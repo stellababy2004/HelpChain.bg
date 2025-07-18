@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}{{ _('Админ панел') }}{% endblock %}
+{% block content %}
+
+<div class="container mt-4">
+    <h2 class="mb-4">{{ _('Административен панел') }}</h2>
+
+    <!-- Брой по статус -->
+    <div class="mb-3">
+      <span class="badge bg-secondary">{{ _('Очакващи') }}: {{ requests|selectattr('status', 'equalto', 'Очакващ')|list|length }}</span>
+      <span class="badge bg-warning text-dark">{{ _('В ход') }}: {{ requests|selectattr('status', 'equalto', 'В ход')|list|length }}</span>
+      <span class="badge bg-success">{{ _('Завършени') }}: {{ requests|selectattr('status', 'equalto', 'Завършен')|list|length }}</span>
+      <span class="badge bg-danger">{{ _('Отхвърлени') }}: {{ requests|selectattr('status', 'equalto', 'Отхвърлен')|list|length }}</span>
+    </div>
+
+    <!-- Филтър и търсене -->
+    <form method="get" class="row g-3 align-items-center mb-4">
+        <div class="col-auto">
+            <label for="statusFilter" class="col-form-label">{{ _('Филтър по статус:') }}</label>
+        </div>
+        <div class="col-auto">
+            <select id="statusFilter" name="status" class="form-select">
+                <option value="">{{ _('Всички') }}</option>
+                <option value="Очакващ">{{ _('Очакващ') }}</option>
+                <option value="В ход">{{ _('В ход') }}</option>
+                <option value="Завършен">{{ _('Завършен') }}</option>
+                <option value="Отхвърлен">{{ _('Отхвърлен') }}</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <input type="text" name="q" class="form-control" placeholder="{{ _('Търси по име или имейл') }}" value="{{ request.args.get('q', '') }}">
+        </div>
+        <div class="col-auto">
+            <input type="date" name="from_date"
+                   value="{{ request.args.get('from_date', '') if request.args.get('from_date', '')|length == 10 else '' }}">
+        </div>
+        <div class="col-auto">
+            <input type="date" name="to_date"
+                   value="{{ request.args.get('to_date', '') if request.args.get('to_date', '')|length == 10 else '' }}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-secondary">{{ _('Филтрирай') }}</button>
+        </div>
+    </form>
+
+    <a href="{{ url_for('export_requests') }}" class="btn btn-outline-success mb-3">{{ _('Експортирай в CSV') }}</a>
+
+    <form method="post" action="{{ url_for('bulk_update_status') }}">
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th><input type="checkbox" id="selectAll"></th>
+                    <th>{{ _('Име') }}</th>
+                    <th>{{ _('Имейл') }}</th>
+                    <th>{{ _('Описание') }}</th>
+                    <th>{{ _('Статус') }}</th>
+                    <th>{{ _('Дата/час') }}</th>
+                    <th>{{ _('Промени') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests.items %}
+                <tr>
+                    <td><input type="checkbox" name="selected_requests" value="{{ req.id }}"></td>
+                    <td>{{ req.name }}</td>
+                    <td>{{ req.email }}</td>
+                    <td>{{ req.description }}</td>
+                    <td>
+                        <span class="badge 
+                            {% if req.status == 'Очакващ' %}bg-secondary
+                            {% elif req.status == 'В ход' %}bg-warning
+                            {% elif req.status == 'Завършен' %}bg-success
+                            {% elif req.status == 'Отхвърлен' %}bg-danger
+                            {% endif %}">
+                            {{ _(req.status) }}
+                        </span>
+                    </td>
+                    <td>{{ req.created_at.strftime('%d.%m.%Y %H:%M') if req.created_at else '' }}</td>
+                    <td>
+                        <form method="post" action="{{ url_for('update_status', request_id=req.id) }}" class="d-flex gap-2"
+                              onsubmit="return confirm('{{ _('Сигурни ли сте, че искате да смените статуса?') }}');">
+                            <select name="status" class="form-select form-select-sm">
+                                <option value="Очакващ" {% if req.status == 'Очакващ' %}selected{% endif %}>{{ _('Очакващ') }}</option>
+                                <option value="В ход" {% if req.status == 'В ход' %}selected{% endif %}>{{ _('В ход') }}</option>
+                                <option value="Завършен" {% if req.status == 'Завършен' %}selected{% endif %}>{{ _('Завършен') }}</option>
+                                <option value="Отхвърлен" {% if req.status == 'Отхвърлен' %}selected{% endif %}>{{ _('Отхвърлен') }}</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary btn-sm">{{ _('Запази') }}</button>
+                        </form>
+                        <form method="post" action="{{ url_for('delete_request', request_id=req.id) }}" onsubmit="return confirm('{{ _('Сигурни ли сте, че искате да изтриете тази заявка?') }}');">
+    <button type="submit" class="btn btn-danger btn-sm">{{ _('Изтрий') }}</button>
+</form>
+<!-- Детайли -->
+<button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#detailsModal{{ req.id }}" data-bs-toggle="tooltip" title="Виж детайли">
+    {{ _('Детайли') }}
+</button>
+<!-- История -->
+<button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#historyModal{{ req.id }}" data-bs-toggle="tooltip" title="История на статусите">
+    {{ _('История') }}
+</button>
+
+<!-- Модал за всяка заявка -->
+<div class="modal fade" id="detailsModal{{ req.id }}" tabindex="-1" aria-labelledby="detailsModalLabel{{ req.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detailsModalLabel{{ req.id }}">Детайли за заявка</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Затвори"></button>
+      </div>
+      <div class="modal-body">
+        <p><b>Име:</b> {{ req.name }}</p>
+        <p><b>Имейл:</b> {{ req.email }}</p>
+        <p><b>Описание:</b> {{ req.description }}</p>
+        <p><b>Статус:</b> <span class="badge 
+            {% if req.status == 'Очакващ' %}bg-secondary
+            {% elif req.status == 'В ход' %}bg-warning
+            {% elif req.status == 'Завършен' %}bg-success
+            {% elif req.status == 'Отхвърлен' %}bg-danger
+            {% endif %}">
+            {{ _(req.status) }}
+        </span></p>
+        <p><b>Дата/час:</b> {{ req.created_at.strftime('%d.%m.%Y %H:%M') if req.created_at else '' }}</p>
+      </div>
+    </div>
+  </div>from models import StatusLog
+
+@app.route('/admin')
+def admin_dashboard():
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    requests = HelpRequest.query.paginate(page=page, per_page=per_page)
+    return render_template("admin_dashboard.html", requests=requests, StatusLog=StatusLog)
+</div>
+
+<!-- Модал за история на статусите -->
+<div class="modal fade" id="historyModal{{ req.id }}" tabindex="-1" aria-labelledby="historyModalLabel{{ req.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="historyModalLabel{{ req.id }}">История на статусите</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Затвори"></button>
+      </div>
+      <div class="modal-body">
+        {% set logs = StatusLog.query.filter_by(request_id=req.id).order_by(StatusLog.changed_at.desc()).all() %}
+        {% if logs %}
+          <ul class="list-group">
+            {% for log in logs %}
+              <li class="list-group-item">
+                <b>{{ log.changed_at.strftime('%d.%m.%Y %H:%M') }}</b>:
+                {{ log.old_status }} → <span class="badge 
+                  {% if log.new_status == 'Очакващ' %}bg-secondary
+                  {% elif log.new_status == 'В ход' %}bg-warning
+                  {% elif log.new_status == 'Завършен' %}bg-success
+                  {% elif log.new_status == 'Отхвърлен' %}bg-danger
+                  {% endif %}">
+                  {{ _(log.new_status) }}
+                </span>
+                {% if log.changed_by %} ({{ log.changed_by }}){% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>Няма история.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <select name="new_status" class="form-select form-select-sm w-auto d-inline">
+        <option value="Очакващ">{{ _('Очакващ') }}</option>
+        <option value="В ход">{{ _('В ход') }}</option>
+        <option value="Завършен">{{ _('Завършен') }}</option>
+        <option value="Отхвърлен">{{ _('Отхвърлен') }}</option>
+    </select>
+    <button type="submit" class="btn btn-warning btn-sm">{{ _('Промени статуса на избраните') }}</button>
+</form>
+
+<script>
+document.getElementById('selectAll').onclick = function() {
+    let checkboxes = document.querySelectorAll('input[name="selected_requests"]');
+    for (let cb of checkboxes) cb.checked = this.checked;
+};
+</script>
+
+    {% if not requests.items %}
+        <div class="alert alert-warning">{{ _('Няма подадени сигнали.') }}</div>
+    {% endif %}
+</div>
+
+<nav>
+  <ul class="pagination">
+    {% if requests.has_prev %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('admin_dashboard', page=requests.prev_num) }}">‹</a></li>
+    {% endif %}
+    {% for p in range(1, requests.pages + 1) %}
+      <li class="page-item {% if requests.page == p %}active{% endif %}">
+        <a class="page-link" href="{{ url_for('admin_dashboard', page=p) }}">{{ p }}</a>
+      </li>
+    {% endfor %}
+    {% if requests.has_next %}
+      <li class="page-item"><a class="page-link" href="{{ url_for('admin_dashboard', page=requests.next_num) }}">›</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
+<input type="text" id="search" class="form-control" placeholder="Търси...">
+<div id="results"></div>
+<script>
+document.getElementById('search').oninput = function() {
+    fetch('/admin_search?q=' + this.value)
+      .then(r => r.text())
+      .then(html => document.getElementById('results').innerHTML = html);
+};
+</script>
+
+{% endblock %}
+
+from flask_mail import Message
+from app import mail
+
+def send_status_email(request_obj):
+    msg = Message("Промяна на статус", recipients=[request_obj.email])
+    msg.body = f"Статусът на вашата заявка е сменен на: {request_obj.status}"
+    mail.send(msg)

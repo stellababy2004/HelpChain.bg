@@ -1,0 +1,20 @@
+msgid "Send Request"
+msgstr "Envoyer la demande"
+
+msgid "Name"
+msgstr "Nom"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "What kind of help do you need?"
+msgstr "Quel type d'aide vous faut-il ?"
+
+msgid "Добре дошли!"
+msgstr "Добре дошли!"
+
+msgid "Тази платформа е създадена, за да свърже хора в нужда с доброволци."
+msgstr "Тази платформа е създадена, за да свърже хора в нужда с доброволци."
+
+msgid "Подай сигнал"
+msgstr "Подай сигнал"

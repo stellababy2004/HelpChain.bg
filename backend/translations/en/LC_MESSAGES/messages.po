@@ -1,0 +1,22 @@
+python -m babel.messages.frontend compile -d translations
+
+msgid "Send Request"
+msgstr "Send Request"
+
+msgid "Name"
+msgstr "Name"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "What kind of help do you need?"
+msgstr "What kind of help do you need?"
+
+msgid "Добре дошли!"
+msgstr "Welcome!"
+
+msgid "Тази платформа е създадена, за да свърже хора в нужда с доброволци."
+msgstr "This platform is created to connect people in need with volunteers."
+
+msgid "Подай сигнал"
+msgstr "Send Request"

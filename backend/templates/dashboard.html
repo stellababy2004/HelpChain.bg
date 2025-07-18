@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Volunteer Dashboard</title>
+    <style>
+        body { font-family: Arial; margin: 2em; background-color: #f7f7f7; }
+        .request { border: 1px solid #ccc; background: white; padding: 1em; margin-bottom: 1em; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+        .buttons { margin-top: 10px; }
+        button { margin-right: 5px; padding: 5px 10px; }
+        form { display: inline; }
+        select { margin-bottom: 1em; padding: 0.4em; }
+    </style>
+</head>
+<body>
+    {% extends "base.html" %}
+
+    {% block title %}Dashboard{% endblock %}
+
+    {% block content %}
+    <h1>📋 Volunteer Dashboard</h1>
+
+    <!-- Филтриране по статус -->
+    <form method="GET" action="{{ url_for('dashboard') }}">
+        <label for="status">Filter by status:</label>
+        <select name="status" onchange="this.form.submit()">
+            <option value="All" {% if filter_status == 'All' %}selected{% endif %}>All</option>
+            <option value="In Progress" {% if filter_status == 'In Progress' %}selected{% endif %}>In Progress</option>
+            <option value="Resolved" {% if filter_status == 'Resolved' %}selected{% endif %}>Resolved</option>
+        </select>
+    </form>
+
+    {% if requests %}
+        <table border="1" cellpadding="8" cellspacing="0" style="background:#fff; margin-bottom:2em; width:100%;">
+            <thead>
+                <tr style="background:#f0f0f0;">
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for request in requests %}
+                <tr>
+                    <td>{{ request.id }}</td>
+                    <td>{{ request.name }}</td>
+                    <td>{{ request.email }}</td>
+                    <td>{{ request.description }}</td>
+                    <td>{{ request.status }}</td>
+                    <td>
+                        {% if request.status != "Resolved" %}
+                        <form method="POST" action="/resolve/{{ request.id }}" style="display:inline;">
+                            <button type="submit">✅</button>
+                        </form>
+                        {% endif %}
+                        <form method="POST" action="/delete/{{ request.id }}" style="display:inline;">
+                            <button type="submit" onclick="return confirm('Are you sure?')">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No help requests found.</p>
+    {% endif %}
+
+    <!-- Линк към конкретен сигнал -->
+    <a href="{{ url_for('show_signal', signal_id=7) }}">Виж сигнал 7</a>
+
+    <!-- Линк към таблото -->
+    <a href="{{ url_for('dashboard') }}">Табло</a>
+
+    <!-- Линк към доброволците -->
+    <a href="{{ url_for('volunteers') }}">Доброволци</a>
+
+    <a href="{{ url_for('submit_request') }}">← Back to Help Form</a>
+    {% endblock %}
+</body>
+</html>

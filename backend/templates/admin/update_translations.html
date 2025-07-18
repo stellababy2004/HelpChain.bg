@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Обновяване на преводи{% endblock %}
+
+{% block content %}
+<h2>Обновяване и компилация на преводи</h2>
+
+<form method="POST">
+  <label for="language">Избери съществуващ език:</label>
+  <select name="language" class="form-select mb-3">
+    <option value="">-- избери език --</option>
+    {% for lang in languages %}
+      <option value="{{ lang }}">{{ lang }}</option>
+    {% endfor %}
+  </select>
+
+  <label for="new_language">...или добави нов език:</label>
+  <input type="text" name="new_language" class="form-control mb-3" placeholder="напр. bg, en, fr">
+
+  <button type="submit" class="btn btn-success">🔄 Обнови и компилирай</button>
+</form>
+
+<a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">⬅ Назад</a>
+{% endblock %}

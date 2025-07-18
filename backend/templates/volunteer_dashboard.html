@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Табло на доброволец | HelpChain{% endblock %}
+
+{% block content %}
+<h2>Заявки за помощ</h2>
+
+<select id="status-filter" class="form-select mb-3" style="max-width: 300px;">
+  <option value="Всички">Всички</option>
+  <option value="Pending">Очакващ</option>
+  <option value="In Progress">В процес</option>
+  <option value="Completed">Завършен</option>
+  <option value="Rejected">Отхвърлен</option>
+</select>
+
+<input type="text" id="searchInput" class="form-control mb-3" placeholder="Търси по име или email...">
+
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Име</th>
+      <th>Имейл</th>
+      <th>Съобщение</th>
+      <th>Статус</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for req in help_requests %}
+    <tr>
+      <td class="req-name">{{ req.name }}</td>
+      <td class="req-email">{{ req.email }}</td>
+      <td>{{ req.message }}</td>
+      <td data-status="{{ req.status }}">
+        <span class="status-badge" data-status="{{ req.status }}">{{ req.status }}</span>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.getElementById("status-filter").addEventListener("change", function () {
+    const selected = this.value;
+    document.querySelectorAll("tbody tr").forEach(row => {
+      const status = row.querySelector("td[data-status]").getAttribute("data-status");
+      row.style.display = (selected === "Всички" || selected === status) ? "" : "none";
+    });
+  });
+
+  document.getElementById("searchInput").addEventListener("keyup", function () {
+    const keyword = this.value.toLowerCase();
+    document.querySelectorAll("tbody tr").forEach(row => {
+      const name = row.querySelector(".req-name").textContent.toLowerCase();
+      const email = row.querySelector(".req-email").textContent.toLowerCase();
+      row.style.display = (name.includes(keyword) || email.includes(keyword)) ? "" : "none";
+    });
+  });
+});
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // Слушаме промяна на статус
+  document.querySelectorAll('.status-select').forEach(select => {
+    select.addEventListener('change', function () {
+      const reqId = this.getAttribute('data-req-id');
+      const newStatus = this.value;
+      fetch('/update_status/' + reqId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      }).then(res => res.json()).then(data => {
+        if (data.success) {
+          alert('Статусът е обновен!');
+          location.reload();
+        }
+      });
+    });
+  });
+
+  // Филтриране
+  const statusFilter = document.getElementById('status-filter');
+  statusFilter.addEventListener('change', function () {
+    const selected = this.value;
+    document.querySelectorAll('tr[data-status]').forEach(row => {
+      row.style.display = (selected === "Всички" || row.dataset.status === selected) ? '' : 'none';
+    });
+  });
+});
+</script>
+{% endblock %}
+
+from flask import jsonify, request
+
+@app.route('/update_status/<int:req_id>', methods=['POST'])
+def update_status(req_id):
+    data = request.get_json()
+    new_status = data.get("status")
+    req = HelpRequest.query.get_or_404(req_id)
+    req.status = new_status
+    db.session.commit()
+    return jsonify({"success": True})
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

@@ -1,0 +1,11 @@
+/* Тук добавете вашите CSS стилове. */
+/* Например: */
+body {
+    background-color: #f8f9fa;
+}
+.custom-max-width {
+    max-width: 800px;
+}
+.alert {
+    margin-top: 1rem;
+}

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}HelpChain{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        html {
+          scroll-behavior: smooth;
+        }
+        body {
+            min-height: 100vh;
+            background: #f8f9fa;
+        }
+        .hero-svg {
+            width: 320px;
+            max-width: 90vw;
+            margin: 0 auto 30px auto;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0);}
+            50% { transform: translateY(-18px);}
+            100% { transform: translateY(0);}
+        }
+        .europe-map {
+            filter: drop-shadow(0 0 8px #0d6efd88);
+            animation: shake 2.5s infinite;
+            transform-origin: center;
+        }
+        @keyframes shake {
+            0%,100% { transform: rotate(-2deg);}
+            20% { transform: rotate(2deg);}
+            40% { transform: rotate(-2deg);}
+            60% { transform: rotate(2deg);}
+            80% { transform: rotate(-2deg);}
+        }
+        .glass {
+            background: rgba(255,255,255,0.82);
+            border-radius: 22px;
+            box-shadow: 0 8px 40px 0 rgba(31, 38, 135, 0.18);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 3rem 2.5rem 2.5rem 2.5rem;
+            margin-top: 2.5rem;
+            animation: fadeIn 1.2s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(40px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        .heart-img {
+            max-width: 140px;
+            border-radius: 50%;
+            box-shadow: 0 4px 24px #1976d244;
+            border: 4px solid #fff;
+            background: #fff;
+            object-fit: cover;
+        }
+        .platform-desc {
+            font-size: 1.15rem;
+            color: #444;
+            margin-bottom: 2rem;
+        }
+        h1 {
+            color: #1976d2;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 #1976d244; }
+            70% { box-shadow: 0 0 0 10px #1976d211; }
+            100% { box-shadow: 0 0 0 0 #1976d244; }
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #1976d2 60%, #00bfae 100%);
+            border: none;
+            font-weight: 600;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 12px #1976d233;
+            transition: background 0.3s;
+            animation: pulse 2.5s infinite;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #00bfae 0%, #1976d2 100%);
+        }
+        .slogan {
+            font-style: italic;
+            color: #1976d2;
+            animation: fadeIn 2s;
+        }
+        .step-icon {
+            transition: transform 0.3s;
+        }
+        .step-icon:hover {
+            transform: scale(1.15) rotate(-6deg);
+            transition: 0.3s;
+        }
+        .glass > * {
+            opacity: 0;
+            animation: fadeIn 1s forwards;
+        }
+        .glass > *:nth-child(1) { animation-delay: 0.2s;}
+        .glass > *:nth-child(2) { animation-delay: 0.4s;}
+        .glass > *:nth-child(3) { animation-delay: 0.6s;}
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+        .social-icons a {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s forwards;
+        }
+        .social-icons a:nth-child(1) { animation-delay: 0.2s;}
+        .social-icons a:nth-child(2) { animation-delay: 0.4s;}
+        .social-icons a:nth-child(3) { animation-delay: 0.6s;}
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0);}
+        }
+        #loader {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: #fff8;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .blockquote {
+            transition: box-shadow 0.3s, transform 0.3s;
+            background: #f8faff;
+            border-left: 4px solid #1976d2;
+            border-radius: 10px;
+            padding: 1.2em 1.5em;
+        }
+        .blockquote:hover {
+            box-shadow: 0 4px 24px #1976d244;
+            transform: scale(1.03);
+        }
+    </style>
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mt-3">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="container mt-5" style="max-width: 900px;">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center glass">
+                <!-- Снимка със сърце от ръце -->
+                <img src="{{ url_for('static', filename='hands-heart.png') }}" alt="Сърце с ръце" class="heart-img mb-4 mt-2">
+                <!-- SVG анимация -->
+                <svg class="hero-svg mb-4" viewBox="0 0 320 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Човек -->
+                  <ellipse cx="160" cy="220" rx="60" ry="18" fill="#e0e0e0"/>
+                  <circle cx="160" cy="80" r="38" fill="#ffe0b2"/>
+                  <rect x="120" y="110" width="80" height="70" rx="30" fill="#1976d2"/>
+                  <!-- Лява ръка -->
+                  <rect x="70" y="120" width="60" height="18" rx="9" fill="#ffe0b2" transform="rotate(-20 70 120)"/>
+                  <!-- Дясна ръка -->
+                  <rect x="190" y="120" width="60" height="18" rx="9" fill="#ffe0b2" transform="rotate(20 250 120)"/>
+                  <!-- Карта на Европа (стилизирана) -->
+                  <g class="europe-map">
+                    <path d="M120 140 Q140 120 170 130 Q200 140 190 170 Q180 200 140 190 Q110 180 120 140 Z"
+                          fill="#81d4fa" stroke="#1976d2" stroke-width="2"/>
+                    <ellipse cx="155" cy="160" rx="10" ry="5" fill="#1976d2" opacity="0.3"/>
+                    <ellipse cx="170" cy="150" rx="6" ry="3" fill="#1976d2" opacity="0.3"/>
+                  </g>
+                  <!-- Усмивка -->
+                  <path d="M148 92 Q160 105 172 92" stroke="#b8860b" stroke-width="3" fill="none"/>
+                  <!-- Очи -->
+                  <ellipse cx="148" cy="80" rx="4" ry="6" fill="#333"/>
+                  <ellipse cx="172" cy="80" rx="4" ry="6" fill="#333"/>
+                </svg>
+                <h1 class="mb-3 mt-3">HelpChain.live</h1>
+                <div class="platform-desc mb-4" style="animation-delay:0.3s;">
+                     https://helpchain.live/свързва хжро в нужда с доброволци готови да помогнат.<br>
+                    Заедно изграждаме общество, в което всеки има значение.
+                </div>
+                <a href="{{ url_for('submit_request') }}" class="btn btn-primary btn-lg mb-3 px-4 position-relative" style="animation-delay:0.6s;">
+                    Подай сигнал за помощ
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.8em;">
+                        NEW
+                    </span>
+                </a>
+                <br>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm mb-3">Админ панел</a>
+                <!-- Стъпки -->
+                <div class="row mt-4 mb-2">
+                  <div class="col-md-4 mb-3">
+                    <div class="fs-2 text-primary step-icon"><i class="bi bi-bullhorn"></i></div>
+                    <div>Подай сигнал</div>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <div class="fs-2 text-success"><i class="bi bi-people"></i></div>
+                    <div>Доброволец откликва</div>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <div class="fs-2 text-danger"><i class="bi bi-heart-fill"></i></div>
+                    <div>Получаваш помощ</div>
+                  </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 mb-2 social-icons">
+      <a href="https://facebook.com/helpchain.live" class="me-2 text-primary" aria-label="Facebook" target="_blank"><i class="bi bi-facebook fs-3"></i></a>
+      <a href="https://t.me/helpchain_live" class="me-2 text-info" aria-label="Telegram" target="_blank"><i class="bi bi-telegram fs-3"></i></a>
+      <a href="mailto:info@helpchain.live" class="text-danger" aria-label="Email"><i class="bi bi-envelope fs-3"></i></a>
+    </div>
+
+    <a href="#why" class="btn btn-outline-primary mb-4">Защо да се включа?</a>
+
+    <div id="why" class="mt-5 mb-4">
+      <h4 class="mb-3 text-primary">Защо да се включа?</h4>
+      <ul class="list-unstyled">
+        <li>✔ Помагаш на хора в нужда</li>
+        <li>✔ Ставаш част от общност</li>
+        <li>✔ Получаваш признание и нови приятели</li>
+      </ul>
+    </div>
+
+    <div class="mt-5">
+      <blockquote class="blockquote">
+        <p>„Благодарение на  https://helpchain.live/най-много имах нужда!“</p>
+        <footer class="blockquote-footer">Мария, София</footer>
+      </blockquote>
+    </div>
+    <div class="mt-3">
+      <blockquote class="blockquote">
+        <p>„И аз станах доброволец и се чувствам полезен!“</p>
+        <footer class="blockquote-footer">Георги, Пловдив</footer>
+      </blockquote>
+    </div>
+
+    <p class="lead slogan mb-4">Заедно можем повече!</p>
+
+    <footer class="text-center mt-5 mb-3 small text-muted">
+        © 2025 HelpChain.live |
+        <a href="mailto:info@helpchain.live">Email</a> |
+        <a href="https://facebook.com/helpchain.live" target="_blank">Facebook</a> |
+        <a href="#">Условия</a> |
+        <a href="#">Политика за поверителност</a>
+    </footer>
+
+    <!-- В края на body -->
+<div id="feedback-popup" style="display:none;position:fixed;bottom:30px;right:30px;z-index=9999;background:#fff;border-radius:12px;box-shadow:0 4px 24px #1976d244;padding:1.2em 1.5em;">
+  <strong>Имате идея или проблем?</strong><br>
+  <a href="mailto:info@helpchain.live" class="btn-sm btn-primary mt-2">Пишете ни</a>
+  <button onclick="document.getElementById('feedback-popup').style.display='none'" style="position:absolute;top:8px;right:12px;background:none;border:none;font-size:1.2em;">&times;</button>
+</div>
+<script>
+  setTimeout(function(){
+    document.getElementById('feedback-popup').style.display='block';
+  }, 4000);
+</script>
+</body>
+</html>

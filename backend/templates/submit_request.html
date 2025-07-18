@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Подай сигнал за помощ | HelpChain.live{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-primary">Подай сигнал за помощ</h2>
+    <form method="post" action="">
+        <div class="mb-3">
+            <label for="name" class="form-label">Име</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="mb-3">
+            <label for="contact" class="form-label">Телефон или имейл</label>
+            <input type="text" class="form-control" id="contact" name="contact" required>
+        </div>
+        <div class="mb-3">
+            <label for="description" class="form-label">Опиши проблема си</label>
+            <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Изпрати сигнал</button>
+    </form>
+</div>
+{% endblock %}

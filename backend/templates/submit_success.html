@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Сигналът е изпратен! | HelpChain.live{% endblock %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+    <h2 class="text-success mb-4">Благодарим!</h2>
+    <p>Сигналът ти беше изпратен успешно.<br>
+    Доброволец ще се свърже с теб възможно най-скоро.</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">Обратно към началната страница</a>
+</div>
+{%
