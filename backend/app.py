@@ -78,3 +78,14 @@ def send_admin_test():
         return "Admin email sent successfully!"
     except Exception as e:
         return f"Error: {e}"
+
+@app.route('/submit_request')
+def submit_request():
+    return render_template('submit_request.html')
+
+@app.route('/test')
+def test():
+    return '''
+    <!-- Ако имаш само send_admin_test, замени линка така: -->
+    <a href="{{ url_for('send_admin_test') }}">Submit</a>
+    '''
