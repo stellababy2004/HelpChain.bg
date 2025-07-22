@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: helpchain
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn backend.app:app"
+    region: frankfurt
