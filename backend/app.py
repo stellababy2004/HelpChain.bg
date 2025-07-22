@@ -89,3 +89,7 @@ def test():
     <!-- Ако имаш само send_admin_test, замени линка така: -->
     <a href="{{ url_for('send_admin_test') }}">Submit</a>
     '''
+
+@app.route('/admin_dashboard')
+def admin_dashboard():
+    return render_template('admin_dashboard.html')

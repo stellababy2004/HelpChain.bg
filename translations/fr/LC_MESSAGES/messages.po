@@ -324,3 +324,14 @@ msgid_plural "{len_type} values are required, but {len_value} were given."
 msgstr[0] ""
 msgstr[1] ""
 
+#: backend/venv/Lib/site-packages/click/types.py:1111
+#, python-brace-format
+msgid "Админ панел"
+msgstr "Panneau d'administration"
+
+msgid "Подай сигнал за помощ"
+msgstr "Soumettre une demande d'aide"
+
+msgid "Вашата заявка беше успешно изпратена."
+msgstr "Votre demande a été envoyée avec succès."
+
