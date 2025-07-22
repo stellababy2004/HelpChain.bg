@@ -1,39 +1,47 @@
-<!DOCTYPE html>
-<html lang="bg">
-<head>
-    <meta charset="UTF-8">
-    <title>{% block title %}HelpChain{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+from flask import Flask, render_template
+from backend.extensions import db, mail, babel
+from backend.models import HelpRequest, StatusLog
+from flask_babel import gettext as _, ngettext
+from flask_mail import MessagelpChain{% endblock %}</title>
+from flask_admin import Adminsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <style>
-        html {
-          scroll-behavior: smooth;
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///backend/helpchain.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
         }
-        body {
-            min-height: 100vh;
-            background: #f8f9fa;
-        }
-        .hero-svg {
-            width: 320px;
-            max-width: 90vw;
+# Email конфигурация (Zoho)
+app.config['MAIL_SERVER'] = 'smtp.zoho.eu'
+app.config['MAIL_PORT'] = 465fa;
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'contact@helpchain.live'  
+app.config['MAIL_PASSWORD'] = 'wWAfCk9A1gZU'
+app.config['MAIL_DEFAULT_SENDER'] = 'contact@helpchain.live'
             margin: 0 auto 30px auto;
-            display: block;
-            animation: float 3s ease-in-out infinite;
-        }
+db.init_app(app)lay: block;
+babel.init_app(app)on: float 3s ease-in-out infinite;
+mail.init_app(app)
         @keyframes float {
-            0% { transform: translateY(0);}
-            50% { transform: translateY(-18px);}
-            100% { transform: translateY(0);}
+# Добави i18n разширението за Jinja2 и глобалните функции за превод
+app.jinja_env.add_extension('jinja2.ext.i18n');}
+app.jinja_env.globals.update(_=_, ngettext=ngettext)
         }
-        .europe-map {
+admin = Admin(app, name="Admin", template_mode="bootstrap4")
             filter: drop-shadow(0 0 8px #0d6efd88);
-            animation: shake 2.5s infinite;
-            transform-origin: center;
-        }
+@app.route('/')mation: shake 2.5s infinite;
+def index():transform-origin: center;
+    return render_template('index.html')
         @keyframes shake {
-            0%,100% { transform: rotate(-2deg);}
-            20% { transform: rotate(2deg);}
-            40% { transform: rotate(-2deg);}
+@app.route('/send_email')sform: rotate(-2deg);}
+def send_email():form: rotate(2deg);}
+
+
+
+
+
+
+
+
+    app.run(debug=True)if __name__ == "__main__":    return "Съобщението беше изпратено!"    mail.send(msg)    msg.body = "Здравей,\n\nТова е тестово съобщение на кирилица.\n\nПоздрави,\nЕкипът на HelpChain"                  recipients=["recipient@example.com"])    msg = Message("Тестово съобщение на кирилица",            40% { transform: rotate(-2deg);}
             60% { transform: rotate(2deg);}
             80% { transform: rotate(-2deg);}
         }
@@ -182,17 +190,19 @@
                   <ellipse cx="148" cy="80" rx="4" ry="6" fill="#333"/>
                   <ellipse cx="172" cy="80" rx="4" ry="6" fill="#333"/>
                 </svg>
-                <h1 class="mb-3 mt-3">HelpChain.live</h1>
+                <h1 class="mb-3 mt-3">{{ _('HelpChain.live') }}</h1>
                 <div class="platform-desc mb-4" style="animation-delay:0.3s;">
                      https://helpchain.live/свързва хжро в нужда с доброволци готови да помогнат.<br>
                     Заедно изграждаме общество, в което всеки има значение.
                 </div>
-                <a href="{{ url_for('submit_request') }}" class="btn btn-primary btn-lg mb-3 px-4 position-relative" style="animation-delay:0.6s;">
-                    Подай сигнал за помощ
+                <form action="{{ url_for('submit_request') }}" method="get" class="d-inline">
+                  <button type="submit" class="btn btn-primary btn-lg mb-3 px-4 position-relative" style="animation-delay:0.6s;">
+                    {{ _('Подай сигнал за помощ') }}
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.8em;">
                         NEW
                     </span>
-                </a>
+                  </button>
+                </form>
                 <br>
                 <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm mb-3">Админ панел</a>
                 <!-- Стъпки -->

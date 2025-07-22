@@ -5,20 +5,22 @@
 {% block content %}
 <div class="container mt-5">
     <h2 class="mb-4 text-primary">Подай сигнал за помощ</h2>
-    <form method="post" action="">
+    <form method="POST" action="{{ url_for('submit_request') }}">
         <div class="mb-3">
-            <label for="name" class="form-label">Име</label>
+            <label for="name" class="form-label">Вашето име:</label>
             <input type="text" class="form-control" id="name" name="name" required>
         </div>
         <div class="mb-3">
-            <label for="contact" class="form-label">Телефон или имейл</label>
-            <input type="text" class="form-control" id="contact" name="contact" required>
+            <label for="problem" class="form-label">Описание на проблема:</label>
+            <textarea class="form-control" id="problem" name="problem" rows="4" required></textarea>
         </div>
-        <div class="mb-3">
-            <label for="description" class="form-label">Опиши проблема си</label>
-            <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Изпрати сигнал</button>
+        <button type="submit" class="btn btn-primary">Изпрати</button>
     </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Примерен скрипт, ако ти трябва
+</script>
 {% endblock %}

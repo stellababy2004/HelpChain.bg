@@ -1,6 +1,6 @@
-# init_db.py
-from app import db, app
+from backend.app import app
+from backend.extensions import db
 
 with app.app_context():
     db.create_all()
-    print("✅ Database initialized successfully.")
+    print("✅ Базата е създадена успешно.")

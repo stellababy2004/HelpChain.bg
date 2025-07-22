@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-success">Благодарим за сигнала!</h2>
+    {% if name %}
+        <p>Благодарим ти, {{ name }}. Ще се свържем с теб при нужда.</p>
+    {% endif %}
+    <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">Към началната страница</a>
+</div>
+{% endblock %}
