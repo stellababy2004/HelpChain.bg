@@ -5,3 +5,4 @@ flask_mail
 flask_babel
 flask_wtf
 email_validator
+flask-admin
