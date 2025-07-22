@@ -274,3 +274,11 @@ def send_email():form: rotate(2deg);}
 </script>
 </body>
 </html>
+{% extends "base.html" %}
+{% block title %}HelpChain{% endblock %}
+
+{% block content %}
+  <h1>Добре дошли в HelpChain</h1>
+  <a href="{{ url_for('submit_request') }}">Подай заявка</a>
+  <a href="{{ url_for('register') }}">Стани доброволец</a>
+{% endblock %}
