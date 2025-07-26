@@ -16,5 +16,13 @@
      <loc>https://helpchain.live/blog</loc>
      <changefreq>monthly</changefreq>
    </url>
+   <url>
+     <loc>https://helpchain.live/faq</loc>
+     <changefreq>monthly</changefreq>
+   </url>
+   <url>
+     <loc>https://helpchain.live/terms</loc>
+     <changefreq>yearly</changefreq>
+   </url>
    <!-- Добави още адреси при нужда -->
 </urlset>

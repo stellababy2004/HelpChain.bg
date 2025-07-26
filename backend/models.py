@@ -1,4 +1,4 @@
-from backend.extensions import db
+from app import db
 from datetime import datetime
 
 class HelpRequest(db.Model):
@@ -19,3 +19,10 @@ class StatusLog(db.Model):
     changed_at = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(50))
     # ... други полета ...
+
+class Volunteer(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(50))
+    location = db.Column(db.String(120))

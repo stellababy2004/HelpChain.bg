@@ -2,12 +2,41 @@
 <html lang="bg">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Нова регистрация</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      color: #222;
+      padding: 24px;
+    }
+    h2 {
+      color: #2b7a78;
+    }
+    p {
+      background: #fff;
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    a {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #2b7a78;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body>
   <h2>🆕 Нова регистрация в HelpChain</h2>
   <p><strong>Име:</strong> {{ username }}</p>
   <p><strong>Имейл:</strong> {{ email }}</p>
   <p>Моля, провери в системата дали профилът отговаря на критериите.</p>
+  <p>Добре дошъл/дошла в нашата общност!</p>
+  <a href="{{ login_url }}">Вход в системата</a>
 </body>
 </html>

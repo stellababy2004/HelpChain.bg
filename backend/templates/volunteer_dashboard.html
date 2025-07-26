@@ -5,7 +5,8 @@
 {% block content %}
 <h2>Заявки за помощ</h2>
 
-<select id="status-filter" class="form-select mb-3" style="max-width: 300px;">
+<label for="status-filter" class="form-label visually-hidden">Филтрирай по статус</label>
+<select id="status-filter" class="form-select mb-3 status-filter-width" aria-label="Филтрирай по статус">
   <option value="Всички">Всички</option>
   <option value="Pending">Очакващ</option>
   <option value="In Progress">В процес</option>

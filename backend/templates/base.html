@@ -2,56 +2,164 @@
 <html lang="bg">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}HelpChain.live{% endblock %}</title>
-    <meta name="description" content="HelpChain.bg – платформа за помощ и доброволчество в България. Свържи се, помогни, бъди част от веригата на доброто.">
-    <meta name="robots" content="index, follow">
+    <title>{% block title %}{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="canonical" href="https://helpchain.live/" />
-    <link rel="alternate" hreflang="bg" href="https://helpchain.live/" />
-    <link rel="alternate" hreflang="en" href="https://helpchain.live/en/" />
-
-    <!-- Bootstrap 5.3 CDN -->
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Собствен стил -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    {% block head %}{% endblock %}
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(120deg, #e3f2fd 0%, #fff 100%);
+            min-height: 100vh;
+        }
+        .glass {
+            background: rgba(255,255,255,0.82);
+            border-radius: 22px;
+            box-shadow: 0 8px 40px 0 rgba(31, 38, 135, 0.18);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            padding: 3rem 2.5rem 2.5rem 2.5rem;
+            margin-top: 2.5rem;
+            opacity: 0;
+            transition: opacity 1.2s;
+            transform: translateZ(0); /* Хардуерно ускорение за по-добра производителност */
+            will-change: opacity, transform; /* Оптимизация за анимация с opacity и transform */
+        }
+        .glass.visible {
+            opacity: 1;
+        }
+        .heart-img {
+            max-width: 140px;
+            border-radius: 50%;
+            box-shadow: 0 4px 24px #1976d244;
+            border: 4px solid #fff;
+            background: #fff;
+            object-fit: cover;
+        }
+        .platform-desc {
+            font-size: 1.15rem;
+            color: #444;
+            margin-bottom: 2rem;
+        }
+        h1 {
+            color: #1976d2;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #1976d2 60%, #00bfae 100%);
+            border: none;
+            font-weight: 600;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 12px #1976d233;
+            transition: background 0.3s;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #00bfae 0%, #1976d2 100%);
+        }
+        .btn-primary, .btn-outline-primary, .btn-outline-secondary {
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover, .btn-outline-primary:hover, .btn-outline-secondary:hover {
+          transform: scale(1.08);
+          box-shadow: 0 4px 24px #1976d244;
+        }
+        .slogan {
+            font-style: italic;
+            color: #1976d2;
+        }
+        .step-icon {
+            transition: transform 0.3s;
+            will-change: transform;
+        }
+        .step-icon:hover {
+            color: #00bfae;
+            transform: scale(1.3) rotate(-8deg);
+        }
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+        .blockquote {
+            background: #f8faff;
+            border-left: 4px solid #1976d2;
+            border-radius: 10px;
+            padding: 1.2em 1.5em;
+            will-change: transform, box-shadow;
+        }
+        .blockquote:hover {
+            box-shadow: 0 4px 24px #1976d244;
+            transform: scale(1.03);
+        }
+        .bg-why {
+            background: #e3f2fd;
+            border-radius: 16px;
+        }
+        .animated-bg {
+          position: fixed;
+          top: 0; left: 0; width: 100vw; height: 100vh;
+          z-index: -1;
+          background: linear-gradient(120deg, #e3f2fd 0%, #fff 100%);
+        }
+        #loader {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #fff8;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
-<body class="bg-light">
-
-    <div class="container mt-5 custom-max-width">
-
-        <!-- Flash съобщения -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
+<body>
+    <div id="loader">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-warning">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
         {% endwith %}
-
-        <!-- Основно съдържание -->
-        {% block content %}{% endblock %}
-        <img src="{{ url_for('static', filename='hands-heart.png') }}" alt="Стискащи се ръце – символ на помощ и подкрепа">
-
-        <!-- Footer -->
-        <footer class="text-center mt-5 mb-3">
-            <p class="mb-2">© 2025 HelpChain.bg | Помощта е в твоите ръце.</p>
-            <!-- Ако искаш езиково меню, трябва да го направиш без get_locale -->
-            <!-- <form action="#" method="post" class="d-inline">
-                <select name="language" class="form-select d-inline w-auto" disabled>
-                    <option value="bg" selected>Български</option>
-                    <option value="en">English</option>
-                    <option value="fr">Français</option>
-                </select>
-            </form> -->
+        {% block content %}
+        <!-- ...текст... -->
+        {% endblock %}
+        <footer class="text-center mt-5">
+            © 2025 HelpChain.live |
+            <a href="mailto:info@helpchain.live">Email</a> |
+            <a href="https://facebook.com">Facebook</a> |
+            <a href="/terms" target="_blank">условията за ползване</a> |
+            <a href="/privacy" target="_blank">Политика за поверителност</a> |
+            <a href="/faq">FAQ</a> |
+            <a href="/success_stories">Истории на успеха</a> |
+            <a href="/feedback">Обратна връзка</a>
+            <form method="post" action="{{ url_for('set_language') }}" class="d-inline mx-2">
+              <select name="language" onchange="this.form.submit()" class="form-select d-inline w-auto">
+                <option value="bg" {% if get_locale() == 'bg' %}selected{% endif %}>Български</option>
+                <option value="en" {% if get_locale() == 'en' %}selected{% endif %}>English</option>
+              </select>
+            </form>
         </footer>
     </div>
-
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    window.addEventListener('load', function() {
+      document.getElementById('loader').style.display = 'none';
+      // Fade-in за всички .glass елементи
+      document.querySelectorAll('.glass').forEach(function(el) {
+        el.classList.add('visible');
+      });
+    });
+    </script>
 </body>
 </html>

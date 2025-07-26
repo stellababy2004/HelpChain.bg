@@ -1,284 +1,285 @@
-from flask import Flask, render_template
-from backend.extensions import db, mail, babel
-from backend.models import HelpRequest, StatusLog
-from flask_babel import gettext as _, ngettext
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///backend/helpchain.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        }
-# Email конфигурация (Zoho)
-app.config['MAIL_SERVER'] = 'smtp.zoho.eu'
-app.config['MAIL_PORT'] = 465fa;
-app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = 'contact@helpchain.live'  
-app.config['MAIL_PASSWORD'] = 'wWAfCk9A1gZU'
-app.config['MAIL_DEFAULT_SENDER'] = 'contact@helpchain.live'
-            margin: 0 auto 30px auto;
-db.init_app(app)lay: block;
-babel.init_app(app)on: float 3s ease-in-out infinite;
-mail.init_app(app)
-        @keyframes float {
-# Добави i18n разширението за Jinja2 и глобалните функции за превод
-app.jinja_env.add_extension('jinja2.ext.i18n');}
-app.jinja_env.globals.update(_=_, ngettext=ngettext)
-        }
-admin = Admin(app, name="Admin", template_mode="bootstrap4")
-            filter: drop-shadow(0 0 8px #0d6efd88);
-@app.route('/')mation: shake 2.5s infinite;
-def index():transform-origin: center;
-    return render_template('index.html')
-        @keyframes shake {
-@app.route('/send_email')sform: rotate(-2deg);}
-def send_email():form: rotate(2deg);}
-
-
-
-
-
-
-
-
-    app.run(debug=True)if __name__ == "__main__":    return "Съобщението беше изпратено!"    mail.send(msg)    msg.body = "Здравей,\n\nТова е тестово съобщение на кирилица.\n\nПоздрави,\nЕкипът на HelpChain"                  recipients=["recipient@example.com"])    msg = Message("Тестово съобщение на кирилица",            40% { transform: rotate(-2deg);}
-            60% { transform: rotate(2deg);}
-            80% { transform: rotate(-2deg);}
-        }
-        .glass {
-            background: rgba(255,255,255,0.82);
-            border-radius: 22px;
-            box-shadow: 0 8px 40px 0 rgba(31, 38, 135, 0.18);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 3rem 2.5rem 2.5rem 2.5rem;
-            margin-top: 2.5rem;
-            animation: fadeIn 1.2s;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(40px);}
-            to { opacity: 1; transform: translateY(0);}
-        }
-        .heart-img {
-            max-width: 140px;
-            border-radius: 50%;
-            box-shadow: 0 4px 24px #1976d244;
-            border: 4px solid #fff;
-            background: #fff;
-            object-fit: cover;
-        }
-        .platform-desc {
-            font-size: 1.15rem;
-            color: #444;
-            margin-bottom: 2rem;
-        }
-        h1 {
-            color: #1976d2;
-            font-weight: 700;
-            letter-spacing: 1px;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 #1976d244; }
-            70% { box-shadow: 0 0 0 10px #1976d211; }
-            100% { box-shadow: 0 0 0 0 #1976d244; }
-        }
-        .btn-primary {
-            background: linear-gradient(90deg, #1976d2 60%, #00bfae 100%);
-            border: none;
-            font-weight: 600;
-            font-size: 1.2rem;
-            box-shadow: 0 2px 12px #1976d233;
-            transition: background 0.3s;
-            animation: pulse 2.5s infinite;
-        }
-        .btn-primary:hover {
-            background: linear-gradient(90deg, #00bfae 0%, #1976d2 100%);
-        }
-        .slogan {
-            font-style: italic;
-            color: #1976d2;
-            animation: fadeIn 2s;
-        }
-        .step-icon {
-            transition: transform 0.3s;
-        }
-        .step-icon:hover {
-            transform: scale(1.15) rotate(-6deg);
-            transition: 0.3s;
-        }
-        .glass > * {
-            opacity: 0;
-            animation: fadeIn 1s forwards;
-        }
-        .glass > *:nth-child(1) { animation-delay: 0.2s;}
-        .glass > *:nth-child(2) { animation-delay: 0.4s;}
-        .glass > *:nth-child(3) { animation-delay: 0.6s;}
-        .social-icons {
-            display: flex;
-            justify-content: center;
-            gap: 18px;
-            margin-bottom: 18px;
-        }
-        .social-icons a {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.8s forwards;
-        }
-        .social-icons a:nth-child(1) { animation-delay: 0.2s;}
-        .social-icons a:nth-child(2) { animation-delay: 0.4s;}
-        .social-icons a:nth-child(3) { animation-delay: 0.6s;}
-        @keyframes fadeInUp {
-            to { opacity: 1; transform: translateY(0);}
-        }
-        #loader {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: #fff8;
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-        }
-        .blockquote {
-            transition: box-shadow 0.3s, transform 0.3s;
-            background: #f8faff;
-            border-left: 4px solid #1976d2;
-            border-radius: 10px;
-            padding: 1.2em 1.5em;
-        }
-        .blockquote:hover {
-            box-shadow: 0 4px 24px #1976d244;
-            transform: scale(1.03);
-        }
-    </style>
-</head>
-<body>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} mt-3">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
-    <div class="container mt-5" style="max-width: 900px;">
-        <div class="row justify-content-center">
-            <div class="col-md-8 text-center glass">
-                <!-- Снимка със сърце от ръце -->
-                <img src="{{ url_for('static', filename='hands-heart.png') }}" alt="Сърце с ръце" class="heart-img mb-4 mt-2">
-                <!-- SVG анимация -->
-                <svg class="hero-svg mb-4" viewBox="0 0 320 260" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <!-- Човек -->
-                  <ellipse cx="160" cy="220" rx="60" ry="18" fill="#e0e0e0"/>
-                  <circle cx="160" cy="80" r="38" fill="#ffe0b2"/>
-                  <rect x="120" y="110" width="80" height="70" rx="30" fill="#1976d2"/>
-                  <!-- Лява ръка -->
-                  <rect x="70" y="120" width="60" height="18" rx="9" fill="#ffe0b2" transform="rotate(-20 70 120)"/>
-                  <!-- Дясна ръка -->
-                  <rect x="190" y="120" width="60" height="18" rx="9" fill="#ffe0b2" transform="rotate(20 250 120)"/>
-                  <!-- Карта на Европа (стилизирана) -->
-                  <g class="europe-map">
-                    <path d="M120 140 Q140 120 170 130 Q200 140 190 170 Q180 200 140 190 Q110 180 120 140 Z"
-                          fill="#81d4fa" stroke="#1976d2" stroke-width="2"/>
-                    <ellipse cx="155" cy="160" rx="10" ry="5" fill="#1976d2" opacity="0.3"/>
-                    <ellipse cx="170" cy="150" rx="6" ry="3" fill="#1976d2" opacity="0.3"/>
-                  </g>
-                  <!-- Усмивка -->
-                  <path d="M148 92 Q160 105 172 92" stroke="#b8860b" stroke-width="3" fill="none"/>
-                  <!-- Очи -->
-                  <ellipse cx="148" cy="80" rx="4" ry="6" fill="#333"/>
-                  <ellipse cx="172" cy="80" rx="4" ry="6" fill="#333"/>
-                </svg>
-                <h1 class="mb-3 mt-3">{{ _('HelpChain.live') }}</h1>
-                <div class="platform-desc mb-4" style="animation-delay:0.3s;">
-                     https://helpchain.live/свързва хжро в нужда с доброволци готови да помогнат.<br>
-                    Заедно изграждаме общество, в което всеки има значение.
-                </div>
-                <form action="{{ url_for('submit_request') }}" method="get" class="d-inline">
-                  <button type="submit" class="btn btn-primary btn-lg mb-3 px-4 position-relative" style="animation-delay:0.6s;">
-                    {{ _('Подай сигнал за помощ') }}
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.8em;">
-                        NEW
-                    </span>
-                  </button>
-                </form>
-                <br>
-                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm mb-3">Админ панел</a>
-                <!-- Стъпки -->
-                <div class="row mt-4 mb-2">
-                  <div class="col-md-4 mb-3">
-                    <div class="fs-2 text-primary step-icon"><i class="bi bi-bullhorn"></i></div>
-                    <div>Подай сигнал</div>
-                  </div>
-                  <div class="col-md-4 mb-3">
-                    <div class="fs-2 text-success"><i class="bi bi-people"></i></div>
-                    <div>Доброволец откликва</div>
-                  </div>
-                  <div class="col-md-4 mb-3">
-                    <div class="fs-2 text-danger"><i class="bi bi-heart-fill"></i></div>
-                    <div>Получаваш помощ</div>
-                  </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="mt-4 mb-2 social-icons">
-      <a href="https://facebook.com/helpchain.live" class="me-2 text-primary" aria-label="Facebook" target="_blank"><i class="bi bi-facebook fs-3"></i></a>
-      <a href="https://t.me/helpchain_live" class="me-2 text-info" aria-label="Telegram" target="_blank"><i class="bi bi-telegram fs-3"></i></a>
-      <a href="mailto:info@helpchain.live" class="text-danger" aria-label="Email"><i class="bi bi-envelope fs-3"></i></a>
-    </div>
-
-    <a href="#why" class="btn btn-outline-primary mb-4">Защо да се включа?</a>
-
-    <div id="why" class="mt-5 mb-4">
-      <h4 class="mb-3 text-primary">Защо да се включа?</h4>
-      <ul class="list-unstyled">
-        <li>✔ Помагаш на хора в нужда</li>
-        <li>✔ Ставаш част от общност</li>
-        <li>✔ Получаваш признание и нови приятели</li>
-      </ul>
-    </div>
-
-    <div class="mt-5">
-      <blockquote class="blockquote">
-        <p>„Благодарение на  https://helpchain.live/най-много имах нужда!“</p>
-        <footer class="blockquote-footer">Мария, София</footer>
-      </blockquote>
-    </div>
-    <div class="mt-3">
-      <blockquote class="blockquote">
-        <p>„И аз станах доброволец и се чувствам полезен!“</p>
-        <footer class="blockquote-footer">Георги, Пловдив</footer>
-      </blockquote>
-    </div>
-
-    <p class="lead slogan mb-4">Заедно можем повече!</p>
-
-    <footer class="text-center mt-5 mb-3 small text-muted">
-        © 2025 HelpChain.live |
-        <a href="mailto:info@helpchain.live">Email</a> |
-        <a href="https://facebook.com/helpchain.live" target="_blank">Facebook</a> |
-        <a href="#">Условия</a> |
-        <a href="#">Политика за поверителност</a>
-    </footer>
-
-    <!-- В края на body -->
-<div id="feedback-popup" style="display:none;position:fixed;bottom:30px;right:30px;z-index=9999;background:#fff;border-radius:12px;box-shadow:0 4px 24px #1976d244;padding:1.2em 1.5em;">
-  <strong>Имате идея или проблем?</strong><br>
-  <a href="mailto:info@helpchain.live" class="btn-sm btn-primary mt-2">Пишете ни</a>
-  <button onclick="document.getElementById('feedback-popup').style.display='none'" style="position:absolute;top:8px;right:12px;background:none;border:none;font-size:1.2em;">&times;</button>
-</div>
-<script>
-  setTimeout(function(){
-    document.getElementById('feedback-popup').style.display='block';
-  }, 4000);
-</script>
-</body>
-</html>
 {% extends "base.html" %}
 {% block title %}HelpChain{% endblock %}
 
 {% block content %}
-  <h1>Добре дошли в HelpChain</h1>
-  <a href="{{ url_for('submit_request') }}">Подай заявка</a>
-  <a href="{{ url_for('register') }}">Стани доброволец</a>
+<style>
+.animated-icon {
+  animation: iconBounce 2s infinite;
+}
+@keyframes iconBounce {
+  0%, 100% { transform: translateY(0);}
+  50% { transform: translateY(-10px);}
+}
+.platform-desc {
+  background: linear-gradient(90deg, #e3f2fd 0%, #fff 100%);
+  border-left: 6px solid #1976d2;
+  font-size: 1.25em;
+}
+.sidebar {
+  position: fixed;
+  top: 80px;
+  left: 30px;
+  width: 220px;
+  min-height: 300px;
+  z-index: 1000;
+  background: #fff;
+  box-shadow: 0 4px 24px #1976d244;
+  border-radius: 16px;
+}
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+}
+.max-width-900 {
+  max-width: 900px;
+}
+.badge-new {
+  font-size: 0.8em;
+}
+.volunteers-img {
+  max-width: 350px;
+}
+.testimonial-img {
+  height: 40px;
+}
+#feedback-popup {
+  display: none;
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 9999;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px #1976d244;
+  padding: 1.2em 1.5em;
+}
+.feedback-close-btn {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 1.2em;
+}
+</style>
+<div class="animated-bg"></div>
+  <div class="container mt-5 max-width-900">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 text-center glass py-4 mb-5">
+        <img src="{{ url_for('static', filename='hands-heart.png') }}" alt="Сърце с ръце" class="heart-img mb-4 mt-2">
+        <!-- SVG анимация -->
+        <svg class="hero-svg mb-4" viewBox="0 0 320 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="160" cy="220" rx="60" ry="18" fill="#e0e0e0"/>
+          <circle cx="160" cy="80" r="38" fill="#ffe0b2"/>
+          <rect x="120" y="110" width="80" height="70" rx="30" fill="#1976d2"/>
+          <rect x="70" y="120" width="60" height="18" rx="9" fill="#ffe0b2" transform="rotate(-20 70 120)"/>
+          <rect x="190" y="120" width="60" height="18" rx="9" fill="#ffe0b2" transform="rotate(20 250 120)"/>
+          <g class="europe-map">
+            <path d="M120 140 Q140 120 170 130 Q200 140 190 170 Q180 200 140 190 Q110 180 120 140 Z"
+                  fill="#81d4fa" stroke="#1976d2" stroke-width="2"/>
+            <ellipse cx="155" cy="160" rx="10" ry="5" fill="#1976d2" opacity="0.3"/>
+            <ellipse cx="170" cy="150" rx="6" ry="3" fill="#1976d2" opacity="0.3"/>
+          </g>
+          <path d="M148 92 Q160 105 172 92" stroke="#b8860b" stroke-width="3" fill="none"/>
+          <ellipse cx="148" cy="80" rx="4" ry="6" fill="#333"/>
+          <ellipse cx="172" cy="80" rx="4" ry="6" fill="#333"/>
+        </svg>
+        <h1 class="mb-4 mt-4">{{ _("Добре дошли!") }}</h1>
+        <div class="platform-desc mb-4 py-3 px-4 rounded shadow-sm bg-light d-flex align-items-center justify-content-center">
+          <i class="fa fa-hands-helping fa-lg text-primary me-3"></i>
+          <div>
+            <span class="fw-semibold text-primary">HelpChain.live</span> свързва хора в нужда с доброволци, готови да помогнат.<br>
+            <span class="text-secondary">Заедно изграждаме общество, в което всеки има значение.</span>
+          </div>
+        </div>
+        <form action="{{ url_for('submit_request') }}" method="get" class="d-inline mb-4">
+          <button type="submit" class="btn btn-primary btn-lg mb-4 px-4 position-relative">
+            {{ _('Подай сигнал за помощ') }}
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger badge-new">
+                NEW
+            </span>
+          </button>
+        </form>
+        <br>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm mb-4">Админ панел</a>
+        <div class="row mt-4 mb-4">
+  <div class="col-md-4 mb-4">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body text-center">
+        <i class="fa fa-bullhorn fa-2x text-primary animated-icon"></i>
+        <h5 class="mt-3">Подай сигнал</h5>
+        <p>Сподели проблема си лесно и бързо.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body text-center">
+        <i class="fa fa-users fa-2x text-success animated-icon"></i>
+        <h5 class="mt-3">Доброволец откликва</h5>
+        <p>Нашите доброволци са винаги готови да помогнат.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 mb-4">
+    <div class="card shadow-sm border-0 h-100">
+      <div class="card-body text-center">
+        <i class="fa fa-heart fa-2x text-danger animated-icon"></i>
+        <h5 class="mt-3">Получаваш помощ</h5>
+        <p>Реална подкрепа за теб и твоите близки.</p>
+      </div>
+    </div>
+  </div>
+</div>
+        <!-- Добави снимка на доброволци тук -->
+        <img src="{{ url_for('static', filename='volunteers.jpg') }}" alt="Доброволци" class="img-fluid rounded shadow mb-5 volunteers-img">
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-5 mb-5 social-icons">
+    <a href="https://facebook.com/helpchain.live" class="me-2 text-primary" aria-label="Facebook" target="_blank" rel="noopener"><i class="bi bi-facebook fs-3"></i></a>
+    <a href="https://t.me/helpchain_live" class="me-2 text-info" aria-label="Telegram" target="_blank" rel="noopener"><i class="bi bi-telegram fs-3"></i></a>
+    <a href="mailto:info@helpchain.live" class="text-danger" aria-label="Email"><i class="bi bi-envelope fs-3"></i></a>
+  </div>
+
+  <a href="#why" class="btn btn-outline-primary mb-5">Защо да се включа?</a>
+
+  <div id="why" class="mt-5 mb-5 py-4 px-5 bg-why">
+    <!-- съдържание -->
+  </div>
+
+  <div class="row justify-content-center mb-4">
+  <div class="col-auto">
+    <div class="card shadow-sm border-0 px-4 py-3 text-center">
+      <div class="fs-2 fw-bold text-success">{{ volunteers_count }}</div>
+      <div class="text-muted">Доброволци</div>
+    </div>
+  </div>
+  <div class="col-auto">
+    <div class="card shadow-sm border-0 px-4 py-3 text-center">
+      <div class="fs-2 fw-bold text-primary">{{ signals_count }}</div>
+      <div class="text-muted">Подадени сигнали</div>
+    </div>
+  </div>
+</div>
+
+  <div class="mt-5 mb-5">
+    <blockquote class="blockquote mb-4">
+      <img src="{{ url_for('static', filename='maria.jpg') }}" alt="Мария" class="rounded-circle me-2 testimonial-img">
+      <p>„Благодарение на helpchain.live най-много имах нужда!“</p>
+      <footer class="blockquote-footer">Мария, София</footer>
+    </blockquote>
+    <!-- още отзиви -->
+  </div>
+
+  <div class="alert alert-success mb-5 py-4 fs-5">
+    Стани доброволец днес и промени нечий живот!
+  </div>
+
+  <p class="lead slogan mb-5">Заедно можем повече!</p>
+
+  <div id="feedback-popup">
+    <strong>Имате идея или проблем?</strong><br>
+    <a href="mailto:info@helpchain.live" class="btn-sm btn-primary mt-2">Пишете ни</a>
+    <button type="button" onclick="document.getElementById('feedback-popup').style.display='none'" class="feedback-close-btn">&times;</button>
+  </div>
+  <script>
+    setTimeout(function(){
+      const popup = document.getElementById('feedback-popup');
+      popup.style.display='block';
+      popup.style.opacity='0';
+      popup.style.transition='opacity 0.8s';
+      setTimeout(()=>popup.style.opacity='1', 50);
+    }, 4000);
+  </script>
+  <div id="testimonials" class="mt-5 mb-5">
+    <blockquote class="blockquote mb-4">
+      <img src="{{ url_for('static', filename='maria.jpg') }}" alt="Мария" class="rounded-circle me-2 testimonial-img">
+      <p id="testimonial-text">„Благодарение на helpchain.live най-много имах нужда!“</p>
+      <footer class="blockquote-footer" id="testimonial-author">Мария, София</footer>
+    </blockquote>
+  </div>
+  <script>
+const testimonials = [
+  {text: "„Благодарение на helpchain.live най-много имах нужда!“", author: "Мария, София"},
+  {text: "„Екипът реагира бързо и професионално!“", author: "Георги, Пловдив"},
+  {text: "„Чувствам се подкрепен и разбран!“", author: "Иван, Варна"}
+];
+let idx = 0;
+setInterval(() => {
+  idx = (idx + 1) % testimonials.length;
+  document.getElementById('testimonial-text').innerText = testimonials[idx].text;
+  document.getElementById('testimonial-author').innerText = testimonials[idx].author;
+}, 4000);
+</script>
+<!-- Примерен sidebar -->
+<div id="sidebar" class="sidebar bg-white shadow rounded py-4 px-3">
+  <h5 class="mb-4 text-primary"><i class="fa fa-bars me-2"></i>Меню</h5>
+  <ul class="nav flex-column">
+    <li class="nav-item mb-2">
+      <a class="nav-link text-dark" href="#" data-bs-toggle="modal" data-bs-target="#newsModal">
+        <i class="fa fa-newspaper me-2"></i>Новини
+      </a>
+    </li>
+    <li class="nav-item mb-2">
+      <a class="nav-link text-dark" href="{{ url_for('volunteer_register') }}">
+        <i class="fa fa-hands-helping me-2"></i>Стани доброволец
+      </a>
+    </li>
+    <li class="nav-item mb-2">
+      <a class="nav-link text-dark" href="#links"><i class="fa fa-link me-2"></i>Полезни връзки</a>
+    </li>
+    <li class="nav-item mb-2">
+      <a class="nav-link text-dark" href="#contacts"><i class="fa fa-envelope me-2"></i>Контакти</a>
+    </li>
+    <li class="nav-item mb-2">
+      <a class="nav-link text-dark" href="{{ url_for('feedback') }}">
+        <i class="fa fa-comment-dots me-2"></i>Обратна връзка
+      </a>
+    </li>
+  </ul>
+</div>
+<!-- Примерни секции за навигация -->
+<div id="news" class="mt-5 mb-5 py-4 px-4 bg-why rounded">
+  <h4 class="text-primary mb-3"><i class="fa fa-newspaper me-2"></i>Новини</h4>
+  <p>HelpChain стартира нова кампания за подкрепа на възрастни хора!</p>
+</div>
+<div id="volunteer" class="mt-5 mb-5 py-4 px-4 bg-light rounded">
+  <h4 class="text-success mb-3"><i class="fa fa-hands-helping me-2"></i>Стани доброволец</h4>
+  <p>Регистрирай се и помогни на хора в нужда – всеки може да бъде герой!</p>
+  <a href="{{ url_for('volunteer_register') }}" class="btn btn-success mt-2">Регистрирай се като доброволец</a>
+</div>
+<div id="links" class="mt-5 mb-5 py-4 px-4 bg-why rounded">
+  <h4 class="text-info mb-3"><i class="fa fa-link me-2"></i>Полезни връзки</h4>
+  <ul>
+    <li><a href="https://redcross.bg/" target="_blank" rel="noopener">БЧК</a></li>
+    <li><a href="https://gov.bg/" target="_blank" rel="noopener">Държавни услуги</a></li>
+  </ul>
+</div>
+<div id="contacts" class="mt-5 mb-5 py-4 px-4 bg-light rounded">
+  <h4 class="text-danger mb-3"><i class="fa fa-envelope me-2"></i>Контакти</h4>
+  <p>Пиши ни на <a href="mailto:info@helpchain.live">info@helpchain.live</a></p>
+</div>
+
+<!-- Модален прозорец за новини -->
+<div class="modal fade" id="newsModal" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4">
+      <div class="modal-header">
+        <h5 class="modal-title" id="newsModalLabel"><i class="fa fa-newspaper me-2"></i>Новини</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Затвори"></button>
+      </div>
+      <div class="modal-body">
+        <h6 class="text-primary mb-2">HelpChain стартира нова кампания за подкрепа на възрастни хора!</h6>
+        <p>От 1 август 2025 г. доброволците ни ще посещават домове на възрастни хора и ще оказват помощ с пазаруване, лекарства и социална подкрепа.</p>
+        <p class="text-muted small">Публикувано на: 23 юли 2025 г.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="table-responsive">
+    <table class="table">
+        ...
+    </table>
+</div>
 {% endblock %}

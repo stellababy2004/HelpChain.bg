@@ -3,14 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Volunteer Dashboard</title>
-    <style>
-        body { font-family: Arial; margin: 2em; background-color: #f7f7f7; }
-        .request { border: 1px solid #ccc; background: white; padding: 1em; margin-bottom: 1em; border-radius: 8px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
-        .buttons { margin-top: 10px; }
-        button { margin-right: 5px; padding: 5px 10px; }
-        form { display: inline; }
-        select { margin-bottom: 1em; padding: 0.4em; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
 </head>
 <body>
     {% extends "base.html" %}
@@ -23,7 +17,7 @@
     <!-- Филтриране по статус -->
     <form method="GET" action="{{ url_for('dashboard') }}">
         <label for="status">Filter by status:</label>
-        <select name="status" onchange="this.form.submit()">
+        <select name="status" id="status" title="Filter help requests by status" onchange="this.form.submit()">
             <option value="All" {% if filter_status == 'All' %}selected{% endif %}>All</option>
             <option value="In Progress" {% if filter_status == 'In Progress' %}selected{% endif %}>In Progress</option>
             <option value="Resolved" {% if filter_status == 'Resolved' %}selected{% endif %}>Resolved</option>
@@ -31,9 +25,9 @@
     </form>
 
     {% if requests %}
-        <table border="1" cellpadding="8" cellspacing="0" style="background:#fff; margin-bottom:2em; width:100%;">
+        <table class="vol-table">
             <thead>
-                <tr style="background:#f0f0f0;">
+                <tr>
                     <th>ID</th>
                     <th>Name</th>
                     <th>Email</th>
@@ -52,11 +46,11 @@
                     <td>{{ request.status }}</td>
                     <td>
                         {% if request.status != "Resolved" %}
-                        <form method="POST" action="/resolve/{{ request.id }}" style="display:inline;">
+                        <form method="POST" action="/resolve/{{ request.id }}" class="inline-form">
                             <button type="submit">✅</button>
                         </form>
                         {% endif %}
-                        <form method="POST" action="/delete/{{ request.id }}" style="display:inline;">
+                        <form method="POST" action="/delete/{{ request.id }}" class="inline-form">
                             <button type="submit" onclick="return confirm('Are you sure?')">🗑️</button>
                         </form>
                     </td>
@@ -75,6 +69,12 @@
     <a href="{{ url_for('dashboard') }}">Табло</a>
 
     <!-- Линк към доброволците -->
+    <a href="{{ url_for('volunteers') }}">Доброволци</a>
+
+    <a href="{{ url_for('submit_request') }}">← Back to Help Form</a>
+    {% endblock %}
+</body>
+</html>
     <a href="{{ url_for('volunteers') }}">Доброволци</a>
 
     <a href="{{ url_for('submit_request') }}">← Back to Help Form</a>

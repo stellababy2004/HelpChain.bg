@@ -7,7 +7,7 @@
 
 <form method="POST">
   <label for="language">Избери съществуващ език:</label>
-  <select name="language" class="form-select mb-3">
+  <select id="language" name="language" class="form-select mb-3">
     <option value="">-- избери език --</option>
     {% for lang in languages %}
       <option value="{{ lang }}">{{ lang }}</option>
@@ -22,4 +22,3 @@
 
 <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">⬅ Назад</a>
 {% endblock %}
-logs_dict=logs_dict

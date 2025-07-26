@@ -5,14 +5,54 @@
 {% block content %}
 <div class="container mt-5">
     <h2 class="mb-4 text-primary">Подай сигнал за помощ</h2>
-    <form method="POST" action="{{ url_for('submit_request') }}">
+    <div class="mb-3">
+        <strong>Примерни ситуации:</strong>
+        <ul>
+            <li>Нужда от медицинска помощ</li>
+            <li>Социална подкрепа</li>
+            <li>Технически проблем</li>
+        </ul>
+    </div>
+    <form method="POST" action="{{ url_for('submit_request') }}" enctype="multipart/form-data">
         <div class="mb-3">
             <label for="name" class="form-label">Вашето име:</label>
             <input type="text" class="form-control" id="name" name="name" required>
         </div>
         <div class="mb-3">
+            <label for="email" class="form-label">Имейл адрес:</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <div class="mb-3">
+            <label for="category" class="form-label">Категория на проблема:</label>
+            <select class="form-select" id="category" name="category" required>
+                <option value="">Изберете...</option>
+                <option value="health">Здраве</option>
+                <option value="social">Социална помощ</option>
+                <option value="technical">Техническа помощ</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="location" class="form-label">Локация/адрес:</label>
+            <input type="text" class="form-control" id="location" name="location">
+        </div>
+        <div class="mb-3">
             <label for="problem" class="form-label">Описание на проблема:</label>
             <textarea class="form-control" id="problem" name="problem" rows="4" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="file" class="form-label">Прикачете файл/снимка (по желание):</label>
+            <input type="file" class="form-control" id="file" name="file">
+        </div>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+            <label class="form-check-label" for="terms">
+                Съгласен съм с <a href="/terms" target="_blank">условията за ползване</a> и <a href="/privacy" target="_blank">политиката за поверителност</a>.
+            </label>
+        </div>
+        <div class="mb-3">
+            <!-- Примерен Captcha (не работещ, само визуално) -->
+            <label for="captcha" class="form-label">Въведете кода: <strong>7G5K</strong></label>
+            <input type="text" class="form-control" id="captcha" name="captcha" required>
         </div>
         <button type="submit" class="btn btn-primary">Изпрати</button>
     </form>
@@ -21,6 +61,14 @@
 
 {% block scripts %}
 <script>
-    // Примерен скрипт, ако ти трябва
+    // JS валидация за Captcha
+    document.querySelector('form').addEventListener('submit', function(e) {
+        var captcha = document.getElementById('captcha').value.trim();
+        if (captcha !== '7G5K') {
+            e.preventDefault();
+            alert('Моля, въведете правилния код за сигурност.');
+            document.getElementById('captcha').focus();
+        }
+    });
 </script>
 {% endblock %}

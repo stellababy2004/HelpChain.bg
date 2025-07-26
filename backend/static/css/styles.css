@@ -1,0 +1,31 @@
+.feedback-container {
+  max-width: 500px;
+}
+
+/* Мобилен padding за бутони */
+button, .btn {
+    padding: 12px 20px;
+    font-size: 1.1rem;
+}
+
+/* Dropdown за език на мобилно */
+form select.form-select {
+    font-size: 1.05rem;
+    padding: 8px 12px;
+}
+
+@media (max-width: 600px) {
+  button, .btn {
+    width: 100%;
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+}
+
+/* Responsive таблица */
+.table-responsive {
+    overflow-x: auto;
+}

@@ -8,17 +8,22 @@
   <form method="POST" action="{{ url_for('submit_request') }}">
     <div class="mb-3">
       <label for="name" class="form-label">Име:</label>
-      <input type="text" id="name" name="name" class="form-control" required>
+      <input type="text" id="name" name="name" class="form-control" required placeholder="Въведете вашето име">
+    </div>
+
+    <div class="mb-3">
+      <label for="phone" class="form-label">Телефон (по избор):</label>
+      <input type="tel" id="phone" name="phone" class="form-control" placeholder="08XXXXXXXX">
     </div>
 
     <div class="mb-3">
       <label for="email" class="form-label">Имейл за връзка:</label>
-      <input type="email" id="email" name="email" class="form-control" required>
+      <input type="email" id="email" name="email" class="form-control" required placeholder="example@email.com">
     </div>
 
     <div class="mb-3">
       <label for="message" class="form-label">Каква помощ ви е необходима?</label>
-      <textarea id="message" name="message" rows="4" class="form-control" required></textarea>
+      <textarea id="message" name="message" rows="4" class="form-control" required placeholder="Опишете ситуацията"></textarea>
     </div>
 
     <button type="submit" class="btn btn-primary">Изпрати сигнал</button>

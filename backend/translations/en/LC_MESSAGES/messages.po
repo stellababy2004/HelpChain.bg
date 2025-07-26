@@ -1,22 +1,829 @@
-python -m babel.messages.frontend compile -d translations
+# English translations for PROJECT.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-07-25 09:43+0200\n"
+"PO-Revision-Date: 2025-07-25 09:46+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
 
-msgid "Send Request"
-msgstr "Send Request"
-
-msgid "Name"
-msgstr "Name"
-
-msgid "Email"
-msgstr "Email"
-
-msgid "What kind of help do you need?"
-msgstr "What kind of help do you need?"
-
+#: templates/index.html:86
 msgid "Добре дошли!"
-msgstr "Welcome!"
+msgstr ""
 
-msgid "Тази платформа е създадена, за да свърже хора в нужда с доброволци."
-msgstr "This platform is created to connect people in need with volunteers."
+#: templates/index.html:96
+msgid "Подай сигнал за помощ"
+msgstr ""
 
-msgid "Подай сигнал"
-msgstr "Send Request"
+#: venv/Lib/site-packages/click/_termui_impl.py:600
+#, python-brace-format
+msgid "{editor}: Editing failed"
+msgstr ""
+
+#: venv/Lib/site-packages/click/_termui_impl.py:604
+#, python-brace-format
+msgid "{editor}: Editing failed: {e}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1084
+#: venv/Lib/site-packages/click/core.py:1121
+#, python-brace-format
+msgid "{text} {deprecated_message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1140
+msgid "Options"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1202
+#, python-brace-format
+msgid "Got unexpected extra argument ({args})"
+msgid_plural "Got unexpected extra arguments ({args})"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/click/core.py:1221
+#, python-brace-format
+msgid "DeprecationWarning: The command {name!r} is deprecated.{extra_message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1405
+msgid "Aborted!"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1779
+msgid "Commands"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1810
+msgid "Missing command."
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:1888
+#, python-brace-format
+msgid "No such command {name!r}."
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2303
+msgid "Value must be an iterable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2324
+#, python-brace-format
+msgid "Takes {nargs} values but 1 was given."
+msgid_plural "Takes {nargs} values but {len} were given."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/click/core.py:2404
+#, python-brace-format
+msgid ""
+"DeprecationWarning: The {param_type} {name!r} is "
+"deprecated.{extra_message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2807
+#, python-brace-format
+msgid "env var: {var}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2810
+#, python-brace-format
+msgid "default: {default}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2814
+msgid "required"
+msgstr ""
+
+#: venv/Lib/site-packages/click/core.py:2870
+msgid "(dynamic)"
+msgstr ""
+
+#: venv/Lib/site-packages/click/decorators.py:465
+#, python-format
+msgid "%(prog)s, version %(version)s"
+msgstr ""
+
+#: venv/Lib/site-packages/click/decorators.py:522
+msgid "Show the version and exit."
+msgstr ""
+
+#: venv/Lib/site-packages/click/decorators.py:548
+msgid "Show this message and exit."
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:50
+#: venv/Lib/site-packages/click/exceptions.py:89
+#, python-brace-format
+msgid "Error: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:81
+#, python-brace-format
+msgid "Try '{command} {option}' for help."
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:130
+#, python-brace-format
+msgid "Invalid value: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:132
+#, python-brace-format
+msgid "Invalid value for {param_hint}: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:190
+msgid "Missing argument"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:192
+msgid "Missing option"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:194
+msgid "Missing parameter"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:196
+#, python-brace-format
+msgid "Missing {param_type}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:203
+#, python-brace-format
+msgid "Missing parameter: {param_name}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:223
+#, python-brace-format
+msgid "No such option: {name}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:235
+#, python-brace-format
+msgid "Did you mean {possibility}?"
+msgid_plural "(Possible options: {possibilities})"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/click/exceptions.py:282
+msgid "unknown error"
+msgstr ""
+
+#: venv/Lib/site-packages/click/exceptions.py:289
+#, python-brace-format
+msgid "Could not open file {filename!r}: {message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/formatting.py:156
+msgid "Usage:"
+msgstr ""
+
+#: venv/Lib/site-packages/click/parser.py:200
+#, python-brace-format
+msgid "Argument {name!r} takes {nargs} values."
+msgstr ""
+
+#: venv/Lib/site-packages/click/parser.py:383
+#, python-brace-format
+msgid "Option {name!r} does not take a value."
+msgstr ""
+
+#: venv/Lib/site-packages/click/parser.py:444
+#, python-brace-format
+msgid "Option {name!r} requires an argument."
+msgid_plural "Option {name!r} requires {nargs} arguments."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/click/shell_completion.py:326
+msgid "Shell completion is not supported for Bash versions older than 4.4."
+msgstr ""
+
+#: venv/Lib/site-packages/click/shell_completion.py:333
+msgid "Couldn't detect Bash version, shell completion is not supported."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:162
+msgid "Repeat for confirmation"
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:178
+msgid "Error: The value you entered was invalid."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:180
+#, python-brace-format
+msgid "Error: {e.message}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:191
+msgid "Error: The two entered values do not match."
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:247
+msgid "Error: invalid input"
+msgstr ""
+
+#: venv/Lib/site-packages/click/termui.py:866
+msgid "Press any key to continue..."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:332
+#, python-brace-format
+msgid ""
+"Choose from:\n"
+"\t{choices}"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:369
+#, python-brace-format
+msgid "{value!r} is not {choice}."
+msgid_plural "{value!r} is not one of {choices}."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/click/types.py:460
+#, python-brace-format
+msgid "{value!r} does not match the format {format}."
+msgid_plural "{value!r} does not match the formats {formats}."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/click/types.py:482
+#, python-brace-format
+msgid "{value!r} is not a valid {number_type}."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:538
+#, python-brace-format
+msgid "{value} is not in the range {range}."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:679
+#, python-brace-format
+msgid "{value!r} is not a valid boolean."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:703
+#, python-brace-format
+msgid "{value!r} is not a valid UUID."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:893
+msgid "file"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:895
+msgid "directory"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:897
+msgid "path"
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:944
+#, python-brace-format
+msgid "{name} {filename!r} does not exist."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:953
+#, python-brace-format
+msgid "{name} {filename!r} is a file."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:961
+#, python-brace-format
+msgid "{name} {filename!r} is a directory."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:970
+#, python-brace-format
+msgid "{name} {filename!r} is not readable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:979
+#, python-brace-format
+msgid "{name} {filename!r} is not writable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:988
+#, python-brace-format
+msgid "{name} {filename!r} is not executable."
+msgstr ""
+
+#: venv/Lib/site-packages/click/types.py:1055
+#, python-brace-format
+msgid "{len_type} values are required, but {len_value} was given."
+msgid_plural "{len_type} values are required, but {len_value} were given."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/rediscli.py:113
+msgid "Cli: Invalid command."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:374
+msgid "File required."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:379
+msgid "Invalid file type."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:404
+msgid "Invalid name"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:774
+#, python-format
+msgid "File \"%(name)s\" already exists."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:819
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:916
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:978
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1031
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1078
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1130
+#: venv/Lib/site-packages/flask_admin/model/base.py:2290
+msgid "Permission denied."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:912
+msgid "File uploading is disabled."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:923
+#, python-format
+msgid "Successfully saved file: %(name)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:927
+#, python-format
+msgid "Failed to save file: %(error)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:935
+msgid "Upload File"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:974
+msgid "Directory creation is disabled."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:987
+#, python-format
+msgid "Successfully created directory: %(directory)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:991
+#, python-format
+msgid "Failed to create directory: %(error)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1001
+msgid "Create Directory"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1027
+msgid "Deletion is disabled."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1036
+msgid "Directory deletion is disabled."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1042
+#, python-format
+msgid "Directory \"%(path)s\" was successfully deleted."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1044
+#, python-format
+msgid "Failed to delete directory: %(error)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1050
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1205
+#, python-format
+msgid "File \"%(name)s\" was successfully deleted."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1052
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1207
+#, python-format
+msgid "Failed to delete file: %(name)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1074
+msgid "Renaming is disabled."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1082
+msgid "Path does not exist."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1091
+#, python-format
+msgid "Successfully renamed \"%(src)s\" to \"%(dst)s\""
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1095
+#, python-format
+msgid "Failed to rename: %(error)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1108
+#, python-format
+msgid "Rename %(name)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1145
+#, python-format
+msgid "Error saving changes to %(name)s."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1149
+#, python-format
+msgid "Changes to %(name)s saved successfully."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1157
+#, python-format
+msgid "Error reading %(name)s."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1160
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1169
+#, python-format
+msgid "Unexpected error while reading from %(name)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1166
+#, python-format
+msgid "Cannot edit %(name)s."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1184
+#, python-format
+msgid "Editing %(path)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/__init__.py:1196
+msgid "File deletion is disabled."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/fileadmin/s3.py:156
+msgid "Cannot operate on non empty directories"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/mongoengine/view.py:558
+#, python-format
+msgid "Failed to get model. %(error)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/mongoengine/view.py:577
+#: venv/Lib/site-packages/flask_admin/contrib/peewee/view.py:462
+#: venv/Lib/site-packages/flask_admin/contrib/pymongo/view.py:317
+#: venv/Lib/site-packages/flask_admin/contrib/sqla/view.py:1166
+#, python-format
+msgid "Failed to create record. %(error)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/mongoengine/view.py:603
+#: venv/Lib/site-packages/flask_admin/contrib/peewee/view.py:481
+#: venv/Lib/site-packages/flask_admin/contrib/pymongo/view.py:342
+#: venv/Lib/site-packages/flask_admin/contrib/sqla/view.py:1192
+#: venv/Lib/site-packages/flask_admin/model/base.py:2427
+#: venv/Lib/site-packages/flask_admin/model/base.py:2434
+#: venv/Lib/site-packages/flask_admin/model/base.py:2437
+#, python-format
+msgid "Failed to update record. %(error)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/mongoengine/view.py:626
+#: venv/Lib/site-packages/flask_admin/contrib/peewee/view.py:496
+#: venv/Lib/site-packages/flask_admin/contrib/pymongo/view.py:367
+#: venv/Lib/site-packages/flask_admin/contrib/sqla/view.py:1217
+#, python-format
+msgid "Failed to delete record. %(error)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/mongoengine/view.py:676
+#: venv/Lib/site-packages/flask_admin/contrib/peewee/view.py:532
+#: venv/Lib/site-packages/flask_admin/contrib/pymongo/view.py:396
+#: venv/Lib/site-packages/flask_admin/contrib/sqla/view.py:1254
+#: venv/Lib/site-packages/flask_admin/model/base.py:2238
+#, python-format
+msgid "Record was successfully deleted."
+msgid_plural "%(count)s records were successfully deleted."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/mongoengine/view.py:682
+#: venv/Lib/site-packages/flask_admin/contrib/peewee/view.py:538
+#: venv/Lib/site-packages/flask_admin/contrib/pymongo/view.py:401
+#: venv/Lib/site-packages/flask_admin/contrib/sqla/view.py:1262
+#, python-format
+msgid "Failed to delete records. %(error)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/sqla/fields.py:127
+#: venv/Lib/site-packages/flask_admin/contrib/sqla/fields.py:177
+#: venv/Lib/site-packages/flask_admin/contrib/sqla/fields.py:182
+#: venv/Lib/site-packages/flask_admin/model/fields.py:178
+#: venv/Lib/site-packages/flask_admin/model/fields.py:227
+msgid "Not a valid choice"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/sqla/validators.py:44
+msgid "Already exists."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/sqla/validators.py:64
+#, python-format
+msgid "At least %(num)d item is required"
+msgid_plural "At least %(num)d items are required"
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/sqla/validators.py:79
+msgid "Not a valid ISO currency code (e.g. USD, EUR, CNY)."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/sqla/validators.py:87
+msgid "Not a valid color (e.g. \"red\", \"#f00\", \"#ff0000\")."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/contrib/sqla/view.py:1130
+#, python-format
+msgid "Integrity error. %(message)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/form/fields.py:98
+msgid "Invalid time format"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/form/fields.py:147
+msgid "Invalid Choice: could not coerce"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/form/fields.py:221
+msgid "Invalid JSON"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/form/upload.py:213
+msgid "Invalid file extension"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/form/upload.py:220
+#: venv/Lib/site-packages/flask_admin/form/upload.py:290
+#, python-format
+msgid "File \"%s\" already exists."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/form/validators.py:16
+msgid "This field requires at least one item."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/model/base.py:1702
+msgid "There are no items in the table."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/model/base.py:1711
+#, python-format
+msgid "Invalid Filter Value: %(value)s"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/model/base.py:2102
+msgid "Record was successfully created."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/model/base.py:2146
+#: venv/Lib/site-packages/flask_admin/model/base.py:2198
+#: venv/Lib/site-packages/flask_admin/model/base.py:2231
+#: venv/Lib/site-packages/flask_admin/model/base.py:2419
+msgid "Record does not exist."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/model/base.py:2155
+#: venv/Lib/site-packages/flask_admin/model/base.py:2423
+msgid "Record was successfully saved."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/model/base.py:2344
+msgid "Tablib dependency not installed."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/model/base.py:2371
+#, python-format
+msgid "Export type \"%(type)s not supported."
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/model/template.py:79
+#: venv/Lib/site-packages/flask_admin/model/template.py:86
+msgid "View Record"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/model/template.py:93
+#: venv/Lib/site-packages/flask_admin/model/template.py:100
+msgid "Edit Record"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/model/template.py:107
+msgid "Delete Record"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/model/widgets.py:62
+msgid "Please select model"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/model/widgets.py:116
+msgid "No"
+msgstr ""
+
+#: venv/Lib/site-packages/flask_admin/model/widgets.py:117
+msgid "Yes"
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:86
+#, python-format
+msgid "Invalid field name '%s'."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:99
+#, python-format
+msgid "Field must be equal to %(other_name)s."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:146
+#, python-format
+msgid "Field must be at least %(min)d character long."
+msgid_plural "Field must be at least %(min)d characters long."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:152
+#, python-format
+msgid "Field cannot be longer than %(max)d character."
+msgid_plural "Field cannot be longer than %(max)d characters."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:158
+#, python-format
+msgid "Field must be exactly %(max)d character long."
+msgid_plural "Field must be exactly %(max)d characters long."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:164
+#, python-format
+msgid "Field must be between %(min)d and %(max)d characters long."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:216
+#, python-format
+msgid "Number must be at least %(min)s."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:219
+#, python-format
+msgid "Number must be at most %(max)s."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:222
+#, python-format
+msgid "Number must be between %(min)s and %(max)s."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:293
+#: venv/Lib/site-packages/wtforms/validators.py:323
+msgid "This field is required."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:358
+msgid "Invalid input."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:422
+msgid "Invalid email address."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:460
+msgid "Invalid IP address."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:503
+msgid "Invalid Mac address."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:540
+msgid "Invalid URL."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:561
+msgid "Invalid UUID."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:595
+#, python-format
+msgid "Invalid value, must be one of: %(values)s."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:631
+#, python-format
+msgid "Invalid value, can't be any of: %(values)s."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:700
+msgid "This field cannot be edited."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/validators.py:716
+msgid "This field is disabled and cannot have a value."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/csrf/core.py:96
+msgid "Invalid CSRF Token."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/csrf/session.py:64
+msgid "CSRF token missing."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/csrf/session.py:72
+msgid "CSRF failed."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/csrf/session.py:77
+msgid "CSRF token expired."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/fields/choices.py:142
+msgid "Invalid Choice: could not coerce."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/fields/choices.py:149
+#: venv/Lib/site-packages/wtforms/fields/choices.py:203
+msgid "Choices cannot be None."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/fields/choices.py:155
+msgid "Not a valid choice."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/fields/choices.py:194
+msgid "Invalid choice(s): one or more data inputs could not be coerced."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/fields/choices.py:212
+#, python-format
+msgid "'%(value)s' is not a valid choice for this field."
+msgid_plural "'%(value)s' are not valid choices for this field."
+msgstr[0] ""
+msgstr[1] ""
+
+#: venv/Lib/site-packages/wtforms/fields/datetime.py:52
+msgid "Not a valid datetime value."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/fields/datetime.py:78
+msgid "Not a valid date value."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/fields/datetime.py:104
+msgid "Not a valid time value."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/fields/datetime.py:149
+msgid "Not a valid week value."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/fields/numeric.py:82
+#: venv/Lib/site-packages/wtforms/fields/numeric.py:92
+msgid "Not a valid integer value."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/fields/numeric.py:168
+msgid "Not a valid decimal value."
+msgstr ""
+
+#: venv/Lib/site-packages/wtforms/fields/numeric.py:197
+msgid "Not a valid float value."
+msgstr ""
+

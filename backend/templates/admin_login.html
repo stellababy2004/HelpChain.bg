@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Вход за админ{% endblock %}
+{% block content %}
+<div class="container mt-5" style="max-width:400px;">
+    <h2 class="mb-4 text-primary">Вход за администратор</h2>
+    {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    <form method="POST">
+        <div class="mb-3">
+            <label for="username" class="form-label">Потребителско име:</label>
+            <input type="text" class="form-control" id="username" name="username" required autofocus>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Парола:</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Вход</button>
+    </form>
+</div>
+{% endblock %}
