@@ -6,3 +6,4 @@ flask_babel
 flask_wtf
 email_validator
 flask-admin
+python-dotenv
