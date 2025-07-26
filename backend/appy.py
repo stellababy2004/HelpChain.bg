@@ -1,5 +1,5 @@
 import os
-fr
+
 # Създай папката instance ако не съществува
 os.makedirs(os.path.join(os.path.dirname(__file__), "instance"), exist_ok=True)
 
