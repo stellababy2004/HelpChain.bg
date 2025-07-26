@@ -1,8 +1,5 @@
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
+fr
 # Създай папката instance ако не съществува
 os.makedirs(os.path.join(os.path.dirname(__file__), "instance"), exist_ok=True)
 
@@ -224,6 +221,16 @@ def inject_get_locale():
     def get_locale():
         return request.cookies.get('language') or request.accept_languages.best_match(['bg', 'en'])
     return dict(get_locale=get_locale)
+
+print("MAIL_SERVER:", os.getenv('MAIL_SERVER'))
+print("MAIL_PORT:", os.getenv('MAIL_PORT'))
+print("MAIL_USE_SSL:", os.getenv('MAIL_USE_SSL'))
+print("MAIL_USE_TLS:", os.getenv('MAIL_USE_TLS'))
+print("MAIL_USERNAME:", os.getenv('MAIL_USERNAME'))
+print("MAIL_PASSWORD:", os.getenv('MAIL_PASSWORD'))
+
+if not os.getenv('MAIL_PORT'):
+    raise RuntimeError("MAIL_PORT environment variable is not set!")
 
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
 app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
