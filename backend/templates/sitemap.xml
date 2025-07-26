@@ -24,5 +24,17 @@
      <loc>https://helpchain.live/terms</loc>
      <changefreq>yearly</changefreq>
    </url>
+   <url>
+     <loc>https://helpchain.live/privacy</loc>
+     <changefreq>yearly</changefreq>
+   </url>
+   <url>
+     <loc>https://helpchain.live/register</loc>
+     <changefreq>monthly</changefreq>
+   </url>
+   <url>
+     <loc>https://helpchain.live/volunteers</loc>
+     <changefreq>weekly</changefreq>
+   </url>
    <!-- Добави още адреси при нужда -->
 </urlset>

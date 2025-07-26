@@ -3,49 +3,53 @@ import os
 # Създай папката instance ако не съществува
 os.makedirs(os.path.join(os.path.dirname(__file__), "instance"), exist_ok=True)
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response
-# from flask_sqlalchemy import SQLAlchemy  # НЕ ти трябва, ако не ползваш база
+from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response, jsonify, Response
 import csv
 from io import StringIO
-from flask import Response
 from flask_babel import Babel, _
+from models import db, Volunteer
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
+
+# Абсолютен път до базата за по-голяма сигурност
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(basedir, 'instance', 'volunteers.db')}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db.init_app(app)
 
 # Езици
 app.config['BABEL_DEFAULT_LOCALE'] = 'bg'
 app.config['BABEL_SUPPORTED_LOCALES'] = ['bg', 'en']
 babel = Babel(app)
 
-# @babel.locale_selector
-# def get_locale():
-#     return request.cookies.get('language') or request.accept_languages.best_match(['bg', 'en'])
-
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/volunteers.db'
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# db = SQLAlchemy(app)
-
-# НЕ импортвай моделите!
-# from models import Volunteer, HelpRequest, StatusLog
-
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'pdf'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-app.config['UPLOAD_FOLDER'] = 'uploads'  # папка за файловете
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # макс. размер 5MB
-app.secret_key = 'supersecretkey'  # добави това най-горе, ако го нямаш
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+app.secret_key = 'supersecretkey'
 
-# Създай папката uploads ако не съществува
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
+# Настройки за поща
+app.config['MAIL_SERVER'] = 'smtp.zoho.eu'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USERNAME'] = 'contact@helpchain.live'
+app.config['MAIL_PASSWORD'] = 'eAaPfTsEFZNv'  # без интервали!
+
+mail = Mail(app)
+
 @app.route('/')
 def index():
-    # volunteers_count = Volunteer.query.count()
-    volunteers_count = 0
-    signals_count = 0
+    volunteers_count = Volunteer.query.count()
+    signals_count = 0  # Ако имаш HelpRequest, може да го смениш
     return render_template('index.html', volunteers_count=volunteers_count, signals_count=signals_count)
 
 @app.route('/admin_login', methods=['GET', 'POST'])
@@ -65,7 +69,6 @@ def admin_login():
 def admin_dashboard():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
-    # Примерни данни за таблицата
     requests = {
         'items': [
             {'id': 1, 'name': 'Мария', 'status': 'Активен'},
@@ -83,8 +86,12 @@ def admin_volunteers():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
     search = request.form.get('search', '')
-    # volunteers = Volunteer.query.all()
-    volunteers = []  # Фиктивен празен списък
+    if search:
+        volunteers = Volunteer.query.filter(
+            Volunteer.name.contains(search) | Volunteer.email.contains(search)
+        ).all()
+    else:
+        volunteers = Volunteer.query.all()
     return render_template('admin_volunteers.html', volunteers=volunteers, search=search)
 
 @app.route('/submit_request', methods=['GET', 'POST'])
@@ -99,12 +106,10 @@ def submit_request():
         captcha = request.form.get('captcha')
         file = request.files.get('file')
 
-        # Проверка за Captcha (примерен код)
         if captcha != '7G5K':
             flash('Грешен код за защита!')
             return redirect(url_for('submit_request'))
 
-        # Запис на файла, ако има
         filename = None
         if file and file.filename:
             if not allowed_file(file.filename):
@@ -113,8 +118,6 @@ def submit_request():
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
 
         # Тук можеш да обработиш/запишеш данните (примерно в база)
-        # ...
-
         return render_template('submit_success.html')
     return render_template('submit_request.html')
 
@@ -133,9 +136,9 @@ def volunteer_register():
         email = request.form.get('email')
         phone = request.form.get('phone')
         location = request.form.get('location')
-        # volunteer = Volunteer(name=name, email=email, phone=phone, location=location)
-        # db.session.add(volunteer)
-        # db.session.commit()
+        volunteer = Volunteer(name=name, email=email, phone=phone, location=location)
+        db.session.add(volunteer)
+        db.session.commit()
         flash('Успешна регистрация! Ще се свържем с вас при нужда.')
         return redirect(url_for('volunteer_register'))
     return render_template('volunteer_register.html')
@@ -144,25 +147,24 @@ def volunteer_register():
 def delete_volunteer(id):
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
-    # volunteer = Volunteer.query.get_or_404(id)
-    # db.session.delete(volunteer)
-    # db.session.commit()
-    flash('Доброволецът е изтрит успешно. (фиктивно)')
+    volunteer = Volunteer.query.get_or_404(id)
+    db.session.delete(volunteer)
+    db.session.commit()
+    flash('Доброволецът е изтрит успешно.')
     return redirect(url_for('admin_volunteers'))
 
 @app.route('/edit_volunteer/<int:id>', methods=['GET', 'POST'])
 def edit_volunteer(id):
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
-    # volunteer = Volunteer.query.get_or_404(id)
-    volunteer = None  # Фиктивно
+    volunteer = Volunteer.query.get_or_404(id)
     if request.method == 'POST':
-        # volunteer.name = request.form.get('name')
-        # volunteer.email = request.form.get('email')
-        # volunteer.phone = request.form.get('phone')
-        # volunteer.location = request.form.get('location')
-        # db.session.commit()
-        flash('Данните са обновени успешно. (фиктивно)')
+        volunteer.name = request.form.get('name')
+        volunteer.email = request.form.get('email')
+        volunteer.phone = request.form.get('phone')
+        volunteer.location = request.form.get('location')
+        db.session.commit()
+        flash('Данните са обновени успешно.')
         return redirect(url_for('admin_volunteers'))
     return render_template('edit_volunteer.html', volunteer=volunteer)
 
@@ -170,13 +172,12 @@ def edit_volunteer(id):
 def export_volunteers():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
-    # volunteers = Volunteer.query.all()
-    volunteers = []  # Фиктивен празен списък
+    volunteers = Volunteer.query.all()
     si = StringIO()
     cw = csv.writer(si)
     cw.writerow(['Име', 'Имейл', 'Телефон', 'Град/регион'])
-    # for v in volunteers:
-    #     cw.writerow([v.name, v.email, v.phone, v.location])
+    for v in volunteers:
+        cw.writerow([v.name, v.email, v.phone, v.location])
     output = si.getvalue()
     return Response(
         output,
@@ -198,7 +199,6 @@ def feedback():
         name = request.form.get('name')
         email = request.form.get('email')
         message = request.form.get('message')
-        # Тук можеш да запишеш във файл, база или да изпратиш имейл
         flash('Благодарим за обратната връзка!')
         return redirect(url_for('feedback'))
     return render_template('feedback.html')
@@ -214,7 +214,10 @@ def set_language():
 def admin():
     return redirect(url_for('admin_login'))
 
-# Подаване на _ към всички шаблони
+@app.route('/update_status/<int:req_id>', methods=['POST'])
+def update_status(req_id):
+    return jsonify({"success": True})
+
 @app.context_processor
 def inject_gettext():
     return dict(_=_)
@@ -225,11 +228,5 @@ def inject_get_locale():
         return request.cookies.get('language') or request.accept_languages.best_match(['bg', 'en'])
     return dict(get_locale=get_locale)
 
-with app.app_context():
-    html_body = render_template('email_templates/admin_notification.html',
-                               username='Иван',
-                               email='ivan@example.com',
-                               registration_date='25.07.2025')
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)

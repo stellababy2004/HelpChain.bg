@@ -20,11 +20,11 @@ msgstr ""
 
 #: templates/index.html:86
 msgid "Добре дошли!"
-msgstr ""
+msgstr "Добре дошли!"
 
 #: templates/index.html:96
 msgid "Подай сигнал за помощ"
-msgstr ""
+msgstr "Подай сигнал за помощ"
 
 #: venv/Lib/site-packages/click/_termui_impl.py:600
 #, python-brace-format
@@ -569,7 +569,7 @@ msgstr ""
 msgid "Not a valid color (e.g. \"red\", \"#f00\", \"#ff0000\")."
 msgstr ""
 
-#: venv/Lib/site-packages/flask_admin/contrib/sqla/view.py:1130
+#: venv/Lib/site-packages/flask_admin/view.py:1130
 #, python-format
 msgid "Integrity error. %(message)s"
 msgstr ""

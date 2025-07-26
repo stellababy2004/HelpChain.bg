@@ -10,11 +10,3 @@ class HelpRequest(db.Model):
 
     def __repr__(self):
         return f"<HelpRequest {self.name}>"
-
-# Translations
-translations = {
-    "Send Request": "Envoyer la demande",
-    "Name": "Nom",
-    "Email": "E-mail",
-    "What kind of help do you need?": "Quel type d'aide vous faut-il ?"
-}
