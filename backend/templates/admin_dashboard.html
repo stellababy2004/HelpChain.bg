@@ -24,7 +24,7 @@
                         <ul class="mb-0 pl-3">
                             {% for log in logs_dict[req.id] %}
                                 <li>
-                                    {{ log.status or 'Неизвестен' }}{% if log.changed_at %} – {{ log.changed_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}
+                                    {{ log.status or 'Неизвестен' }}{% if log.changed_at %} – {{ log.changed_at }}{% endif %}
                                 </li>
                             {% endfor %}
                         </ul>
@@ -38,4 +38,3 @@
     </table>
 </div>
 {% endblock %}
-
