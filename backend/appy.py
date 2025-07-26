@@ -36,8 +36,6 @@ app.secret_key = 'supersecretkey'
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-
-
 mail = Mail(app)
 
 @app.route('/')
@@ -222,6 +220,7 @@ def inject_get_locale():
         return request.cookies.get('language') or request.accept_languages.best_match(['bg', 'en'])
     return dict(get_locale=get_locale)
 
+# Debug принтове за mail настройките
 print("MAIL_SERVER:", os.getenv('MAIL_SERVER'))
 print("MAIL_PORT:", os.getenv('MAIL_PORT'))
 print("MAIL_USE_SSL:", os.getenv('MAIL_USE_SSL'))
