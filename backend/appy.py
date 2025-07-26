@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Създай папката instance ако не съществува
 os.makedirs(os.path.join(os.path.dirname(__file__), "instance"), exist_ok=True)
@@ -7,7 +10,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import csv
 from io import StringIO
 from flask_babel import Babel, _
-from models import db, Volunteer
+from backend.models import db, Volunteer
 from flask_mail import Mail, Message
 
 app = Flask(__name__)
@@ -36,13 +39,7 @@ app.secret_key = 'supersecretkey'
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-# Настройки за поща
-app.config['MAIL_SERVER'] = 'smtp.zoho.eu'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USERNAME'] = 'contact@helpchain.live'
-app.config['MAIL_PASSWORD'] = 'eAaPfTsEFZNv'  # без интервали!
+
 
 mail = Mail(app)
 
@@ -227,6 +224,13 @@ def inject_get_locale():
     def get_locale():
         return request.cookies.get('language') or request.accept_languages.best_match(['bg', 'en'])
     return dict(get_locale=get_locale)
+
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
+app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 
 if __name__ == "__main__":
     app.run(debug=True)
