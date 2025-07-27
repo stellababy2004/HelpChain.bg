@@ -9,6 +9,7 @@ from io import StringIO
 from flask_babel import Babel, _
 from backend.models import db, Volunteer
 from flask_mail import Mail, Message
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 
@@ -18,6 +19,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(basedir, 'inst
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
+migrate = Migrate(app, db)
 
 # Езици
 app.config['BABEL_DEFAULT_LOCALE'] = 'bg'
@@ -77,14 +79,24 @@ def admin_dashboard():
 def admin_volunteers():
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
-    search = request.form.get('search', '')
-    if search:
-        volunteers = Volunteer.query.filter(
-            Volunteer.name.contains(search) | Volunteer.email.contains(search)
-        ).all()
-    else:
-        volunteers = Volunteer.query.all()
-    return render_template('admin_volunteers.html', volunteers=volunteers, search=search)
+    volunteers = Volunteer.query.all()
+    return render_template('admin_volunteers.html', volunteers=volunteers)
+
+@app.route('/admin_volunteers/add', methods=['GET', 'POST'])
+def add_volunteer():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        phone = request.form['phone']
+        location = request.form['location']  # <-- нов ред
+        volunteer = Volunteer(name=name, email=email, phone=phone, location=location)
+        db.session.add(volunteer)
+        db.session.commit()
+        flash('Доброволецът е добавен успешно!', 'success')
+        return redirect(url_for('admin_volunteers'))
+    return render_template('add_volunteer.html')
 
 @app.route('/submit_request', methods=['GET', 'POST'])
 def submit_request():
@@ -142,21 +154,21 @@ def delete_volunteer(id):
     volunteer = Volunteer.query.get_or_404(id)
     db.session.delete(volunteer)
     db.session.commit()
-    flash('Доброволецът е изтрит успешно.')
+    flash('Доброволецът е изтрит успешно!', 'success')
     return redirect(url_for('admin_volunteers'))
 
-@app.route('/edit_volunteer/<int:id>', methods=['GET', 'POST'])
+@app.route('/admin_volunteers/edit/<int:id>', methods=['GET', 'POST'])
 def edit_volunteer(id):
     if not session.get('admin_logged_in'):
         return redirect(url_for('admin_login'))
     volunteer = Volunteer.query.get_or_404(id)
     if request.method == 'POST':
-        volunteer.name = request.form.get('name')
-        volunteer.email = request.form.get('email')
-        volunteer.phone = request.form.get('phone')
-        volunteer.location = request.form.get('location')
+        volunteer.name = request.form['name']
+        volunteer.email = request.form['email']
+        volunteer.phone = request.form['phone']
+        volunteer.location = request.form['location']  # Добави и локацията тук
         db.session.commit()
-        flash('Данните са обновени успешно.')
+        flash('Промените са запазени!', 'success')
         return redirect(url_for('admin_volunteers'))
     return render_template('edit_volunteer.html', volunteer=volunteer)
 
@@ -210,6 +222,23 @@ def admin():
 def update_status(req_id):
     return jsonify({"success": True})
 
+@app.route('/admin_volunteers/<int:id>')
+def volunteer_detail(id):
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    volunteer = Volunteer.query.get_or_404(id)
+    return render_template('volunteer_detail.html', volunteer=volunteer)
+
+@app.route('/admin_volunteers/search')
+def search_volunteers():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
+    q = request.args.get('q', '')
+    volunteers = Volunteer.query.filter(
+        (Volunteer.name.ilike(f'%{q}%')) | (Volunteer.email.ilike(f'%{q}%'))
+    ).all()
+    return render_template('admin_volunteers.html', volunteers=volunteers, q=q)
+
 @app.context_processor
 def inject_gettext():
     return dict(_=_)
@@ -228,15 +257,15 @@ print("MAIL_USE_TLS:", os.getenv('MAIL_USE_TLS'))
 print("MAIL_USERNAME:", os.getenv('MAIL_USERNAME'))
 print("MAIL_PASSWORD:", os.getenv('MAIL_PASSWORD'))
 
-if not os.getenv('MAIL_PORT'):
-    raise RuntimeError("MAIL_PORT environment variable is not set!")
-
-app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
-app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
-app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
-app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+if os.getenv('MAIL_PORT'):
+    app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
+    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT'))
+    app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL') == 'True'
+    app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS') == 'True'
+    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+else:
+    print("Warning: MAIL_PORT environment variable is not set! Имейл функционалността няма да работи.")
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -4,6 +4,8 @@
 {% block content %}
 <div class="container mt-5">
     <h2 class="mb-4">Админ панел</h2>
+    <a href="{{ url_for('admin_volunteers') }}" class="btn btn-primary mb-3">Доброволци</a>
+    <a href="{{ url_for('add_volunteer') }}" class="btn btn-success mb-3">Добави доброволец</a>
     <table class="table table-bordered">
         <thead>
             <tr>

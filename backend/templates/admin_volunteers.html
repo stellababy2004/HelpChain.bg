@@ -1,51 +1,47 @@
 {% extends "base.html" %}
-{% block title %}Доброволци{% endblock %}
+{% block title %}Доброволци | HelpChain.live{% endblock %}
+
 {% block content %}
-<style>
-/* Поддържа формата за изтриване на един ред с бутона за редакция */
-.inline-form {
-  display: inline;
-}
-/* Ограничаване ширината на формата за търсене */
-.max-width-400 {
-  max-width: 400px;
-}
-</style>
 <div class="container mt-5">
-  <h2 class="mb-4 text-success">Списък с доброволци</h2>
-  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-primary mb-3">Админ панел</a>
-  <a href="{{ url_for('export_volunteers') }}" class="btn btn-outline-info mb-3 ms-2">Експорт в CSV</a>
-  <form method="POST" class="mb-3 d-flex max-width-400">
-    <input type="text" name="search" class="form-control me-2" placeholder="Търси по име или град" value="{{ search }}">
-    <button type="submit" class="btn btn-outline-success">Търси</button>
-  </form>
-  <table class="table table-bordered table-hover">
-    <thead class="table-light">
-      <tr>
-        <th scope="col">Име</th>
-        <th scope="col">Имейл</th>
-        <th scope="col">Телефон</th>
-        <th scope="col">Град/регион</th>
-        <th scope="col">Действия</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for v in volunteers %}
-      <tr>
-        <td>{{ v.name }}</td>
-        <td>{{ v.email }}</td>
-        <td>{{ v.phone }}</td>
-        <td>{{ v.location }}</td>
-        <td>
-          <a href="{{ url_for('edit_volunteer', id=v.id) }}" class="btn btn-sm btn-warning me-1">Редактирай</a>
-          <!-- бутон за изтриване (пример) -->
-          <form method="POST" action="{{ url_for('delete_volunteer', id=v.id) }}" class="inline-form">
-            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Сигурни ли сте, че искате да изтриете този доброволец?');">Изтрий</button>
-          </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <h2>Списък с доброволци</h2>
+
+    <!-- Форма за търсене -->
+    <form method="get" action="{{ url_for('search_volunteers') }}" class="mb-3">
+        <input type="text" name="q" value="{{ request.args.get('q') }}" placeholder="Търсене по име, имейл или телефон" class="form-control d-inline-block" style="width: auto; display: inline-block;">
+        <button type="submit" class="btn btn-primary">Търси</button>
+    </form>
+
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mb-3">⬅ Назад към админ панел</a>
+    <a href="{{ url_for('add_volunteer') }}" class="btn btn-success mb-3">Добави доброволец</a>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Име</th>
+                <th>Имейл</th>
+                <th>Телефон</th>
+                <th>Град/регион</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for v in volunteers %}
+            <tr>
+                <td>{{ v.id }}</td>
+                <td>{{ v.name }}</td>
+                <td>{{ v.email }}</td>
+                <td>{{ v.phone }}</td>
+                <td>{{ v.location }}</td>
+                <td>
+                    <a href="{{ url_for('edit_volunteer', id=v.id) }}" class="btn btn-sm btn-warning">Редакция</a>
+                    <form action="{{ url_for('delete_volunteer', id=v.id) }}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Сигурни ли сте?')">Изтрий</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{{ url_for('export_volunteers') }}" class="btn btn-success">Експортирай в CSV</a>
 </div>
 {% endblock %}

@@ -1,40 +1,22 @@
 {% extends "base.html" %}
-{% block title %}Редакция доброволец{% endblock %}
 {% block content %}
-<div class="container mt-5 max-width-500">
-  <h2 class="mb-4 text-warning">Редакция на доброволец</h2>
-  <form method="POST" autocomplete="off">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-    {% if form and form.csrf_token %}
-      {{ form.csrf_token }}
-    {% endif %}
-    <div class="mb-3">
-      <label for="name" class="form-label">Име:</label>
-      <input type="text" class="form-control" id="name" name="name" value="{{ volunteer.name }}" required placeholder="Въведете име">
-    </div>
-    <div class="mb-3">
-      <label for="email" class="form-label">Имейл:</label>
-      <input type="email" class="form-control" id="email" name="email" value="{{ volunteer.email }}" required placeholder="Въведете имейл">
-    </div>
-    <div class="mb-3">
-      <label for="phone" class="form-label">Телефон:</label>
-      <input type="text" class="form-control" id="phone" name="phone" value="{{ volunteer.phone }}" required placeholder="Въведете телефон">
-    </div>
-    <div class="mb-3">
-      <label for="location" class="form-label">Град/регион:</label>
-      <input type="text" class="form-control" id="location" name="location" value="{{ volunteer.location }}" required placeholder="Въведете град или регион">
-    </div>
-    <button type="submit" class="btn btn-warning">Запази промените</button>
-    <a href="{{ url_for('admin_volunteers') }}" class="btn btn-secondary ms-2">Назад</a>
-  </form>
+<div class="container mt-5">
+    <h2>Редакция на доброволец</h2>
+    <form method="post">
+        <div class="mb-3">
+            <label>Име</label>
+            <input type="text" name="name" class="form-control" value="{{ volunteer.name }}" required>
+        </div>
+        <div class="mb-3">
+            <label>Имейл</label>
+            <input type="email" name="email" class="form-control" value="{{ volunteer.email }}" required>
+        </div>
+        <div class="mb-3">
+            <label>Телефон</label>
+            <input type="text" name="phone" class="form-control" value="{{ volunteer.phone }}">
+        </div>
+        <button type="submit" class="btn btn-primary">Запази</button>
+        <a href="{{ url_for('admin_volunteers') }}" class="btn btn-secondary">Назад</a>
+    </form>
 </div>
 {% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Добави доброволец</h2>
+    <form method="post">
+        <div class="mb-3">
+            <label>Име</label>
+            <input type="text" name="name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Имейл</label>
+            <input type="email" name="email" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label>Телефон</label>
+            <input type="text" name="phone" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-success">Добави</button>
+        <a href="{{ url_for('admin_volunteers') }}" class="btn btn-primary mb-3">Доброволци</a>
+    </form>
+</div>
+{% endblock %}
