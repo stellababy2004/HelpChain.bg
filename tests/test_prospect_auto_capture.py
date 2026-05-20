@@ -1,13 +1,18 @@
-﻿from datetime import UTC, datetime
+import json
+from datetime import UTC, datetime
 
+from bs4 import BeautifulSoup
 from flask import session as flask_session
 
-from backend.models_with_analytics import AnalyticsEvent
-from backend.helpchain_backend.src.models import OrganizationAccessRequest, ProfessionalLead
+from backend.helpchain_backend.src.models import (
+    OrganizationAccessRequest,
+    ProfessionalLead,
+)
 from backend.helpchain_backend.src.services.prospect_auto_capture import (
     attach_session_intelligence_to_professional_lead,
     extract_audience_context,
 )
+from backend.models_with_analytics import AnalyticsEvent
 
 
 def _post_access_request(client, suffix="capture"):
@@ -25,6 +30,13 @@ def _post_access_request(client, suffix="capture"):
         },
         follow_redirects=False,
     )
+
+
+def _audience_payload(html: str) -> dict:
+    soup = BeautifulSoup(html, "html.parser")
+    payload = soup.select_one("#audienceMapPayload")
+    assert payload is not None
+    return json.loads(payload.get_text())
 
 
 def test_access_request_auto_captures_prior_audience_session(client, session):
@@ -77,7 +89,6 @@ def test_professional_lead_can_receive_session_intelligence(client, session):
     )
     session.add(lead)
     session.flush()
-    lead_id = lead.id
 
     with client.application.test_request_context("/"):
         flask_session["hc_audience_sid"] = "aud_professional_test"
@@ -93,11 +104,7 @@ def test_professional_lead_can_receive_session_intelligence(client, session):
     )
 
     if lead is None:
-        lead = (
-            session.query(ProfessionalLead)
-            .order_by(ProfessionalLead.id.desc())
-            .first()
-        )
+        lead = session.query(ProfessionalLead).order_by(ProfessionalLead.id.desc()).first()
     assert lead is not None
 
     context = extract_audience_context(lead.notes)
@@ -131,11 +138,24 @@ def test_revenue_radar_marks_captured_access_request(authenticated_admin_client)
 
     response = authenticated_admin_client.get("/admin/audience-map")
     html = response.get_data(as_text=True)
+    payload = _audience_payload(html)
+    revenue_rows = payload["revenue_radar_rows"]
 
     assert response.status_code == 200
-    assert "Revenue Radar" in html
-    assert "Lie a une demande" in html
-    assert "LinkedIn" in html
+    assert 'id="audienceRevenueRadar"' in html
+    assert revenue_rows
 
+    captured_row = next(
+        row
+        for row in revenue_rows
+        if row["source"] == "LinkedIn"
+        and "demande d'acces" in row["captured_label"].lower()
+    )
 
-
+    assert captured_row["session"].startswith("aud_")
+    assert int(captured_row["pages_count"]) >= 3
+    assert captured_row["temperature"] == "Tres chaud"
+    assert any(
+        repeat_row["label"] == captured_row["session"]
+        for repeat_row in payload["repeat_rows"]
+    )
