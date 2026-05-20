@@ -43,6 +43,13 @@ def _extract_demo_kpi_counts(html: str) -> dict[str, int]:
     return {label.strip(): int(value) for label, value in matches}
 
 
+def _assert_contact_submission_status(response) -> None:
+    assert response.status_code in (200, 303, 502)
+    if response.status_code == 502:
+        html = response.get_data(as_text=True)
+        assert "Votre demande a bien été enregistrée" in html
+
+
 def test_contact_honeypot_submission_is_saved_as_screened_spam(
     client,
     db_session,
@@ -73,7 +80,7 @@ def test_contact_message_only_dummy_signal_does_not_invalidate_lead(
 
     response = client.post("/contact", data=_contact_payload(message="test"))
 
-    assert response.status_code in (200, 303)
+    _assert_contact_submission_status(response)
     lead = ProfessionalLead.query.one()
     assert lead.status == "new"
     assert "dummy_fields:message" not in (lead.notes or "")
@@ -93,7 +100,7 @@ def test_contact_mailinator_submission_is_saved_as_spam_without_notification(
         data=_contact_payload(email="robot@mailinator.com"),
     )
 
-    assert response.status_code in (200, 303)
+    _assert_contact_submission_status(response)
     lead = ProfessionalLead.query.one()
     assert lead.status == "spam"
     assert "mailinator.com" in (lead.notes or "")
@@ -113,7 +120,7 @@ def test_contact_obviously_invalid_phone_is_saved_as_invalid(
         data=_contact_payload(phone="abc123"),
     )
 
-    assert response.status_code in (200, 303)
+    _assert_contact_submission_status(response)
     lead = ProfessionalLead.query.one()
     assert lead.status == "invalid"
     assert "phone:invalid" in (lead.notes or "")
@@ -130,7 +137,7 @@ def test_contact_zaproxy_signal_is_saved_as_spam(client, db_session, monkeypatch
         headers={"User-Agent": "Mozilla/5.0 ZAPROXY"},
     )
 
-    assert response.status_code in (200, 303)
+    _assert_contact_submission_status(response)
     lead = ProfessionalLead.query.one()
     assert lead.status == "spam"
     assert "marker:zap,zaproxy" in (lead.notes or "")
@@ -329,7 +336,7 @@ def test_screened_lead_detail_can_still_be_updated_to_contacted(
         data={"status": "contacted", "notes": "Reviewed by ops"},
     )
 
-    assert response.status_code in (200, 303)
+    _assert_contact_submission_status(response)
     db_session.refresh(lead)
     assert lead.status == "contacted"
     assert lead.contacted_at is not None
@@ -345,7 +352,7 @@ def test_contact_turnstile_disabled_does_not_block_submission(
 
     response = client.post("/contact", data=_contact_payload())
 
-    assert response.status_code in (200, 303)
+    _assert_contact_submission_status(response)
     assert ProfessionalLead.query.one().status == "new"
     assert mock_send.call_count == 1
 

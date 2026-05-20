@@ -36,7 +36,7 @@ class TestAPIAuthentication:
         response = client.get("/api/ai/status")
 
         assert response.status_code == 200
-        assert response.content_type == "application/json"
+        assert response.mimetype == "application/json"
 
     def test_api_cors_headers(self, client):
         """Тест за CORS headers в API responses"""

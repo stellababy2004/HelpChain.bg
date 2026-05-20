@@ -1,5 +1,9 @@
 ﻿from datetime import UTC, datetime, timedelta
 
+import json
+
+from bs4 import BeautifulSoup
+
 from backend.models_with_analytics import AnalyticsEvent, UserBehavior
 from backend.helpchain_backend.src.routes.admin import (
     _audience_score_session,
@@ -14,14 +18,23 @@ def test_admin_audience_map_requires_admin(client):
     assert response.status_code != 200
 
 
+def _audience_payload(html: str) -> dict:
+    soup = BeautifulSoup(html, "html.parser")
+    payload = soup.select_one("#audienceMapPayload")
+    assert payload is not None
+    return json.loads(payload.get_text())
+
+
 def test_admin_audience_map_empty_state(authenticated_admin_client):
     response = authenticated_admin_client.get("/admin/audience-map")
     html = response.get_data(as_text=True)
+    payload = _audience_payload(html)
 
     assert response.status_code == 200
     assert "Carte d'interet - France" in html
-    assert "Revenue Radar" in html
-    assert ("Aucun signal revenue exploitable" in html) or ("Aucun signal réel" in html) or ("Revenue Radar" in html)
+    assert "Radar des signaux" in html
+    assert 'id="audienceRevenueRadar"' in html
+    assert payload["revenue_radar_rows"] == []
     assert "Geo enrichissement limite" in html or "Aucune table d'analytics disponible" in html
 
 
@@ -150,12 +163,13 @@ def test_admin_audience_map_renders_revenue_radar(authenticated_admin_client, se
 
     response = authenticated_admin_client.get("/admin/audience-map")
     html = response.get_data(as_text=True)
+    payload = _audience_payload(html)
+    revenue_rows = payload["revenue_radar_rows"]
 
     assert response.status_code == 200
-    assert "Revenue Radar" in html
-    assert "session-hot-founder" in html
-    assert "Tres chaud" in html
-    assert "Priorite haute" in html
-    assert "Google" in html
-    assert ("visiteur(s) chaud(s) sur les 24 dernieres heures" in html) or ("24" in html and "Revenue Radar" in html)
+    assert "Radar des signaux" in html
+    assert any(row["session"] == "session-hot-founder" for row in revenue_rows)
+    assert any(row["source"] == "Google" for row in revenue_rows)
+    assert any(row["temperature"] == "Tres chaud" for row in revenue_rows)
+    assert any(int(row["pages_count"]) == 4 for row in revenue_rows)
 

@@ -127,28 +127,29 @@ def _make_case(
 
 
 def _workspace_kpi_value(html: str, label: str) -> int:
-    pattern = re.compile(
-        r'<div class="hc-ops-summary__label">\s*'
-        + re.escape(label)
-        + r'\s*</div>\s*<div class="hc-ops-summary__value[^"]*">\s*(\d+)\s*</div>',
-        re.S,
-    )
-    match = pattern.search(html)
-    assert match, f"KPI label not found: {label}"
-    return int(match.group(1))
+    soup = BeautifulSoup(html, "html.parser")
+    for item in soup.select(".hc-ops-summary__item"):
+        label_el = item.select_one(".hc-ops-summary__label")
+        value_el = item.select_one(".hc-ops-summary__value")
+        if label_el and value_el and label_el.get_text(" ", strip=True) == label:
+            return int(value_el.get_text(strip=True))
+    raise AssertionError(f"KPI label not found: {label}")
 
 
 
 def _workspace_kpi_value_fuzzy(html: str, label_pattern: str) -> int:
-    pattern = re.compile(
-        r'<div class="hc-ops-summary__label">\s*'
-        + label_pattern
-        + r'\s*</div>\s*<div class="hc-ops-summary__value[^"]*">\s*(\d+)\s*</div>',
-        re.S,
-    )
-    match = pattern.search(html)
-    assert match, f"KPI label pattern not found: {label_pattern}"
-    return int(match.group(1))
+    pattern = re.compile(label_pattern)
+    soup = BeautifulSoup(html, "html.parser")
+    for item in soup.select(".hc-ops-summary__item"):
+        label_el = item.select_one(".hc-ops-summary__label")
+        value_el = item.select_one(".hc-ops-summary__value")
+        if (
+            label_el
+            and value_el
+            and pattern.search(label_el.get_text(" ", strip=True))
+        ):
+            return int(value_el.get_text(strip=True))
+    raise AssertionError(f"KPI label pattern not found: {label_pattern}")
 
 
 def _case_row_count(html: str) -> int:
@@ -156,15 +157,13 @@ def _case_row_count(html: str) -> int:
 
 
 def _case_overview_value(html: str, label: str) -> int:
-    pattern = re.compile(
-        r'<span class="hc-risk-overview__label">\s*'
-        + re.escape(label)
-        + r'\s*</span>\s*<strong class="hc-risk-overview__value">\s*(\d+)\s*</strong>',
-        re.S,
-    )
-    match = pattern.search(html)
-    assert match, f"Case overview label not found: {label}"
-    return int(match.group(1))
+    soup = BeautifulSoup(html, "html.parser")
+    for item in soup.select(".hc-risk-overview__item"):
+        label_el = item.select_one(".hc-risk-overview__label")
+        value_el = item.select_one(".hc-risk-overview__value")
+        if label_el and value_el and label_el.get_text(" ", strip=True) == label:
+            return int(value_el.get_text(strip=True))
+    raise AssertionError(f"Case overview label not found: {label}")
 
 
 def _request_summary_cards(html: str) -> dict[str, dict[str, object]]:
@@ -292,8 +291,8 @@ def test_admin_requests_summary_counts_match_global_queues(
     expected = {
         "Nouvelles demandes": "À qualifier ou orienter",
         "En traitement": "Suivi actif en cours",
-        "Urgentes": "À traiter en priorité",
-        "Clôturées": "Historique terminé",
+        "Action requise": "File opérateur à traiter",
+        "Clôturées": "Demandes terminées",
     }
     assert set(cards) >= set(expected)
     assert "Nouvelles orientations" not in cards
@@ -323,9 +322,9 @@ def test_admin_requests_summary_counts_match_global_queues(
     assert "global-new-food" not in filtered_titles["En traitement"]
     assert "global-completed-food" not in filtered_titles["En traitement"]
 
-    assert filtered_titles["Urgentes"] == {"global-urgent-food"}
-    assert "global-new-food" not in filtered_titles["Urgentes"]
-    assert "global-rejected-urgent-hidden" not in filtered_titles["Urgentes"]
+    assert filtered_titles["Action requise"] == {"global-urgent-food"}
+    assert "global-new-food" not in filtered_titles["Action requise"]
+    assert "global-rejected-urgent-hidden" not in filtered_titles["Action requise"]
 
     assert filtered_titles["Clôturées"] == {"global-completed-food"}
     assert "global-new-food" not in filtered_titles["Clôturées"]
@@ -593,8 +592,8 @@ def test_admin_requests_summary_counts_match_filtered_orientation_queues(
     expected = {
         "Nouvelles orientations": "À qualifier ou orienter",
         "En traitement": "Suivi actif en cours",
-        "Urgentes": "À traiter en priorité",
-        "Clôturées": "Historique terminé",
+        "Action requise": "File opérateur à traiter",
+        "Clôturées": "Demandes terminées",
     }
     assert set(cards) >= set(expected)
 
@@ -632,15 +631,15 @@ def test_admin_requests_summary_counts_match_filtered_orientation_queues(
     assert "summary-completed-can-help" not in filtered_titles["En traitement"]
     assert "summary-category-decoy" not in filtered_titles["En traitement"]
 
-    assert filtered_titles["Urgentes"] == {
+    assert filtered_titles["Action requise"] == {
         "summary-urgent-high",
         "summary-urgent-critical",
     }
-    assert "summary-new-one" not in filtered_titles["Urgentes"]
-    assert "summary-new-two" not in filtered_titles["Urgentes"]
-    assert "summary-completed-urgent-hidden" not in filtered_titles["Urgentes"]
-    assert "summary-rejected-urgent-hidden" not in filtered_titles["Urgentes"]
-    assert "summary-category-decoy" not in filtered_titles["Urgentes"]
+    assert "summary-new-one" not in filtered_titles["Action requise"]
+    assert "summary-new-two" not in filtered_titles["Action requise"]
+    assert "summary-completed-urgent-hidden" not in filtered_titles["Action requise"]
+    assert "summary-rejected-urgent-hidden" not in filtered_titles["Action requise"]
+    assert "summary-category-decoy" not in filtered_titles["Action requise"]
 
     assert filtered_titles["Clôturées"] == {
         "summary-completed-can-help",
