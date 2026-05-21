@@ -617,12 +617,11 @@ def admin_requests():
         attention_count = overview_query.filter(
             func.lower(func.coalesce(Request.risk_level, "")) == "attention"
         ).count()
-        no_owner_count = overview_query.filter(
-            or_(
-                Request.owner_id.is_(None),
-                func.lower(func.coalesce(Request.risk_signals, "")).like("%no_owner%"),
-            )
-        ).filter(_request_non_terminal_status_filter()).count()
+        no_owner_count = (
+            overview_query.filter(_request_no_owner_filter())
+            .filter(_request_non_terminal_status_filter())
+            .count()
+        )
     overview_query = _scope_requests(Request.query).filter(Request.deleted_at.is_(None))
     try:
         overview_query = overview_query.filter(Request.is_archived.is_(False))
@@ -1192,6 +1191,10 @@ def _request_non_terminal_status_filter():
     return ~_request_terminal_status_filter()
 
 
+def _request_no_owner_filter():
+    return Request.owner_id.is_(None)
+
+
 def _request_actionable_filter():
     status_value = _request_status_value()
     terminal_status = _request_terminal_status_filter()
@@ -1393,12 +1396,7 @@ def build_requests_query(base_query, request_args, legacy: bool = False):
             func.lower(func.coalesce(Request.risk_level, "standard")) == risk_level
         )
     if no_owner:
-        base_query = base_query.filter(
-            or_(
-                Request.owner_id.is_(None),
-                func.lower(func.coalesce(Request.risk_signals, "")).like("%no_owner%"),
-            )
-        )
+        base_query = base_query.filter(_request_no_owner_filter())
         base_query = base_query.filter(_request_non_terminal_status_filter())
     if not_seen_72h:
         activity_sq, _activity_expr, _stale_threshold, stale_filter = (
