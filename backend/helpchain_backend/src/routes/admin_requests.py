@@ -1409,6 +1409,9 @@ def build_requests_query(base_query, request_args, legacy: bool = False):
         try:
             base_query = base_query.filter(Request.is_archived.is_(False))
         except Exception:
+            # Keep legacy compatibility when the Request mapper/schema does not
+            # expose is_archived in this runtime; the stale filter still works
+            # without the archive predicate, so we intentionally ignore it.
             pass
     if queue == "sla" and sla_kind:
         base_query = _apply_sla_queue_filter(
