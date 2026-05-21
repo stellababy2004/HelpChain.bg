@@ -1139,7 +1139,12 @@ def _request_status_bucket_filter(tab: str):
     status_value = _request_status_value()
     terminal_status = _request_terminal_status_filter()
     if tab == "NEW":
-        return status_value.in_(["new", *request_status_read_values("open", active_as="open")])
+        new_queue_statuses = tuple(
+            value
+            for value in request_status_read_values("open", active_as="open")
+            if value not in {"open", "active"}
+        )
+        return status_value.in_(["new", *new_queue_statuses])
     if tab == "IN_PROGRESS":
         return status_value.in_(
             [
