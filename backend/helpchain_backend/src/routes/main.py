@@ -5088,6 +5088,8 @@ def contact():
         )
         if not admin_to and not is_demo:
             admin_to = (current_app.config.get("ADMIN_NOTIFY_EMAIL") or "").strip()
+        if not admin_to and current_app.config.get("TESTING", False):
+            admin_to = "test-notify@helpchain.local"
 
         ctx = {
             "lead_id": lead.id,
