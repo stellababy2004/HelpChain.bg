@@ -7,27 +7,18 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy import and_, func, or_
 
 from backend.extensions import db
+from backend.helpchain_backend.src.statuses import (
+    canonical_request_status,
+    request_status_read_values,
+    request_terminal_status_read_values,
+)
 from backend.models import Intervenant, Request, Structure
 from backend.helpchain_backend.src.services.sla_alerts import build_sla_alerts
 
 
-CLOSED_STATUSES = {
-    "done",
-    "cancelled",
-    "rejected",
-    "canceled",
-    "closed",
-    "completed",
-    "resolved",
-    "archived",
-}
+CLOSED_STATUSES = set(request_terminal_status_read_values()) | {"archived"}
 
-RESOLVED_STATUSES = {
-    "done",
-    "closed",
-    "completed",
-    "resolved",
-}
+RESOLVED_STATUSES = set(request_status_read_values("done"))
 
 PRIORITY_SEVERITY_RANK = {
     "stable": 1,
@@ -180,6 +171,31 @@ def _rows_by_label(rows, label_name: str, count_name: str = "count") -> list[dic
     ]
 
 
+def _canonical_status_rows(rows) -> list[dict]:
+    counts: OrderedDict[str, int] = OrderedDict()
+    unknown_counts: OrderedDict[str, int] = OrderedDict()
+
+    for raw_status, count in rows:
+        canonical = canonical_request_status(
+            raw_status,
+            active_as="open",
+            fallback=str(raw_status or "").strip().lower() or "unknown",
+        )
+        target = counts if canonical in {"open", "in_progress", "done", "cancelled"} else unknown_counts
+        target[canonical] = target.get(canonical, 0) + int(count or 0)
+
+    result = [
+        {"status": status, "count": counts[status]}
+        for status in ("open", "in_progress", "done", "cancelled")
+        if counts.get(status)
+    ]
+    result.extend(
+        {"status": status, "count": count}
+        for status, count in unknown_counts.items()
+    )
+    return result
+
+
 def _trend_semantic(direction: str, positive_when: str = "up") -> str:
     if direction == "stable":
         return "neutral"
@@ -314,7 +330,12 @@ def _count_sla_breaches(rows, as_of: datetime) -> int:
         created_at = _normalize_dt(getattr(row, "created_at", None))
         updated_at = _normalize_dt(getattr(row, "updated_at", None)) or created_at
         completed_at = _normalize_dt(getattr(row, "completed_at", None))
-        status = str(getattr(row, "status", "") or "").lower()
+        raw_status = getattr(row, "status", None)
+        status = canonical_request_status(
+            raw_status,
+            active_as="open",
+            fallback=str(raw_status or "").lower(),
+        )
         priority = str(getattr(row, "priority", "") or "").lower()
         owner_id = getattr(row, "owner_id", None)
 
@@ -933,12 +954,13 @@ def build_operational_report(
     )
 
     status_expr = func.coalesce(Request.status, "unknown").label("status_label")
-    by_status_rows = (
+    raw_status_rows = (
         base.with_entities(status_expr, func.count(Request.id))
         .group_by(status_expr)
         .order_by(func.count(Request.id).desc())
         .all()
     )
+    by_status_rows = _canonical_status_rows(raw_status_rows)
 
     assignment_rows = (
         base.filter(Request.owned_at.isnot(None))
@@ -1217,7 +1239,7 @@ def build_operational_report(
         },
         "breakdowns": {
             "by_category": _rows_by_label(by_category_rows, "category"),
-            "by_status": _rows_by_label(by_status_rows, "status"),
+            "by_status": by_status_rows,
         },
         "timeline": timeline,
         "items": report_items,

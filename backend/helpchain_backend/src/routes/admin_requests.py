@@ -55,7 +55,12 @@ from ..services.request_sla import (
     build_request_inactivity_components,
     request_dashboard_actionable_filter,
 )
-from ..statuses import REQUEST_STATUS_ALLOWED, normalize_request_status
+from ..statuses import (
+    REQUEST_STATUS_ALLOWED,
+    normalize_request_status,
+    request_status_read_values,
+    request_terminal_status_read_values,
+)
 from .admin import (
     ASSIGN_SLA_HOURS,
     CASE_PRIORITY_RANK,
@@ -1134,19 +1139,28 @@ def _request_status_bucket_filter(tab: str):
     status_value = _request_status_value()
     terminal_status = _request_terminal_status_filter()
     if tab == "NEW":
-        return status_value.in_(["new", "pending"])
+        new_queue_statuses = tuple(
+            value
+            for value in request_status_read_values("open", active_as="open")
+            if value not in {"open", "active"}
+        )
+        return status_value.in_(["new", *new_queue_statuses])
     if tab == "IN_PROGRESS":
-        return status_value.in_(["approved", "in_progress", "in progress"])
-    if tab == "COMPLETED":
         return status_value.in_(
             [
-                "done",
-                "completed",
+                *request_status_read_values("in_progress", active_as="in_progress"),
+                "in progress",
+            ]
+        )
+    if tab == "COMPLETED":
+        return status_value.in_(request_status_read_values("done"))
+    if tab == "CLOSED":
+        return status_value.in_(
+            [
+                *request_status_read_values("cancelled"),
                 "closed",
             ]
         )
-    if tab == "CLOSED":
-        return status_value.in_(["rejected", "cancelled", "canceled", "closed"])
     if tab == "URGENT":
         return and_(
             func.lower(func.coalesce(Request.priority, "low")).in_(
@@ -1171,9 +1185,7 @@ def _request_status_value():
 
 
 def _request_terminal_status_filter():
-    return _request_status_value().in_(
-        ["done", "completed", "rejected", "cancelled", "canceled", "closed"]
-    )
+    return _request_status_value().in_(request_terminal_status_read_values())
 
 
 def _request_non_terminal_status_filter():
@@ -1183,7 +1195,12 @@ def _request_non_terminal_status_filter():
 def _request_actionable_filter():
     status_value = _request_status_value()
     terminal_status = _request_terminal_status_filter()
-    in_progress = status_value.in_(["approved", "in_progress", "in progress"])
+    in_progress = status_value.in_(
+        [
+            *request_status_read_values("in_progress", active_as="in_progress"),
+            "in progress",
+        ]
+    )
     unassigned_open = and_(Request.assigned_volunteer_id.is_(None), ~terminal_status)
 
     has_can_help = false()

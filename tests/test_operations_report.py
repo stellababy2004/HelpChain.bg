@@ -225,6 +225,62 @@ def test_operations_report_priority_actions_and_territorial_pressure(app, db_sch
         assert report["territorial_pressure"]["zones"][0]["city"] == "Paris"
 
 
+def test_operations_report_normalizes_legacy_request_status_reads(app, db_schema):
+    now = datetime(2026, 5, 17, 12, 0, tzinfo=UTC)
+
+    with app.app_context():
+        structure = _make_structure("Compat Report")
+        _make_request(
+            structure_id=structure.id,
+            title="legacy pending",
+            status="pending",
+            created_at=now - timedelta(days=2),
+        )
+        _make_request(
+            structure_id=structure.id,
+            title="legacy active",
+            status="active",
+            created_at=now - timedelta(days=2),
+        )
+        _make_request(
+            structure_id=structure.id,
+            title="legacy approved",
+            status="approved",
+            created_at=now - timedelta(days=2),
+        )
+        _make_request(
+            structure_id=structure.id,
+            title="legacy resolved",
+            status="resolved",
+            created_at=now - timedelta(days=4),
+            completed_at=now - timedelta(days=1),
+        )
+        _make_request(
+            structure_id=structure.id,
+            title="legacy rejected",
+            status="rejected",
+            created_at=now - timedelta(days=3),
+        )
+        _make_request(
+            structure_id=structure.id,
+            title="unknown status",
+            status="queued_review",
+            created_at=now - timedelta(days=1),
+        )
+
+        report = build_operational_report(structure_id=structure.id, days=7, now=now)
+
+        assert report["requests"]["open"] == 4
+        assert report["requests"]["resolved"] == 1
+        assert report["breakdowns"]["by_status"] == [
+            {"status": "open", "count": 2},
+            {"status": "in_progress", "count": 1},
+            {"status": "done", "count": 1},
+            {"status": "cancelled", "count": 1},
+            {"status": "queued_review", "count": 1},
+        ]
+
+
 def test_operations_report_xlsx_workbook_structure(app, db_schema):
     from io import BytesIO
 
