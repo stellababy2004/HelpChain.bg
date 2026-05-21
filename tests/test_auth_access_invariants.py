@@ -4,11 +4,14 @@ from datetime import timedelta
 from uuid import uuid4
 
 import pyotp
+import pytest
 
 from backend.models import AdminUser, Request, Structure, User, utc_now
 
 
 TEST_ADMIN_PASSWORD = "TestPassword1"
+
+pytestmark = pytest.mark.shared_platform
 
 
 def _default_structure(session) -> Structure:

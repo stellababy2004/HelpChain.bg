@@ -2,7 +2,11 @@ from datetime import UTC, datetime, timedelta
 import re
 from uuid import uuid4
 
+import pytest
+
 from backend.models import AdminUser, Request, Structure, User
+
+pytestmark = pytest.mark.spine
 
 
 def _admin_id_from_client(client) -> int:

@@ -7,6 +7,8 @@ import os
 from backend.models import AdminUser, Request, Structure, db, utc_now
 import pytest
 
+pytestmark = pytest.mark.spine
+
 
 def _submit_public_request(client, unique_suffix: str) -> str:
     title = f"Smoke request {unique_suffix}"

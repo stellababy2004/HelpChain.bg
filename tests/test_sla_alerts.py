@@ -3,6 +3,9 @@
 from backend.extensions import db
 from backend.models import Request
 from backend.helpchain_backend.src.services.sla_alerts import build_sla_alerts
+import pytest
+
+pytestmark = pytest.mark.spine
 
 
 def test_sla_alerts_detect_unassigned_and_stale_requests(app, db_schema):

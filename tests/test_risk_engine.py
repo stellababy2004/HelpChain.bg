@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
+import pytest
+
 from backend.extensions import db
 from backend.helpchain_backend.src.models import (
     AdminUser,
@@ -10,6 +12,8 @@ from backend.helpchain_backend.src.models import (
     User,
 )
 from backend.models import Assignment, Intervenant
+
+pytestmark = pytest.mark.spine
 
 
 def _login_admin_session(client, admin_id: int):

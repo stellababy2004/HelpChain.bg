@@ -3,6 +3,9 @@ import re
 from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup
+import pytest
+
+pytestmark = pytest.mark.spine
 
 
 def _satisfy_privileged_mfa(client, session, admin_user):

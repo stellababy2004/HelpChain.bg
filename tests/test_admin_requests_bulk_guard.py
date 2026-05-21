@@ -1,5 +1,9 @@
 import re
 
+import pytest
+
+pytestmark = pytest.mark.spine
+
 
 def _csrf(html: str) -> str:
     m = re.search(r'name="csrf_token"\s+value="([^"]+)"', html)

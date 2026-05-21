@@ -1,6 +1,9 @@
 from datetime import timedelta
 
+import pytest
 from werkzeug.security import generate_password_hash
+
+pytestmark = pytest.mark.spine
 
 
 def _login_admin(client, app, admin_user):

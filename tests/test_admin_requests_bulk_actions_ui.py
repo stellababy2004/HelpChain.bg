@@ -2,6 +2,8 @@ import re
 
 import pytest
 
+pytestmark = pytest.mark.spine
+
 
 @pytest.fixture
 def admin_login(authenticated_admin_client):

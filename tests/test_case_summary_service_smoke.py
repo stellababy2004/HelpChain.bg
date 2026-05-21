@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
+
 from backend.helpchain_backend.src.services.case_summary import build_case_summary
+
+pytestmark = pytest.mark.spine
 
 
 def test_case_summary_critical_no_owner():

@@ -2,6 +2,10 @@ from datetime import UTC, datetime, timedelta
 
 from bs4 import BeautifulSoup
 
+import pytest
+
+pytestmark = pytest.mark.spine
+
 
 def _request_titles(html: str) -> set[str]:
     soup = BeautifulSoup(html, "html.parser")

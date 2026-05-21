@@ -3,8 +3,11 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from bs4 import BeautifulSoup
+import pytest
 
 from backend.models import Request, Structure, User
+
+pytestmark = pytest.mark.mixed_transition
 
 
 def _make_user(session, suffix: str) -> User:

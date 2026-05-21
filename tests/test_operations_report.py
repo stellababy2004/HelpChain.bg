@@ -2,11 +2,15 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from backend.extensions import db
 from backend.models import Request, Structure
 from backend.helpchain_backend.src.services.reporting.operations_report import (
     build_operational_report,
 )
+
+pytestmark = pytest.mark.spine
 
 
 def _make_structure(name: str = "Test Structure") -> Structure:
