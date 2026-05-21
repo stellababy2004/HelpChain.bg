@@ -378,6 +378,49 @@ def test_closed_completed_archived_and_deleted_requests_are_ignored(
     assert enqueue_calls == []
 
 
+def test_sla_read_normalization_treats_active_as_open_and_resolved_as_terminal(
+    sla_engine_session, enqueue_calls
+):
+    now = utc_now()
+    structure = _make_structure(sla_engine_session)
+    _make_admin(
+        sla_engine_session,
+        role="admin",
+        structure_id=structure.id,
+        email="compat-admin@test.local",
+    )
+    requester = _make_user(sla_engine_session, structure_id=structure.id)
+
+    active_req = _make_request(
+        sla_engine_session,
+        structure_id=structure.id,
+        user_id=requester.id,
+        owner_id=None,
+        status="active",
+        created_at=now - timedelta(hours=60),
+        updated_at=now - timedelta(hours=60),
+    )
+    _make_request(
+        sla_engine_session,
+        structure_id=structure.id,
+        user_id=requester.id,
+        owner_id=None,
+        status="resolved",
+        created_at=now - timedelta(hours=60),
+        updated_at=now - timedelta(hours=60),
+    )
+
+    stats = request_sla.process_request_sla(now=now)
+
+    assert stats["owner_reminders_enqueued"] == 1
+    assert len(enqueue_calls) == 1
+    assert _marker_count(
+        sla_engine_session,
+        request_id=active_req.id,
+        action=request_sla.SLA_OWNER_REMINDER_SENT,
+    ) == 1
+
+
 def test_recent_request_activity_prevents_stale_detection_even_when_created_is_old(
     sla_engine_session,
 ):

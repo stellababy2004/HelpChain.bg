@@ -17,6 +17,12 @@ from backend.models import (
 )
 from ..models.case import Case
 from ..models.case_event import CaseEvent
+from ..statuses import (
+    canonical_request_status,
+    is_terminal_request_status,
+    request_status_read_values,
+    request_terminal_status_read_values,
+)
 
 from .notification_jobs import enqueue_email_notification
 
@@ -40,10 +46,8 @@ DEFAULT_ESCALATION_THRESHOLD_HOURS = 72
 SLA_MARKER_COOLDOWN_HOURS = 24
 REQUEST_DASHBOARD_ACTIONABLE_STATUSES = (
     "new",
-    "open",
-    "in_progress",
-    "approved",
-    "pending",
+    *request_status_read_values("open", active_as="open"),
+    *request_status_read_values("in_progress", active_as="in_progress"),
 )
 
 # The repo currently has no dedicated SLA email template. Reuse an existing
@@ -51,14 +55,7 @@ REQUEST_DASHBOARD_ACTIONABLE_STATUSES = (
 # introducing template/UI changes in this pass.
 SLA_EMAIL_TEMPLATE = "emails/professional_lead_notify.html"
 
-_CLOSED_REQUEST_STATUSES = {
-    "done",
-    "completed",
-    "closed",
-    "cancelled",
-    "canceled",
-    "rejected",
-}
+_CLOSED_REQUEST_STATUSES = set(request_terminal_status_read_values())
 
 
 def _to_utc_naive(dt: datetime | None) -> datetime | None:
@@ -76,7 +73,12 @@ def _now_naive(now: datetime | None = None) -> datetime:
 
 
 def _request_status_value(request_obj: Request) -> str:
-    return ((getattr(request_obj, "status", None) or "").strip().lower() or "")
+    raw_status = getattr(request_obj, "status", None)
+    return canonical_request_status(
+        raw_status,
+        active_as="open",
+        fallback=((raw_status or "").strip().lower() or ""),
+    )
 
 
 def _is_open_request(request_obj: Request) -> bool:
@@ -84,7 +86,7 @@ def _is_open_request(request_obj: Request) -> bool:
         return False
     if bool(getattr(request_obj, "is_archived", False)):
         return False
-    return _request_status_value(request_obj) not in _CLOSED_REQUEST_STATUSES
+    return not is_terminal_request_status(getattr(request_obj, "status", None), active_as="open")
 
 
 def _request_label(request_obj: Request) -> str:

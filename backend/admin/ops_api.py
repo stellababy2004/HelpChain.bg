@@ -5,6 +5,9 @@ from flask_login import current_user
 from sqlalchemy import func
 
 from backend.extensions import db
+from backend.helpchain_backend.src.statuses import (
+    request_status_read_values,
+)
 from backend.models import Request
 
 ops_api = Blueprint("ops_api", __name__)
@@ -30,7 +33,11 @@ def ops_metrics():
 
     active = (
         db.session.query(func.count(Request.id))
-        .filter(Request.status == "active")
+        .filter(
+            func.lower(func.coalesce(Request.status, "")).in_(
+                request_status_read_values("open", active_as="open")
+            )
+        )
         .scalar()
         or 0
     )
@@ -54,7 +61,11 @@ def ops_metrics():
     if resolved_col is not None:
         resolved_today = (
             db.session.query(func.count(Request.id))
-            .filter(Request.status.in_(("resolved", "completed")))
+            .filter(
+                func.lower(func.coalesce(Request.status, "")).in_(
+                    request_status_read_values("done")
+                )
+            )
             .filter(func.date(resolved_col) == now.date())
             .scalar()
             or 0
