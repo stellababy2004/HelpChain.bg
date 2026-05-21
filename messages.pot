@@ -1177,6 +1177,10 @@ msgstr ""
 msgid "Demandes"
 msgstr ""
 
+#: templates/base.html:794
+msgid "Accès historique demandes"
+msgstr ""
+
 #: templates/base.html:229 templates/partials/navbar_public.html:5
 #: templates/public/pour_les_structures.html:3
 msgid "Structures"
@@ -8382,7 +8386,7 @@ msgid "Structure"
 msgstr ""
 
 #: templates/requests/details.html:12
-msgid "Canonical social path"
+msgid "Compatibility workflow"
 msgstr ""
 
 #: templates/requests/details.html:17 templates/requests/list.html:25
