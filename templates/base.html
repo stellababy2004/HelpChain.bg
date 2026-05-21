@@ -721,7 +721,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                 {% set show_platform_admin = is_global_admin %}
                 {% set show_structure_admin = is_structure_admin %}
                 {% set show_ops_console = is_operator_role or is_structure_admin or is_global_admin %}
-                {% set ops_active = ep in ['ops.ops_workspace', 'ops.ops_cases_list', 'ops.ops_notifications_list', 'admin.admin_referrals_index', 'admin.admin_referrals_received', 'admin.admin_referrals_sent', 'admin.admin_referral_detail', 'admin.admin_request_refer', 'admin.admin_professionals_map', 'risk_api.professionals_map_page', 'admin.admin_risk_map'] or ep.startswith('social_requests.') %}
+                {% set ops_active = ep in ['ops.ops_workspace', 'ops.ops_cases_list', 'ops.ops_notifications_list', 'admin.admin_referrals_index', 'admin.admin_referrals_received', 'admin.admin_referrals_sent', 'admin.admin_referral_detail', 'admin.admin_request_refer', 'admin.admin_professionals_map', 'risk_api.professionals_map_page', 'admin.admin_risk_map', 'admin.admin_requests'] or ep.startswith('social_requests.') %}
                 {% set platform_admin_active = ep in ['admin.admin_structures', 'admin.admin_organization_access_requests', 'admin.admin_volunteers', 'admin.admin_roles', 'admin.admin_sla_breakdown', 'admin.admin_audit', 'admin.admin_security', 'admin.admin_system_health', 'admin.admin_demo_leads'] %}
                 {% set structure_admin_active = ep in ['admin.admin_requests', 'admin.admin_ops', 'admin.admin_risk_panel', 'admin.admin_system_health'] or ep.startswith('admin.admin_structure_') %}
 
@@ -790,7 +790,8 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                   </a>
                   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="opsConsoleDropdown">
                     <li><a class="dropdown-item {{ 'active' if ep == 'ops.ops_workspace' else '' }}" href="{{ url_for('ops.ops_workspace') }}">{{ _('Tableau opérateur') }}</a></li>
-                    <li><a class="dropdown-item {{ 'active' if ep in ['social_requests.list_requests', 'social_requests.dashboard'] else '' }}" href="{{ url_for('social_requests.list_requests') }}">{{ _('Demandes') }}</a></li>
+                    <li><a class="dropdown-item {{ 'active' if ep == 'admin.admin_requests' else '' }}" href="{{ url_for('admin.admin_requests') }}">{{ _('Demandes') }}</a></li>
+                    <li><a class="dropdown-item {{ 'active' if ep.startswith('social_requests.') else '' }}" href="{{ url_for('social_requests.list_requests') }}">{{ _('Accès historique demandes') }}</a></li>
                     <li><a class="dropdown-item {{ 'active' if ep == 'ops.ops_cases_list' else '' }}" href="{{ url_for('ops.ops_cases_list') }}">{{ _('Cas') }}</a></li>
                     <li><a class="dropdown-item {{ 'active' if ep.startswith('admin.admin_referral') or ep == 'admin.admin_request_refer' else '' }}" href="{{ url_for('admin.admin_referrals_index') }}">{{ _('Orientations partenaires') }}</a></li>
                     <li><a class="dropdown-item {{ 'active' if ep in ['admin.admin_professionals_map', 'risk_api.professionals_map_page'] else '' }}" href="{{ url_for('admin.admin_professionals_map') }}">{{ _('Carte des professionnels') }}</a></li>
