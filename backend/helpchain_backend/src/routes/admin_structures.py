@@ -169,11 +169,11 @@ def _intervenant_profession(row: Intervenant) -> str:
 def _split_intervenant_location(row: Intervenant) -> tuple[str, str]:
     location = (getattr(row, "location", None) or "").strip()
     if not location:
-        return "Ã¢â‚¬â€", "Ã¢â‚¬â€"
-    parts = [part.strip() for part in location.split("Ã‚Â·", 1)]
+        return "—", "—"
+    parts = [part.strip() for part in location.split("·", 1)]
     if len(parts) == 2:
-        return parts[0] or "Ã¢â‚¬â€", parts[1] or "Ã¢â‚¬â€"
-    return location, "Ã¢â‚¬â€"
+        return parts[0] or "—", parts[1] or "—"
+    return location, "—"
 
 
 @admin_bp.get("/structures")

@@ -110,7 +110,8 @@ def test_admin_requests_list_handles_legacy_like_rows(
     resp = authenticated_admin_client.get("/admin/requests")
     assert resp.status_code == 200
     html = resp.get_data(as_text=True)
-    assert "Risk" in html
+    assert "Legacy-like request" in html
+    assert "traceback" not in html.lower()
     assert f">{req.id}<" in html
 
 

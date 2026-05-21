@@ -1,4 +1,15 @@
+import json
+
+from bs4 import BeautifulSoup
+
 from backend.models_with_analytics import AnalyticsEvent, UserBehavior
+
+
+def _audience_payload(html: str) -> dict:
+    soup = BeautifulSoup(html, "html.parser")
+    payload = soup.select_one("#audienceMapPayload")
+    assert payload is not None
+    return json.loads(payload.get_text())
 
 
 def test_tracked_public_page_creates_page_view(client):
@@ -41,11 +52,16 @@ def test_audience_map_reads_feed_metrics(authenticated_admin_client):
 
     response = authenticated_admin_client.get("/admin/audience-map")
     html = response.get_data(as_text=True)
+    payload = _audience_payload(html)
+    pages = {row["label"]: int(row["count"]) for row in payload["page_rows"]}
+    revenue_rows = payload["revenue_radar_rows"]
 
     assert response.status_code == 200
-    assert "/offre" in html
-    assert "/demander-acces" in html
-    assert "2 visite(s) sur des pages a forte intention" in html
+    assert "Offre" in pages
+    assert any("demander" in label.lower() for label in pages)
+    assert pages["Offre"] >= 1
+    assert any(count >= 1 for label, count in pages.items() if "demander" in label.lower())
+    assert any(int(row["pages_count"]) >= 2 for row in revenue_rows)
 
 
 def test_feed_failure_does_not_break_page_rendering(client, monkeypatch):

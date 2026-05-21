@@ -767,8 +767,11 @@ def create_app(config_object=None) -> Flask:
 
     # Ensure models are imported so Alembic sees them
     with app.app_context():
-        # Single canonical model import (avoid multiple MetaData instances)
-        from . import models  # noqa: F401
+        # Eagerly load the canonical model registry, then the src compatibility
+        # exports. This avoids bootstrap drift in environments where both
+        # `src/models.py` and `src/models/` are importable.
+        import backend.models  # noqa: F401
+        import backend.helpchain_backend.src.models  # noqa: F401
         from .models.audit_guard import install_admin_audit_append_only_guard
         from .services.risk_engine import register_request_risk_hooks
 

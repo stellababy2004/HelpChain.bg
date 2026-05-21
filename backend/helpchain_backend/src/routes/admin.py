@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from collections import Counter
 import csv
@@ -342,7 +342,7 @@ AUDIENCE_BUSINESS_MAP_POINTS = (
         "lat": 48.9362,
         "lng": 2.3574,
         "priority": "Haute",
-        "recommendation": "Activer les relais ESS et les collectivites a fort volume de demandes.",
+        "recommendation": "Activer les relais ESS et les collectivités à fort volume de demandes.",
         "default_demands": 9,
         "default_structures": 6,
     },
@@ -362,7 +362,7 @@ AUDIENCE_BUSINESS_MAP_POINTS = (
         "lat": 48.7904,
         "lng": 2.4556,
         "priority": "Moyenne",
-        "recommendation": "Positionner HelpChain sur les usages coordination medico-sociale et accompagnement.",
+        "recommendation": "Positionner HelpChain sur les usages coordination médico-sociale et accompagnement.",
         "default_demands": 6,
         "default_structures": 4,
     },
@@ -1633,7 +1633,7 @@ def _as_aware_utc(dt_val: datetime | None) -> datetime | None:
 def _format_elapsed_compact(dt_val: datetime | None) -> str:
     dt_aware = _as_aware_utc(dt_val)
     if not dt_aware:
-        return "—"
+        return "â€”"
     delta = max(timedelta(0), _now_utc() - dt_aware)
     total_minutes = int(delta.total_seconds() // 60)
     if total_minutes < 1:
@@ -1661,7 +1661,7 @@ def _elapsed_tone(dt_val: datetime | None) -> str:
 
 def _format_duration_compact(delta: timedelta | None) -> str:
     if delta is None:
-        return "—"
+        return "â€”"
     total_minutes = max(0, int(delta.total_seconds() // 60))
     if total_minutes < 60:
         return f"{total_minutes} min"
@@ -1675,7 +1675,7 @@ def _format_duration_compact(delta: timedelta | None) -> str:
 def _case_sla_snapshot(case_row: Case | None) -> dict:
     if not case_row:
         return {
-            "target_label": "—",
+            "target_label": "â€”",
             "deadline": None,
             "state": "on_time",
             "state_label": "À temps",
@@ -5612,7 +5612,7 @@ def admin_onboarding_step():
             flash("Le nom de la structure est requis.", "warning")
             return redirect(url_for("admin.admin_onboarding"), code=303)
         if team_size and team_size not in ONBOARDING_TEAM_SIZE_OPTIONS:
-            flash("La taille d'équipe selectionnee est invalide.", "warning")
+            flash("La taille d'équipe sélectionnée est invalide.", "warning")
             return redirect(url_for("admin.admin_onboarding"), code=303)
         if main_need and main_need not in ONBOARDING_MAIN_NEED_OPTIONS:
             flash("Le besoin principal selectionne est invalide.", "warning")
@@ -5699,7 +5699,7 @@ def admin_onboarding_complete():
     return redirect(_default_admin_workspace_url(), code=303)
 
 
-# API endpoint Ð·Ð° Ð·Ð°ÑÐ²ÐºÐ¸ Ñ Ñ„Ð¸Ð»Ñ‚Ñ€Ð¸ (status, date)
+# API endpoint for request filtering (status, date)
 def api_requests():
     from flask import current_app, jsonify, request
 
@@ -5744,7 +5744,7 @@ def api_requests():
     return jsonify({"items": data})
 
 
-# API endpoint Ð·Ð° Ð²ÑÐ¸Ñ‡ÐºÐ¸ Ð´Ð¾Ð±Ñ€Ð¾Ð²Ð¾Ð»Ñ†Ð¸ (JSON)
+# API endpoint for all volunteers (JSON)
 def api_volunteers():
     from flask import current_app, jsonify
 
@@ -5767,7 +5767,7 @@ def api_volunteers():
     return jsonify(data)
 
 
-# Ð”ÐµÑ‚Ð°Ð¹Ð»Ð¸ Ð·Ð° Ð´Ð¾Ð±Ñ€Ð¾Ð²Ð¾Ð»ÐµÑ†
+# Volunteer details
 @admin_bp.route("/admin_volunteers/<int:id>")
 @admin_required
 def volunteer_detail(id):
@@ -6149,7 +6149,7 @@ def admin_mfa_setup():
 
         if not verify_totp_code(pending_secret, code):
             flash(
-                "ÐÐµÐ²Ð°Ð»Ð¸Ð´ÐµÐ½ ÐºÐ¾Ð´. ÐŸÑ€Ð¾Ð²ÐµÑ€Ð¸ Ñ‡Ð°ÑÐ¾Ð²Ð½Ð¸ÐºÐ° Ð½Ð° Ñ‚ÐµÐ»ÐµÑ„Ð¾Ð½Ð° Ð¸ Ð¾Ð¿Ð¸Ñ‚Ð°Ð¹ Ð¿Ð°Ðº.", "danger"
+                "Невалиден код. Провери часовника на телефона и опитай пак.", "danger"
             )
             return render_template(
                 "admin/mfa_setup.html",
@@ -6237,7 +6237,7 @@ def admin_mfa_verify():
             },
         )
         flash(
-            f"Ð¢Ð²ÑŠÑ€Ð´Ðµ Ð¼Ð½Ð¾Ð³Ð¾ Ð¾Ð¿Ð¸Ñ‚Ð¸. ÐžÐ¿Ð¸Ñ‚Ð°Ð¹ ÑÐ»ÐµÐ´ {max(1, remaining // 60)} Ð¼Ð¸Ð½.", "danger"
+            f"Твърде много опити. Опитай след {max(1, remaining // 60)} мин.", "danger"
         )
         return redirect(
             url_for("admin.admin_mfa_verify", next=next_url)
@@ -6348,7 +6348,7 @@ def admin_mfa_backup_codes():
             },
         )
         flash(
-            "Backup ÐºÐ¾Ð´Ð¾Ð²ÐµÑ‚Ðµ ÑÐ° Ð³ÐµÐ½ÐµÑ€Ð¸Ñ€Ð°Ð½Ð¸. Ð—Ð°Ð¿Ð°Ð·Ð¸ Ð³Ð¸ ÑÐµÐ³Ð° — Ð½ÑÐ¼Ð° Ð´Ð° ÑÐµ Ð¿Ð¾ÐºÐ°Ð¶Ð°Ñ‚ Ð²Ñ‚Ð¾Ñ€Ð¸ Ð¿ÑŠÑ‚.",
+            "Backup кодовете са генерирани. Запази ги сега — няма да се покажат втори път.",
             "success",
         )
         return redirect(url_for("admin.admin_mfa_backup_codes"))
@@ -6368,7 +6368,7 @@ def admin_mfa_backup_codes():
 @login_required
 def admin_2fa():
     admin_required_404()
-    """2FA Ð²ÐµÑ€Ð¸Ñ„Ð¸ÐºÐ°Ñ†Ð¸Ñ Ð·Ð° Ð°Ð´Ð¼Ð¸Ð½"""
+    """2FA verification for admins."""
     user_id = session.get("pending_admin_user_id")
     if not user_id:
         return redirect(url_for("admin.admin_login_legacy"))
@@ -6422,7 +6422,7 @@ def admin_email_2fa():
 @admin_required
 def admin_2fa_setup():
     admin_required_404()
-    """ÐÐ°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ° Ð½Ð° 2FA Ð·Ð° Ð°Ð´Ð¼Ð¸Ð½"""
+    """2FA setup for admins."""
     if not isinstance(current_user, AdminUser):
         flash(_("Access denied."), "error")
         return redirect(url_for("main.index"))
@@ -6444,7 +6444,7 @@ def admin_2fa_setup():
 @admin_required
 def admin_2fa_disable():
     admin_required_404()
-    """Ð”ÐµÐ°ÐºÑ‚Ð¸Ð²Ð¸Ñ€Ð°Ð½Ðµ Ð½Ð° 2FA Ð·Ð° Ð°Ð´Ð¼Ð¸Ð½"""
+    """Disable 2FA for admins."""
     if not isinstance(current_user, AdminUser):
         flash(_("Access denied."), "error")
         return redirect(url_for("main.index"))
@@ -7264,7 +7264,7 @@ def admin_create_structure():
 @admin_required
 def admin_dashboard():
     admin_required_404()
-    """ÐÐ´Ð¼Ð¸Ð½ Ð¿Ð°Ð½ÐµÐ»"""
+    """Admin panel."""
 
     import logging
 
@@ -8347,7 +8347,7 @@ def admin_volunteers_compat():
 @admin_required
 def add_volunteer():
     admin_required_404()
-    """Ð”Ð¾Ð±Ð°Ð²ÑÐ½Ðµ Ð½Ð° Ð´Ð¾Ð±Ñ€Ð¾Ð²Ð¾Ð»ÐµÑ†"""
+    """Add a volunteer."""
     if not current_user.is_admin:
         flash(_("Access denied."), "error")
         return redirect(url_for("main.index"))
@@ -8372,7 +8372,7 @@ def add_volunteer():
 @admin_required
 def delete_volunteer(id):
     admin_required_404()
-    """Ð˜Ð·Ñ‚Ñ€Ð¸Ð²Ð°Ð½Ðµ Ð½Ð° Ð´Ð¾Ð±Ñ€Ð¾Ð²Ð¾Ð»ÐµÑ†"""
+    """Delete a volunteer."""
     if not current_user.is_admin:
         flash(_("Access denied."), "error")
         return redirect(url_for("main.index"))
@@ -8392,7 +8392,7 @@ def delete_volunteer(id):
 @admin_required
 def edit_volunteer(id):
     admin_required_404()
-    """Ð ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€Ð°Ð½Ðµ Ð½Ð° Ð´Ð¾Ð±Ñ€Ð¾Ð²Ð¾Ð»ÐµÑ†"""
+    """Edit volunteer details."""
     if not current_user.is_admin:
         flash(_("Access denied."), "error")
         return redirect(url_for("main.index"))
@@ -8429,7 +8429,7 @@ def edit_volunteer(id):
 @admin_required
 def export_volunteers():
     admin_required_404()
-    """Ð•ÐºÑÐ¿Ð¾Ñ€Ñ‚ Ð½Ð° Ð´Ð¾Ð±Ñ€Ð¾Ð²Ð¾Ð»Ñ†Ð¸ ÐºÐ°Ñ‚Ð¾ CSV"""
+    """Export volunteers as CSV."""
     if not current_user.is_admin:
         flash(_("Access denied."), "error")
         return redirect(url_for("main.index"))
@@ -8442,7 +8442,7 @@ def export_volunteers():
     volunteers = Volunteer.query.all()
     si = StringIO()
     cw = csv.writer(si)
-    cw.writerow(["Ð˜Ð¼Ðµ", "Ð˜Ð¼ÐµÐ¹Ð»", "Ð¢ÐµÐ»ÐµÑ„Ð¾Ð½", "Ð“Ñ€Ð°Ð´/Ñ€ÐµÐ³Ð¸Ð¾Ð½", "Ð£Ð¼ÐµÐ½Ð¸Ñ"])
+    cw.writerow(["Име", "Имейл", "Телефон", "Град/регион", "Умения"])
     for v in volunteers:
         cw.writerow([v.name, v.email, v.phone, v.location, v.skills])
 
@@ -8462,11 +8462,11 @@ from ..models import Request, RequestActivity, db
 ALLOWED_STATUSES = {"pending", "approved", "in_progress", "done", "rejected"}
 
 STATUS_LABELS_BG = {
-    "pending": "Ð§Ð°ÐºÐ°Ñ‰Ð¸",
-    "approved": "ÐžÐ´Ð¾Ð±Ñ€ÐµÐ½Ð¸",
-    "in_progress": "Ð’ Ð¿Ñ€Ð¾Ñ†ÐµÑ",
-    "done": "ÐŸÑ€Ð¸ÐºÐ»ÑŽÑ‡ÐµÐ½Ð¸",
-    "rejected": "ÐžÑ‚Ñ…Ð²ÑŠÑ€Ð»ÐµÐ½Ð¸",
+    "pending": "Чакащи",
+    "approved": "Одобрени",
+    "in_progress": "В процес",
+    "done": "Приключени",
+    "rejected": "Отхвърлени",
 }
 
 # Canonical EN msgids for status labels - passed to templates for localization
@@ -13653,21 +13653,21 @@ OPS_REPORT_STATUS_LABELS = {
     "pending": "En attente",
     "in_progress": "En cours",
     "open": "En cours",
-    "closed": "Cloturee",
-    "completed": "Cloturee",
-    "done": "Cloturee",
-    "resolved": "Cloturee",
-    "cancelled": "Annulee",
-    "canceled": "Annulee",
+    "closed": "Clôturée",
+    "completed": "Clôturée",
+    "done": "Clôturée",
+    "resolved": "Clôturée",
+    "cancelled": "Annulée",
+    "canceled": "Annulée",
 }
 
 OPS_REPORT_PRIORITY_LABELS = {
     "normal": "Normale",
     "medium": "Normale",
     "low": "Normale",
-    "high": "Elevee",
-    "elevee": "Elevee",
-    "élevée": "Elevee",
+    "high": "Élevée",
+    "elevee": "Élevée",
+    "élevée": "Élevée",
     "critical": "Critique",
     "critique": "Critique",
     "urgent": "Critique",
@@ -13675,7 +13675,7 @@ OPS_REPORT_PRIORITY_LABELS = {
 
 OPS_REPORT_CATEGORY_LABELS = {
     "housing": "Logement",
-    "health": "Sante",
+    "health": "Santé",
     "admin": "Administratif",
     "orientation": "Orientation",
     "legal": "Juridique",
@@ -13683,13 +13683,13 @@ OPS_REPORT_CATEGORY_LABELS = {
 }
 
 OPS_REPORT_DEFINITIONS = {
-    "Perimetre": "Demandes visibles dans le perimetre de pilotage selectionne.",
-    "Ouvert": "Situation encore active ou necessitant un suivi.",
-    "Cloture": "Situation traitee ou cloturee sur la periode.",
-    "Sans action recente": "Situation ouverte sans activite enregistree depuis plus de 72 heures.",
-    "Non assignee": "Situation sans responsable operationnel identifie.",
-    "Delai moyen d'assignation": "Temps moyen entre la creation d'une demande et son attribution.",
-    "Delai moyen de resolution": "Temps moyen entre la creation et la cloture d'une demande.",
+    "Périmètre": "Demandes visibles dans le périmètre de pilotage sélectionné.",
+    "Ouvert": "Situation encore active ou nécessitant un suivi.",
+    "Clôturé": "Situation traitée ou clôturée sur la période.",
+    "Sans action récente": "Situation ouverte sans activité enregistrée depuis plus de 72 heures.",
+    "Non assignée": "Situation sans responsable opérationnel identifié.",
+    "Délai moyen d'assignation": "Temps moyen entre la création d'une demande et son attribution.",
+    "Délai moyen de résolution": "Temps moyen entre la création et la clôture d'une demande.",
 }
 
 
@@ -13742,8 +13742,8 @@ def _ops_report_clean_text(value: str) -> str:
         .replace("annulee", "annulée")
         .replace("Sante", "Santé")
         .replace("sante", "santé")
-        .replace("MaÃ®trisÃ©", "Maîtrisé")
-        .replace("DÃ©passÃ©", "Dépassé")
+        .replace("Maitrise", "Maîtrisé")
+        .replace("Depasse", "Dépassé")
     )
 
 
@@ -14251,7 +14251,6 @@ def _build_operational_report_csv_response(report: dict):
         .replace("operationnelle", "opérationnelle")
         .replace("operationnelles", "opérationnelles")
         .replace("operationnellement", "opérationnellement")
-        .replace("clés", "clés")
         .replace("cloturees", "clôturées")
         .replace("Cloturee", "Clôturée")
         .replace("Cloturé", "Clôturé")
@@ -14334,56 +14333,6 @@ def admin_operations_report_xlsx():
     )
 
     return _build_operational_report_xlsx_response(report)
-
-    output = StringIO()
-    writer = csv.writer(output, delimiter=";")
-
-    writer.writerow(["Rapport opérationnel HelpChain"])
-    writer.writerow(["Périmètre", report["scope"]["structure_name"] or "Toutes les structures visibles"])
-    writer.writerow(["Période", f'{report["period"]["days"]} jours'])
-    writer.writerow(["Généré le", report["generated_at"]])
-    writer.writerow([])
-
-    writer.writerow(["Indicateur", "Valeur"])
-    writer.writerow(["Nouvelles demandes", report["requests"]["new"]])
-    writer.writerow(["Demandes clôturées", report["requests"]["resolved"]])
-    writer.writerow(["Demandes ouvertes", report["requests"]["open"]])
-    writer.writerow(["Demandes non assignées", report["requests"]["unassigned"]])
-    writer.writerow(["Sans action récente", report["requests"]["stale"]])
-    writer.writerow(["Délai moyen d’assignation (heures)", report["sla"]["avg_assignment_hours"]])
-    writer.writerow(["Délai moyen de résolution (heures)", report["sla"]["avg_resolution_hours"]])
-    writer.writerow([])
-
-    writer.writerow(["Répartition par catégorie"])
-    writer.writerow(["Catégorie", "Volume"])
-    for row in report["breakdowns"]["by_category"]:
-        writer.writerow([row["category"], row["count"]])
-    writer.writerow([])
-
-    writer.writerow(["Répartition par statut"])
-    writer.writerow(["Statut", "Volume"])
-    for row in report["breakdowns"]["by_status"]:
-        writer.writerow([row["status"], row["count"]])
-    writer.writerow([])
-
-    writer.writerow(["Définition des indicateurs"])
-    writer.writerow(["Scope", report["definition"]["scope"]])
-    writer.writerow(["Ouvert", report["definition"]["open"]])
-    writer.writerow(["Clôturé", report["definition"]["resolved"]])
-    writer.writerow(["Sans action récente", report["definition"]["stale"]])
-
-    csv_data = "\ufeff" + output.getvalue()
-
-    filename = f"helpchain-rapport-operationnel-{report['period']['days']}j.csv"
-
-    return Response(
-        csv_data,
-        mimetype="text/csv; charset=utf-8",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-            "Cache-Control": "no-store",
-        },
-    )
 @admin_bp.get("/reports/operations/export.pdf")
 @admin_required
 @admin_role_required("readonly", "ops", "admin", "superadmin")
@@ -14417,130 +14366,6 @@ def admin_operations_report_pdf():
     )
 
     return _build_operational_report_pdf_response(report)
-
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=A4,
-        rightMargin=14 * mm,
-        leftMargin=14 * mm,
-        topMargin=14 * mm,
-        bottomMargin=14 * mm,
-    )
-
-    styles = getSampleStyleSheet()
-    story = []
-
-    story.append(Paragraph("Rapport opérationnel HelpChain", styles["Title"]))
-    story.append(Paragraph(report["scope"]["structure_name"] or "Toutes les structures visibles", styles["Normal"]))
-    story.append(Paragraph(f"Période : {report['period']['days']} jours", styles["Normal"]))
-    story.append(Paragraph(f"Généré le : {report['generated_at']}", styles["Normal"]))
-    story.append(Spacer(1, 8 * mm))
-
-    story.append(Paragraph("Synthèse exécutive", styles["Heading2"]))
-    story.append(Paragraph(report["executive_summary"], styles["BodyText"]))
-    story.append(Paragraph(
-        f"Niveau : {report['operational_severity']['label']} — {report['operational_severity']['message']}",
-        styles["BodyText"],
-    ))
-    story.append(Spacer(1, 6 * mm))
-
-    kpi_data = [
-        ["Indicateur", "Valeur"],
-        ["Nouvelles demandes", report["requests"]["new"]],
-        ["Demandes clôturées", report["requests"]["resolved"]],
-        ["Demandes ouvertes", report["requests"]["open"]],
-        ["Demandes non assignées", report["requests"]["unassigned"]],
-        ["Sans action récente", report["requests"]["stale"]],
-        ["Délai moyen d’assignation", f"{report['sla']['avg_assignment_hours']}h"],
-        ["Délai moyen de résolution", f"{report['sla']['avg_resolution_hours']}h"],
-        ["Taux d’assignation", f"{report['sla']['assignment_rate']}%"],
-        ["Résolues < 24h", f"{report['sla']['resolved_under_24h_rate']}%"],
-    ]
-
-    kpi_table = Table(kpi_data, colWidths=[95 * mm, 65 * mm])
-    kpi_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0f2742")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#d8e2ee")),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f6f8fb")]),
-        ("LEFTPADDING", (0, 0), (-1, -1), 6),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-    ]))
-    story.append(kpi_table)
-    story.append(Spacer(1, 6 * mm))
-
-    story.append(Paragraph("Recommandations automatiques", styles["Heading2"]))
-    for item in report["recommendations"]:
-        story.append(Paragraph(f"<b>{item['priority']} — {item['title']}</b>", styles["BodyText"]))
-        story.append(Paragraph(item["description"], styles["BodyText"]))
-        story.append(Spacer(1, 2 * mm))
-
-    story.append(Spacer(1, 4 * mm))
-    story.append(Paragraph("Situations incluses dans le rapport", styles["Heading2"]))
-
-    rows = [["ID", "Titre", "Ville", "Statut", "Priorité", "Créée le"]]
-    for item in report["items"][:80]:
-        rows.append([
-            f"#{item['id']}",
-            item["title"][:42],
-            item["city"] or "—",
-            item["status"] or "—",
-            item["priority"] or "—",
-            item["created_at"][:10] if item["created_at"] else "—",
-        ])
-
-    items_table = Table(rows, colWidths=[15 * mm, 62 * mm, 28 * mm, 28 * mm, 25 * mm, 28 * mm])
-    items_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0f2742")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#d8e2ee")),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 8),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f6f8fb")]),
-    ]))
-    story.append(items_table)
-
-    def _add_footer(canvas, doc):
-        canvas.saveState()
-        canvas.setFont("Helvetica", 8)
-
-        canvas.drawString(
-            14 * mm,
-            10 * mm,
-            "Confidentiel — Usage interne HelpChain",
-        )
-
-        canvas.drawRightString(
-            196 * mm,
-            10 * mm,
-            f"Page {canvas.getPageNumber()}",
-        )
-
-        canvas.restoreState()
-
-    doc.build(
-        story,
-        onFirstPage=_add_footer,
-        onLaterPages=_add_footer,
-    )
-
-    pdf_data = buffer.getvalue()
-    buffer.close()
-
-    filename = f"helpchain-rapport-operationnel-{report['period']['days']}j.pdf"
-
-    return Response(
-        pdf_data,
-        mimetype="application/pdf",
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
-            "Cache-Control": "no-store",
-        },
-    )
 
 @admin_bp.get("/reports/operations")
 @admin_required
