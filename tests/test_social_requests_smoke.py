@@ -1,3 +1,8 @@
+import pytest
+
+pytestmark = pytest.mark.compat_social_request
+
+
 def test_social_requests_pages(client, authenticated_admin_client, init_test_data, db_session):
     from backend.models import SocialRequest, SocialRequestEvent, User
 

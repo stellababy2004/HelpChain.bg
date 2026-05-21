@@ -1,6 +1,8 @@
 import pytest
 from werkzeug.security import generate_password_hash
 
+pytestmark = pytest.mark.shared_platform
+
 
 def _ensure_structure(session, structure_id: int, name: str, slug: str):
     from backend.models import Structure

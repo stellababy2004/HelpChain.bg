@@ -4,9 +4,13 @@ import json
 from datetime import UTC, datetime
 from uuid import uuid4
 
+import pytest
+
 from sqlalchemy import inspect, text
 
 from backend.models import Request, Structure, User
+
+pytestmark = pytest.mark.mixed_transition
 
 
 def _make_user(session) -> User:

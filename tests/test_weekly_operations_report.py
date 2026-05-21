@@ -1,10 +1,14 @@
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from backend.extensions import db
 from backend.models import AdminUser, Request, Structure
 from backend.helpchain_backend.src.services.weekly_operations_report import (
     enqueue_weekly_operations_report,
 )
+
+pytestmark = pytest.mark.spine
 
 
 def test_enqueue_weekly_operations_report_creates_notification_job(app, db_schema):

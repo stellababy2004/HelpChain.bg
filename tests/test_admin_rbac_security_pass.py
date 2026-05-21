@@ -1,6 +1,10 @@
 from uuid import uuid4
 
+import pytest
+
 from backend.models import AdminUser, Request, RequestActivity, Structure, User
+
+pytestmark = pytest.mark.spine
 
 
 def _login_admin(client, admin_user):

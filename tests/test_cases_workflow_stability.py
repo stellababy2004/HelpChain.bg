@@ -1,5 +1,9 @@
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
+pytestmark = pytest.mark.spine
+
 
 def _login_admin(client, admin_user):
     with client.session_transaction() as sess:

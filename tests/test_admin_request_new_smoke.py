@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+import pytest
+
 from backend.models import Request
+
+pytestmark = pytest.mark.spine
 
 
 def test_admin_request_new_get_smoke(authenticated_admin_client):

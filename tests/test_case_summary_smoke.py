@@ -3,8 +3,12 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from types import SimpleNamespace
 
+import pytest
+
 from backend.helpchain_backend.src.services.case_summary import build_case_summary
 from backend.models import Request, Structure, User
+
+pytestmark = pytest.mark.spine
 
 
 def _make_user(session, suffix: str) -> User:

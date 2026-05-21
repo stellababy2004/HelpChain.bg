@@ -1,5 +1,7 @@
 import pytest
 
+pytestmark = pytest.mark.shared_platform
+
 
 def _login_admin(client, admin_user):
     with client.session_transaction() as s:

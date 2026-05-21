@@ -4,6 +4,8 @@ import pytest
 
 from backend.models import AdminUser, utc_now
 
+pytestmark = pytest.mark.mixed_transition
+
 
 def _admin_id_from_client(client) -> int:
     with client.session_transaction() as sess:

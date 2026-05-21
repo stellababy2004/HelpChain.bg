@@ -8,6 +8,8 @@ import pytest
 from backend.models import AdminUser, db
 from backend.helpchain_backend.src.services import daily_health_report
 
+pytestmark = pytest.mark.shared_platform
+
 
 @pytest.fixture
 def health_report_app(monkeypatch):

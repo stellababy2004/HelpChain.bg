@@ -9,6 +9,8 @@ import pytest
 from backend.models import AdminUser, Request, RequestActivity, Structure, User, db, utc_now
 from backend.helpchain_backend.src.services import request_sla
 
+pytestmark = pytest.mark.spine
+
 
 @pytest.fixture
 def sla_engine_app(monkeypatch):

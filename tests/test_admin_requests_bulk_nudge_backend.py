@@ -4,6 +4,8 @@ import pytest
 
 from backend.models import AdminUser, Notification, Request, RequestActivity, Structure, User, Volunteer
 
+pytestmark = pytest.mark.spine
+
 
 def _admin_id_from_client(client) -> int:
     with client.session_transaction() as sess:
