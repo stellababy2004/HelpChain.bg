@@ -240,7 +240,7 @@ from datetime import UTC, datetime, timedelta
 
 from backend.helpchain_backend.src.jwt_utils import encode_access_token
 from backend.helpchain_backend.src.routes import api as api_routes
-from backend.models import AdminUser, Request, Structure, User, utc_now
+from backend.models import AdminUser, Request, SecurityEvent, Structure, User, utc_now
 
 
 def _login_admin(client, app, admin_user: AdminUser) -> None:
@@ -475,6 +475,26 @@ def test_legacy_admin_change_status_stays_tenant_scoped(app, session):
     assert req_a.status == "done"
     assert req_b.status == "pending"
 
+    denied_event = (
+        session.query(SecurityEvent)
+        .filter(SecurityEvent.event_type == "admin_authz_decision")
+        .order_by(SecurityEvent.id.desc())
+        .first()
+    )
+    assert denied_event is not None
+    assert denied_event.actor_id == admin_a.id
+    assert denied_event.route == "/api/admin/change_status"
+    assert denied_event.method == "POST"
+    assert denied_event.meta["actor_id"] == admin_a.id
+    assert denied_event.meta["actor_role"] == "admin"
+    assert denied_event.meta["structure_id"] == _structure_a.id
+    assert denied_event.meta["action"] == "request.change_status"
+    assert denied_event.meta["resource_type"] == "Request"
+    assert denied_event.meta["resource_id"] == req_b.id
+    assert denied_event.meta["decision"] == "denied"
+    assert denied_event.meta["reason"] == "tenant_scope_mismatch"
+    assert denied_event.meta["request_path"] == "/api/admin/change_status"
+
 
 def test_legacy_admin_delete_request_requires_admin_session(client):
     response = client.post(
@@ -506,3 +526,23 @@ def test_legacy_admin_delete_request_stays_tenant_scoped(app, session):
 
     assert session.get(Request, req_a.id) is None
     assert session.get(Request, req_b.id) is not None
+
+    denied_event = (
+        session.query(SecurityEvent)
+        .filter(SecurityEvent.event_type == "admin_authz_decision")
+        .order_by(SecurityEvent.id.desc())
+        .first()
+    )
+    assert denied_event is not None
+    assert denied_event.actor_id == admin_a.id
+    assert denied_event.route == "/api/admin/delete_request"
+    assert denied_event.method == "POST"
+    assert denied_event.meta["actor_id"] == admin_a.id
+    assert denied_event.meta["actor_role"] == "admin"
+    assert denied_event.meta["structure_id"] == _structure_a.id
+    assert denied_event.meta["action"] == "request.delete"
+    assert denied_event.meta["resource_type"] == "Request"
+    assert denied_event.meta["resource_id"] == req_b.id
+    assert denied_event.meta["decision"] == "denied"
+    assert denied_event.meta["reason"] == "tenant_scope_mismatch"
+    assert denied_event.meta["request_path"] == "/api/admin/delete_request"
