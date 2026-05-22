@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from sqlalchemy import false
+
+from .models import Case, NotificationJob, Request
+
 if TYPE_CHECKING:
     from .admin_actor import AdminActor
 
@@ -49,3 +53,31 @@ def can_mutate_request(actor: "AdminActor | None", request) -> bool:
         return int(tenant_scope_id) == int(request_structure_id)
     except (TypeError, ValueError):
         return False
+
+
+def _scope_query_to_structure(actor: "AdminActor | None", query, structure_column):
+    if not actor or not actor.is_authenticated or not actor.is_admin:
+        return query.filter(false())
+    if actor.is_platform_global:
+        return query
+
+    tenant_scope_id = actor.tenant_scope_id
+    if tenant_scope_id is None:
+        return query.filter(false())
+
+    try:
+        return query.filter(structure_column == int(tenant_scope_id))
+    except (TypeError, ValueError):
+        return query.filter(false())
+
+
+def scope_request_query(actor: "AdminActor | None", query):
+    return _scope_query_to_structure(actor, query, Request.structure_id)
+
+
+def scope_notification_query(actor: "AdminActor | None", query):
+    return _scope_query_to_structure(actor, query, NotificationJob.structure_id)
+
+
+def scope_case_query(actor: "AdminActor | None", query):
+    return _scope_query_to_structure(actor, query, Case.structure_id)

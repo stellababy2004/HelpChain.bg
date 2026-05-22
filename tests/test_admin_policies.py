@@ -8,7 +8,12 @@ from backend.helpchain_backend.src.admin_policies import (
     can_export_operational_data,
     can_mutate_request,
     can_view_global_analytics,
+    scope_case_query,
+    scope_notification_query,
+    scope_request_query,
 )
+from backend.helpchain_backend.src.models import Case
+from backend.models import NotificationJob, Request, Structure, User
 
 
 def _actor(
@@ -70,3 +75,101 @@ def test_request_mutation_helper_respects_request_tenant_scope():
     assert can_mutate_request(structure_admin, unscoped_request) is False
     assert can_mutate_request(founder_global, visible_request) is True
     assert can_mutate_request(founder_global, hidden_request) is True
+
+
+def test_query_scope_helpers_enforce_actor_scope_consistently(session):
+    structure_a = Structure(name="Policy Scope A", slug="policy-scope-a")
+    structure_b = Structure(name="Policy Scope B", slug="policy-scope-b")
+    session.add_all([structure_a, structure_b])
+    session.flush()
+
+    user_a = User(
+        username="policy_scope_user_a",
+        email="policy_scope_user_a@test.local",
+        password_hash="x",
+        role="requester",
+        is_active=True,
+        structure_id=structure_a.id,
+    )
+    user_b = User(
+        username="policy_scope_user_b",
+        email="policy_scope_user_b@test.local",
+        password_hash="x",
+        role="requester",
+        is_active=True,
+        structure_id=structure_b.id,
+    )
+    session.add_all([user_a, user_b])
+    session.flush()
+
+    request_a = Request(
+        title="policy-scope-request-a",
+        description="A",
+        category="general",
+        user_id=user_a.id,
+        structure_id=structure_a.id,
+        status="pending",
+    )
+    request_b = Request(
+        title="policy-scope-request-b",
+        description="B",
+        category="general",
+        user_id=user_b.id,
+        structure_id=structure_b.id,
+        status="pending",
+    )
+    session.add_all([request_a, request_b])
+    session.flush()
+
+    case_a = Case(request_id=request_a.id, structure_id=structure_a.id, status="new")
+    case_b = Case(request_id=request_b.id, structure_id=structure_b.id, status="new")
+    job_a = NotificationJob(
+        channel="email",
+        event_type="policy_scope_a",
+        recipient="policy-a@test.local",
+        status="failed",
+        structure_id=structure_a.id,
+    )
+    job_b = NotificationJob(
+        channel="email",
+        event_type="policy_scope_b",
+        recipient="policy-b@test.local",
+        status="failed",
+        structure_id=structure_b.id,
+    )
+    session.add_all([case_a, case_b, job_a, job_b])
+    session.commit()
+
+    scoped_actor = _actor(role="admin", structure_id=structure_a.id)
+    global_actor = _actor(role="superadmin", structure_id=None, is_platform_global=True)
+
+    scoped_request_ids = {
+        row.id
+        for row in scope_request_query(
+            scoped_actor,
+            Request.query.filter(Request.structure_id == structure_b.id),
+        ).all()
+    }
+    scoped_notification_ids = {
+        row.id
+        for row in scope_notification_query(scoped_actor, NotificationJob.query).all()
+    }
+    scoped_case_ids = {
+        row.id for row in scope_case_query(scoped_actor, Case.query).all()
+    }
+    global_request_ids = {
+        row.id for row in scope_request_query(global_actor, Request.query).all()
+    }
+    global_notification_ids = {
+        row.id for row in scope_notification_query(global_actor, NotificationJob.query).all()
+    }
+    global_case_ids = {
+        row.id for row in scope_case_query(global_actor, Case.query).all()
+    }
+
+    assert scoped_request_ids == set()
+    assert scoped_notification_ids == {job_a.id}
+    assert scoped_case_ids == {case_a.id}
+    assert global_request_ids == {request_a.id, request_b.id}
+    assert global_notification_ids == {job_a.id, job_b.id}
+    assert global_case_ids == {case_a.id, case_b.id}

@@ -55,6 +55,7 @@ from backend.system_sanity import run_system_checks
 from ..admin_actor import resolve_current_admin_actor
 from ..admin_policies import can_access_professional_leads
 from ..admin_policies import can_view_global_analytics
+from ..admin_policies import scope_case_query, scope_notification_query, scope_request_query
 from ..models.volunteer_interest import VolunteerInterest
 from ..observability import (
     tenant_leak_get,
@@ -2724,8 +2725,7 @@ def _apply_tenant_filter(query, tenant_filter):
 
 def _scope_requests(query):
     """Sprint-1 tenant guard for request queries."""
-    tenant_filter = _structure_scope_filter()
-    return _apply_tenant_filter(query, tenant_filter)
+    return scope_request_query(resolve_current_admin_actor(), query)
 
 
 def _request_kpi_base_query(*entities):
@@ -9154,6 +9154,7 @@ def _build_scoped_cases_base_query():
         .outerjoin(activity_sq, activity_sq.c.request_id == Request.id)
         .filter(Case.structure_id == Request.structure_id)
     )
+    query = scope_case_query(resolve_current_admin_actor(), query)
     case_filters = _build_case_kpi_filters(activity_expr_override=case_activity_expr)
     return query, case_filters
 
@@ -9344,14 +9345,10 @@ def _case_active_filter_labels(
 
 
 def _scoped_notification_jobs_query():
-    query = NotificationJob.query
     try:
-        if not _is_global_admin():
-            sid = _current_structure_id()
-            query = query.filter(NotificationJob.structure_id == sid)
+        return scope_notification_query(resolve_current_admin_actor(), NotificationJob.query)
     except Exception:
-        pass
-    return query
+        return NotificationJob.query
 
 
 def _notification_bucket_filter(bucket: str):
