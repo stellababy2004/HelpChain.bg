@@ -14,6 +14,7 @@ from werkzeug.security import check_password_hash
 from backend.ai_service import ai_service
 
 from ..admin_actor import resolve_bearer_admin_actor, resolve_current_admin_actor
+from ..admin_policies import can_mutate_request
 from ..controllers.helpchain_controller import HelpChainController
 from ..extensions import csrf
 from ..models import (
@@ -824,9 +825,14 @@ def change_status():
         if not request_id or not new_status:
             return jsonify({"success": False, "message": "Invalid data"}), 400
 
-        _actor, scoped_query = _session_admin_request_scope()
-        req = scoped_query.filter(Request.id == int(request_id)).first()
-        if not req:
+        actor = resolve_current_admin_actor()
+        if not actor.is_authenticated or not actor.is_admin:
+            raise PermissionError("inactive or missing admin actor")
+        if not actor.is_platform_global and actor.tenant_scope_id is None:
+            raise PermissionError("tenant-scoped admin missing structure")
+
+        req = Request.query.filter(Request.id == int(request_id)).first()
+        if not req or not can_mutate_request(actor, req):
             return jsonify({"success": False, "message": "Request not found"}), 404
 
         req.status = new_status
@@ -869,9 +875,14 @@ def delete_request():
         if not request_id:
             return jsonify({"success": False, "message": "Invalid request ID"}), 400
 
-        _actor, scoped_query = _session_admin_request_scope()
-        req = scoped_query.filter(Request.id == int(request_id)).first()
-        if not req:
+        actor = resolve_current_admin_actor()
+        if not actor.is_authenticated or not actor.is_admin:
+            raise PermissionError("inactive or missing admin actor")
+        if not actor.is_platform_global and actor.tenant_scope_id is None:
+            raise PermissionError("tenant-scoped admin missing structure")
+
+        req = Request.query.filter(Request.id == int(request_id)).first()
+        if not req or not can_mutate_request(actor, req):
             return jsonify({"success": False, "message": "Request not found"}), 404
 
         # Delete logs first

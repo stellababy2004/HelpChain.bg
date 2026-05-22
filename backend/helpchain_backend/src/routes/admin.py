@@ -53,6 +53,7 @@ from backend.audit import log_activity
 from backend.extensions import db, limiter, mail
 from backend.system_sanity import run_system_checks
 from ..admin_actor import resolve_current_admin_actor
+from ..admin_policies import can_access_professional_leads
 from ..models.volunteer_interest import VolunteerInterest
 from ..observability import (
     tenant_leak_get,
@@ -2681,7 +2682,7 @@ def _require_professional_lead_access() -> None:
     # ProfessionalLead is intentionally platform-global. Keep operationally
     # scoped admins out of the CRM surface while preserving founder access.
     actor = resolve_current_admin_actor()
-    if not actor.has_founder_global_access:
+    if not can_access_professional_leads(actor):
         _audit_denied_action(
             required_roles={"platform_commercial", "superadmin"},
             actor_role=actor.role,
