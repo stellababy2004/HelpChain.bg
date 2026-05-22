@@ -14,7 +14,7 @@ from backend.models import (
     Structure,
     User,
 )
-from backend.helpchain_backend.src.models import Case
+from backend.helpchain_backend.src.models import Case, CaseCollaborator
 
 pytestmark = pytest.mark.spine
 
@@ -385,6 +385,169 @@ def test_cross_tenant_case_visibility_and_mutation_are_scoped(app, session):
     refreshed = session.get(Case, hidden_case.id)
     assert refreshed is not None
     assert refreshed.owner_user_id is None
+
+
+def test_invited_case_collaborator_can_view_shared_case_but_not_unrelated_cases(app, session):
+    structure_a, structure_b, _owner_admin, user_a, user_b = _seed_scoped_admin(
+        session, prefix="case_collab_detail"
+    )
+    structure_c = _make_structure(
+        session,
+        name="case_collab_detail Gamma",
+        slug="case-collab-detail-gamma",
+    )
+    collaborator_admin = _make_admin(
+        session,
+        username="case_collab_detail_admin_b",
+        email="case_collab_detail_admin_b@test.local",
+        role="admin",
+        structure_id=structure_b.id,
+    )
+    visible_request = _make_request(
+        session,
+        title="tenant-a-collab-visible",
+        user_id=user_a.id,
+        structure_id=structure_a.id,
+        status="open",
+    )
+    hidden_request = _make_request(
+        session,
+        title="tenant-b-collab-hidden",
+        user_id=user_b.id,
+        structure_id=structure_b.id,
+        status="open",
+    )
+    user_c = _make_user(
+        session,
+        username="case_collab_detail_user_c",
+        email="case_collab_detail_user_c@test.local",
+        structure_id=structure_c.id,
+    )
+    unrelated_request = _make_request(
+        session,
+        title="tenant-c-collab-hidden",
+        user_id=user_c.id,
+        structure_id=structure_c.id,
+        status="open",
+    )
+    visible_case = _make_case(
+        session,
+        request_id=visible_request.id,
+        structure_id=structure_a.id,
+    )
+    _make_case(
+        session,
+        request_id=hidden_request.id,
+        structure_id=structure_b.id,
+    )
+    unrelated_case = _make_case(
+        session,
+        request_id=unrelated_request.id,
+        structure_id=structure_c.id,
+    )
+    session.add(
+        CaseCollaborator(
+            case_id=visible_case.id,
+            structure_id=structure_b.id,
+            role="viewer",
+        )
+    )
+    session.commit()
+
+    client = app.test_client()
+    _login_admin(client, app, collaborator_admin)
+
+    invited_detail = client.get(f"/admin/cases/{visible_case.id}")
+    assert invited_detail.status_code == 200
+    assert "tenant-a-collab-visible" in invited_detail.get_data(as_text=True)
+
+    unrelated_detail = client.get(f"/admin/cases/{unrelated_case.id}")
+    assert unrelated_detail.status_code == 404
+
+
+def test_owner_structure_can_assign_case_owner_with_scoped_case_visibility(app, session):
+    structure_a, _structure_b, admin, user_a, _user_b = _seed_scoped_admin(
+        session, prefix="case_owner_assign"
+    )
+    assignee = _make_admin(
+        session,
+        username="case_owner_assign_target",
+        email="case_owner_assign_target@test.local",
+        role="admin",
+        structure_id=structure_a.id,
+    )
+    visible_request = _make_request(
+        session,
+        title="tenant-a-owner-visible",
+        user_id=user_a.id,
+        structure_id=structure_a.id,
+        status="open",
+    )
+    visible_case = _make_case(
+        session,
+        request_id=visible_request.id,
+        structure_id=structure_a.id,
+    )
+    session.commit()
+
+    client = app.test_client()
+    _login_admin(client, app, admin)
+
+    response = client.post(
+        f"/admin/cases/{visible_case.id}/assign-owner",
+        data={"owner_user_id": str(assignee.id)},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    session.expire_all()
+    refreshed = session.get(Case, visible_case.id)
+    assert refreshed is not None
+    assert refreshed.owner_user_id == assignee.id
+
+
+def test_global_superadmin_retains_cross_tenant_case_visibility(app, session):
+    structure_a, structure_b, _scoped_admin, user_a, user_b = _seed_scoped_admin(
+        session, prefix="case_global_visibility"
+    )
+    global_admin = _make_admin(
+        session,
+        username="case_global_visibility_root",
+        email="case_global_visibility_root@test.local",
+        role="superadmin",
+        structure_id=None,
+    )
+    visible_request = _make_request(
+        session,
+        title="tenant-a-global-visible",
+        user_id=user_a.id,
+        structure_id=structure_a.id,
+        status="open",
+    )
+    hidden_request = _make_request(
+        session,
+        title="tenant-b-global-visible",
+        user_id=user_b.id,
+        structure_id=structure_b.id,
+        status="open",
+    )
+    visible_case = _make_case(
+        session,
+        request_id=visible_request.id,
+        structure_id=structure_a.id,
+    )
+    hidden_case = _make_case(
+        session,
+        request_id=hidden_request.id,
+        structure_id=structure_b.id,
+    )
+    session.commit()
+
+    client = app.test_client()
+    _login_admin(client, app, global_admin)
+
+    assert client.get(f"/admin/cases/{visible_case.id}").status_code == 200
+    assert client.get(f"/admin/cases/{hidden_case.id}").status_code == 200
 
 
 def test_cross_tenant_assignment_visibility_is_scoped_on_intervenant_detail(app, session):

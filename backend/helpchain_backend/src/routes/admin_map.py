@@ -8,12 +8,12 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import joinedload
 
 from backend.extensions import db
+from ..admin_actor import resolve_current_admin_actor
+from ..admin_policies import scope_case_query, scope_request_query
 from backend.helpchain_backend.src.models import Case, Request
 from backend.helpchain_backend.src.services.case_risk import score_request_risk
 from backend.helpchain_backend.src.services.risk_engine import compute_case_risk
 from .admin import (
-    _current_structure_id,
-    _is_global_admin,
     _scope_requests,
     admin_required,
     admin_required_404,
@@ -53,16 +53,22 @@ def _valid_coordinates(lat_value, lng_value) -> tuple[float, float] | None:
 
 
 def _scope_case_query(query):
-    if _is_global_admin():
-        return query
-
-    try:
-        return query.filter(Case.structure_id == _current_structure_id())
-    except Exception:
-        current_structure = getattr(current_user, "structure_id", None)
-        if current_structure is not None:
+    actor = resolve_current_admin_actor()
+    scoped_query = scope_case_query(actor, query)
+    if actor and actor.is_platform_global:
+        return scoped_query
+    if actor and actor.is_authenticated and actor.structure_id is not None:
+        try:
+            return query.filter(Case.structure_id == int(actor.structure_id))
+        except (TypeError, ValueError):
+            return query.filter(Case.id.is_(None))
+    current_structure = getattr(current_user, "structure_id", None)
+    if current_structure is not None:
+        try:
             return query.filter(Case.structure_id == int(current_structure))
-        return query
+        except (TypeError, ValueError):
+            return query.filter(Case.id.is_(None))
+    return scoped_query
 
 
 def _city_filter_expr(city: str | None):
@@ -177,6 +183,20 @@ def _load_request_only_risk_items(limit: int = 1000, city: str | None = None) ->
     ]
 
 
+def _build_scoped_case_map_query(actor, *, include_request_join: bool = True):
+    scoped_request_ids_query = _scope_requests(Request.query.with_entities(Request.id))
+    scoped_request_ids = scoped_request_ids_query.subquery()
+    query = (
+        Case.query.join(Request, Case.request_id == Request.id)
+        .join(scoped_request_ids, Request.id == scoped_request_ids.c.id)
+        .filter(Case.structure_id == Request.structure_id)
+    )
+    query = _scope_case_query(query)
+    if include_request_join:
+        return query
+    return query.enable_eagerloads(False)
+
+
 def _load_cases_with_geo():
     bind = db.session.get_bind()
     if not bind:
@@ -209,11 +229,11 @@ def _load_cases_with_geo():
 def admin_risk_map_api():
     admin_required_404()
     try:
+        actor = resolve_current_admin_actor()
         selected_city = (request.args.get("city") or "").strip()
         query = (
-            Case.query.options(joinedload(Case.request))
-            .join(Request, Case.request_id == Request.id)
-            .filter(Case.structure_id == Request.structure_id)
+            _build_scoped_case_map_query(actor)
+            .options(joinedload(Case.request))
             .filter(func.lower(func.coalesce(Case.status, "")).in_(tuple(_ACTIVE_CASE_STATUSES)))
             .filter(
                 or_(
@@ -236,7 +256,7 @@ def admin_risk_map_api():
         city_filter = _city_filter_expr(selected_city)
         if city_filter is not None:
             query = query.filter(city_filter)
-        cases = _scope_case_query(query).limit(1000).all()
+        cases = query.limit(1000).all()
         case_items = [
             item for item in (_serialize_risk_map_item(case) for case in cases) if item
         ]
@@ -280,20 +300,21 @@ def admin_risk_map_api():
 @admin_role_required("readonly", "ops", "admin", "superadmin")
 def admin_cases_map_api():
     admin_required_404()
-    scoped_request_ids = _scope_requests(Request.query.with_entities(Request.id)).subquery()
-    visible_case_ids = {
-        int(case_id)
-        for (case_id,) in (
-            db.session.query(Case.id)
-            .join(Request, Case.request_id == Request.id)
-            .join(scoped_request_ids, Request.id == scoped_request_ids.c.id)
-            .filter(Case.structure_id == Request.structure_id)
-            .all()
+    actor = resolve_current_admin_actor()
+    rows = (
+        _build_scoped_case_map_query(actor, include_request_join=False)
+        .with_entities(
+            Case.id,
+            Case.latitude,
+            Case.longitude,
+            Case.status,
+            Case.created_at,
         )
-    }
-    rows = [
-        row for row in _load_cases_with_geo() if int(getattr(row, "id", 0) or 0) in visible_case_ids
-    ]
+        .filter(Case.latitude.isnot(None), Case.longitude.isnot(None))
+        .filter(Case.latitude.between(-90, 90))
+        .filter(Case.longitude.between(-180, 180))
+        .all()
+    )
     payload = []
     for row in rows:
         risk = compute_case_risk(int(row.id)) or {}

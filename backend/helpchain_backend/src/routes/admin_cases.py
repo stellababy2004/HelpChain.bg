@@ -6,9 +6,11 @@ from datetime import datetime, timezone
 
 from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user
-from sqlalchemy import func, or_
+from sqlalchemy import false, func, or_
 
 from backend.extensions import db
+from ..admin_actor import resolve_current_admin_actor
+from ..admin_policies import scope_case_query
 from ..models import (
     AdminUser,
     Case,
@@ -287,22 +289,98 @@ def build_case_copilot(case, request, events=None, assignments=None):
     }
 
 
+def _actor_case_scope_id(actor) -> int | None:
+    if not actor or not actor.is_authenticated:
+        return None
+    if actor.is_platform_global:
+        return None
+    try:
+        return int(actor.structure_id) if actor.structure_id is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _build_actor_owner_scoped_case_query(actor, query):
+    if actor and actor.is_platform_global:
+        return query
+    tenant_scope_id = _actor_case_scope_id(actor)
+    if tenant_scope_id is None:
+        return query.filter(false())
+    if actor and actor.is_admin:
+        return scope_case_query(actor, query)
+    return query.filter(Case.structure_id == tenant_scope_id)
+
+
+def build_actor_scoped_case_query(actor, query, *, include_collaborator_cases: bool = False):
+    owner_scoped_query = _build_actor_owner_scoped_case_query(actor, query)
+    if not include_collaborator_cases:
+        return owner_scoped_query
+    if not actor or not actor.is_authenticated or actor.is_platform_global:
+        return owner_scoped_query
+
+    tenant_scope_id = _actor_case_scope_id(actor)
+    if tenant_scope_id is None:
+        return owner_scoped_query
+
+    collaborator_case_ids = CaseCollaborator.query.with_entities(CaseCollaborator.case_id).filter(
+        CaseCollaborator.structure_id == tenant_scope_id
+    )
+    owner_case_ids = owner_scoped_query.with_entities(Case.id)
+    return query.filter(
+        or_(
+            Case.id.in_(owner_case_ids),
+            Case.id.in_(collaborator_case_ids),
+        )
+    )
+
+
+def get_actor_visible_case(actor, case_id: int) -> Case | None:
+    try:
+        normalized_case_id = int(case_id)
+    except (TypeError, ValueError):
+        return None
+    return (
+        build_actor_scoped_case_query(
+            actor,
+            Case.query,
+            include_collaborator_cases=True,
+        )
+        .filter(Case.id == normalized_case_id)
+        .first()
+    )
+
+
+def _actor_has_owner_case_visibility(actor, case_row: Case) -> bool:
+    if actor and actor.is_platform_global:
+        return True
+
+    tenant_scope_id = getattr(actor, "tenant_scope_id", None)
+    case_structure_id = getattr(case_row, "structure_id", None)
+    if tenant_scope_id is None or case_structure_id is None:
+        return False
+
+    try:
+        return int(tenant_scope_id) == int(case_structure_id)
+    except (TypeError, ValueError):
+        return False
+
+
 def _get_scoped_case_or_404(case_id: int) -> tuple[Case, Request]:
-    case_row = db.session.get(Case, int(case_id))
+    actor = resolve_current_admin_actor()
+    case_row = get_actor_visible_case(actor, case_id)
     if not case_row:
         abort(404)
-    sid = _current_structure_id()
-    if sid and case_row.structure_id != sid and not _is_global_admin():
-        collaborator = (
-            CaseCollaborator.query.filter(CaseCollaborator.case_id == case_row.id)
-            .filter(CaseCollaborator.structure_id == sid)
-            .first()
-        )
-        if not collaborator:
-            abort(404)
-        req = db.session.get(Request, case_row.request_id)
+    if _actor_has_owner_case_visibility(actor, case_row):
+        if actor and actor.is_admin:
+            req = _scope_requests(Request.query).filter(Request.id == case_row.request_id).first()
+        else:
+            req = (
+                Request.query.filter(Request.id == case_row.request_id)
+                .filter(Request.structure_id == _actor_case_scope_id(actor))
+                .first()
+            )
     else:
-        req = _scope_requests(Request.query).filter(Request.id == case_row.request_id).first()
+        req = db.session.get(Request, case_row.request_id)
     if not req:
         abort(404)
     if getattr(case_row, "structure_id", None) != getattr(req, "structure_id", None):
@@ -321,16 +399,18 @@ def _case_status_transition_allowed(old_status: str, new_status: str) -> bool:
 
 
 def _owner_query_for_current_scope():
+    actor = resolve_current_admin_actor()
     query = AdminUser.query.with_entities(AdminUser.id, AdminUser.username)
-    if not _is_global_admin():
-        query = query.filter(AdminUser.structure_id == _current_structure_id())
+    if not actor.is_platform_global:
+        query = query.filter(AdminUser.structure_id == actor.tenant_scope_id)
     return query.order_by(AdminUser.username.asc())
 
 
 def _owner_allowed_for_current_scope(owner_id: int) -> bool:
+    actor = resolve_current_admin_actor()
     query = AdminUser.query.filter(AdminUser.id == int(owner_id))
-    if not _is_global_admin():
-        query = query.filter(AdminUser.structure_id == _current_structure_id())
+    if not actor.is_platform_global:
+        query = query.filter(AdminUser.structure_id == actor.tenant_scope_id)
     return db.session.query(query.exists()).scalar()
 
 

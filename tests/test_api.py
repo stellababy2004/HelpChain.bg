@@ -442,6 +442,26 @@ def test_api_export_passes_platform_global_actor_to_controller(
     assert captured["filters"]["status"] == "pending"
 
 
+def test_api_dashboard_stays_request_scoped_for_bearer_actor(app, session):
+    _structure_a, _structure_b, admin_a, _req_a, _req_b = _seed_admin_api_scope(
+        session, prefix="tracked_api_dashboard_scope"
+    )
+
+    with app.app_context():
+        token = encode_access_token(admin_a.id)
+
+    client = app.test_client()
+    response = client.get(
+        "/api/dashboard?days=30",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["total_requests"] == 1
+    assert payload["counts_by_status"] == {"pending": 1}
+
+
 def test_legacy_admin_change_status_requires_admin_session(client):
     response = client.post(
         "/api/admin/change_status",
@@ -474,6 +494,32 @@ def test_legacy_admin_change_status_stays_tenant_scoped(app, session):
     session.refresh(req_b)
     assert req_a.status == "done"
     assert req_b.status == "pending"
+
+
+def test_legacy_admin_change_status_allows_platform_global_admin(app, session):
+    _structure_a, _structure_b, _admin_a, _req_a, req_b = _seed_admin_api_scope(
+        session, prefix="tracked_api_change_status_global"
+    )
+    global_superadmin = _make_admin(
+        session,
+        username="tracked_api_change_status_global_superadmin",
+        email="tracked_api_change_status_global_superadmin@test.local",
+        role="superadmin",
+        structure_id=None,
+    )
+    session.commit()
+
+    client = app.test_client()
+    _login_admin(client, app, global_superadmin)
+
+    response = client.post(
+        "/api/admin/change_status",
+        json={"request_id": req_b.id, "status": "done"},
+    )
+
+    assert response.status_code == 200
+    session.refresh(req_b)
+    assert req_b.status == "done"
 
 
 def test_legacy_admin_delete_request_requires_admin_session(client):

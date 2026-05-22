@@ -14,7 +14,7 @@ from werkzeug.security import check_password_hash
 from backend.ai_service import ai_service
 
 from ..admin_actor import resolve_bearer_admin_actor, resolve_current_admin_actor
-from ..admin_policies import can_mutate_request
+from ..admin_policies import scope_request_query
 from ..controllers.helpchain_controller import HelpChainController
 from ..extensions import csrf
 from ..models import (
@@ -55,13 +55,9 @@ def _session_admin_request_scope():
     if not actor.is_authenticated or not actor.is_admin:
         raise PermissionError("inactive or missing admin actor")
 
-    query = Request.query
-    if not actor.is_platform_global:
-        structure_id = actor.tenant_scope_id
-        if structure_id is None:
-            raise PermissionError("tenant-scoped admin missing structure")
-        query = query.filter(Request.structure_id == int(structure_id))
-    return actor, query
+    if not actor.is_platform_global and actor.tenant_scope_id is None:
+        raise PermissionError("tenant-scoped admin missing structure")
+    return actor, scope_request_query(actor, Request.query)
 
 _RELAY_ALLOWED_FIELDS = {
     "external_source",
@@ -697,9 +693,7 @@ def dashboard():
             days = 30
 
         since_dt = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
-        base_query = db.session.query(Request)
-        if not is_global_admin:
-            base_query = base_query.filter(Request.structure_id == int(structure_id))
+        base_query = scope_request_query(_actor, db.session.query(Request))
 
         # 1) counts by status
         status_rows = (
@@ -831,8 +825,10 @@ def change_status():
         if not actor.is_platform_global and actor.tenant_scope_id is None:
             raise PermissionError("tenant-scoped admin missing structure")
 
-        req = Request.query.filter(Request.id == int(request_id)).first()
-        if not req or not can_mutate_request(actor, req):
+        req = scope_request_query(actor, Request.query).filter(
+            Request.id == int(request_id)
+        ).first()
+        if not req:
             return jsonify({"success": False, "message": "Request not found"}), 404
 
         req.status = new_status
@@ -881,8 +877,10 @@ def delete_request():
         if not actor.is_platform_global and actor.tenant_scope_id is None:
             raise PermissionError("tenant-scoped admin missing structure")
 
-        req = Request.query.filter(Request.id == int(request_id)).first()
-        if not req or not can_mutate_request(actor, req):
+        req = scope_request_query(actor, Request.query).filter(
+            Request.id == int(request_id)
+        ).first()
+        if not req:
             return jsonify({"success": False, "message": "Request not found"}), 404
 
         # Delete logs first
