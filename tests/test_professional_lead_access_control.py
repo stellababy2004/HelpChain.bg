@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
@@ -100,7 +100,7 @@ def _seed_professional_lead_access_data(session):
         name="Lead Scope Alpha",
         slug="lead-scope-alpha",
     )
-    structure_b = _make_structure(
+    _make_structure(
         session,
         name="Lead Scope Beta",
         slug="lead-scope-beta",
@@ -226,6 +226,33 @@ def test_superadmin_keeps_global_professional_lead_access_and_nav(app, session):
     assert lead.status == "contacted"
     assert lead.contacted_at is not None
     assert "Founder review" in (lead.notes or "")
+
+
+def test_structure_attached_superadmin_keeps_founder_global_professional_lead_access(
+    app, session
+):
+    _structure_admin, _superadmin, lead, _request_a, case_row = _seed_professional_lead_access_data(
+        session
+    )
+    founder_scoped_superadmin = _make_admin(
+        session,
+        username="lead_scope_founder_scoped_superadmin",
+        email="lead-scope-founder-scoped-superadmin@test.local",
+        role="superadmin",
+        structure_id=case_row.structure_id,
+    )
+    session.commit()
+
+    client = app.test_client()
+    _login_admin(client, app, founder_scoped_superadmin)
+
+    listing = client.get("/admin/professional-leads")
+    detail = client.get(f"/admin/professional-leads/{lead.id}")
+
+    assert listing.status_code == 200
+    assert detail.status_code == 200
+    assert "global-lead@example.org" in listing.get_data(as_text=True)
+    assert "global-lead@example.org" in detail.get_data(as_text=True)
 
 
 def test_structure_admin_case_detail_still_renders_linked_professional_lead_reference(app, session):
