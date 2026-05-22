@@ -983,6 +983,13 @@ def admin_request_new():
                     "Impossible de déterminer la structure active."
                 )
 
+        if _is_global_admin() and not form_data["structure_id"]:
+            # Narrow fail-closed step: keep resolver compatibility elsewhere,
+            # but require an explicit structure on this normal runtime write
+            # path instead of silently inheriting the default tenant.
+            structure_id = None
+            form_errors["structure_id"] = "Veuillez selectionner une structure."
+
         owner_id = None
         if form_data["owner_id"]:
             try:
