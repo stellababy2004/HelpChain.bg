@@ -474,3 +474,35 @@ def test_legacy_admin_change_status_stays_tenant_scoped(app, session):
     session.refresh(req_b)
     assert req_a.status == "done"
     assert req_b.status == "pending"
+
+
+def test_legacy_admin_delete_request_requires_admin_session(client):
+    response = client.post(
+        "/api/admin/delete_request",
+        json={"request_id": 1},
+    )
+
+    assert response.status_code == 403
+
+
+def test_legacy_admin_delete_request_stays_tenant_scoped(app, session):
+    _structure_a, _structure_b, admin_a, req_a, req_b = _seed_admin_api_scope(
+        session, prefix="tracked_api_delete_request_scope"
+    )
+    client = app.test_client()
+    _login_admin(client, app, admin_a)
+
+    own_response = client.post(
+        "/api/admin/delete_request",
+        json={"request_id": req_a.id},
+    )
+    hidden_response = client.post(
+        "/api/admin/delete_request",
+        json={"request_id": req_b.id},
+    )
+
+    assert own_response.status_code == 200
+    assert hidden_response.status_code == 404
+
+    assert session.get(Request, req_a.id) is None
+    assert session.get(Request, req_b.id) is not None
