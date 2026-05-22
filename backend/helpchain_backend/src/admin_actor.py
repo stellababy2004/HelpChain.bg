@@ -154,13 +154,23 @@ def resolve_bearer_admin_actor() -> AdminActor:
 
 
 def resolve_current_admin_actor() -> AdminActor:
+    if not has_request_context():
+        return AdminActor(
+            admin_id=None,
+            role=None,
+            structure_id=None,
+            is_authenticated=False,
+            is_platform_global=False,
+            auth_source="none",
+            raw_admin=None,
+        )
+
     cached = getattr(g, "_current_admin_actor", None)
     if cached is not None:
         return cached
 
     auth = ""
-    if has_request_context():
-        auth = request.headers.get("Authorization", "")
+    auth = request.headers.get("Authorization", "")
     actor = resolve_bearer_admin_actor() if auth.startswith("Bearer ") else resolve_session_admin_actor()
     g._current_admin_actor = actor
     return actor
