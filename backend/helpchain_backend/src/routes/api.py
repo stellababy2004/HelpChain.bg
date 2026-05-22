@@ -31,6 +31,7 @@ from ..models import (
     Structure,
     db,
 )
+from ..security_logging import log_security_event
 from .admin import admin_required, admin_required_404, admin_role_required, _is_global_admin
 from ..security.api_authz import require_api_auth, require_roles
 
@@ -62,6 +63,37 @@ def _session_admin_request_scope():
             raise PermissionError("tenant-scoped admin missing structure")
         query = query.filter(Request.structure_id == int(structure_id))
     return actor, query
+
+
+def _log_admin_authz_denied(
+    *,
+    actor,
+    action: str,
+    resource_type: str,
+    resource_id: int | None,
+    reason: str,
+) -> None:
+    try:
+        log_security_event(
+            "admin_authz_decision",
+            actor_type="admin" if getattr(actor, "is_authenticated", False) else "anonymous",
+            actor_id=getattr(actor, "admin_id", None),
+            route=request.path,
+            method=request.method,
+            meta={
+                "actor_id": getattr(actor, "admin_id", None),
+                "actor_role": getattr(actor, "role", None),
+                "structure_id": getattr(actor, "structure_id", None),
+                "action": action,
+                "resource_type": resource_type,
+                "resource_id": resource_id,
+                "decision": "denied",
+                "reason": reason,
+                "request_path": request.path,
+            },
+        )
+    except Exception:
+        current_app.logger.exception("admin_authz_denied_logging_failed")
 
 _RELAY_ALLOWED_FIELDS = {
     "external_source",
@@ -832,7 +864,16 @@ def change_status():
             raise PermissionError("tenant-scoped admin missing structure")
 
         req = Request.query.filter(Request.id == int(request_id)).first()
-        if not req or not can_mutate_request(actor, req):
+        if req and not can_mutate_request(actor, req):
+            _log_admin_authz_denied(
+                actor=actor,
+                action="request.change_status",
+                resource_type="Request",
+                resource_id=req.id,
+                reason="tenant_scope_mismatch",
+            )
+            return jsonify({"success": False, "message": "Request not found"}), 404
+        if not req:
             return jsonify({"success": False, "message": "Request not found"}), 404
 
         req.status = new_status
@@ -882,7 +923,16 @@ def delete_request():
             raise PermissionError("tenant-scoped admin missing structure")
 
         req = Request.query.filter(Request.id == int(request_id)).first()
-        if not req or not can_mutate_request(actor, req):
+        if req and not can_mutate_request(actor, req):
+            _log_admin_authz_denied(
+                actor=actor,
+                action="request.delete",
+                resource_type="Request",
+                resource_id=req.id,
+                reason="tenant_scope_mismatch",
+            )
+            return jsonify({"success": False, "message": "Request not found"}), 404
+        if not req:
             return jsonify({"success": False, "message": "Request not found"}), 404
 
         # Delete logs first
