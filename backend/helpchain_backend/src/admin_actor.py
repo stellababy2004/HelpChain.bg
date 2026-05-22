@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import jwt
-from flask import g, request, session
+from flask import g, has_request_context, request, session
 from flask_login import current_user
 
 from .extensions import db
@@ -158,7 +158,9 @@ def resolve_current_admin_actor() -> AdminActor:
     if cached is not None:
         return cached
 
-    auth = request.headers.get("Authorization", "")
+    auth = ""
+    if has_request_context():
+        auth = request.headers.get("Authorization", "")
     actor = resolve_bearer_admin_actor() if auth.startswith("Bearer ") else resolve_session_admin_actor()
     g._current_admin_actor = actor
     return actor
