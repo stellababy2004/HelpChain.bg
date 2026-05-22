@@ -2679,6 +2679,17 @@ def _require_global_admin() -> None:
         abort(403)
 
 
+def _require_professional_lead_access() -> None:
+    # ProfessionalLead is intentionally platform-global. Keep operationally
+    # scoped admins out of the CRM surface while preserving founder access.
+    if _admin_role_value() != "superadmin":
+        _audit_denied_action(
+            required_roles={"platform_commercial", "superadmin"},
+            actor_role=_admin_role_value(),
+        )
+        abort(403)
+
+
 def _require_structure_admin_or_global() -> None:
     if not (_is_structure_admin() or _is_global_admin()):
         _audit_denied_action(
@@ -11540,7 +11551,9 @@ def admin_import_rollback(batch_id: int):
 @admin_bp.get("/professional-leads")
 @login_required
 @admin_required
+@admin_role_required("superadmin")
 def admin_professional_leads():
+    _require_professional_lead_access()
     empty_metrics = {
         "total": 0,
         "new": 0,
@@ -12108,7 +12121,9 @@ def _demo_lead_sla_state(lead: ProfessionalLead) -> str | None:
 @admin_bp.get("/professional-leads/demo")
 @login_required
 @admin_required
+@admin_role_required("superadmin")
 def admin_demo_leads():
+    _require_professional_lead_access()
     def _lead_age_meta(created_at, status_value: str | None):
         now_utc = datetime.now(UTC)
         if created_at is None:
@@ -12326,7 +12341,9 @@ def admin_demo_leads():
 @admin_bp.post("/professional-leads/<int:lead_id>/status")
 @login_required
 @admin_required
+@admin_role_required("superadmin")
 def admin_professional_lead_update_status(lead_id: int):
+    _require_professional_lead_access()
     allowed_statuses = {
         "new",
         "contacted",
@@ -12386,7 +12403,9 @@ def admin_professional_lead_update_status(lead_id: int):
 @admin_bp.post("/professional-leads/<int:lead_id>/notes")
 @login_required
 @admin_required
+@admin_role_required("superadmin")
 def admin_professional_lead_update_notes(lead_id: int):
+    _require_professional_lead_access()
     redirect_kwargs = {}
     for key in ("q", "profession", "city", "status", "queue"):
         value = (request.form.get(key) or "").strip()
@@ -12434,7 +12453,9 @@ def admin_professional_lead_update_notes(lead_id: int):
 @admin_bp.post("/professional-leads/<int:lead_id>/owner")
 @login_required
 @admin_required
+@admin_role_required("superadmin")
 def admin_professional_lead_update_owner(lead_id: int):
+    _require_professional_lead_access()
     redirect_kwargs = {}
     for key in ("q", "profession", "city", "status", "queue"):
         value = (request.form.get(key) or "").strip()
@@ -12512,7 +12533,9 @@ def admin_professional_lead_update_owner(lead_id: int):
 @admin_bp.post("/professional-leads/<int:lead_id>/contacted")
 @login_required
 @admin_required
+@admin_role_required("superadmin")
 def admin_professional_lead_mark_contacted(lead_id: int):
+    _require_professional_lead_access()
     if not _table_exists("professional_leads"):
         flash("Professional leads table is not available.", "warning")
         return redirect(url_for("admin.admin_professional_leads"), code=303)
@@ -12530,7 +12553,9 @@ def admin_professional_lead_mark_contacted(lead_id: int):
 @admin_bp.route("/professional-leads/<int:lead_id>", methods=["GET", "POST"])
 @login_required
 @admin_required
+@admin_role_required("superadmin")
 def admin_professional_lead_detail(lead_id: int):
+    _require_professional_lead_access()
     if not _table_exists("professional_leads"):
         flash("Professional leads table is not available.", "warning")
         return redirect(url_for("admin.admin_professional_leads"), code=303)
@@ -12575,7 +12600,9 @@ def admin_professional_lead_detail(lead_id: int):
 @admin_bp.get("/professionnels/leads")
 @login_required
 @admin_required
+@admin_role_required("superadmin")
 def admin_professionnels_leads():
+    _require_professional_lead_access()
     return redirect(url_for("admin.admin_professional_leads"), code=302)
 
 
