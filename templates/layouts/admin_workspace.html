@@ -27,6 +27,8 @@
     {% set is_notifications_active = current_path.startswith('/ops/notifications') or current_path.startswith('/admin/notifications') %}
     {% set is_referrals_active = current_path.startswith('/admin/referrals') or (current_path.startswith('/admin/requests') and current_path.endswith('/refer')) %}
     {% set is_leads_active = current_path.startswith('/admin/professional-leads') %}
+    {% set admin_role = (current_user.role or '')|lower %}
+    {% set can_access_professional_leads = admin_role in ['superadmin', 'super_admin', 'super-admin'] %}
     {% set is_revenue_active = current_path.startswith('/admin/revenue') %}
     {% set is_conversion_active = current_path.startswith('/admin/conversion-dashboard') %}
 {% set is_reports_active = current_path.startswith('/admin/reports') %}
@@ -52,7 +54,9 @@
           <a class="hc-admin-shellnav__link {{ 'is-active' if is_cases_active else '' }}" href="{{ cases_href }}" {% if is_cases_active %}aria-current="page"{% endif %}>Cas</a>
           <a class="hc-admin-shellnav__link {{ 'is-active' if is_referrals_active else '' }}" href="{{ url_for('admin.admin_referrals_index') }}" {% if is_referrals_active %}aria-current="page"{% endif %}>Orientations partenaires</a>
           <a class="hc-admin-shellnav__link {{ 'is-active' if is_notifications_active else '' }}" href="{{ notifications_href }}" {% if is_notifications_active %}aria-current="page"{% endif %}>Notifications</a>
+          {% if can_access_professional_leads %}
           <a class="hc-admin-shellnav__link {{ 'is-active' if is_leads_active else '' }}" href="{{ url_for('admin.admin_professional_leads') }}" {% if is_leads_active %}aria-current="page"{% endif %}>Leads</a>
+          {% endif %}
           <a class="hc-admin-shellnav__link {{ 'is-active' if is_revenue_active else '' }}" href="{{ url_for('admin.admin_revenue') }}" {% if is_revenue_active %}aria-current="page"{% endif %}>Revenue</a>
           <a class="hc-admin-shellnav__link {{ 'is-active' if is_conversion_active else '' }}" href="/admin/conversion-dashboard" {% if is_conversion_active %}aria-current="page"{% endif %}>Conversion</a>
 <a class="hc-admin-shellnav__link {{ 'is-active' if is_reports_active else '' }}"
