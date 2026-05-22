@@ -1,44 +1,21 @@
 from functools import wraps
 
-import jwt
-from ..jwt_utils import decode_token
-from flask import g, jsonify, request
+from flask import g, jsonify
 
-from ..extensions import db
-from ..models import AdminUser, canonical_role
+from ..admin_actor import BearerActorResolutionError, resolve_bearer_admin_actor
 
 
 def require_api_auth(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        auth = request.headers.get("Authorization", "")
-        if not auth.startswith("Bearer "):
-            return jsonify({"error": "Missing Bearer token"}), 401
-
-        token = auth.split(" ", 1)[1].strip()
         try:
-            claims = decode_token(token, "access")
-        except jwt.ExpiredSignatureError:
-            return jsonify({"error": "Token expired"}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({"error": "Invalid token"}), 401
+            actor = resolve_bearer_admin_actor()
+        except BearerActorResolutionError as exc:
+            return jsonify({"error": exc.message}), exc.status_code
 
-        g.api_claims = claims
-        g.api_user_id = claims.get("sub")
-        role = claims.get("role")
-        is_admin = bool(claims.get("is_admin", False))
-
-        # Load fresh role/is_admin from DB when possible (tokens may omit them)
-        try:
-            user = db.session.get(AdminUser, int(claims.get("sub")))
-            if user:
-                role = getattr(user, "role", role)
-                is_admin = bool(getattr(user, "is_admin", is_admin))
-        except Exception:
-            pass
-
-        g.api_role = role
-        g.api_is_admin = is_admin or canonical_role(role) in ("admin", "superadmin")
+        g.admin_actor = actor
+        g.api_role = actor.role
+        g.api_is_admin = actor.is_admin
         return fn(*args, **kwargs)
 
     return wrapper

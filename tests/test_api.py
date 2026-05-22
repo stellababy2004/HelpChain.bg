@@ -234,3 +234,243 @@ class TestAPIRateLimiting:
 
         # Този тест е труден за имплементация без реален rate limiter
         # Затова го оставяме като пример
+
+
+from datetime import UTC, datetime, timedelta
+
+from backend.helpchain_backend.src.jwt_utils import encode_access_token
+from backend.helpchain_backend.src.routes import api as api_routes
+from backend.models import AdminUser, Request, Structure, User, utc_now
+
+
+def _login_admin(client, app, admin_user: AdminUser) -> None:
+    with client.session_transaction() as sess:
+        sess["_user_id"] = str(admin_user.id)
+        sess["user_id"] = admin_user.id
+        sess["admin_id"] = admin_user.id
+        sess["admin_user_id"] = admin_user.id
+        sess["role"] = admin_user.role
+        sess["is_authenticated"] = True
+        sess["is_admin"] = True
+        sess["admin_logged_in"] = True
+        sess["mfa_required"] = True
+        sess[app.config.get("MFA_SESSION_KEY", "mfa_ok")] = True
+        sess["mfa_ok_until"] = (utc_now() + timedelta(minutes=30)).isoformat()
+        sess["admin_mfa_last_verified"] = 4102444800
+        sess["admin_mfa_user_id"] = admin_user.id
+
+
+def _make_structure(session, *, name: str, slug: str) -> Structure:
+    row = Structure(name=name, slug=slug)
+    session.add(row)
+    session.flush()
+    return row
+
+
+def _make_admin(
+    session,
+    *,
+    username: str,
+    email: str,
+    role: str,
+    structure_id: int | None,
+) -> AdminUser:
+    row = AdminUser(
+        username=username,
+        email=email,
+        password_hash="x",
+        role=role,
+        structure_id=structure_id,
+        is_active=True,
+        mfa_enabled=True,
+        totp_secret="test-api-admin-authz",
+    )
+    session.add(row)
+    session.flush()
+    return row
+
+
+def _make_user(session, *, username: str, email: str, structure_id: int) -> User:
+    row = User(
+        username=username,
+        email=email,
+        password_hash="x",
+        role="requester",
+        is_active=True,
+        structure_id=structure_id,
+    )
+    session.add(row)
+    session.flush()
+    return row
+
+
+def _make_request(
+    session,
+    *,
+    title: str,
+    user_id: int,
+    structure_id: int,
+    status: str = "pending",
+) -> Request:
+    now = datetime.now(UTC).replace(tzinfo=None)
+    row = Request(
+        title=title,
+        description=f"Description for {title}",
+        category="general",
+        user_id=user_id,
+        structure_id=structure_id,
+        status=status,
+        created_at=now,
+        updated_at=now,
+    )
+    session.add(row)
+    session.flush()
+    return row
+
+
+def _seed_admin_api_scope(session, *, prefix: str):
+    structure_a = _make_structure(session, name=f"{prefix} Alpha", slug=f"{prefix}-alpha")
+    structure_b = _make_structure(session, name=f"{prefix} Beta", slug=f"{prefix}-beta")
+    admin_a = _make_admin(
+        session,
+        username=f"{prefix}_admin_a",
+        email=f"{prefix}_admin_a@test.local",
+        role="admin",
+        structure_id=structure_a.id,
+    )
+    user_a = _make_user(
+        session,
+        username=f"{prefix}_user_a",
+        email=f"{prefix}_user_a@test.local",
+        structure_id=structure_a.id,
+    )
+    user_b = _make_user(
+        session,
+        username=f"{prefix}_user_b",
+        email=f"{prefix}_user_b@test.local",
+        structure_id=structure_b.id,
+    )
+    req_a = _make_request(
+        session,
+        title=f"{prefix}-visible",
+        user_id=user_a.id,
+        structure_id=structure_a.id,
+    )
+    req_b = _make_request(
+        session,
+        title=f"{prefix}-hidden",
+        user_id=user_b.id,
+        structure_id=structure_b.id,
+    )
+    session.commit()
+    return structure_a, structure_b, admin_a, req_a, req_b
+
+
+def test_api_export_passes_scoped_actor_to_controller(app, session, monkeypatch, tmp_path):
+    structure_a, _structure_b, admin_a, _req_a, _req_b = _seed_admin_api_scope(
+        session, prefix="tracked_api_export_scope"
+    )
+    export_path = tmp_path / "scoped-export.txt"
+    export_path.write_text("scoped export", encoding="utf-8")
+    captured: dict[str, object] = {}
+
+    def _fake_export(filters, fmt, *, structure_id, allow_global):
+        captured["filters"] = filters
+        captured["fmt"] = fmt
+        captured["structure_id"] = structure_id
+        captured["allow_global"] = allow_global
+        return str(export_path), "text/plain", "scoped-export.txt"
+
+    monkeypatch.setattr(api_routes.controller, "export_requests", _fake_export)
+
+    with app.app_context():
+        token = encode_access_token(admin_a.id)
+
+    client = app.test_client()
+    response = client.get(
+        "/api/export?format=csv&status=pending",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    assert captured["fmt"] == "csv"
+    assert captured["structure_id"] == structure_a.id
+    assert captured["allow_global"] is False
+    assert captured["filters"]["status"] == "pending"
+
+
+def test_api_export_passes_platform_global_actor_to_controller(
+    app, session, monkeypatch, tmp_path
+):
+    _structure_a, _structure_b, _admin_a, _req_a, _req_b = _seed_admin_api_scope(
+        session, prefix="tracked_api_export_global"
+    )
+    global_superadmin = _make_admin(
+        session,
+        username="tracked_api_export_global_superadmin",
+        email="tracked_api_export_global_superadmin@test.local",
+        role="superadmin",
+        structure_id=None,
+    )
+    session.commit()
+    export_path = tmp_path / "global-export.txt"
+    export_path.write_text("global export", encoding="utf-8")
+    captured: dict[str, object] = {}
+
+    def _fake_export(filters, fmt, *, structure_id, allow_global):
+        captured["filters"] = filters
+        captured["fmt"] = fmt
+        captured["structure_id"] = structure_id
+        captured["allow_global"] = allow_global
+        return str(export_path), "text/plain", "global-export.txt"
+
+    monkeypatch.setattr(api_routes.controller, "export_requests", _fake_export)
+
+    with app.app_context():
+        token = encode_access_token(global_superadmin.id)
+
+    client = app.test_client()
+    response = client.get(
+        "/api/export?format=csv&status=pending",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    assert captured["fmt"] == "csv"
+    assert captured["structure_id"] is None
+    assert captured["allow_global"] is True
+    assert captured["filters"]["status"] == "pending"
+
+
+def test_legacy_admin_change_status_requires_admin_session(client):
+    response = client.post(
+        "/api/admin/change_status",
+        json={"request_id": 1, "status": "done"},
+    )
+
+    assert response.status_code == 403
+
+
+def test_legacy_admin_change_status_stays_tenant_scoped(app, session):
+    _structure_a, _structure_b, admin_a, req_a, req_b = _seed_admin_api_scope(
+        session, prefix="tracked_api_change_status_scope"
+    )
+    client = app.test_client()
+    _login_admin(client, app, admin_a)
+
+    own_response = client.post(
+        "/api/admin/change_status",
+        json={"request_id": req_a.id, "status": "done"},
+    )
+    hidden_response = client.post(
+        "/api/admin/change_status",
+        json={"request_id": req_b.id, "status": "done"},
+    )
+
+    assert own_response.status_code == 200
+    assert hidden_response.status_code == 404
+
+    session.refresh(req_a)
+    session.refresh(req_b)
+    assert req_a.status == "done"
+    assert req_b.status == "pending"

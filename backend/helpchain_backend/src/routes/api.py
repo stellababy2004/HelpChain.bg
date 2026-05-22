@@ -13,6 +13,7 @@ from werkzeug.security import check_password_hash
 
 from backend.ai_service import ai_service
 
+from ..admin_actor import resolve_bearer_admin_actor, resolve_current_admin_actor
 from ..controllers.helpchain_controller import HelpChainController
 from ..extensions import csrf
 from ..models import (
@@ -28,7 +29,6 @@ from ..models import (
     RequestMetric,
     Structure,
     db,
-    canonical_role,
 )
 from .admin import admin_required, admin_required_404, admin_role_required, _is_global_admin
 from ..security.api_authz import require_api_auth, require_roles
@@ -36,6 +36,31 @@ from ..security.api_authz import require_api_auth, require_roles
 api_bp = Blueprint("api", __name__)
 controller = HelpChainController()
 csrf.exempt(api_bp)
+
+
+def _api_admin_scope():
+    actor = resolve_bearer_admin_actor()
+    if not actor.is_authenticated or not actor.is_admin:
+        raise PermissionError("inactive or missing admin actor")
+
+    structure_id = actor.tenant_scope_id
+    if not actor.is_platform_global and structure_id is None:
+        raise PermissionError("tenant-scoped admin missing structure")
+    return actor, structure_id, actor.is_platform_global
+
+
+def _session_admin_request_scope():
+    actor = resolve_current_admin_actor()
+    if not actor.is_authenticated or not actor.is_admin:
+        raise PermissionError("inactive or missing admin actor")
+
+    query = Request.query
+    if not actor.is_platform_global:
+        structure_id = actor.tenant_scope_id
+        if structure_id is None:
+            raise PermissionError("tenant-scoped admin missing structure")
+        query = query.filter(Request.structure_id == int(structure_id))
+    return actor, query
 
 _RELAY_ALLOWED_FIELDS = {
     "external_source",
@@ -664,16 +689,20 @@ def reject_help(help_id):
 @require_roles("admin")
 def dashboard():
     try:
+        _actor, structure_id, is_global_admin = _api_admin_scope()
         try:
             days = int(request.args.get("days", 30))
         except Exception:
             days = 30
 
         since_dt = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
+        base_query = db.session.query(Request)
+        if not is_global_admin:
+            base_query = base_query.filter(Request.structure_id == int(structure_id))
 
         # 1) counts by status
         status_rows = (
-            db.session.query(
+            base_query.with_entities(
                 func.coalesce(Request.status, "unknown").label("status"),
                 func.count(Request.id).label("cnt"),
             )
@@ -690,7 +719,7 @@ def dashboard():
             "unknown",
         )
         city_rows = (
-            db.session.query(
+            base_query.with_entities(
                 city_expr.label("city"), func.count(Request.id).label("cnt")
             )
             .group_by("city")
@@ -702,7 +731,7 @@ def dashboard():
 
         # 3) timeseries (daily) from created_at
         ts_rows = (
-            db.session.query(
+            base_query.with_entities(
                 func.date(Request.created_at).label("day"),
                 func.count(Request.id).label("cnt"),
             )
@@ -718,7 +747,13 @@ def dashboard():
         try:
             from ..models import Volunteer  # local import to avoid import issues
 
-            total_volunteers = db.session.query(Volunteer).count()
+            volunteer_query = db.session.query(Volunteer)
+            volunteer_structure_field = getattr(Volunteer, "structure_id", None)
+            if not is_global_admin and volunteer_structure_field is not None:
+                volunteer_query = volunteer_query.filter(
+                    volunteer_structure_field == int(structure_id)
+                )
+            total_volunteers = volunteer_query.count()
         except Exception:
             total_volunteers = 0
 
@@ -734,6 +769,8 @@ def dashboard():
             ),
             200,
         )
+    except PermissionError:
+        return jsonify({"error": "Forbidden"}), 403
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -747,17 +784,7 @@ def export():
         for k in ("date_from", "date_to", "status", "region", "volunteer_id")
     }
     try:
-        actor_id = getattr(g, "api_user_id", None)
-        actor = db.session.get(AdminUser, int(actor_id)) if actor_id else None
-        if actor is None or not bool(getattr(actor, "is_active", False)):
-            return jsonify({"error": "Forbidden"}), 403
-
-        role = canonical_role(getattr(actor, "role", None))
-        is_global_admin = role == "superadmin" and getattr(actor, "structure_id", None) is None
-        structure_id = None if is_global_admin else getattr(actor, "structure_id", None)
-        if not is_global_admin and structure_id is None:
-            return jsonify({"error": "Forbidden"}), 403
-
+        _actor, structure_id, is_global_admin = _api_admin_scope()
         path, mimetype, filename = controller.export_requests(
             filters,
             fmt,
@@ -797,15 +824,16 @@ def change_status():
         if not request_id or not new_status:
             return jsonify({"success": False, "message": "Invalid data"}), 400
 
-        req = db.session.get(Request, request_id)
+        _actor, scoped_query = _session_admin_request_scope()
+        req = scoped_query.filter(Request.id == int(request_id)).first()
         if not req:
             return jsonify({"success": False, "message": "Request not found"}), 404
 
         req.status = new_status
         db.session.commit()
 
-        # Add log entry
-        log = RequestLog(request_id=request_id, status=new_status)
+        # Keep the legacy route compatible with the canonical RequestLog model.
+        log = RequestLog(request_id=int(request_id), action=f"status:{new_status}")
         db.session.add(log)
         db.session.commit()
 
@@ -816,6 +844,8 @@ def change_status():
         response.headers.add("Access-Control-Allow-Headers", "Content-Type")
         response.headers.add("Access-Control-Allow-Methods", "POST")
         return response
+    except PermissionError:
+        return jsonify({"success": False, "message": "Forbidden"}), 403
     except Exception as e:
         print(f"Error in change_status: {e}")  # Debug log
         return jsonify({"success": False, "message": str(e)}), 500
@@ -839,7 +869,8 @@ def delete_request():
         if not request_id:
             return jsonify({"success": False, "message": "Invalid request ID"}), 400
 
-        req = db.session.get(Request, request_id)
+        _actor, scoped_query = _session_admin_request_scope()
+        req = scoped_query.filter(Request.id == int(request_id)).first()
         if not req:
             return jsonify({"success": False, "message": "Request not found"}), 404
 
@@ -855,6 +886,8 @@ def delete_request():
         response.headers.add("Access-Control-Allow-Headers", "Content-Type")
         response.headers.add("Access-Control-Allow-Methods", "POST")
         return response
+    except PermissionError:
+        return jsonify({"success": False, "message": "Forbidden"}), 403
     except Exception as e:
         print(f"Error in delete_request: {e}")  # Debug log
         return jsonify({"success": False, "message": str(e)}), 500

@@ -52,6 +52,7 @@ except Exception:  # pragma: no cover - keep admin routes import-safe
 from backend.audit import log_activity
 from backend.extensions import db, limiter, mail
 from backend.system_sanity import run_system_checks
+from ..admin_actor import resolve_current_admin_actor
 from ..models.volunteer_interest import VolunteerInterest
 from ..observability import (
     tenant_leak_get,
@@ -2654,27 +2655,24 @@ def _current_structure_id() -> int:
 
 
 def _is_global_admin() -> bool:
-    role = _admin_role_value()
-    if role not in {"superadmin"}:
-        return False
-    return getattr(current_user, "structure_id", None) is None
+    actor = resolve_current_admin_actor()
+    return actor.is_platform_global
 
 
 def _is_structure_admin() -> bool:
-    role = _admin_role_value()
-    if role not in {"superadmin"}:
-        return False
-    return getattr(current_user, "structure_id", None) is not None
+    actor = resolve_current_admin_actor()
+    return actor.is_authenticated and actor.role == "superadmin" and actor.is_structure_attached
 
 
 def _require_global_admin() -> None:
     # Platform-wide admin pages are gated by the canonical superadmin role.
     # Some dev/bootstrap setups attach that account to a default structure for
     # tenant context, so do not deny on structure_id alone here.
-    if _admin_role_value() != "superadmin":
+    actor = resolve_current_admin_actor()
+    if not actor.has_founder_global_access:
         _audit_denied_action(
             required_roles={"global_admin"},
-            actor_role=_admin_role_value(),
+            actor_role=actor.role,
         )
         abort(403)
 
@@ -2682,10 +2680,11 @@ def _require_global_admin() -> None:
 def _require_professional_lead_access() -> None:
     # ProfessionalLead is intentionally platform-global. Keep operationally
     # scoped admins out of the CRM surface while preserving founder access.
-    if _admin_role_value() != "superadmin":
+    actor = resolve_current_admin_actor()
+    if not actor.has_founder_global_access:
         _audit_denied_action(
             required_roles={"platform_commercial", "superadmin"},
-            actor_role=_admin_role_value(),
+            actor_role=actor.role,
         )
         abort(403)
 
