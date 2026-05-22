@@ -6,6 +6,7 @@ from uuid import uuid4
 import pyotp
 import pytest
 
+from backend.helpchain_backend.src.admin_actor import AdminActor, resolve_session_admin_actor
 from backend.models import AdminUser, Request, Structure, User, utc_now
 
 
@@ -259,3 +260,104 @@ def test_structure_level_admin_is_scoped_in_admin_requests(client, session):
     html = response.get_data(as_text=True)
     assert "in-scope-invariant-request" in html
     assert "out-of-scope-invariant-request" not in html
+
+
+def test_session_actor_resolution_matches_structure_admin_session(app, session):
+    structure = _make_structure(
+        session,
+        structure_id=20,
+        name="Actor Invariant Structure",
+        slug="actor-invariant-structure",
+    )
+    admin = _make_admin(
+        session,
+        username="actor_invariant_admin",
+        email="actor_invariant_admin@test.local",
+        role="admin",
+        structure_id=structure.id,
+    )
+
+    with app.test_request_context("/admin/requests"):
+        from flask import session as flask_session
+
+        flask_session["user_id"] = admin.id
+        flask_session["admin_id"] = admin.id
+        flask_session["admin_user_id"] = admin.id
+        flask_session["admin_logged_in"] = True
+        actor = resolve_session_admin_actor()
+
+    assert actor.admin_id == admin.id
+    assert actor.role == "admin"
+    assert actor.structure_id == structure.id
+    assert actor.is_authenticated is True
+    assert actor.is_platform_global is False
+    assert actor.auth_source == "session"
+
+
+def test_ops_actor_resolves_as_scoped_non_global_session_actor(app, session):
+    structure = _make_structure(
+        session,
+        structure_id=21,
+        name="Ops Actor Structure",
+        slug="ops-actor-structure",
+    )
+    admin = _make_admin(
+        session,
+        username="ops_actor_invariant",
+        email="ops_actor_invariant@test.local",
+        role="ops",
+        structure_id=structure.id,
+    )
+
+    with app.test_request_context("/admin/requests"):
+        from flask import session as flask_session
+
+        flask_session["user_id"] = admin.id
+        flask_session["admin_id"] = admin.id
+        flask_session["admin_user_id"] = admin.id
+        flask_session["admin_logged_in"] = True
+        actor = resolve_session_admin_actor()
+
+    assert actor.role == "ops"
+    assert actor.is_ops is True
+    assert actor.structure_id == structure.id
+    assert actor.is_platform_global is False
+
+
+def test_session_actor_distinguishes_platform_global_and_structure_attached_superadmin(
+    session
+):
+    structure = _make_structure(
+        session,
+        structure_id=22,
+        name="Superadmin Scope Structure",
+        slug="superadmin-scope-structure",
+    )
+    scoped_actor = AdminActor(
+        admin_id=1,
+        role="superadmin",
+        structure_id=structure.id,
+        is_authenticated=True,
+        is_platform_global=False,
+        auth_source="session",
+        raw_admin=None,
+    )
+    global_actor = AdminActor(
+        admin_id=1,
+        role="superadmin",
+        structure_id=None,
+        is_authenticated=True,
+        is_platform_global=True,
+        auth_source="session",
+        raw_admin=None,
+    )
+
+    assert scoped_actor.role == "superadmin"
+    assert scoped_actor.structure_id == structure.id
+    assert scoped_actor.is_platform_global is False
+    assert scoped_actor.tenant_scope_id == structure.id
+
+    assert global_actor.role == "superadmin"
+    assert global_actor.structure_id is None
+    assert global_actor.is_platform_global is True
+    assert global_actor.tenant_scope_id is None
