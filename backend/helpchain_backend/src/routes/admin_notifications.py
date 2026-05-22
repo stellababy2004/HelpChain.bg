@@ -8,9 +8,8 @@ from backend.models import NotificationJob, utc_now
 from ..services.notification_jobs import deliver_notification_job
 
 from .admin import (
-    _current_structure_id,
-    _is_global_admin,
     _render_notifications_list,
+    _scoped_notification_jobs_query,
     _table_exists,
     admin_bp,
     admin_required,
@@ -45,16 +44,11 @@ def _notification_retry_impl(job_id: int):
             code=303,
         )
 
-    query = NotificationJob.query
     try:
-        if not _is_global_admin():
-            sid = _current_structure_id()
-            query = query.filter(
-                (NotificationJob.structure_id == sid)
-                | (NotificationJob.structure_id.is_(None))
-            )
+        query = _scoped_notification_jobs_query()
     except Exception as exc:
         current_app.logger.warning("notification_retry_scope_failed: %s", exc)
+        query = NotificationJob.query
 
     job = query.filter(NotificationJob.id == int(job_id)).first()
     if not job:
@@ -113,16 +107,11 @@ def _notification_retry_impl_sync(job_id: int):
             code=303,
         )
 
-    query = NotificationJob.query
     try:
-        if not _is_global_admin():
-            sid = _current_structure_id()
-            query = query.filter(
-                (NotificationJob.structure_id == sid)
-                | (NotificationJob.structure_id.is_(None))
-            )
+        query = _scoped_notification_jobs_query()
     except Exception as exc:
         current_app.logger.warning("notification_retry_scope_failed: %s", exc)
+        query = NotificationJob.query
 
     job = query.filter(NotificationJob.id == int(job_id)).first()
     if not job:

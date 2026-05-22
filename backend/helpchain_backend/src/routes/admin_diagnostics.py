@@ -13,6 +13,7 @@ from .admin import (
     CLOSED_STATUSES,
     _current_structure_id,
     _is_global_admin,
+    _scoped_notification_jobs_query,
     _scope_requests,
     _sla_prediction_state,
     _table_exists,
@@ -57,16 +58,10 @@ def _collect_notification_queue_snapshot(now: datetime) -> dict[str, int | None]
     if not _table_exists("notification_jobs"):
         return out
 
-    queue_query = NotificationJob.query
     try:
-        if not _is_global_admin():
-            sid = _current_structure_id()
-            queue_query = queue_query.filter(
-                (NotificationJob.structure_id == sid)
-                | (NotificationJob.structure_id.is_(None))
-            )
+        queue_query = _scoped_notification_jobs_query()
     except Exception:
-        pass
+        queue_query = NotificationJob.query
 
     status_expr = func.lower(NotificationJob.status)
     pending_filter = status_expr.in_(("pending", "retry"))

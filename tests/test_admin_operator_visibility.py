@@ -155,6 +155,25 @@ def _workspace_kpi_value_fuzzy(html: str, label_pattern: str) -> int:
     raise AssertionError(f"KPI label pattern not found: {label_pattern}")
 
 
+def _workspace_failed_notification_count(html: str) -> int:
+    soup = BeautifulSoup(html, "html.parser")
+    link = soup.select_one('a[href*="/ops/notifications?status=failed"]')
+    assert link is not None
+    value = link.select_one(".hc-ops-summary__value")
+    assert value is not None
+    return int(value.get_text(strip=True))
+
+
+def _ops_notification_summary_counts(html: str) -> dict[str, int]:
+    soup = BeautifulSoup(html, "html.parser")
+    values = [
+        int(node.get_text(strip=True))
+        for node in soup.select(".hc-notify-summary__value")[:3]
+    ]
+    assert len(values) == 3
+    return {"pending": values[0], "retry": values[1], "failed": values[2]}
+
+
 def _case_row_count(html: str) -> int:
     return html.count('class="hc-case-row')
 
@@ -877,6 +896,118 @@ def test_ops_workspace_kpis_match_quick_action_case_filters(
     assert "Responsable: non attribue" in unassigned_html
     assert "Cas sans action 72h" in stale_html
     assert workspace_html.count('/ops/cases?risk=critical') >= 2
+
+
+def test_ops_notification_views_exclude_null_tenant_jobs_for_structure_scoped_users(
+    app, session
+):
+    from backend.models import NotificationJob
+
+    structure = _make_structure(session, structure_id=2, name="Structure 2", slug="structure-2")
+    other_structure = _make_structure(
+        session, structure_id=3, name="Structure 3", slug="structure-3"
+    )
+    operator = _make_admin(
+        session,
+        username="ops_notifications_scope",
+        email="ops_notifications_scope@test.local",
+        role="ops",
+        structure_id=structure.id,
+    )
+
+    session.add_all(
+        [
+            NotificationJob(
+                channel="email",
+                event_type="ops_scope_same",
+                recipient="same-structure@test.local",
+                status="failed",
+                structure_id=structure.id,
+            ),
+            NotificationJob(
+                channel="email",
+                event_type="ops_scope_null",
+                recipient="null-structure@test.local",
+                status="failed",
+                structure_id=None,
+            ),
+            NotificationJob(
+                channel="email",
+                event_type="ops_scope_other",
+                recipient="other-structure@test.local",
+                status="failed",
+                structure_id=other_structure.id,
+            ),
+        ]
+    )
+    session.commit()
+
+    client = app.test_client()
+    _login_admin(client, operator)
+    _satisfy_privileged_mfa(client, session, operator)
+
+    notifications = client.get("/ops/notifications?status=failed")
+    assert notifications.status_code == 200
+    notifications_html = notifications.get_data(as_text=True)
+    assert "same-structure@test.local" in notifications_html
+    assert "null-structure@test.local" not in notifications_html
+    assert "other-structure@test.local" not in notifications_html
+    assert _ops_notification_summary_counts(notifications_html) == {
+        "pending": 0,
+        "retry": 0,
+        "failed": 1,
+    }
+
+    workspace = client.get("/ops/workspace", follow_redirects=False)
+    assert workspace.status_code == 200
+    assert _workspace_failed_notification_count(workspace.get_data(as_text=True)) == 1
+
+    health = client.get("/admin/api/system-health")
+    assert health.status_code == 200
+    payload = health.get_json()
+    assert payload["queue"]["dead_letter"] == 1
+    assert payload["queue"]["failed_15m"] == 1
+
+
+def test_ops_notification_retry_rejects_null_tenant_job_for_structure_scoped_users(
+    app, session
+):
+    from backend.models import NotificationJob
+
+    structure = _make_structure(session, structure_id=2, name="Structure 2", slug="structure-2")
+    operator = _make_admin(
+        session,
+        username="ops_notifications_retry_scope",
+        email="ops_notifications_retry_scope@test.local",
+        role="ops",
+        structure_id=structure.id,
+    )
+    hidden_job = NotificationJob(
+        channel="email",
+        event_type="ops_hidden_retry",
+        recipient="hidden-null@test.local",
+        status="failed",
+        structure_id=None,
+    )
+    session.add(hidden_job)
+    session.commit()
+
+    client = app.test_client()
+    _login_admin(client, operator)
+    _satisfy_privileged_mfa(client, session, operator)
+
+    response = client.post(
+        f"/ops/notifications/{hidden_job.id}/retry",
+        data={},
+        follow_redirects=True,
+    )
+    assert response.status_code == 200
+    assert "Notification introuvable." in response.get_data(as_text=True)
+
+    session.expire_all()
+    refreshed = session.get(NotificationJob, hidden_job.id)
+    assert refreshed is not None
+    assert refreshed.status == "failed"
 
 
 def test_admin_cases_owner_missing_count_matches_filtered_queue(
