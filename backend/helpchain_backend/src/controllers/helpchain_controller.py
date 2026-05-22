@@ -178,13 +178,26 @@ class HelpChainController:
 
         return out
 
-    def export_requests(self, filters, fmt="excel"):
+    def export_requests(
+        self,
+        filters,
+        fmt="excel",
+        *,
+        structure_id: int | None = None,
+        allow_global: bool = False,
+    ):
         if not MODELS_AVAILABLE:
             raise RuntimeError(
                 "Models HelpRequest/Volunteer not found. Add them under src/models/ to enable export."
             )
 
         q = db.session.query(HelpRequest)
+        if allow_global:
+            pass
+        elif structure_id is not None:
+            q = q.filter(HelpRequest.structure_id == int(structure_id))
+        else:
+            raise PermissionError("tenant scope required for export")
         q = self._apply_filters_query(q, filters)
         rows = []
         for r in q.all():
@@ -201,28 +214,55 @@ class HelpChainController:
                 }
             )
 
-        # pandas lazy import
-        try:
-            import pandas as pd  # local import
-        except Exception as e:
-            raise RuntimeError(
-                "pandas is required for export_requests. Install with: pip install pandas openpyxl"
-            ) from e
-
-        df = pd.DataFrame(rows)
-
         tmpdir = tempfile.gettempdir()
         if fmt == "excel":
+            try:
+                import pandas as pd  # local import
+            except Exception:
+                pd = None
+
             path = os.path.join(
                 tmpdir, f"help_requests_{int(utc_now().timestamp())}.xlsx"
             )
-            df.to_excel(path, index=False, engine="openpyxl")
+            if pd is not None:
+                df = pd.DataFrame(rows)
+                df.to_excel(path, index=False, engine="openpyxl")
+            else:
+                try:
+                    from openpyxl import Workbook
+                except Exception as e:
+                    raise RuntimeError(
+                        "openpyxl is required for excel export. Install with: pip install openpyxl"
+                    ) from e
+                workbook = Workbook()
+                sheet = workbook.active
+                headers = [
+                    "id",
+                    "title",
+                    "status",
+                    "type",
+                    "region",
+                    "volunteer",
+                    "created_at",
+                    "updated_at",
+                ]
+                sheet.append(headers)
+                for row in rows:
+                    sheet.append([row.get(header) for header in headers])
+                workbook.save(path)
             return (
                 path,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 os.path.basename(path),
             )
         elif fmt == "pdf":
+            try:
+                import pandas as pd  # local import
+            except Exception as e:
+                raise RuntimeError(
+                    "pandas is required for export_requests. Install with: pip install pandas openpyxl"
+                ) from e
+            df = pd.DataFrame(rows)
             try:
                 from jinja2 import Template
                 from weasyprint import HTML

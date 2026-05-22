@@ -215,6 +215,108 @@ def test_cross_tenant_request_visibility_export_and_detail_are_scoped(app, sessi
     assert "tenant-b-request-hidden" not in export_text
 
 
+def test_cross_tenant_request_export_xlsx_matches_listing_scope(app, session):
+    from openpyxl import load_workbook
+
+    structure_a, structure_b, admin, user_a, user_b = _seed_scoped_admin(
+        session, prefix="request_xlsx_scope"
+    )
+    _make_request(
+        session,
+        title="tenant-a-xlsx-visible",
+        user_id=user_a.id,
+        structure_id=structure_a.id,
+        status="pending",
+    )
+    _make_request(
+        session,
+        title="tenant-b-xlsx-hidden",
+        user_id=user_b.id,
+        structure_id=structure_b.id,
+        status="pending",
+    )
+    session.commit()
+
+    client = app.test_client()
+    _login_admin(client, app, admin)
+
+    listing = client.get("/admin/requests")
+    assert listing.status_code == 200
+    listing_html = listing.get_data(as_text=True)
+    assert "tenant-a-xlsx-visible" in listing_html
+    assert "tenant-b-xlsx-hidden" not in listing_html
+
+    export_xlsx = client.get("/admin/requests/export.xlsx")
+    assert export_xlsx.status_code == 200
+
+    workbook = load_workbook(BytesIO(export_xlsx.get_data()))
+    sheet = workbook.active
+    values = {
+        str(cell)
+        for row in sheet.iter_rows(values_only=True)
+        for cell in row
+        if cell is not None
+    }
+    assert "tenant-a-xlsx-visible" in values
+    assert "tenant-b-xlsx-hidden" not in values
+
+
+def test_cross_tenant_legacy_api_export_is_scoped(app, session):
+    from backend.helpchain_backend.src.jwt_utils import encode_access_token
+    from openpyxl import load_workbook
+
+    structure_a, structure_b, admin, user_a, user_b = _seed_scoped_admin(
+        session, prefix="legacy_api_export_scope"
+    )
+    _make_request(
+        session,
+        title="tenant-a-api-export-visible",
+        user_id=user_a.id,
+        structure_id=structure_a.id,
+        status="pending",
+    )
+    _make_request(
+        session,
+        title="tenant-b-api-export-hidden",
+        user_id=user_b.id,
+        structure_id=structure_b.id,
+        status="pending",
+    )
+    session.commit()
+
+    with app.app_context():
+        token = encode_access_token(admin.id)
+
+    client = app.test_client()
+    response = client.get(
+        "/api/export?format=excel",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert response.status_code == 200
+
+    workbook = load_workbook(BytesIO(response.get_data()))
+    sheet = workbook.active
+    values = {
+        str(cell)
+        for row in sheet.iter_rows(values_only=True)
+        for cell in row
+        if cell is not None
+    }
+    assert "tenant-a-api-export-visible" in values
+    assert "tenant-b-api-export-hidden" not in values
+
+
+def test_structure_scoped_admin_cannot_use_global_volunteer_export(app, session):
+    _structure_a, _structure_b, admin, _user_a, _user_b = _seed_scoped_admin(
+        session, prefix="volunteer_export_scope"
+    )
+    client = app.test_client()
+    _login_admin(client, app, admin)
+
+    response = client.get("/admin/export_volunteers")
+    assert response.status_code == 403
+
+
 def test_cross_tenant_case_visibility_and_mutation_are_scoped(app, session):
     structure_a, structure_b, admin, user_a, user_b = _seed_scoped_admin(
         session, prefix="case_scope"

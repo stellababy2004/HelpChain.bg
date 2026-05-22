@@ -8452,6 +8452,9 @@ def edit_volunteer(id):
 def export_volunteers():
     admin_required_404()
     """Export volunteers as CSV."""
+    _require_global_admin()
+    if getattr(current_user, "structure_id", None) is not None:
+        abort(403)
     if not current_user.is_admin:
         flash(_("Access denied."), "error")
         return redirect(url_for("main.index"))

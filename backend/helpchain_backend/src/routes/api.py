@@ -28,6 +28,7 @@ from ..models import (
     RequestMetric,
     Structure,
     db,
+    canonical_role,
 )
 from .admin import admin_required, admin_required_404, admin_role_required, _is_global_admin
 from ..security.api_authz import require_api_auth, require_roles
@@ -746,10 +747,28 @@ def export():
         for k in ("date_from", "date_to", "status", "region", "volunteer_id")
     }
     try:
-        path, mimetype, filename = controller.export_requests(filters, fmt)
+        actor_id = getattr(g, "api_user_id", None)
+        actor = db.session.get(AdminUser, int(actor_id)) if actor_id else None
+        if actor is None or not bool(getattr(actor, "is_active", False)):
+            return jsonify({"error": "Forbidden"}), 403
+
+        role = canonical_role(getattr(actor, "role", None))
+        is_global_admin = role == "superadmin" and getattr(actor, "structure_id", None) is None
+        structure_id = None if is_global_admin else getattr(actor, "structure_id", None)
+        if not is_global_admin and structure_id is None:
+            return jsonify({"error": "Forbidden"}), 403
+
+        path, mimetype, filename = controller.export_requests(
+            filters,
+            fmt,
+            structure_id=structure_id,
+            allow_global=is_global_admin,
+        )
         return send_file(
             path, mimetype=mimetype, as_attachment=True, download_name=filename
         )
+    except PermissionError:
+        return jsonify({"error": "Forbidden"}), 403
     except NotImplementedError:
         return jsonify({"error": "format not supported"}), 400
     except RuntimeError as e:
