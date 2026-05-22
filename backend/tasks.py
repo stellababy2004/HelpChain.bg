@@ -121,6 +121,11 @@ def utc_now() -> datetime:
 
 
 def _resolve_structure_id(structure_id: int | None = None) -> int:
+    # Background entry points should prefer an explicit structure_id from the
+    # caller. Falling back to current_structure_id() is legacy compatibility
+    # for in-process/task invocations that still inherit Flask context today.
+    # Future out-of-band producers should pass structure_id explicitly and fail
+    # closed when tenant resolution is unavailable.
     if structure_id:
         return int(structure_id)
     return int(current_structure_id())
