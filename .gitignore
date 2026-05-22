@@ -241,6 +241,13 @@ _safety_before_full_restore_*/
 *.bak_*
 
 # Local cleanup artifacts
-_archive/
+_archive/*
+!_archive/README.md
+!_archive/runtime_backups/
+!_archive/runtime_backups/**
+!_archive/legacy_snapshots/
+!_archive/legacy_snapshots/**
+!_archive/scratch/
+!_archive/scratch/**
 _inventory/
 

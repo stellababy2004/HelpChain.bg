@@ -59,7 +59,15 @@ def changed_files(base_ref: str) -> list[str]:
     return out
 
 
+def _is_archived_path(file_path: str) -> bool:
+    normalized = file_path.replace("\\", "/")
+    return normalized.startswith("_archive/")
+
+
 def added_lines_for_file(base_ref: str, file_path: str) -> list[AddedLine]:
+    if _is_archived_path(file_path):
+        return []
+
     cp = _run_git(["diff", "--unified=0", "--no-color", f"{base_ref}...HEAD", "--", file_path])
     if cp.returncode != 0:
         return []
