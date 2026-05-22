@@ -29,6 +29,7 @@
     {% set is_leads_active = current_path.startswith('/admin/professional-leads') %}
     {% set admin_role = (current_user.role or '')|lower %}
     {% set can_access_professional_leads = admin_role in ['superadmin', 'super_admin', 'super-admin'] %}
+    {% set can_access_global_analytics = admin_role in ['superadmin', 'super_admin', 'super-admin'] %}
     {% set is_revenue_active = current_path.startswith('/admin/revenue') %}
     {% set is_conversion_active = current_path.startswith('/admin/conversion-dashboard') %}
 {% set is_reports_active = current_path.startswith('/admin/reports') %}
@@ -57,12 +58,16 @@
           {% if can_access_professional_leads %}
           <a class="hc-admin-shellnav__link {{ 'is-active' if is_leads_active else '' }}" href="{{ url_for('admin.admin_professional_leads') }}" {% if is_leads_active %}aria-current="page"{% endif %}>Leads</a>
           {% endif %}
+          {% if can_access_global_analytics %}
           <a class="hc-admin-shellnav__link {{ 'is-active' if is_revenue_active else '' }}" href="{{ url_for('admin.admin_revenue') }}" {% if is_revenue_active %}aria-current="page"{% endif %}>Revenue</a>
+          {% endif %}
           <a class="hc-admin-shellnav__link {{ 'is-active' if is_conversion_active else '' }}" href="/admin/conversion-dashboard" {% if is_conversion_active %}aria-current="page"{% endif %}>Conversion</a>
 <a class="hc-admin-shellnav__link {{ 'is-active' if is_reports_active else '' }}"
 href="{{ url_for('admin.admin_operations_report') }}"
 {% if is_reports_active %}aria-current="page"{% endif %}>Rapports</a>
+          {% if can_access_global_analytics %}
           <a class="hc-admin-shellnav__link {{ 'is-active' if is_audience_active else '' }}" href="{{ url_for('admin.admin_audience_map') }}" {% if is_audience_active %}aria-current="page"{% endif %}>Audience</a>
+          {% endif %}
           <a class="hc-admin-shellnav__link {{ 'is-active' if is_integrations_active else '' }}" href="{{ url_for('admin.admin_integrations') }}" {% if is_integrations_active %}aria-current="page"{% endif %}>Connecteurs</a>
           <a class="hc-admin-shellnav__link {{ 'is-active' if is_security_active else '' }}" href="{{ url_for('admin.admin_security') }}" {% if is_security_active %}aria-current="page"{% endif %}>Sécurité</a>
           <a class="hc-admin-shellnav__link {{ 'is-active' if is_platform_active else '' }}" href="{{ url_for('admin.admin_structures') }}" {% if is_platform_active %}aria-current="page"{% endif %}>Plateforme</a>

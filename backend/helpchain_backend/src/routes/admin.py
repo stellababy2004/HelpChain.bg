@@ -54,6 +54,7 @@ from backend.extensions import db, limiter, mail
 from backend.system_sanity import run_system_checks
 from ..admin_actor import resolve_current_admin_actor
 from ..admin_policies import can_access_professional_leads
+from ..admin_policies import can_view_global_analytics
 from ..models.volunteer_interest import VolunteerInterest
 from ..observability import (
     tenant_leak_get,
@@ -2685,6 +2686,16 @@ def _require_professional_lead_access() -> None:
     if not can_access_professional_leads(actor):
         _audit_denied_action(
             required_roles={"platform_commercial", "superadmin"},
+            actor_role=actor.role,
+        )
+        abort(403)
+
+
+def _require_global_analytics_access() -> None:
+    actor = resolve_current_admin_actor()
+    if not can_view_global_analytics(actor):
+        _audit_denied_action(
+            required_roles={"global_analytics"},
             actor_role=actor.role,
         )
         abort(403)
@@ -10970,7 +10981,7 @@ def _revenue_focus(rows: list[SimpleNamespace]) -> dict:
 @admin_required
 @admin_role_required("superadmin")
 def admin_revenue():
-    _require_global_admin()
+    _require_global_analytics_access()
     filters = {
         "type": (request.args.get("type") or "").strip(),
         "stage": (request.args.get("stage") or "").strip(),
@@ -11004,7 +11015,7 @@ def admin_revenue():
 @admin_required
 @admin_role_required("superadmin")
 def admin_revenue_quick_action(item_type: str, item_id: int):
-    _require_global_admin()
+    _require_global_analytics_access()
     action = (request.form.get("action") or "").strip().lower()
     note = (request.form.get("note") or "").strip()
     now = _now_utc()
@@ -11058,7 +11069,11 @@ def admin_revenue_quick_action(item_type: str, item_id: int):
 
 
 @admin_bp.get("/api/high-intent-sessions")
+@login_required
+@admin_required
+@admin_role_required("superadmin")
 def admin_high_intent_sessions():
+    _require_global_analytics_access()
 
     from collections import defaultdict
     from datetime import datetime, timedelta
@@ -11246,7 +11261,7 @@ def admin_high_intent_sessions():
 @admin_role_required("superadmin")
 def admin_audience_map():
     admin_required_404()
-    _require_global_admin()
+    _require_global_analytics_access()
     return render_template(
         "admin/audience_map.html",
         audience=_build_audience_map_context(),
