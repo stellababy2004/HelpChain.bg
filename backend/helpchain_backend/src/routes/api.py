@@ -16,6 +16,7 @@ from backend.ai_service import ai_service
 from ..controllers.helpchain_controller import HelpChainController
 from ..extensions import csrf
 from ..models import (
+    AdminUser,
     Case,
     CaseCollaborator,
     CaseEvent,
@@ -28,7 +29,7 @@ from ..models import (
     Structure,
     db,
 )
-from .admin import admin_required, admin_required_404, admin_role_required, _current_structure_id, _is_global_admin
+from .admin import admin_required, admin_required_404, admin_role_required, _is_global_admin
 from ..security.api_authz import require_api_auth, require_roles
 
 api_bp = Blueprint("api", __name__)
@@ -537,8 +538,20 @@ def invite_structure_to_case(case_id: int):
     if not case_row:
         return jsonify({"error": "case not found"}), 404
 
-    sid = _current_structure_id()
-    if not _is_global_admin() and sid and case_row.structure_id != sid:
+    admin_structure_id = getattr(current_user, "structure_id", None)
+    admin_user_id = (
+        session.get("admin_user_id")
+        or session.get("admin_id")
+        or session.get("user_id")
+    )
+    try:
+        if admin_user_id is not None:
+            admin_user = db.session.get(AdminUser, int(admin_user_id))
+            if admin_user is not None:
+                admin_structure_id = getattr(admin_user, "structure_id", None)
+    except Exception:
+        admin_structure_id = getattr(current_user, "structure_id", None)
+    if not _is_global_admin() and admin_structure_id is not None and case_row.structure_id != admin_structure_id:
         return jsonify({"error": "forbidden"}), 403
 
     if structure_id == case_row.structure_id:

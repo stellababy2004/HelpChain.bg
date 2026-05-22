@@ -7154,13 +7154,13 @@ def admin_territorial_kpis():
         now = datetime.now(UTC).replace(tzinfo=None)
         since = now - timedelta(days=7)
 
-        case_filter = None
+        base_cases = (
+            db.session.query(Case)
+            .join(Request, Case.request_id == Request.id)
+            .filter(Case.structure_id == Request.structure_id)
+        )
         if not _is_global_admin():
-            case_filter = Case.structure_id == _current_structure_id()
-
-        base_cases = db.session.query(Case)
-        if case_filter is not None:
-            base_cases = base_cases.filter(case_filter)
+            base_cases = base_cases.filter(Request.structure_id == _current_structure_id())
 
         active_cases = (
             base_cases.filter(func.lower(Case.status) != "closed").count()
@@ -7196,18 +7196,29 @@ def admin_territorial_kpis():
                 )
             )
             .join(first_event_subq, Case.id == first_event_subq.c.case_id)
+            .join(Request, Case.request_id == Request.id)
+            .filter(Case.structure_id == Request.structure_id)
         )
-        if case_filter is not None:
-            avg_response_query = avg_response_query.filter(case_filter)
+        if not _is_global_admin():
+            avg_response_query = avg_response_query.filter(
+                Request.structure_id == _current_structure_id()
+            )
         avg_response_sec = avg_response_query.scalar()
         avg_response_hours = round(float(avg_response_sec or 0) / 3600.0, 2)
 
         open_filter = func.lower(Case.status) != "closed"
-        oldest_open_query = db.session.query(
-            func.max((func.julianday(now) - func.julianday(Case.created_at)) * 86400.0)
-        ).filter(open_filter)
-        if case_filter is not None:
-            oldest_open_query = oldest_open_query.filter(case_filter)
+        oldest_open_query = (
+            db.session.query(
+                func.max((func.julianday(now) - func.julianday(Case.created_at)) * 86400.0)
+            )
+            .join(Request, Case.request_id == Request.id)
+            .filter(Case.structure_id == Request.structure_id)
+            .filter(open_filter)
+        )
+        if not _is_global_admin():
+            oldest_open_query = oldest_open_query.filter(
+                Request.structure_id == _current_structure_id()
+            )
         oldest_open_sec = oldest_open_query.scalar()
         oldest_open_case_days = int(float(oldest_open_sec or 0) / 86400.0)
 
@@ -9127,6 +9138,7 @@ def _build_scoped_cases_base_query():
         Case.query.join(Request, Case.request_id == Request.id)
         .join(scoped_ids_subq, Request.id == scoped_ids_subq.c.id)
         .outerjoin(activity_sq, activity_sq.c.request_id == Request.id)
+        .filter(Case.structure_id == Request.structure_id)
     )
     case_filters = _build_case_kpi_filters(activity_expr_override=case_activity_expr)
     return query, case_filters
@@ -9489,11 +9501,12 @@ def _render_cases_list():
     no_owner_count = queue_counts["no_owner"]
     stale_count = queue_counts["stale_72h"]
 
-    owners = (
-        AdminUser.query.with_entities(AdminUser.id, AdminUser.username)
-        .order_by(AdminUser.username.asc())
-        .all()
-    )
+    owners_query = AdminUser.query.with_entities(AdminUser.id, AdminUser.username)
+    if not _is_global_admin():
+        owners_query = owners_query.filter(
+            AdminUser.structure_id == _current_structure_id()
+        )
+    owners = owners_query.order_by(AdminUser.username.asc()).all()
 
     return render_template(
         "admin/cases.html",

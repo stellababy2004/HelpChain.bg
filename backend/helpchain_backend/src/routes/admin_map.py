@@ -213,6 +213,7 @@ def admin_risk_map_api():
         query = (
             Case.query.options(joinedload(Case.request))
             .join(Request, Case.request_id == Request.id)
+            .filter(Case.structure_id == Request.structure_id)
             .filter(func.lower(func.coalesce(Case.status, "")).in_(tuple(_ACTIVE_CASE_STATUSES)))
             .filter(
                 or_(
@@ -276,9 +277,23 @@ def admin_risk_map_api():
 
 @admin_map_bp.get("/api/cases/map")
 @admin_required
+@admin_role_required("readonly", "ops", "admin", "superadmin")
 def admin_cases_map_api():
     admin_required_404()
-    rows = _load_cases_with_geo()
+    scoped_request_ids = _scope_requests(Request.query.with_entities(Request.id)).subquery()
+    visible_case_ids = {
+        int(case_id)
+        for (case_id,) in (
+            db.session.query(Case.id)
+            .join(Request, Case.request_id == Request.id)
+            .join(scoped_request_ids, Request.id == scoped_request_ids.c.id)
+            .filter(Case.structure_id == Request.structure_id)
+            .all()
+        )
+    }
+    rows = [
+        row for row in _load_cases_with_geo() if int(getattr(row, "id", 0) or 0) in visible_case_ids
+    ]
     payload = []
     for row in rows:
         risk = compute_case_risk(int(row.id)) or {}

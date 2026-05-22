@@ -305,6 +305,8 @@ def _get_scoped_case_or_404(case_id: int) -> tuple[Case, Request]:
         req = _scope_requests(Request.query).filter(Request.id == case_row.request_id).first()
     if not req:
         abort(404)
+    if getattr(case_row, "structure_id", None) != getattr(req, "structure_id", None):
+        abort(404)
     return case_row, req
 
 
@@ -433,9 +435,13 @@ def admin_case_detail(case_id: int):
         .all()
     )
     owners = _owner_query_for_current_scope().all()
+    legacy_users_query = User.query.with_entities(User.id, User.username, User.email)
+    if not _is_global_admin():
+        legacy_users_query = legacy_users_query.filter(
+            User.structure_id == getattr(case_row, "structure_id", None)
+        )
     legacy_users = (
-        User.query.with_entities(User.id, User.username, User.email)
-        .order_by(User.username.asc())
+        legacy_users_query.order_by(User.username.asc())
         .limit(300)
         .all()
     )
@@ -727,8 +733,17 @@ def admin_case_add_participant(case_id: int):
         except Exception:
             lead_id = None
 
-    if user_id is not None and not db.session.get(User, user_id):
+    selected_user = db.session.get(User, user_id) if user_id is not None else None
+    if user_id is not None and not selected_user:
         flash("Selected legacy user record does not exist.", "warning")
+        return redirect(
+            url_for("admin.admin_case_detail", case_id=case_row.id),
+            code=303,
+        )
+    if user_id is not None and getattr(selected_user, "structure_id", None) != getattr(
+        case_row, "structure_id", None
+    ):
+        flash("Selected user is outside this case structure.", "warning")
         return redirect(
             url_for("admin.admin_case_detail", case_id=case_row.id),
             code=303,
