@@ -25,6 +25,13 @@ def _is_test_env() -> bool:
 def _load_default_structure_id() -> int:
     global _DEFAULT_STRUCTURE_ID
     if _DEFAULT_STRUCTURE_ID is None:
+        # Legacy compatibility gate:
+        # - tests may bootstrap before schema creation
+        # - local/dev startup may warm tenant state before explicit scoping exists
+        #
+        # New request/admin/ops write flows should not depend on this branch long
+        # term. They should resolve a tenant explicitly and eventually fail closed
+        # before reaching the default-tenant fallback.
         allow_bootstrap = False
         if _is_test_env():
             allow_bootstrap = True
@@ -72,6 +79,20 @@ def _load_default_structure_id() -> int:
 
 
 def current_structure_id() -> int:
+    """Resolve the active tenant for the current runtime context.
+
+    Resolution order is part of the current compatibility contract:
+    1. ``g.structure_id`` when a caller has already bound an explicit tenant.
+    2. ``current_user.structure_id`` for authenticated request/admin flows.
+    3. ``g.user.structure_id`` for older request bootstrap paths.
+    4. ``_load_default_structure_id()`` as a documented legacy fallback.
+
+    The first three layers are the preferred runtime sources. Layer 4 exists to
+    preserve legacy tests, bootstrap/startup helpers, and older flows that still
+    assume an ambient default tenant. Future write paths and background entry
+    points should pass an explicit structure id or fail closed before relying on
+    the default tenant fallback.
+    """
     if not has_app_context():
         return _load_default_structure_id()
 
