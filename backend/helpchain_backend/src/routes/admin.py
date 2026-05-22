@@ -9311,10 +9311,7 @@ def _scoped_notification_jobs_query():
     try:
         if not _is_global_admin():
             sid = _current_structure_id()
-            query = query.filter(
-                (NotificationJob.structure_id == sid)
-                | (NotificationJob.structure_id.is_(None))
-            )
+            query = query.filter(NotificationJob.structure_id == sid)
     except Exception:
         pass
     return query
