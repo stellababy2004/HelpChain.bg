@@ -30,6 +30,39 @@ PROTECTED_MODULES = {
     ],
 }
 
+REQUEST_CANONICAL_STATUSES = {"open", "in_progress", "done", "cancelled"}
+REQUEST_COMPATIBILITY_ALIASES = {
+    "pending",
+    "approved",
+    "rejected",
+    "completed",
+    "resolved",
+    "closed",
+    "active",
+    "canceled",
+}
+REQUEST_STATUS_VOCABULARY = REQUEST_CANONICAL_STATUSES | REQUEST_COMPATIBILITY_ALIASES
+
+REQUEST_STATUS_PROTECTED_MODULES = {
+    "admin": [
+        "backend/helpchain_backend/src/routes/admin_requests.py",
+    ],
+    "reporting": [
+        "backend/helpchain_backend/src/services/reporting/operations_report.py",
+    ],
+    "sla": [
+        "backend/helpchain_backend/src/services/request_sla.py",
+    ],
+    "ops": [
+        "backend/admin/ops_api.py",
+    ],
+    "tests": [
+        "tests/test_request_statuses.py",
+        "tests/test_request_sla_engine.py",
+        "tests/test_ops_metrics_status_compat.py",
+    ],
+}
+
 
 def _parse_module(relative_path: str) -> ast.AST:
     path = REPO_ROOT / relative_path
@@ -73,6 +106,128 @@ def _forbidden_references(relative_path: str) -> list[str]:
     return sorted(hits)
 
 
+def _contains_request_status_reference(node: ast.AST | None) -> bool:
+    if node is None:
+        return False
+    for child in ast.walk(node):
+        if (
+            isinstance(child, ast.Attribute)
+            and child.attr == "status"
+            and isinstance(child.value, ast.Name)
+            and child.value.id == "Request"
+        ):
+            return True
+    return False
+
+
+def _string_literals(node: ast.AST | None) -> set[str]:
+    values: set[str] = set()
+    if node is None:
+        return values
+    for child in ast.walk(node):
+        if isinstance(child, ast.Constant) and isinstance(child.value, str):
+            values.add(child.value.strip().lower())
+    return values
+
+
+def _assignment_target_names(node: ast.Assign | ast.AnnAssign) -> list[str]:
+    if isinstance(node, ast.Assign):
+        targets = node.targets
+    else:
+        targets = [node.target]
+
+    names: list[str] = []
+    for target in targets:
+        if isinstance(target, ast.Name):
+            names.append(target.id)
+    return names
+
+
+def _direct_string_literals(node: ast.AST | None) -> set[str]:
+    values: set[str] = set()
+
+    def visit(current: ast.AST | None) -> None:
+        if current is None:
+            return
+        if isinstance(current, ast.Constant) and isinstance(current.value, str):
+            values.add(current.value.strip().lower())
+            return
+        if isinstance(current, (ast.List, ast.Tuple, ast.Set)):
+            for elt in current.elts:
+                if isinstance(elt, ast.Starred):
+                    continue
+                visit(elt)
+            return
+        if isinstance(current, ast.Dict):
+            for key in current.keys:
+                visit(key)
+            for value in current.values:
+                visit(value)
+
+    visit(node)
+    return values
+
+
+def _request_status_vocabulary_violations(relative_path: str) -> list[str]:
+    tree = _parse_module(relative_path)
+    hits: set[str] = set()
+    allow_compatibility_aliases = relative_path.startswith("tests/")
+
+    class RequestStatusVocabularyVisitor(ast.NodeVisitor):
+        def visit_Compare(self, node: ast.Compare) -> None:
+            if not _contains_request_status_reference(node.left):
+                self.generic_visit(node)
+                return
+
+            raw_values: set[str] = set()
+            for comparator in node.comparators:
+                raw_values.update(_string_literals(comparator) & REQUEST_STATUS_VOCABULARY)
+
+            disallowed = raw_values - REQUEST_CANONICAL_STATUSES
+            if disallowed and not allow_compatibility_aliases:
+                hits.add(
+                    "raw Request.status comparison uses compatibility/legacy values: "
+                    + ", ".join(sorted(disallowed))
+                )
+            self.generic_visit(node)
+
+        def visit_Call(self, node: ast.Call) -> None:
+            if (
+                isinstance(node.func, ast.Attribute)
+                and node.func.attr in {"in_", "notin_"}
+                and _contains_request_status_reference(node.func.value)
+            ):
+                raw_values: set[str] = set()
+                for arg in node.args:
+                    raw_values.update(_string_literals(arg) & REQUEST_STATUS_VOCABULARY)
+
+                disallowed = raw_values - REQUEST_CANONICAL_STATUSES
+                if disallowed and not allow_compatibility_aliases:
+                    hits.add(
+                        f"raw Request.status {node.func.attr} uses compatibility/legacy values: "
+                        + ", ".join(sorted(disallowed))
+                    )
+            self.generic_visit(node)
+
+    RequestStatusVocabularyVisitor().visit(tree)
+
+    for node in tree.body:
+        if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+            continue
+        target_names = _assignment_target_names(node)
+        if not any("STATUS" in name.upper() for name in target_names):
+            continue
+
+        literal_values = _direct_string_literals(node.value) & REQUEST_STATUS_VOCABULARY
+        if len(literal_values) >= 2:
+            hits.add(
+                "scattered status vocabulary assignment outside statuses.py: "
+                + ", ".join(sorted(literal_values))
+            )
+
+    return sorted(hits)
+
+
 @pytest.mark.parametrize("relative_path", PROTECTED_MODULES["reporting"])
 def test_reporting_modules_do_not_depend_on_social_request(relative_path: str):
     assert _forbidden_references(relative_path) == [], (
@@ -94,4 +249,23 @@ def test_assignment_modules_do_not_depend_on_social_request(relative_path: str):
     assert _forbidden_references(relative_path) == [], (
         "Canonical assignment orchestration must stay on the Request/Case operational spine; "
         f"found SocialRequest dependency in {relative_path}: {_forbidden_references(relative_path)}"
+    )
+
+
+@pytest.mark.parametrize(
+    "relative_path",
+    REQUEST_STATUS_PROTECTED_MODULES["admin"]
+    + REQUEST_STATUS_PROTECTED_MODULES["reporting"]
+    + REQUEST_STATUS_PROTECTED_MODULES["sla"]
+    + REQUEST_STATUS_PROTECTED_MODULES["ops"]
+    + REQUEST_STATUS_PROTECTED_MODULES["tests"],
+)
+def test_canonical_request_modules_do_not_introduce_new_status_vocabularies(
+    relative_path: str,
+):
+    assert _request_status_vocabulary_violations(relative_path) == [], (
+        "Canonical Request lifecycle modules must keep raw status vocabularies inside "
+        "backend/helpchain_backend/src/statuses.py (tests may cover compatibility aliases "
+        "explicitly); found violations in "
+        f"{relative_path}: {_request_status_vocabulary_violations(relative_path)}"
     )
