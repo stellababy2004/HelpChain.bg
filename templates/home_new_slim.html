@@ -281,6 +281,38 @@
       line-height: 1.55;
     }
 
+    body.hc-page-home .hc-home-premium__shot-card--interstructure {
+      max-height: none !important;
+      overflow: hidden !important;
+    }
+
+    body.hc-page-home .hc-home-premium__product-visual .hc-home-premium__shot-bar span:nth-child(1) {
+      background: #ff5f57 !important;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+    }
+
+    body.hc-page-home .hc-home-premium__product-visual .hc-home-premium__shot-bar span:nth-child(2) {
+      background: #febc2e !important;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+    }
+
+    body.hc-page-home .hc-home-premium__product-visual .hc-home-premium__shot-bar span:nth-child(3) {
+      background: #28c840 !important;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+    }
+
+    body.hc-page-home .hc-home-premium__shot-card--interstructure .hc-home-premium__shot-img {
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+      max-height: none !important;
+      object-fit: contain !important;
+      object-position: center top !important;
+      padding: 0 !important;
+      background: #f8fbff !important;
+      margin: 0 !important;
+    }
+
     @media (max-width: 991.98px) {
       body.hc-page-home .hc-home-premium__nav {
         padding-top: 8px !important;
@@ -522,10 +554,10 @@
         </div>
         <img
           class="hc-home-premium__shot-img hc-home-premium__shot-img--hero"
-          src="{{ url_for('static', filename='img/helpchain-hero-final.png') }}"
+          src="{{ url_for('static', filename='img/helpchain-hero-final.png') }}?v=20260523-hero-ops"
           alt="Interface de pilotage HelpChain"
-          width="1672"
-          height="941"
+          width="1481"
+          height="1062"
           loading="eager"
           decoding="async"
           fetchpriority="high"
@@ -660,6 +692,39 @@
             decoding="async"
           >
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hc-home-premium__section hc-home-premium__section--product" aria-labelledby="hc-home-interstructure-title">
+    <div class="hc-home-premium__product-row hc-home-premium__product-row--reverse">
+      <div class="hc-home-premium__product-visual">
+        <div class="hc-home-premium__shot-card hc-home-premium__shot-card--interstructure">
+          <div class="hc-home-premium__shot-bar">
+            <span></span><span></span><span></span>
+            <strong>{{ _('Coordination inter-structures') }}</strong>
+          </div>
+          <img
+            class="hc-home-premium__shot-img"
+            src="{{ url_for('static', filename='img/product/coordination-inter-structures.png') }}"
+            alt="{{ _('Vue HelpChain d’une demande avec orientation vers partenaire dans un cadre inter-structures maîtrisé') }}"
+            width="1718"
+            height="916"
+            loading="lazy"
+            decoding="async"
+          >
+        </div>
+      </div>
+      <div class="hc-home-premium__product-copy">
+        <p class="hc-home-premium__section-kicker">{{ _('COORDINATION INTER-STRUCTURES MAÎTRISÉE') }}</p>
+        <h2 id="hc-home-interstructure-title">{{ _('Coordonnez plusieurs organisations sans exposer tout le dossier.') }}</h2>
+        <p>{{ _('HelpChain permet de faire circuler une orientation, un retour partenaire ou un point de suivi utile sans transformer la coordination en visibilité totale entre structures.') }}</p>
+        <ul class="hc-home-premium__workflow-points">
+          <li>{{ _('Chaque organisation accède uniquement au périmètre qui relève de son intervention.') }}</li>
+          <li>{{ _('Les échanges inter-structures restent traçables, avec statuts, retours et historique partagé sous contrôle.') }}</li>
+          <li>{{ _('Le cloisonnement par structure et les droits par rôle soutiennent une gouvernance multi-tenant crédible.') }}</li>
+        </ul>
+        <div class="hc-home-premium__workflow-note">{{ _('Une coopération opérationnelle devient possible sans ouvrir l’intégralité du suivi interne à tous les partenaires.') }}</div>
       </div>
     </div>
   </section>

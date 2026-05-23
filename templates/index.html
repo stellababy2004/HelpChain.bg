@@ -376,6 +376,119 @@
         grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
+      body.hc-page-home .hc-home__coordination-shell {
+        display: grid;
+        gap: 24px;
+        grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+        align-items: stretch;
+      }
+
+      body.hc-page-home .hc-home__coordination-copy,
+      body.hc-page-home .hc-home__coordination-panel {
+        padding: clamp(24px, 4vw, 34px);
+        border-radius: 28px;
+        border: 1px solid var(--hc-b2b-line);
+        background: var(--hc-b2b-surface);
+        box-shadow: var(--hc-b2b-shadow);
+      }
+
+      body.hc-page-home .hc-home__coordination-copy p {
+        margin: 0 0 1.1rem;
+        color: var(--hc-b2b-muted);
+        line-height: 1.78;
+      }
+
+      body.hc-page-home .hc-home__coordination-copy p:last-child {
+        margin-bottom: 0;
+      }
+
+      body.hc-page-home .hc-home__coordination-points {
+        display: grid;
+        gap: 14px;
+        margin-top: 1.7rem;
+      }
+
+      body.hc-page-home .hc-home__coordination-point {
+        display: grid;
+        gap: 0.35rem;
+        padding: 16px 18px;
+        border-radius: 20px;
+        border: 1px solid rgba(17, 35, 60, 0.08);
+        background: rgba(248, 250, 253, 0.9);
+      }
+
+      body.hc-page-home .hc-home__coordination-point strong {
+        color: var(--hc-b2b-ink);
+        font-size: 1rem;
+      }
+
+      body.hc-page-home .hc-home__coordination-point span {
+        color: var(--hc-b2b-muted);
+        line-height: 1.66;
+      }
+
+      body.hc-page-home .hc-home__coordination-panel {
+        background:
+          radial-gradient(circle at top right, rgba(20, 116, 111, 0.14), transparent 28%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(243, 247, 252, 0.96));
+      }
+
+      body.hc-page-home .hc-home__coordination-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin-bottom: 1.2rem;
+        color: #46617f;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      body.hc-page-home .hc-home__coordination-map {
+        display: grid;
+        gap: 14px;
+      }
+
+      body.hc-page-home .hc-home__coordination-node {
+        padding: 16px 18px;
+        border-radius: 20px;
+        border: 1px solid rgba(17, 35, 60, 0.08);
+        background: rgba(255, 255, 255, 0.92);
+      }
+
+      body.hc-page-home .hc-home__coordination-node strong,
+      body.hc-page-home .hc-home__coordination-node span {
+        display: block;
+      }
+
+      body.hc-page-home .hc-home__coordination-node strong {
+        margin-bottom: 0.35rem;
+        color: var(--hc-b2b-ink);
+      }
+
+      body.hc-page-home .hc-home__coordination-node span {
+        color: var(--hc-b2b-muted);
+        line-height: 1.62;
+      }
+
+      body.hc-page-home .hc-home__coordination-divider {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #53708d;
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+
+      body.hc-page-home .hc-home__coordination-divider::before,
+      body.hc-page-home .hc-home__coordination-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: rgba(17, 35, 60, 0.12);
+      }
+
       body.hc-page-home .hc-home__final {
         padding: clamp(28px, 5vw, 52px);
         border-radius: 32px;
@@ -423,6 +536,7 @@
         body.hc-page-home .hc-home__hero-grid,
         body.hc-page-home .hc-home__grid--3,
         body.hc-page-home .hc-home__kpis,
+        body.hc-page-home .hc-home__coordination-shell,
         body.hc-page-home .hc-home__checklist,
         body.hc-page-home .hc-home__proof-grid {
           grid-template-columns: 1fr;
@@ -749,6 +863,60 @@
                 <strong>{{ _('Multi-structures') }}</strong>
                 <span>{{ _('pilotage mutualisé des équipes et territoires') }}</span>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="hc-home__section" id="coordination-inter-structures">
+          <div class="container">
+            <div class="hc-home__section-head">
+              <span class="hc-home__eyebrow">{{ _('Coordination inter-structures maîtrisée') }}</span>
+              <h2>{{ _('Plusieurs organisations peuvent coordonner une situation sans ouvrir tout le dossier.') }}</h2>
+              <p>{{ _('HelpChain permet une coopération encadrée entre structures, avec une visibilité limitée à ce qui doit être partagé, au bon moment et pour le bon acteur.') }}</p>
+            </div>
+
+            <div class="hc-home__coordination-shell">
+              <article class="hc-home__coordination-copy">
+                <p>{{ _('La coordination inter-structures ne repose pas sur un accès généralisé. Chaque organisation intervient dans un cadre défini, avec des règles de partage, des rôles distincts et une traçabilité complète des échanges utiles à la situation.') }}</p>
+                <p>{{ _('Le résultat: une coopération opérationnelle entre CCAS, associations, services partenaires ou réseaux territoriaux, sans dérive vers un dossier ouvert à tous.') }}</p>
+
+                <div class="hc-home__coordination-points" role="list" aria-label="{{ _('Principes de coordination maîtrisée') }}">
+                  <div class="hc-home__coordination-point" role="listitem">
+                    <strong>{{ _('Visibilité ciblée') }}</strong>
+                    <span>{{ _('Chaque structure voit uniquement les informations, actions ou demandes qui relèvent de son périmètre.') }}</span>
+                  </div>
+                  <div class="hc-home__coordination-point" role="listitem">
+                    <strong>{{ _('Collaboration contrôlée') }}</strong>
+                    <span>{{ _('Les orientations, retours partenaires et points de coordination circulent sans exposer l’intégralité du suivi interne.') }}</span>
+                  </div>
+                  <div class="hc-home__coordination-point" role="listitem">
+                    <strong>{{ _('Gouvernance multi-tenant') }}</strong>
+                    <span>{{ _('Le cloisonnement par structure, les droits par rôle et l’historique d’activité soutiennent un pilotage institutionnel crédible.') }}</span>
+                  </div>
+                </div>
+              </article>
+
+              <aside class="hc-home__coordination-panel" aria-label="{{ _('Exemple de partage encadré entre structures') }}">
+                <div class="hc-home__coordination-label">
+                  <i class="fas fa-building-shield" aria-hidden="true"></i>{{ _('Partage encadré') }}
+                </div>
+                <div class="hc-home__coordination-map">
+                  <div class="hc-home__coordination-node">
+                    <strong>{{ _('Structure coordinatrice') }}</strong>
+                    <span>{{ _('Conserve la vue complète de la situation, les décisions internes et le pilotage global.') }}</span>
+                  </div>
+                  <div class="hc-home__coordination-divider">{{ _('Orientation ciblée') }}</div>
+                  <div class="hc-home__coordination-node">
+                    <strong>{{ _('Structure partenaire orientée') }}</strong>
+                    <span>{{ _('Reçoit uniquement la demande utile, le contexte nécessaire et les éléments de suivi attendus.') }}</span>
+                  </div>
+                  <div class="hc-home__coordination-divider">{{ _('Retour tracé') }}</div>
+                  <div class="hc-home__coordination-node">
+                    <strong>{{ _('Historique partagé sous contrôle') }}</strong>
+                    <span>{{ _('Chaque transmission, statut et retour est journalisé pour préserver la lisibilité inter-organisationnelle.') }}</span>
+                  </div>
+                </div>
+              </aside>
             </div>
           </div>
         </section>
