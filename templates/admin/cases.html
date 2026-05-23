@@ -1,6 +1,6 @@
 {% extends "layouts/admin_workspace.html" %}
 {% block title %}Admin - Cas | HelpChain{% endblock %}
-{% block admin_body_class %} hc-admin-requests-page{% if request.path.startswith('/ops') %} hc-ops-console-page{% endif %}{% endblock %}
+{% block admin_body_class %} hc-admin-requests-page hc-admin-table-page hc-admin-list-page hc-density-compact{% if request.path.startswith('/ops') %} hc-ops-console-page{% endif %}{% endblock %}
 {% block admin_content %}
 {% set cases_endpoint = 'ops.ops_cases_list' if request.path.startswith('/ops') else 'admin.admin_cases_list' %}
 {% set status_display_labels = {

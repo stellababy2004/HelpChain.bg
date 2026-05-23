@@ -1,10 +1,10 @@
 {% extends "layouts/admin_workspace.html" %}
 
 {% block title %}Connecteurs | HelpChain{% endblock %}
-{% block admin_body_class %} hc-admin-integrations-page{% endblock %}
+{% block admin_body_class %} hc-admin-integrations-page hc-admin-table-page hc-admin-list-page hc-density-compact{% endblock %}
 
 {% block admin_content %}
-<div class="hc-admin-wrap hc-admin-wrap--wide hc-density-compact">
+<div class="hc-admin-wrap hc-admin-wrap--wide hc-admin-shell hc-admin-list-shell hc-admin-module-page hc-admin-module-page--forms hc-density-compact">
   <nav class="hc-admin-breadcrumb" aria-label="Fil d'Ariane">
     <a href="{{ url_for('admin.admin_home') }}">Accueil</a>
     <span>/</span>

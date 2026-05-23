@@ -1,194 +1,160 @@
 {% extends "layouts/admin_workspace.html" %}
-{% block title %}Délais et dépassements SLA | HelpChain{% endblock %}
-{% block admin_body_class %} hc-admin-requests-page{% endblock %}
-{% block admin_workspace_css %}
-<style>
-.hc-sla-table-wrap {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.hc-sla-table {
-  width: 100%;
-  min-width: 920px;
-  border-collapse: collapse;
-  table-layout: fixed;
-}
-
-.hc-sla-table thead { display: table-header-group; }
-.hc-sla-table tbody { display: table-row-group; }
-.hc-sla-table tr { display: table-row; }
-
-.hc-sla-table th,
-.hc-sla-table td {
-  display: table-cell;
-  position: static;
-  float: none;
-  vertical-align: middle;
-  box-sizing: border-box;
-}
-
-.hc-sla-table th:nth-child(1),
-.hc-sla-table td:nth-child(1) { width: 8%; }
-
-.hc-sla-table th:nth-child(2),
-.hc-sla-table td:nth-child(2) { width: 28%; }
-
-.hc-sla-table th:nth-child(3),
-.hc-sla-table td:nth-child(3) { width: 13%; }
-
-.hc-sla-table th:nth-child(4),
-.hc-sla-table td:nth-child(4) { width: 18%; }
-
-.hc-sla-table th:nth-child(5),
-.hc-sla-table td:nth-child(5) { width: 13%; }
-
-.hc-sla-table th:nth-child(6),
-.hc-sla-table td:nth-child(6) { width: 12%; }
-
-.hc-sla-table th:nth-child(7),
-.hc-sla-table td:nth-child(7) { width: 8%; }
-</style>
-{% endblock %}
+{% block title %}Delais et depassements SLA | HelpChain{% endblock %}
+{% block admin_body_class %} hc-admin-requests-page hc-admin-table-page hc-admin-list-page hc-admin-sla-page hc-density-compact{% endblock %}
 
 {% block admin_content %}
-<div class="hc-admin-wrap">
-  <div class="hc-card mb-3 hc-page-hero">
-    <div class="d-flex align-items-end justify-content-between gap-3 flex-wrap">
-    <div>
-      <div class="hc-admin-kicker">Pilotage opérationnel</div>
-      <h1 class="hc-admin-title">Vue des délais et dépassements SLA</h1>
-      <div class="text-muted small mt-1">{{ breach_label }} • Fenêtre : {{ days }} jours</div>
-      <div class="text-muted small mt-1">Cette page affiche uniquement les demandes en dépassement de SLA.</div>
-      <div class="text-muted small mt-1">Alerte préventive SLA • Risque de dépassement SLA</div>
-    </div>
-
-    <form class="d-flex gap-2 flex-wrap" method="get" action="{{ url_for('admin.admin_sla_breakdown') }}">
-      <input type="hidden" name="limit" value="{{ limit }}">
-      <select class="form-select form-select-sm" name="type">
-        <option value="all" {% if breach_type == 'all' %}selected{% endif %}>Tous</option>
-        <option value="resolve" {% if breach_type == 'resolve' %}selected{% endif %}>Résolution</option>
-        <option value="owner_assign" {% if breach_type == 'owner_assign' %}selected{% endif %}>Attribution responsable</option>
-        <option value="volunteer_assign" {% if breach_type == 'volunteer_assign' %}selected{% endif %}>Attribution intervenant</option>
-      </select>
-      <select class="form-select form-select-sm" name="days">
-        <option value="7" {% if days == 7 %}selected{% endif %}>7 j</option>
-        <option value="30" {% if days == 30 %}selected{% endif %}>30 j</option>
-        <option value="90" {% if days == 90 %}selected{% endif %}>90 j</option>
-      </select>
-      <select class="form-select form-select-sm" name="sort">
-        <option value="overdue" {% if sort == 'overdue' %}selected{% endif %}>Les plus en retard</option>
-        <option value="created" {% if sort == 'created' %}selected{% endif %}>Les plus anciens d’abord</option>
-      </select>
-      <button class="btn btn-primary btn-sm" type="submit">Filtrer</button>
-    </form>
-    </div>
-  </div>
-
-  <div class="row g-3 mb-4">
-    <div class="col-md-4">
-      <a class="text-decoration-none text-reset d-block" href="{{ safe_url_for('admin.admin_requests', queue='sla', sla_kind='resolution_overdue', sla_days=days) }}">
-        <div class="hc-card h-100 hc-sla-kpi">
-          <div class="card-body">
-            <div class="text-muted small">Résolution en retard</div>
-            <div class="display-6 fw-semibold">{{ resolve_count }}</div>
-            <div class="text-muted small mt-1">Échéance proche : {{ prediction_counts.resolution_overdue }}</div>
-          </div>
-        </div>
-      </a>
-    </div>
-    <div class="col-md-4">
-      <a class="text-decoration-none text-reset d-block" href="{{ safe_url_for('admin.admin_requests', queue='sla', sla_kind='owner_assignment_overdue', sla_days=days) }}">
-        <div class="hc-card h-100 hc-sla-kpi">
-          <div class="card-body">
-            <div class="text-muted small">Attribution responsable en retard</div>
-            <div class="display-6 fw-semibold">{{ owner_assign_count }}</div>
-            <div class="text-muted small mt-1">Échéance proche : {{ prediction_counts.owner_assignment_overdue }}</div>
-          </div>
-        </div>
-      </a>
-    </div>
-    <div class="col-md-4">
-      <a class="text-decoration-none text-reset d-block" href="{{ safe_url_for('admin.admin_requests', queue='sla', sla_kind='volunteer_assignment_overdue', sla_days=days) }}">
-        <div class="hc-card h-100 hc-sla-kpi">
-          <div class="card-body">
-            <div class="text-muted small">Attribution intervenant en retard</div>
-            <div class="display-6 fw-semibold">{{ volunteer_assign_count }}</div>
-            <div class="text-muted small mt-1">Échéance proche : {{ prediction_counts.volunteer_assignment_overdue }}</div>
-          </div>
-        </div>
-      </a>
-    </div>
-  </div>
-
-  <div class="hc-card">
-    <div class="card-body p-0">
-      <div class="hc-sla-table-wrap">
-        <table class="hc-sla-table">
-          <thead>
-            <tr>
-              <th style="width:80px;">ID</th>
-              <th>Titre</th>
-              <th style="width:160px;">Type</th>
-              <th style="width:140px;">Catégorie</th>
-              <th style="width:140px;">Statut</th>
-              <th style="width:180px;">Créé le</th>
-              <th style="width:160px;">Retard</th>
-              <th style="width:260px;"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for r in rows %}
-              <tr>
-                <td class="text-muted">#{{ r.id }}</td>
-                <td>{{ r.title or "—" }}</td>
-                <td>
-                  {% if r.breach_type == "resolve" %}
-                    <span class="badge text-bg-danger">Résolution</span>
-                  {% elif r.breach_type == "owner_assign" %}
-                    <span class="badge text-bg-warning">Attribution responsable</span>
-                  {% elif r.breach_type == "volunteer_assign" %}
-                    <span class="badge text-bg-secondary">Intervenant</span>
-                  {% else %}
-                    <span class="badge text-bg-light">—</span>
-                  {% endif %}
-                </td>
-                <td><span class="badge text-bg-light">{{ request_category_label(r.category) }}</span></td>
-                <td><span class="badge text-bg-light">{{ r.status or "open" }}</span></td>
-                <td class="text-muted small">{{ r.created_at|format_datetime_fr }}</td>
-                <td><span class="fw-semibold">{{ "%.1f"|format(r.overdue_hours or 0.0) }}h</span></td>
-                <td class="text-end hc-td-action">
-                  {% if config.DEMO_MODE %}
-                    <span class="btn btn-sm btn-outline-secondary disabled" aria-disabled="true">Aperçu</span>
-                    {% if not r.owner_id %}
-                      <span class="btn btn-sm btn-primary disabled" aria-disabled="true">Assignation démo</span>
-                    {% endif %}
-                  {% else %}
-                    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.admin_request_details', req_id=r.id) }}">Voir</a>
-                    {% if not r.owner_id %}
-                      <form method="post" action="{{ safe_url_for('admin.admin_request_assign', req_id=r.id) }}" class="d-inline">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="next" value="{{ request.full_path }}">
-                        <button class="btn btn-sm btn-primary" type="submit">Attribuer</button>
-                      </form>
-                    {% endif %}
-                  {% endif %}
-                </td>
-              </tr>
-            {% else %}
-              <tr>
-                <td colspan="8" class="text-center text-muted py-4">Aucun dépassement SLA.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+<div class="hc-admin-wrap hc-admin-wrap--wide hc-admin-shell hc-admin-list-shell hc-admin-module-page hc-admin-module-page--sla">
+  <div class="hc-card hc-page-hero">
+    <div class="hc-row hc-admin-headerTop">
+      <div>
+        <div class="hc-admin-kicker">Pilotage operationnel</div>
+        <h1 class="hc-admin-title">Delais et depassements SLA</h1>
+        <div class="hc-muted">Lecture concentree des demandes en retard et des echeances proches sur la fenetre selectionnee.</div>
+        <div class="small text-muted mt-1">{{ breach_label }} · Fenetre : {{ days }} jours</div>
+      </div>
+      <div class="hc-admin-actions">
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('ops.ops_workspace') }}">Retour workspace</a>
       </div>
     </div>
   </div>
-  <div class="hc-section-thread" aria-label="Continuité SLA">
+
+  <div class="hc-card hc-ops-toolbar-card hc-sla-filter-shell">
+    <div class="hc-section-intro">
+      <div>
+        <h2 class="hc-section-title">Repères SLA</h2>
+        <p class="hc-section-subtitle">Isolez les retards de resolution, d'attribution responsable et d'attribution intervenant sans perdre la lisibilite operationnelle.</p>
+      </div>
+    </div>
+
+    <div class="hc-kpis hc-sla-kpi-grid" aria-label="Synthese SLA">
+      <a class="hc-sla-kpi text-decoration-none text-reset" href="{{ safe_url_for('admin.admin_requests', queue='sla', sla_kind='resolution_overdue', sla_days=days) }}">
+        <div class="hc-kpi__label">Resolution en retard</div>
+        <div class="hc-kpi__value">{{ resolve_count }}</div>
+        <div class="hc-kpi__context">Echeance proche : {{ prediction_counts.resolution_overdue }}</div>
+      </a>
+      <a class="hc-sla-kpi text-decoration-none text-reset" href="{{ safe_url_for('admin.admin_requests', queue='sla', sla_kind='owner_assignment_overdue', sla_days=days) }}">
+        <div class="hc-kpi__label">Attribution responsable</div>
+        <div class="hc-kpi__value">{{ owner_assign_count }}</div>
+        <div class="hc-kpi__context">Echeance proche : {{ prediction_counts.owner_assignment_overdue }}</div>
+      </a>
+      <a class="hc-sla-kpi text-decoration-none text-reset" href="{{ safe_url_for('admin.admin_requests', queue='sla', sla_kind='volunteer_assignment_overdue', sla_days=days) }}">
+        <div class="hc-kpi__label">Attribution intervenant</div>
+        <div class="hc-kpi__value">{{ volunteer_assign_count }}</div>
+        <div class="hc-kpi__context">Echeance proche : {{ prediction_counts.volunteer_assignment_overdue }}</div>
+      </a>
+    </div>
+
+    <form class="row g-2 align-items-end hc-ops-filters hc-sla-filters" method="get" action="{{ url_for('admin.admin_sla_breakdown') }}">
+      <input type="hidden" name="limit" value="{{ limit }}">
+      <div class="col-12 col-md-4 col-xl-3">
+        <label class="form-label">Type</label>
+        <select class="form-select form-select-sm" name="type">
+          <option value="all" {% if breach_type == 'all' %}selected{% endif %}>Tous</option>
+          <option value="resolve" {% if breach_type == 'resolve' %}selected{% endif %}>Resolution</option>
+          <option value="owner_assign" {% if breach_type == 'owner_assign' %}selected{% endif %}>Attribution responsable</option>
+          <option value="volunteer_assign" {% if breach_type == 'volunteer_assign' %}selected{% endif %}>Attribution intervenant</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-4 col-xl-2">
+        <label class="form-label">Fenetre</label>
+        <select class="form-select form-select-sm" name="days">
+          <option value="7" {% if days == 7 %}selected{% endif %}>7 j</option>
+          <option value="30" {% if days == 30 %}selected{% endif %}>30 j</option>
+          <option value="90" {% if days == 90 %}selected{% endif %}>90 j</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-4 col-xl-3">
+        <label class="form-label">Tri</label>
+        <select class="form-select form-select-sm" name="sort">
+          <option value="overdue" {% if sort == 'overdue' %}selected{% endif %}>Les plus en retard</option>
+          <option value="created" {% if sort == 'created' %}selected{% endif %}>Les plus anciens d'abord</option>
+        </select>
+      </div>
+      <div class="col-12 col-xl-auto ms-xl-auto d-flex gap-2 align-items-center hc-ops-filters__actions">
+        <button class="btn btn-primary btn-sm" type="submit">Filtrer</button>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_sla_breakdown') }}">Reinitialiser</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="hc-card hc-admin-table-shell hc-sla-table-shell">
+    <div class="hc-card__header hc-admin-table-toolbar">
+      <div>
+        <h2 class="hc-section-title mb-1">Demandes en depassement</h2>
+        <div class="hc-section-subtitle">Vue operationnelle des lignes en retard avec type de breach, statut actuel et action rapide.</div>
+      </div>
+      <span class="badge text-bg-light border">{{ rows|length }} lignes</span>
+    </div>
+    <div class="hc-admin-tablewrap hc-sla-table-wrap">
+      <table class="hc-sla-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Titre</th>
+            <th>Type</th>
+            <th>Categorie</th>
+            <th>Statut</th>
+            <th>Cree le</th>
+            <th>Retard</th>
+            <th class="text-end">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+            <tr>
+              <td class="text-muted">#{{ r.id }}</td>
+              <td>{{ r.title or "-" }}</td>
+              <td>
+                {% if r.breach_type == "resolve" %}
+                  <span class="badge text-bg-danger">Resolution</span>
+                {% elif r.breach_type == "owner_assign" %}
+                  <span class="badge text-bg-warning text-dark">Attribution responsable</span>
+                {% elif r.breach_type == "volunteer_assign" %}
+                  <span class="badge text-bg-secondary">Intervenant</span>
+                {% else %}
+                  <span class="badge text-bg-light border">-</span>
+                {% endif %}
+              </td>
+              <td><span class="badge text-bg-light border">{{ request_category_label(r.category) }}</span></td>
+              <td><span class="badge text-bg-light border">{{ r.status or "open" }}</span></td>
+              <td class="text-muted small">{{ r.created_at|format_datetime_fr }}</td>
+              <td><span class="fw-semibold">{{ "%.1f"|format(r.overdue_hours or 0.0) }}h</span></td>
+              <td class="text-end">
+                {% if config.DEMO_MODE %}
+                  <span class="btn btn-sm btn-outline-secondary disabled" aria-disabled="true">Apercu</span>
+                  {% if not r.owner_id %}
+                    <span class="btn btn-sm btn-primary disabled" aria-disabled="true">Attribuer</span>
+                  {% endif %}
+                {% else %}
+                  <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.admin_request_details', req_id=r.id) }}">Voir</a>
+                  {% if not r.owner_id %}
+                    <form method="post" action="{{ safe_url_for('admin.admin_request_assign', req_id=r.id) }}" class="d-inline">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <input type="hidden" name="next" value="{{ request.full_path }}">
+                      <button class="btn btn-sm btn-primary" type="submit">Attribuer</button>
+                    </form>
+                  {% endif %}
+                {% endif %}
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="8" class="py-4">
+                <div class="hc-empty-state">
+                  <div class="hc-empty-state__title">Aucun depassement SLA</div>
+                  <div class="hc-empty-state__text">La file ne contient actuellement aucune demande en retard sur les delais suivis.</div>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="hc-section-thread" aria-label="Continuite SLA">
     <span class="hc-section-thread__label">Pour structurer le traitement</span>
-    <a class="hc-section-thread__link" href="{{ url_for('ops.ops_workspace') }}">Découvrir le cadre de déploiement</a>
+    <a class="hc-section-thread__link" href="{{ url_for('ops.ops_workspace') }}">Revenir au centre operationnel</a>
   </div>
 </div>
 {% endblock %}
