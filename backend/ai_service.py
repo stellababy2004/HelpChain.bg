@@ -345,7 +345,7 @@ except Exception:
     # We default to Bulgarian ('bg') to keep behavior predictable.
     import logging as _logging
 
-    _logging.warning("langdetect not installed — defaulting language detection to 'bg'")
+    _logging.info("langdetect not installed; defaulting language detection to 'bg'")
 
     def detect(text: str) -> str:  # type: ignore
         return "bg"

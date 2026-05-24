@@ -1,5 +1,6 @@
 import os
 import tempfile
+import logging
 from datetime import UTC, datetime, timedelta
 
 from flask import render_template
@@ -7,6 +8,8 @@ from flask import render_template
 from backend.core.tenant import current_structure_id
 from backend.extensions import db
 from backend.models import Request
+
+logger = logging.getLogger(__name__)
 
 
 def utc_now() -> datetime:
@@ -37,7 +40,7 @@ except Exception:
 
 class HelpChainController:
     def __init__(self):
-        print("HelpChainController initialized")  # Debug log
+        logger.info("helpchain_controller_initialized")
         pass
 
     def create_help_request(self, data):
@@ -290,7 +293,12 @@ class HelpChainController:
             raise NotImplementedError()
 
     def create_help(self, data):
-        print(f"Creating help request with data: {data}")  # Debug log
+        logger.info(
+            "help_request_create_started has_email=%s has_phone=%s category=%s",
+            bool(data.get("email")),
+            bool(data.get("phone")),
+            data.get("category"),
+        )
         # Create a new request
         req = Request(
             name=data.get("name"),
@@ -305,7 +313,7 @@ class HelpChainController:
         )
         db.session.add(req)
         db.session.commit()
-        print(f"Created request with id: {req.id}")  # Debug log
+        logger.info("help_request_create_succeeded request_id=%s", req.id)
         return {"success": True, "id": req.id}
 
     def render_category_template(self, category, COMMON):

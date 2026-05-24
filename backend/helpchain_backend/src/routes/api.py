@@ -848,11 +848,15 @@ def change_status():
         return response
 
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         request_id = data.get("request_id")
         new_status = data.get("status")
 
-        print(f"Received data: {data}")  # Debug log
+        current_app.logger.info(
+            "api_admin_change_status_requested request_id=%s status=%s",
+            request_id,
+            new_status,
+        )
 
         if not request_id or not new_status:
             return jsonify({"success": False, "message": "Invalid data"}), 400
@@ -884,7 +888,11 @@ def change_status():
         db.session.add(log)
         db.session.commit()
 
-        print(f"Status changed for request {request_id} to {new_status}")  # Debug log
+        current_app.logger.info(
+            "api_admin_change_status_succeeded request_id=%s status=%s",
+            request_id,
+            new_status,
+        )
 
         response = jsonify({"success": True})
         response.headers.add("Access-Control-Allow-Origin", "*")
@@ -894,7 +902,9 @@ def change_status():
     except PermissionError:
         return jsonify({"success": False, "message": "Forbidden"}), 403
     except Exception as e:
-        print(f"Error in change_status: {e}")  # Debug log
+        current_app.logger.exception(
+            "api_admin_change_status_failed request_id=%s", data.get("request_id")
+        )
         return jsonify({"success": False, "message": str(e)}), 500
 
 
@@ -908,10 +918,13 @@ def delete_request():
         return response
 
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         request_id = data.get("request_id")
 
-        print(f"Deleting request: {request_id}")  # Debug log
+        current_app.logger.info(
+            "api_admin_delete_request_requested request_id=%s",
+            request_id,
+        )
 
         if not request_id:
             return jsonify({"success": False, "message": "Invalid request ID"}), 400
@@ -940,7 +953,10 @@ def delete_request():
         db.session.delete(req)
         db.session.commit()
 
-        print(f"Deleted request {request_id}")  # Debug log
+        current_app.logger.info(
+            "api_admin_delete_request_succeeded request_id=%s",
+            request_id,
+        )
 
         response = jsonify({"success": True})
         response.headers.add("Access-Control-Allow-Origin", "*")
@@ -950,7 +966,9 @@ def delete_request():
     except PermissionError:
         return jsonify({"success": False, "message": "Forbidden"}), 403
     except Exception as e:
-        print(f"Error in delete_request: {e}")  # Debug log
+        current_app.logger.exception(
+            "api_admin_delete_request_failed request_id=%s", data.get("request_id")
+        )
         return jsonify({"success": False, "message": str(e)}), 500
 
 
@@ -1040,7 +1058,7 @@ def update_volunteer_location(volunteer_id):
         ):
             return jsonify({"error": "Unauthorized"}), 401
 
-        data = request.get_json()
+        data = request.get_json(silent=True) or {}
         lat = data.get("latitude")
         lng = data.get("longitude")
         location = data.get("location")
