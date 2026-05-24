@@ -10,6 +10,7 @@ Flask-Limiter==3.5.0
 Flask-SocketIO==5.3.6
 Flask-Talisman==1.1.0
 Flask-Caching==2.3.0
+asgiref==3.7.2
 gunicorn==23.0.0
 sqlalchemy==2.0.44
 psycopg[binary]==3.2.13

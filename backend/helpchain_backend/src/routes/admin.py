@@ -11143,7 +11143,7 @@ def admin_high_intent_sessions():
 
         return "Observer les prochaines visites"
 
-    since = datetime.utcnow() - timedelta(days=7)
+    since = utc_now() - timedelta(days=7)
 
     rows = (
         db.session.query(AnalyticsEvent)

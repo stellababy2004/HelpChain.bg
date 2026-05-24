@@ -5,6 +5,7 @@ flask-sqlalchemy==3.0.5
 Flask-Migrate==4.0.5
 flask-babel==3.1.0
 flask-cors==6.0.1
+asgiref==3.7.2
 gunicorn==23.0.0
 sqlalchemy==2.0.44
 psycopg2-binary==2.9.10

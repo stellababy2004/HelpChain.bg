@@ -328,7 +328,7 @@ def add_security_headers(app: Flask):
 
 def maybe_self_heal_local_sqlite(app, db):
     if __import__("os").getenv("HC_SELFHEAL_RUNNING") == "1":
-        app.logger.warning("[SELFHEAL] skipped because HC_SELFHEAL_RUNNING=1")
+        app.logger.info("[SELFHEAL] skipped because HC_SELFHEAL_RUNNING=1")
         return
 
     """
@@ -347,16 +347,16 @@ def maybe_self_heal_local_sqlite(app, db):
 
     skip_selfheal = os.getenv("HC_SKIP_SELFHEAL") == "1" or os.getenv("DISABLE_SELF_HEAL") == "1"
     if skip_selfheal:
-        app.logger.warning("[SELFHEAL] skipped: self-heal disabled by environment")
+        app.logger.info("[SELFHEAL] skipped: self-heal disabled by environment")
         return
 
     argv = [str(arg).lower() for arg in getattr(sys, "argv", [])]
     if "flask" in " ".join(argv) and "db" in argv:
-        app.logger.warning("[SELFHEAL] skipped: Flask DB CLI command detected")
+        app.logger.info("[SELFHEAL] skipped: Flask DB CLI command detected")
         return
 
     if app.config.get("TESTING") or os.getenv("HELPCHAIN_TESTING") == "1":
-        app.logger.warning("[SELFHEAL] skipped: testing context")
+        app.logger.info("[SELFHEAL] skipped: testing context")
         return
 
     uri = str(app.config.get("SQLALCHEMY_DATABASE_URI") or "")
@@ -365,12 +365,12 @@ def maybe_self_heal_local_sqlite(app, db):
         return
 
     if os.getenv("FLASK_ENV") == "production" or os.getenv("RENDER"):
-        app.logger.warning("[SELFHEAL] skipped: production/cloud env detected")
+        app.logger.info("[SELFHEAL] skipped: production/cloud env detected")
         return
 
     database_url = os.getenv("DATABASE_URL", "")
     if database_url.startswith(("postgres://", "postgresql://")):
-        app.logger.warning("[SELFHEAL] skipped: DATABASE_URL points to Postgres")
+        app.logger.info("[SELFHEAL] skipped: DATABASE_URL points to Postgres")
         return
 
     db_path_raw = uri.replace("sqlite:///", "", 1)
@@ -551,7 +551,7 @@ def create_app(config_object=None) -> Flask:
         app.config["VOLUNTEER_DEV_BYPASS_ENABLED"] = False
         app.config["VOLUNTEER_DEV_BYPASS_EMAIL"] = ""
 
-    app.logger.warning(
+    app.logger.info(
         "[ENV] PUBLIC_BASE_URL=%r | TRUST_PROXY_HEADERS=%r",
         os.getenv("PUBLIC_BASE_URL"),
         os.getenv("TRUST_PROXY_HEADERS"),
