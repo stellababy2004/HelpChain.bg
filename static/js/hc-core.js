@@ -1648,6 +1648,7 @@
       showA11yScreen("main");
       showA11yPane(currentPane || "display");
       drawer.hidden = false;
+      drawer.inert = false;
       drawer.setAttribute("aria-hidden", "false");
       btn.setAttribute("aria-expanded", "true");
       document.body.classList.add("hc-modal-open");
@@ -1665,6 +1666,7 @@
       currentProfileKey = "";
       stopReading("stopped");
       drawer.hidden = true;
+      drawer.inert = true;
       drawer.setAttribute("aria-hidden", "true");
       btn.setAttribute("aria-expanded", "false");
       document.body.classList.remove("hc-modal-open");

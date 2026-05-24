@@ -1,9 +1,28 @@
 <nav class="hc-nav" aria-label="{{ _('Navigation principale') }}">
-  <a href="{{ url_for('main.index') }}">{{ _('Accueil') }}</a>
-  <a href="{{ url_for('main.orienter') }}">{{ _('Fonctionnement') }}</a>
-  <a href="{{ url_for('main.submit_request') }}">{{ _('Demandes') }}</a>
-  <a href="{{ url_for('main.pour_les_structures') }}">{{ _('Structures') }}</a>
-  <a href="{{ url_for('main.about') }}">{{ _('À propos') }}</a>
-  <a href="{{ url_for('main.contact') }}">{{ _('Contact') }}</a>
-  <a href="{{ url_for('main.contact') }}">{{ _('Demander un échange') }}</a>
+  <div class="hc-nav-mega" data-hc-mega>
+    <button class="hc-nav-mega__trigger" type="button" data-hc-mega-trigger aria-expanded="false" aria-controls="hcPartialMegaProduct">
+      {{ _('Produit') }}
+    </button>
+    <div class="hc-nav-mega__panel" id="hcPartialMegaProduct" data-hc-mega-panel hidden>
+      <div class="hc-nav-mega__grid">
+        <div class="hc-nav-mega__feature">
+          <span class="hc-nav-mega__eyebrow">{{ _('Plateforme') }}</span>
+          <strong>{{ _('Coordination opérationnelle, gouvernance et pilotage dans un même cadre.') }}</strong>
+          <p>{{ _('Explorez les surfaces principales de HelpChain et les scénarios de déploiement.') }}</p>
+        </div>
+        <div class="hc-nav-mega__links">
+          <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Fonctionnement') }}</strong><span>{{ _('De la demande au suivi traçable.') }}</span></a>
+          <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Coordination pour CCAS, collectivités et associations.') }}</span></a>
+          <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi pour acteurs habilités.') }}</span></a>
+          <a class="hc-nav-mega__link" href="{{ url_for('main.offre') }}"><strong>{{ _('Offre') }}</strong><span>{{ _('Cadres pilote, professionnel et institutionnel.') }}</span></a>
+          <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive et gouvernance.') }}</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <a href="{{ url_for('main.pour_les_structures') }}">{{ _('Secteurs') }}</a>
+  <a href="{{ url_for('main.securite') }}">{{ _('Sécurité') }}</a>
+  <a href="{{ url_for('main.deploiement') }}">{{ _('Déploiement') }}</a>
+  <a href="{{ url_for('main.cas_usage') }}">{{ _('Ressources') }}</a>
+  <a href="/demo">{{ _('Demander un accès pilote') }}</a>
 </nav>

@@ -4,6 +4,7 @@
 {% block og_title %}{{ _("Pilotage opérationnel & indicateurs") }}{% endblock %}
 {% block og_image %}{{ og_image_url('og-home-1200x630.jpg') }}{% endblock %}
 {% block og_image_alt %}{{ _("Aperçu de la page Pilotage et indicateurs") }}{% endblock %}
+{% block body_class %}hc-page-trust hc-page-pilotage{% endblock %}
 
 {% block content %}
 <div class="container hc-doc-page public-page-shell">
@@ -11,89 +12,125 @@
     <p class="hc-doc-intro__label">{{ _("Pilotage") }}</p>
     <h1 class="hc-doc-intro__title">{{ _("Pilotage opérationnel & indicateurs") }}</h1>
     <p class="hc-doc-intro__lead">
-      {{ _("HelpChain fournit aux structures une lecture opérationnelle des situations suivies, des priorités de traitement, des responsabilités et des actions engagées dans un cadre de coordination partagé.") }}
+      {{ _("HelpChain transforme des suivis dispersés en lecture opérationnelle partageable : demandes en cours, arbitrages, responsabilités visibles et historique exploitable dans un même cadre.") }}
     </p>
     <p class="hc-doc-intro__lead">
-      {{ _("Cette lecture permet de repérer les situations sensibles, de suivre l’activité, de clarifier les arbitrages et d’ajuster les interventions à partir d’indicateurs lisibles.") }}
+      {{ _("La plateforme aide les structures à repérer les situations sensibles, à suivre l’activité réelle et à soutenir des décisions de coordination plus lisibles sans remplacer les décisions métier.") }}
     </p>
+    <div class="hc-reality-proof hc-reality-proof--clean" aria-label="{{ _('Repères de pilotage') }}">
+      <span class="hc-reality-proof__chip">{{ _("Vue consolidée des demandes") }}</span>
+      <span class="hc-reality-proof__chip">{{ _("Priorités et délais visibles") }}</span>
+      <span class="hc-reality-proof__chip">{{ _("Traçabilité des actions") }}</span>
+      <span class="hc-reality-proof__chip">{{ _("Cadre de pilotage progressif") }}</span>
+    </div>
   </header>
 
-  <section class="card mb-3"><div class="card-body">
-    <h2 class="h5 mb-3">{{ _("Une vue opérationnelle des demandes") }}</h2>
-    <p class="mb-2">{{ _("HelpChain permet de visualiser les demandes en cours, leur statut, leur évolution et les points nécessitant une attention particulière.") }}</p>
-    <ul class="mb-0">
-      <li>{{ _("Identifier les demandes en attente.") }}</li>
-      <li>{{ _("Suivre l’avancement des situations.") }}</li>
-      <li>{{ _("Repérer les situations sensibles ou bloquées.") }}</li>
-      <li>{{ _("Réduire la dispersion entre emails, tableaux et échanges informels.") }}</li>
-    </ul>
-  </div></section>
+  <section class="mb-4">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <article class="card h-100">
+          <div class="card-body">
+            <h2 class="h5 mb-3">{{ _("Une vue opérationnelle des demandes") }}</h2>
+            <p class="mb-3">{{ _("HelpChain permet de visualiser les demandes suivies, leur statut, leur évolution et les situations qui nécessitent une attention particulière.") }}</p>
+            <ul class="mb-0">
+              <li>{{ _("Identifier les demandes en attente.") }}</li>
+              <li>{{ _("Suivre l’avancement des situations.") }}</li>
+              <li>{{ _("Repérer les points de blocage ou de fragilité.") }}</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+      <div class="col-lg-4">
+        <article class="card h-100">
+          <div class="card-body">
+            <h2 class="h5 mb-3">{{ _("Priorisation et arbitrage") }}</h2>
+            <p class="mb-3">{{ _("Certaines situations appellent une décision plus rapide, une réorientation ou une mobilisation coordonnée de ressources.") }}</p>
+            <ul class="mb-0">
+              <li>{{ _("Mettre en évidence les demandes prioritaires.") }}</li>
+              <li>{{ _("Orienter les arbitrages vers les bons interlocuteurs.") }}</li>
+              <li>{{ _("Soutenir une allocation plus lisible des ressources.") }}</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+      <div class="col-lg-4">
+        <article class="card h-100">
+          <div class="card-body">
+            <h2 class="h5 mb-3">{{ _("Coordination des actions") }}</h2>
+            <p class="mb-3">{{ _("La plateforme structure un cadre commun entre acteurs habilités autour d’une situation suivie.") }}</p>
+            <ul class="mb-0">
+              <li>{{ _("Clarifier les responsabilités visibles.") }}</li>
+              <li>{{ _("Suivre les actions réalisées et à relancer.") }}</li>
+              <li>{{ _("Améliorer la continuité entre équipes, services ou partenaires.") }}</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
 
-  <section class="card mb-3"><div class="card-body">
-    <h2 class="h5 mb-3">{{ _("Priorisation et arbitrage") }}</h2>
-    <p class="mb-2">{{ _("Certaines situations nécessitent une attention plus rapide, une réorientation ou une décision de pilotage.") }}</p>
-    <ul class="mb-0">
-      <li>{{ _("Identifier les demandes prioritaires.") }}</li>
-      <li>{{ _("Orienter les arbitrages vers les bons interlocuteurs.") }}</li>
-      <li>{{ _("Soutenir la mobilisation des ressources disponibles.") }}</li>
-      <li>{{ _("Mettre en évidence les situations nécessitant un suivi renforcé.") }}</li>
-    </ul>
-  </div></section>
+  <section class="card mb-4">
+    <div class="card-body">
+      <h2 class="h5 mb-3">{{ _("Des indicateurs utiles au pilotage, pas une couche de reporting abstraite") }}</h2>
+      <p class="mb-3">{{ _("Les indicateurs ne remplacent pas l’analyse humaine. Ils consolident l’activité observée pour rendre le pilotage plus praticable au quotidien et plus lisible lors des points de coordination.") }}</p>
+      <div class="row g-4">
+        <div class="col-md-6">
+          <h3 class="h6 mb-2">{{ _("Lecture d’activité") }}</h3>
+          <ul class="mb-0">
+            <li>{{ _("Volume de demandes suivies.") }}</li>
+            <li>{{ _("Statuts et délais de traitement.") }}</li>
+            <li>{{ _("Priorités et situations à surveiller.") }}</li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <h3 class="h6 mb-2">{{ _("Lecture de responsabilité") }}</h3>
+          <ul class="mb-0">
+            <li>{{ _("Répartition des actions et responsabilités.") }}</li>
+            <li>{{ _("Historique de suivi et points de relecture.") }}</li>
+            <li>{{ _("Évolution des besoins observés sur le terrain.") }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  <section class="card mb-3"><div class="card-body">
-    <h2 class="h5 mb-3">{{ _("Coordination des actions") }}</h2>
-    <p class="mb-2">{{ _("La plateforme structure la coordination entre acteurs habilités autour d’une situation, sans se substituer aux décisions métier des structures.") }}</p>
-    <ul class="mb-0">
-      <li>{{ _("Suivre les actions réalisées.") }}</li>
-      <li>{{ _("Clarifier les responsabilités.") }}</li>
-      <li>{{ _("Organiser les interventions dans un cadre commun.") }}</li>
-      <li>{{ _("Améliorer la continuité entre équipes, services ou partenaires.") }}</li>
-    </ul>
-  </div></section>
-
-  <section class="card mb-3"><div class="card-body">
-    <h2 class="h5 mb-3">{{ _("Indicateurs de suivi") }}</h2>
-    <p class="mb-2">{{ _("Les indicateurs ne remplacent pas l’analyse humaine : ils donnent une lecture consolidée de l’activité afin d’appuyer le pilotage opérationnel.") }}</p>
-    <ul class="mb-0">
-      <li>{{ _("Volume de demandes suivies.") }}</li>
-      <li>{{ _("Statuts et délais de traitement.") }}</li>
-      <li>{{ _("Priorités et situations à surveiller.") }}</li>
-      <li>{{ _("Répartition des actions et responsabilités.") }}</li>
-      <li>{{ _("Évolution des besoins observés sur le terrain.") }}</li>
-    </ul>
-  </div></section>
-
-  <section class="card mb-3"><div class="card-body">
-    <h2 class="h5 mb-3">{{ _("Traçabilité et relecture") }}</h2>
-    <p class="mb-0">
-      {{ _("La traçabilité des actions importantes permet de comprendre ce qui a été fait, par qui, quand et dans quel contexte. Cette capacité de relecture renforce la lisibilité opérationnelle et la responsabilité des acteurs autorisés.") }}
-    </p>
-  </div></section>
-
-  <section class="card mb-3"><div class="card-body">
-    <h2 class="h5 mb-3">{{ _("Amélioration continue") }}</h2>
-    <p class="mb-2">{{ _("Les informations issues de HelpChain peuvent contribuer à améliorer progressivement l’organisation des actions de coordination et la qualification des besoins rencontrés.") }}</p>
-    <ul class="mb-0">
-      <li>{{ _("Mieux qualifier les besoins récurrents.") }}</li>
-      <li>{{ _("Ajuster l’organisation des actions.") }}</li>
-      <li>{{ _("Renforcer la coordination entre acteurs.") }}</li>
-      <li>{{ _("Préparer un élargissement du dispositif sur des bases mesurables.") }}</li>
-    </ul>
-  </div></section>
-
-  <section class="card mb-3"><div class="card-body">
-    <h2 class="h5 mb-3">{{ _("Conclusion") }}</h2>
-    <p class="mb-2">{{ _("HelpChain aide les structures à transformer un suivi fragmenté en une lecture structurée, partagée et pilotable.") }}</p>
-    <p class="mb-0">{{ _("L’objectif est de soutenir la coordination territoriale et l’action opérationnelle, sans remplacer les équipes, les décisions métier ni les circuits institutionnels existants.") }}</p>
-  </div></section>
+  <section class="mb-4">
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <article class="card h-100">
+          <div class="card-body">
+            <h2 class="h5 mb-3">{{ _("Traçabilité et relecture") }}</h2>
+            <p class="mb-0">
+              {{ _("La traçabilité des actions importantes aide à comprendre ce qui a été fait, par qui, quand et dans quel contexte. Cette capacité de relecture renforce la lisibilité opérationnelle et la responsabilité des acteurs autorisés.") }}
+            </p>
+          </div>
+        </article>
+      </div>
+      <div class="col-lg-6">
+        <article class="card h-100">
+          <div class="card-body">
+            <h2 class="h5 mb-3">{{ _("Amélioration continue et montée en charge") }}</h2>
+            <p class="mb-3">
+              {{ _("Les informations issues de HelpChain peuvent soutenir un pilote encadré, puis une montée en charge progressive sur des bases plus mesurables et mieux gouvernées.") }}
+            </p>
+            <ul class="mb-0">
+              <li>{{ _("Mieux qualifier les besoins récurrents.") }}</li>
+              <li>{{ _("Ajuster l’organisation des actions de coordination.") }}</li>
+              <li>{{ _("Préparer un élargissement du dispositif sur un périmètre maîtrisé.") }}</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
 
   <section class="public-cta-card mb-3">
-    <h2 class="h5 mb-2">{{ _("Prolonger l’échange") }}</h2>
+    <h2 class="h5 mb-2">{{ _("Voir comment ce pilotage s’installe sur le terrain") }}</h2>
     <p class="mb-0">
-      {{ _("Une démonstration permet de visualiser le cadre de pilotage. Un pilote permet de l’éprouver sur un périmètre maîtrisé.") }}
+      {{ _("Un échange permet de cadrer les indicateurs utiles, le périmètre initial et les conditions d’un premier pilote maîtrisé pour votre structure ou votre territoire.") }}
     </p>
     <div class="mt-3 d-flex flex-wrap gap-2">
-      <a href="/demo" class="hc-btn hc-btn--primary">{{ _("Échanger sur un pilote") }}</a>
+      <a href="/demo" class="hc-btn hc-btn--primary">{{ _("Demander un accès pilote") }}</a>
       <a href="{{ url_for('main.deploiement') }}" class="hc-btn hc-btn--ghost">{{ _("Voir le cadre de déploiement") }}</a>
     </div>
   </section>
