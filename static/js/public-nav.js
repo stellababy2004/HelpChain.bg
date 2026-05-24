@@ -33,19 +33,44 @@
     navRoot.querySelectorAll("[data-hc-mega]").forEach(function (megaRoot) {
       var trigger = megaRoot.querySelector("[data-hc-mega-trigger]");
       var panel = megaRoot.querySelector("[data-hc-mega-panel]");
+      var closeTimer = null;
       if (!trigger || !panel) return;
+
+      function cancelPendingClose() {
+        if (!closeTimer) return;
+        window.clearTimeout(closeTimer);
+        closeTimer = null;
+      }
+
+      function scheduleClose() {
+        cancelPendingClose();
+        closeTimer = window.setTimeout(function () {
+          closeMega(megaRoot);
+        }, 140);
+      }
 
       panel.hidden = true;
       trigger.setAttribute("aria-expanded", "false");
 
       trigger.addEventListener("click", function (event) {
         event.preventDefault();
+        cancelPendingClose();
         if (megaRoot.classList.contains("is-open")) closeMega(megaRoot);
         else openMega(megaRoot);
       });
 
       trigger.addEventListener("focus", function () {
+        cancelPendingClose();
         openMega(megaRoot);
+      });
+
+      megaRoot.addEventListener("pointerenter", function () {
+        cancelPendingClose();
+        openMega(megaRoot);
+      });
+
+      megaRoot.addEventListener("pointerleave", function () {
+        scheduleClose();
       });
 
       megaRoot.addEventListener("focusout", function () {

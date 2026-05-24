@@ -22,7 +22,7 @@
           {{ _("Pilotez localement aujourd’hui. Déployez à l’échelle demain.") }}
         </p>
         <div class="hc-offre__actions">
-          <a href="/demo" class="hc-offre__btn hc-offre__btn--primary">{{ _("Échanger sur un pilote") }}</a>
+          <a href="/demo" class="hc-offre__btn hc-offre__btn--primary">{{ _("Demander un accès pilote") }}</a>
           <a href="{{ url_for('main.deploiement') }}" class="hc-offre__btn hc-offre__btn--secondary">{{ _("Voir le déploiement") }}</a>
         </div>
         <ul class="hc-offre__hero-chips" aria-label="{{ _('Repères institutionnels') }}">
@@ -62,7 +62,7 @@
       <div class="hc-offre__section-head">
         <span class="hc-offre__eyebrow">{{ _("Modèles d’engagement") }}</span>
         <h2>{{ _("Trois cadres pour démarrer, structurer puis déployer") }}</h2>
-        <p>{{ _("Chaque offre correspond à un niveau de coordination différent, sans afficher de tarification simpliste ni forcer un cadre inadapté à votre organisation.") }}</p>
+        <p>{{ _("Chaque offre correspond à un niveau de coordination différent, avec un cadrage plus lisible du bon périmètre selon votre structure, vos équipes et votre gouvernance.") }}</p>
       </div>
 
       
@@ -77,6 +77,7 @@
         <article class="hc-offre__card">
           <div class="hc-offre__card-label">{{ _("Premier déploiement") }}</div>
           <h3>{{ _("Pilote") }}</h3>
+          <p class="hc-offre__buyer">{{ _("Pour un premier pilote contrôlé ou un petit périmètre de démarrage.") }}</p>
           <p>{{ _("Pour lancer HelpChain sur un premier périmètre et poser un cadre de coordination clair.") }}</p>
           <ul class="hc-offre__list">
             <li><i class="fas fa-check-circle" aria-hidden="true"></i><span>{{ _("1 structure") }}</span></li>
@@ -94,6 +95,7 @@
           <div class="hc-offre__adoption-note">{{ _("Le plus adopté pour les structures en croissance") }}</div>
           <div class="hc-offre__card-label">{{ _("Structures en croissance") }}</div>
           <h3>{{ _("Professionnel") }}</h3>
+          <p class="hc-offre__buyer">{{ _("Pour les associations, CCAS et structures opérationnelles qui coordonnent dans la durée.") }}</p>
           <p>{{ _("Pour les structures qui veulent un workflow complet, du suivi opérationnel et une vraie visibilité sur l’activité.") }}</p>
           <ul class="hc-offre__list">
             <li><i class="fas fa-check-circle" aria-hidden="true"></i><span>{{ _("Multi utilisateurs") }}</span></li>
@@ -103,13 +105,14 @@
             <li><i class="fas fa-check-circle" aria-hidden="true"></i><span>{{ _("Pilotage activité") }}</span></li>
           </ul>
           <div class="hc-offre__card-cta">
-            <a href="/demo" class="hc-offre__btn hc-offre__btn--primary">{{ _("Échanger sur un pilote") }}</a>
+            <a href="/demo" class="hc-offre__btn hc-offre__btn--primary">{{ _("Demander un accès pilote") }}</a>
           </div>
         </article>
 
         <article class="hc-offre__card">
           <div class="hc-offre__card-label">{{ _("Territoires et groupements") }}</div>
           <h3>{{ _("Institutionnel") }}</h3>
+          <p class="hc-offre__buyer">{{ _("Pour les collectivités, structures multi-sites et besoins de gouvernance plus larges.") }}</p>
           <p>{{ _("Pour les collectivités, réseaux ou groupements qui veulent structurer un déploiement multi-structures dans le temps.") }}</p>
           <ul class="hc-offre__list">
             <li><i class="fas fa-check-circle" aria-hidden="true"></i><span>{{ _("Multi structures") }}</span></li>
@@ -174,7 +177,7 @@
         <h2>{{ _("Présentez votre contexte et recevez une proposition adaptée.") }}</h2>
         <p>{{ _("Nous cadrons avec vous le bon niveau d’engagement selon votre organisation, vos équipes, votre gouvernance et votre trajectoire de déploiement.") }}</p>
         <div class="hc-offre__actions">
-          <a href="/demo" class="hc-offre__btn hc-offre__btn--primary">{{ _("Échanger sur un pilote") }}</a>
+          <a href="/demo" class="hc-offre__btn hc-offre__btn--primary">{{ _("Demander un accès pilote") }}</a>
           <a href="{{ url_for('main.contact') }}" class="hc-offre__btn hc-offre__btn--secondary">{{ _("Nous contacter") }}</a>
         </div>
         <ul class="hc-offre__final-chips" aria-label="{{ _('Repères de réassurance') }}">

@@ -510,7 +510,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
       {'code': 'fr', 'name': 'Français', 'flag': ''},
       {'code': 'en', 'name': 'English', 'flag': ''},
       {'code': 'de', 'name': 'Deutsch', 'flag': ''},
-      {'code': 'bg', 'name': '?????????', 'flag': ''}
+      {'code': 'bg', 'name': 'Български', 'flag': ''}
     ] %}
     {% set hc_institutional_public_eps = [
       'main.index',
@@ -598,6 +598,11 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
         <div class="collapse navbar-collapse{% if not is_any_logged_in and not hide_full_nav %} hc-public-nav-desktop{% endif %}" id="navbarNav">
           {% if not hide_full_nav %}
           {% set ep = request.endpoint or '' %}
+          {% set produit_active = ep.startswith('main.comment_ca_marche') or ep.startswith('main.offre') %}
+          {% set secteurs_active = ep.startswith('main.pour_les_structures') or ep.startswith('main.professionnels') or ep.startswith('main.collectivites_associations') %}
+          {% set securite_active = ep.startswith('main.securite') or ep.startswith('main.architecture') or ep.startswith('main.gouvernance') %}
+          {% set deploiement_active = ep.startswith('main.deploiement') %}
+          {% set ressources_active = ep.startswith('main.cas_usage') or ep.startswith('main.pilotage_indicateurs') or ep.startswith('main.partenariats') or ep.startswith('main.faq') or ep.startswith('main.pourquoi_helpchain') or ep.startswith('main.vision_europeenne') %}
           {% if is_ops_shell %}
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
@@ -628,15 +633,9 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
           {% else %}
           {% if not is_any_logged_in %}
           <ul class="navbar-nav mx-auto align-items-lg-center hc-public-nav-main">
-            <li class="nav-item">
-              <a class="nav-link {{ 'active' if ep == 'main.index' else '' }}" href="{{ safe_url_for('main.index') }}" data-hc-nav="home" {% if ep == 'main.index' %}aria-current="page"{% endif %}>
-                <span class="hc-navlabel">{{ _('Accueil') }}</span>
-              </a>
-            </li>
-            {% set product_active = ep.startswith('main.comment_ca_marche') or ep.startswith('main.professionnels') or ep.startswith('main.pour_les_structures') or ep.startswith('main.offre') or ep.startswith('main.deploiement') %}
-            <li class="nav-item hc-nav-mega {{ 'is-active' if product_active else '' }}" data-hc-mega>
-              <button class="hc-nav-mega__trigger" type="button" data-hc-mega-trigger aria-expanded="false" aria-controls="hcPublicMegaProduct">
-                {{ _('Produit') }}
+            <li class="nav-item hc-nav-mega {{ 'is-active' if produit_active else '' }}" data-hc-mega>
+              <button class="hc-nav-mega__trigger" type="button" data-hc-mega-trigger aria-expanded="false" aria-controls="hcPublicMegaProduct" {% if produit_active %}aria-current="page"{% endif %}>
+                <span class="hc-navlabel">{{ _('Produit') }}</span>
               </button>
               <div class="hc-nav-mega__panel" id="hcPublicMegaProduct" data-hc-mega-panel hidden>
                 <div class="hc-nav-mega__grid">
@@ -656,59 +655,77 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
               </div>
             </li>
             <li class="nav-item">
-              <a class="nav-link {{ 'active' if ep.startswith('main.pilotage_indicateurs') else '' }}" href="{{ url_for('main.pilotage_indicateurs') }}" {% if ep.startswith('main.pilotage_indicateurs') %}aria-current="page"{% endif %}>
-                {{ _('Pilotage') }}
+              <a class="nav-link {{ 'active' if secteurs_active else '' }}" href="{{ url_for('main.pour_les_structures') }}" {% if secteurs_active %}aria-current="page"{% endif %}>
+                <span class="hc-navlabel">{{ _('Secteurs') }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {{ 'active' if securite_active else '' }}" href="{{ url_for('main.securite') }}" {% if securite_active %}aria-current="page"{% endif %}>
+                <span class="hc-navlabel">{{ _('Sécurité') }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {{ 'active' if deploiement_active else '' }}" href="{{ url_for('main.deploiement') }}" {% if deploiement_active %}aria-current="page"{% endif %}>
+                <span class="hc-navlabel">{{ _('Déploiement') }}</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link {{ 'active' if ressources_active else '' }}" href="{{ url_for('main.cas_usage') }}" {% if ressources_active %}aria-current="page"{% endif %}>
+                <span class="hc-navlabel">{{ _('Ressources') }}</span>
               </a>
             </li>
           </ul>
           <div class="hc-public-nav-actions d-flex align-items-center gap-2">
-            <a class="nav-link nav-link--secondary hc-public-nav-login" href="{{ url_for('main.volunteer_login') }}">
-              {{ _('Connexion') }}
-            </a>
             <a class="nav-link hc-nav-cta hc-cta hc-public-nav-demo-cta" href="/demo">
-              <span class="hc-navlabel">{{ _('Échanger sur un pilote') }}</span>
+              <span class="hc-navlabel">{{ _('Demander un accès pilote') }}</span>
             </a>
           </div>
           {% else %}
           <ul class="navbar-nav ms-auto">
+            <li class="nav-item hc-nav-mega {{ 'is-active' if produit_active else '' }}" data-hc-mega>
+              <button class="hc-nav-mega__trigger" type="button" data-hc-mega-trigger aria-expanded="false" aria-controls="hcPublicMegaProductAuth" {% if produit_active %}aria-current="page"{% endif %}>
+                {{ _('Produit') }}
+              </button>
+              <div class="hc-nav-mega__panel" id="hcPublicMegaProductAuth" data-hc-mega-panel hidden>
+                <div class="hc-nav-mega__grid">
+                  <div class="hc-nav-mega__feature">
+                    <span class="hc-nav-mega__eyebrow">{{ _('Plateforme') }}</span>
+                    <strong>{{ _('Coordination opérationnelle, gouvernance et pilotage dans un même cadre.') }}</strong>
+                    <p>{{ _('Explorez les surfaces principales de HelpChain et les scénarios de déploiement.') }}</p>
+                  </div>
+                  <div class="hc-nav-mega__links">
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Fonctionnement') }}</strong><span>{{ _('De la demande au suivi traçable.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Coordination pour CCAS, collectivités et associations.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi pour acteurs habilités.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.offre') }}"><strong>{{ _('Offre') }}</strong><span>{{ _('Cadres pilote, professionnel et institutionnel.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive et gouvernance.') }}</span></a>
+                  </div>
+                </div>
+              </div>
+            </li>
             <li class="nav-item">
-              <a class="nav-link {{ 'active' if ep == 'main.index' else '' }}" href="{{ safe_url_for('main.index') }}" data-hc-nav="home" {% if ep == 'main.index' %}aria-current="page"{% endif %}>
-                <span class="hc-navlabel">{{ _('Accueil') }}</span>
+              <a class="nav-link {{ 'active' if secteurs_active else '' }}" href="{{ url_for('main.pour_les_structures') }}" {% if secteurs_active %}aria-current="page"{% endif %}>
+                {{ _('Secteurs') }}
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {{ 'active' if ep.startswith('main.comment_ca_marche') else '' }}" href="{{ url_for('main.comment_ca_marche') }}" {% if ep.startswith('main.comment_ca_marche') %}aria-current="page"{% endif %}>
-                {{ _('Fonctionnement') }}
+              <a class="nav-link {{ 'active' if securite_active else '' }}" href="{{ url_for('main.securite') }}" {% if securite_active %}aria-current="page"{% endif %}>
+                {{ _('Sécurité') }}
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {{ 'active' if ep.startswith('main.professionnels') else '' }}" href="{{ url_for('main.professionnels') }}" {% if ep.startswith('main.professionnels') %}aria-current="page"{% endif %}>
-                {{ _('Professionnels') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {{ 'active' if ep.startswith('main.pour_les_structures') else '' }}" href="{{ url_for('main.pour_les_structures') }}" {% if ep.startswith('main.pour_les_structures') %}aria-current="page"{% endif %}>
-                {{ _('Collectivités') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {{ 'active' if ep.startswith('main.offre') else '' }}" href="{{ url_for('main.offre') }}" {% if ep.startswith('main.offre') %}aria-current="page"{% endif %}>
-                {{ _('Offre') }}
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {{ 'active' if ep.startswith('main.deploiement') else '' }}" href="{{ url_for('main.deploiement') }}" {% if ep.startswith('main.deploiement') %}aria-current="page"{% endif %}>
+              <a class="nav-link {{ 'active' if deploiement_active else '' }}" href="{{ url_for('main.deploiement') }}" {% if deploiement_active %}aria-current="page"{% endif %}>
                 {{ _('Déploiement') }}
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {{ 'active' if ep.startswith('main.pilotage_indicateurs') else '' }}" href="{{ url_for('main.pilotage_indicateurs') }}" {% if ep.startswith('main.pilotage_indicateurs') %}aria-current="page"{% endif %}>
-                {{ _('Pilotage') }}
+              <a class="nav-link {{ 'active' if ressources_active else '' }}" href="{{ url_for('main.cas_usage') }}" {% if ressources_active %}aria-current="page"{% endif %}>
+                {{ _('Ressources') }}
               </a>
             </li>
             <li class="nav-item hc-public-nav-cta">
               <a class="nav-link hc-nav-cta hc-cta hc-public-nav-demo-cta" href="/demo">
-                <span class="hc-navlabel">{{ _('Échanger sur un pilote') }}</span>
+                <span class="hc-navlabel">{{ _('Demander un accès pilote') }}</span>
               </a>
             </li>
             {% if current_user.is_authenticated %}
@@ -892,12 +909,15 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
           <!-- Topbar actions -->             
 
           {% set ep = request.endpoint or '' %}
-          {% set public_eps = [
-            'main.index', 'main.orienter', 'main.about', 'main.professionnels',
+          {% set public_eps = hc_institutional_public_eps + [
+            'main.orienter',
+            'main.about',
+            'main.professionnels',
             'main.pour_les_structures',
-            'main.offre',
-            'main.deploiement',
-            'main.become_volunteer', 'main.volunteer_login', 'main.faq', 'main.contact'
+            'main.cas_usage',
+            'main.become_volunteer',
+            'main.volunteer_login',
+            'main.demander_acces'
           ] %}
           {% set show_nav_chrome = ep.startswith('admin.') or ep.startswith('main.volunteer_') or (ep not in public_eps) %}
           {% if show_nav_chrome and config.DEBUG and not disable_nav_chrome %}
@@ -953,31 +973,25 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
         </div>
         <ul class="hc-mobile-nav__list">
           <li class="hc-mobile-nav__item">
-            <a class="{{ 'is-active' if mobile_ep == 'main.index' else '' }}" href="{{ url_for('main.index') }}" {% if mobile_ep == 'main.index' %}aria-current="page"{% endif %}>{{ _('Accueil') }}</a>
+            <a class="{{ 'is-active' if produit_active else '' }}" href="{{ url_for('main.comment_ca_marche') }}" {% if produit_active %}aria-current="page"{% endif %}>{{ _('Produit') }}</a>
           </li>
           <li class="hc-mobile-nav__item">
-            <a class="{{ 'is-active' if mobile_ep.startswith('main.comment_ca_marche') else '' }}" href="{{ url_for('main.comment_ca_marche') }}" {% if mobile_ep.startswith('main.comment_ca_marche') %}aria-current="page"{% endif %}>{{ _('Fonctionnement') }}</a>
+            <a class="{{ 'is-active' if secteurs_active else '' }}" href="{{ url_for('main.pour_les_structures') }}" {% if secteurs_active %}aria-current="page"{% endif %}>{{ _('Secteurs') }}</a>
           </li>
           <li class="hc-mobile-nav__item">
-            <a class="{{ 'is-active' if mobile_ep.startswith('main.professionnels') else '' }}" href="{{ url_for('main.professionnels') }}" {% if mobile_ep.startswith('main.professionnels') %}aria-current="page"{% endif %}>{{ _('Professionnels') }}</a>
+            <a class="{{ 'is-active' if securite_active else '' }}" href="{{ url_for('main.securite') }}" {% if securite_active %}aria-current="page"{% endif %}>{{ _('Sécurité') }}</a>
           </li>
           <li class="hc-mobile-nav__item">
-            <a class="{{ 'is-active' if mobile_ep.startswith('main.pour_les_structures') else '' }}" href="{{ url_for('main.pour_les_structures') }}" {% if mobile_ep.startswith('main.pour_les_structures') %}aria-current="page"{% endif %}>{{ _('Collectivités') }}</a>
+            <a class="{{ 'is-active' if deploiement_active else '' }}" href="{{ url_for('main.deploiement') }}" {% if deploiement_active %}aria-current="page"{% endif %}>{{ _('Déploiement') }}</a>
           </li>
           <li class="hc-mobile-nav__item">
-            <a class="{{ 'is-active' if mobile_ep.startswith('main.offre') else '' }}" href="{{ url_for('main.offre') }}" {% if mobile_ep.startswith('main.offre') %}aria-current="page"{% endif %}>{{ _('Offre') }}</a>
-          </li>
-          <li class="hc-mobile-nav__item">
-            <a class="{{ 'is-active' if mobile_ep.startswith('main.deploiement') else '' }}" href="{{ url_for('main.deploiement') }}" {% if mobile_ep.startswith('main.deploiement') %}aria-current="page"{% endif %}>{{ _('Déploiement') }}</a>
-          </li>
-          <li class="hc-mobile-nav__item">
-            <a class="{{ 'is-active' if mobile_ep.startswith('main.pilotage_indicateurs') else '' }}" href="{{ url_for('main.pilotage_indicateurs') }}" {% if mobile_ep.startswith('main.pilotage_indicateurs') %}aria-current="page"{% endif %}>{{ _('Pilotage') }}</a>
+            <a class="{{ 'is-active' if ressources_active else '' }}" href="{{ url_for('main.cas_usage') }}" {% if ressources_active %}aria-current="page"{% endif %}>{{ _('Ressources') }}</a>
           </li>
           <li class="hc-mobile-nav__item">
             <a class="{{ 'is-active' if mobile_ep.startswith('main.volunteer_login') else '' }}" href="{{ url_for('main.volunteer_login') }}" {% if mobile_ep.startswith('main.volunteer_login') %}aria-current="page"{% endif %}>{{ _('Connexion') }}</a>
           </li>
           <li class="hc-mobile-nav__item hc-mobile-nav__item--cta">
-            <a class="hc-public-nav-demo-cta" href="/demo">{{ _('Échanger sur un pilote') }}</a>
+            <a class="hc-public-nav-demo-cta" href="/demo">{{ _('Demander un accès pilote') }}</a>
           </li>
         </ul>
       </aside>
@@ -990,6 +1004,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
       tabindex="-1"
       id="hcLangSheet"
       aria-labelledby="hcLangSheetTitle"
+      data-nosnippet
     >
       <div class="offcanvas-header">
         <h2 class="offcanvas-title h5 mb-0" id="hcLangSheetTitle">{{ _('Language') }}</h2>
@@ -1010,7 +1025,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                   {% if lang.note %}<span class="hc-lang-note">{{ lang.note }}</span>{% endif %}
                 </span>
                 {% if lang.code == hc_locale_code %}
-                  <span class="hc-lang-check" aria-hidden="true">?</span>
+                  <span class="hc-lang-check" aria-hidden="true">&#10003;</span>
                 {% endif %}
               </button>
             </form>
@@ -1060,6 +1075,8 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
       aria-labelledby="hcA11yTitle"
       aria-hidden="true"
       hidden
+      inert
+      data-nosnippet
     >
       <div class="hc-a11y-drawer__overlay" data-a11y-close="true"></div>
       <div class="hc-a11y-drawer__panel" role="document">
@@ -1519,7 +1536,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                       {% if lang.note %}<span class="hc-lang-note">{{ lang.note }}</span>{% endif %}
                     </span>
                     {% if lang.code == hc_locale_code %}
-                      <span class="hc-lang-check" aria-hidden="true">?</span>
+                      <span class="hc-lang-check" aria-hidden="true">&#10003;</span>
                     {% else %}
                       <span class="hc-a11y-langitem__chevron" aria-hidden="true">›</span>
                     {% endif %}

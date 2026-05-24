@@ -393,16 +393,106 @@ body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) :is(.
 }
 
 body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) :is(.btn-primary, .hc-btn--primary, .hc-btn-primary, .hc-offre__btn--primary, .hc-home__btn--primary) {
-  border-color: rgba(11, 39, 66, 0.22) !important;
-  background: linear-gradient(135deg, #0b2742 0%, #174f8f 100%) !important;
+  min-height: 48px;
+  padding: 0.78rem 1.28rem;
+  border: 1px solid rgba(8, 28, 49, 0.34) !important;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #12345a 0%, #0d2845 100%) !important;
   color: #ffffff !important;
-  box-shadow: 0 16px 34px rgba(23, 79, 143, 0.24);
+  font-weight: 780;
+  letter-spacing: -0.01em;
+  box-shadow:
+    0 12px 28px rgba(9, 30, 55, 0.15),
+    0 2px 6px rgba(9, 30, 55, 0.08);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+  -webkit-font-smoothing: antialiased;
 }
 
 body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) :is(.btn, .hc-btn, .hc-offre__btn, .hc-home__btn) {
   min-height: 50px;
   border-radius: 13px;
   font-weight: 760;
+}
+
+body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) :is(.btn-primary, .hc-btn--primary, .hc-btn-primary, .hc-offre__btn--primary, .hc-home__btn--primary):hover {
+  border-color: rgba(7, 25, 43, 0.42) !important;
+  background: linear-gradient(180deg, #153b66 0%, #0f2d4d 100%) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 16px 34px rgba(9, 30, 55, 0.18),
+    0 4px 10px rgba(9, 30, 55, 0.1);
+  transform: translateY(-1px);
+}
+
+body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) :is(.btn-primary, .hc-btn--primary, .hc-btn-primary, .hc-offre__btn--primary, .hc-home__btn--primary):active {
+  transform: translateY(0);
+  box-shadow:
+    0 10px 22px rgba(9, 30, 55, 0.16),
+    0 2px 6px rgba(9, 30, 55, 0.08);
+}
+
+body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) :is(.btn-primary, .hc-btn--primary, .hc-btn-primary, .hc-offre__btn--primary, .hc-home__btn--primary):focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.96),
+    0 0 0 6px rgba(23, 79, 143, 0.32),
+    0 12px 28px rgba(9, 30, 55, 0.16);
+}
+
+body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) :is(.btn-outline-secondary, .btn-secondary, .hc-btn--ghost, .hc-btn-outline, .hc-btnGhost, .hc-btn--secondary, .hc-home__btn--secondary, .hc-offre__btn--secondary) {
+  min-height: 48px;
+  padding: 0.78rem 1.18rem;
+  border: 1px solid rgba(127, 151, 181, 0.48);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(245, 248, 252, 0.96));
+  color: #234366;
+  font-weight: 700;
+  letter-spacing: -0.006em;
+  box-shadow:
+    0 8px 20px rgba(9, 30, 55, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) :is(.btn-outline-secondary, .btn-secondary, .hc-btn--ghost, .hc-btn-outline, .hc-btnGhost, .hc-btn--secondary, .hc-home__btn--secondary, .hc-offre__btn--secondary):hover {
+  border-color: rgba(100, 129, 165, 0.58);
+  background: linear-gradient(180deg, #ffffff, #eef4fa);
+  color: #17395f;
+  box-shadow:
+    0 10px 24px rgba(9, 30, 55, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  transform: translateY(-1px);
+}
+
+body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) :is(.btn-outline-secondary, .btn-secondary, .hc-btn--ghost, .hc-btn-outline, .hc-btnGhost, .hc-btn--secondary, .hc-home__btn--secondary, .hc-offre__btn--secondary):active {
+  transform: translateY(0);
+}
+
+body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) :is(.btn-outline-secondary, .btn-secondary, .hc-btn--ghost, .hc-btn-outline, .hc-btnGhost, .hc-btn--secondary, .hc-home__btn--secondary, .hc-offre__btn--secondary):focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.96),
+    0 0 0 6px rgba(23, 79, 143, 0.22),
+    0 10px 24px rgba(9, 30, 55, 0.08);
+}
+
+body.hc-page-home .hc-home-premium__hero-actions {
+  align-items: center;
+  gap: 0.9rem;
+}
+
+body.hc-page-home .hc-home-premium__hero-actions :is(.btn, .hc-btn) {
+  justify-content: center;
 }
 
 body.hc-page-home .hc-home__hero {
