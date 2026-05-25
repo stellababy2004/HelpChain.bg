@@ -175,6 +175,10 @@ from ..services.account_intelligence import (
     build_account_intelligence,
 )
 
+from ..services.relationship_memory import (
+    build_relationship_memory,
+)
+
 from ..services.founder_cockpit import (
     build_founder_alerts,
     build_founder_priority_queue,
@@ -10715,6 +10719,28 @@ def _build_audience_map_context() -> dict:
             row["account_strength"] = account_intelligence.get("account_strength")
             row["operational_intent"] = account_intelligence.get("operational_intent")
             row["account_recommendation"] = account_intelligence.get("recommendation")
+
+            relationship_memory = build_relationship_memory(
+                row,
+                events=row.get("timeline_events") or [],
+            )
+
+            row["relationship_memory"] = relationship_memory
+            row["relationship_stage"] = relationship_memory.get("relationship_stage")
+
+            followup = relationship_memory.get("followup") or {}
+
+            row["followup_status"] = followup.get("followup_status")
+            row["followup_priority"] = followup.get("followup_priority")
+            row["relationship_reason"] = followup.get("reason")
+
+            row["recommended_relationship_action"] = (
+                relationship_memory.get("recommended_relationship_action")
+            )
+
+            row["timeline_size"] = len(
+                relationship_memory.get("timeline") or []
+            )
 
         except Exception:
             continue
