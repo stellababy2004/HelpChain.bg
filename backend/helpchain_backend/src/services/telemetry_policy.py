@@ -29,6 +29,7 @@ PUBLIC_COMMERCIAL_PATH_ALIASES = {
     "/pilotage-indicateurs": "/pilotage-indicateurs",
     "/pilotage_indicateurs": "/pilotage-indicateurs",
     "/pour-les-structures": "/pour-les-structures",
+    "/pour_les_structures": "/pour-les-structures",
     "/collectivites-associations": "/collectivites-associations",
     "/collectivites_associations": "/collectivites-associations",
     "/pourquoi-helpchain": "/pourquoi-helpchain",

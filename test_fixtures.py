@@ -1,12 +1,23 @@
 import pytest
 from datetime import timedelta
+from pathlib import Path
+from sqlalchemy import inspect as sa_inspect
 
 from backend.models import utc_now
 
 
+def _sqlite_db_path(app) -> Path | None:
+    uri = str(app.config.get("SQLALCHEMY_DATABASE_URI") or "").strip()
+    if not uri.startswith("sqlite:///"):
+        return None
+    return Path(uri.replace("sqlite:///", "", 1))
+
+
 @pytest.fixture(autouse=True)
-def _set_test_env(monkeypatch):
-    import os
+def _set_test_env(monkeypatch, tmp_path_factory):
+    tmp_root = tmp_path_factory.mktemp("hc-pytest-db")
+    test_db_path = tmp_root / "test.sqlite"
+    test_db_uri = f"sqlite:///{test_db_path.as_posix()}"
 
     monkeypatch.setenv("HC_ENV", "test")
     monkeypatch.setenv("HELPCHAIN_TESTING", "1")
@@ -15,22 +26,40 @@ def _set_test_env(monkeypatch):
     monkeypatch.setenv("TEST_ADMIN_PASSWORD", "TestPassword1")
     monkeypatch.setenv("ADMIN_PASSWORD", "TestPassword1")
     monkeypatch.setenv("ADMIN_USER_PASSWORD", "TestPassword1")
-    tmp_root = os.path.join(os.getcwd(), ".tmp")
-    os.makedirs(tmp_root, exist_ok=True)
-    test_db_path = os.path.join(tmp_root, "root_pytest.sqlite")
-    monkeypatch.setenv("HC_DB_PATH", test_db_path)
-    monkeypatch.delenv("DATABASE_URL", raising=False)
-    monkeypatch.delenv("SQLALCHEMY_DATABASE_URI", raising=False)
-    monkeypatch.setenv("TMPDIR", tmp_root)
-    monkeypatch.setenv("TEMP", tmp_root)
-    monkeypatch.setenv("TMP", tmp_root)
+    monkeypatch.setenv("HC_DB_PATH", str(test_db_path))
+    monkeypatch.setenv("DATABASE_URL", test_db_uri)
+    monkeypatch.setenv("SQLALCHEMY_DATABASE_URI", test_db_uri)
+    monkeypatch.setenv("TMPDIR", str(tmp_root))
+    monkeypatch.setenv("TEMP", str(tmp_root))
+    monkeypatch.setenv("TMP", str(tmp_root))
 
 
 @pytest.fixture
 def app():
-    from backend.helpchain_backend.src.app import create_app
+    import importlib
+    import os
 
-    app = create_app({"TESTING": True, "WTF_CSRF_ENABLED": False})
+    from backend.helpchain_backend.src import config as app_config
+    from backend.models import db
+
+    app_config = importlib.reload(app_config)
+    from backend.helpchain_backend.src import app as app_module
+
+    app_module = importlib.reload(app_module)
+    test_db_uri = f"sqlite:///{os.environ['HC_DB_PATH'].replace('\\', '/')}"
+    app_config.Config.SQLALCHEMY_DATABASE_URI = test_db_uri
+    if hasattr(app_config, "DevConfig"):
+        app_config.DevConfig.SQLALCHEMY_DATABASE_URI = test_db_uri
+    if hasattr(app_config, "ProdConfig"):
+        app_config.ProdConfig.SQLALCHEMY_DATABASE_URI = test_db_uri
+
+    app = app_module.create_app(
+        {
+            "TESTING": True,
+            "WTF_CSRF_ENABLED": False,
+            "SQLALCHEMY_DATABASE_URI": test_db_uri,
+        }
+    )
     # create_app loads config objects after dict update; force test-only overrides here.
     app.config["TESTING"] = True
     app.config["WTF_CSRF_ENABLED"] = False
@@ -38,6 +67,19 @@ def app():
     app.config["VOLUNTEER_DEV_BYPASS_ENABLED"] = True
     app.config["VOLUNTEER_DEV_BYPASS_EMAIL"] = "volunteer@test.local"
     yield app
+    with app.app_context():
+        db.session.remove()
+        try:
+            db.engine.dispose()
+        except Exception:
+            pass
+    db_path = Path(str(app.config.get("SQLALCHEMY_DATABASE_URI") or "").replace("sqlite:///", "", 1))
+    for candidate in (db_path, db_path.with_suffix(db_path.suffix + "-shm"), db_path.with_suffix(db_path.suffix + "-wal")):
+        try:
+            if candidate.exists():
+                candidate.unlink()
+        except Exception:
+            pass
 
 
 @pytest.fixture
@@ -47,10 +89,15 @@ def db_schema(app):
         import backend.models  # noqa: F401
         import backend.models_with_analytics  # noqa: F401
 
-        # Force clean schema each test run; create_all() does not add missing
-        # columns on existing tables (e.g. newly added Request risk fields).
-        db.drop_all()
-        db.create_all()
+        db_path = _sqlite_db_path(app)
+        db.session.remove()
+        try:
+            db.engine.dispose()
+        except Exception:
+            pass
+        existing_tables = set(sa_inspect(db.engine).get_table_names())
+        if not existing_tables:
+            db.create_all()
 
         from backend.models import Structure
 
@@ -61,7 +108,15 @@ def db_schema(app):
         yield
 
         db.session.remove()
-        db.drop_all()
+        try:
+            db.engine.dispose()
+        except Exception:
+            pass
+        if db_path and db_path.exists():
+            try:
+                db_path.unlink()
+            except Exception:
+                pass
 
 
 @pytest.fixture
