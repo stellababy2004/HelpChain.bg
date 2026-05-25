@@ -61,7 +61,7 @@
     </div>
     <div class="hc-founder-cockpit__grid p-3">
       <div class="hc-founder-cockpit__panel">
-        <div class="hc-founder-cockpit__heading">À contacter aujourd’hui</div>
+        <div class="hc-founder-cockpit__heading">{{ _('À contacter aujourd’hui') }}</div>
 
         <div class="hc-founder-cockpit__list">
           {% for item in founder_cockpit.daily_queue %}
@@ -93,18 +93,18 @@
               {% endif %}
 
               <div class="small mt-2">
-                <strong>Action:</strong>
+                <strong>{{ _('Action:') }}</strong>
                 {{ item.daily_recommended_action }}
               </div>
             </article>
           {% else %}
             <div class="hc-empty-state">
               <div class="hc-empty-state__title">
-                No operational founder queue yet
+                {{ _('No operational founder queue yet') }}
               </div>
 
               <div class="hc-empty-state__text">
-                Institutional opportunities will appear here automatically.
+                {{ _('Institutional opportunities will appear here automatically.') }}
               </div>
             </div>
           {% endfor %}
