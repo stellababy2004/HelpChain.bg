@@ -61,6 +61,57 @@
     </div>
     <div class="hc-founder-cockpit__grid p-3">
       <div class="hc-founder-cockpit__panel">
+        <div class="hc-founder-cockpit__heading">À contacter aujourd’hui</div>
+
+        <div class="hc-founder-cockpit__list">
+          {% for item in founder_cockpit.daily_queue %}
+            <article class="hc-founder-cockpit__item">
+              <div class="d-flex justify-content-between gap-2">
+                <strong class="text-truncate">
+                  {{ item.organization or item.account_name or "Institutional account" }}
+                </strong>
+
+                <span class="badge text-bg-primary">
+                  {{ item.daily_priority_score }}
+                </span>
+              </div>
+
+              <div class="hc-muted small mt-1">
+                {{ item.relationship_stage|replace('_', ' ') }}
+                · {{ item.account_strength }}
+                · {{ item.outreach_label or item.outreach_stage }}
+              </div>
+
+              {% if item.daily_priority_reasons %}
+                <div class="hc-founder-cockpit__chips mt-2">
+                  {% for reason in item.daily_priority_reasons %}
+                    <span class="badge text-bg-light border">
+                      {{ reason }}
+                    </span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              <div class="small mt-2">
+                <strong>Action:</strong>
+                {{ item.daily_recommended_action }}
+              </div>
+            </article>
+          {% else %}
+            <div class="hc-empty-state">
+              <div class="hc-empty-state__title">
+                No operational founder queue yet
+              </div>
+
+              <div class="hc-empty-state__text">
+                Institutional opportunities will appear here automatically.
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="hc-founder-cockpit__panel">
         <div class="hc-founder-cockpit__heading">Top opportunities</div>
         <div class="hc-founder-cockpit__list">
           {% for item in founder_cockpit.queue %}

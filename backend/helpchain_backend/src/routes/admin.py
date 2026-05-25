@@ -185,6 +185,11 @@ from ..services.founder_cockpit import (
     group_founder_signals_by_territory,
     summarize_founder_actions,
 )
+
+from ..services.daily_founder_queue import (
+    build_daily_founder_queue,
+    summarize_daily_founder_queue,
+)
 from ..services.territorial_intelligence import (
     detect_priority_territories,
     normalize_territory_name,
@@ -10967,8 +10972,15 @@ def _revenue_audience_metadata(audience_context: dict | None) -> dict[str, objec
 
 def _build_founder_cockpit_context(rows: list[SimpleNamespace]) -> dict[str, object]:
     queue = build_founder_priority_queue(rows)
+    daily_source_rows = [
+        dict(item.__dict__) if hasattr(item, "__dict__") else dict(item)
+        for item in rows
+    ]
+
     return {
         "queue": queue[:8],
+        "daily_queue": build_daily_founder_queue(daily_source_rows, limit=5),
+        "daily_summary": summarize_daily_founder_queue(daily_source_rows),
         "alerts": build_founder_alerts(rows),
         "territories": group_founder_signals_by_territory(rows)[:6],
         "summary": summarize_founder_actions(rows),
