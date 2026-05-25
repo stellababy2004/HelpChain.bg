@@ -9186,3 +9186,14 @@ msgstr ""
 
 #~ msgid "Ouvrir"
 #~ msgstr "Ouvrir"
+msgid "Action:"
+msgstr "Action :"
+
+msgid "Institutional opportunities will appear here automatically."
+msgstr "Les opportunités institutionnelles apparaîtront ici automatiquement."
+
+msgid "No operational founder queue yet"
+msgstr "Aucune file opérationnelle fondateur pour le moment"
+
+msgid "Ã€ contacter aujourdâ€™hui"
+msgstr "À contacter aujourd’hui"
