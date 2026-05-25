@@ -22,8 +22,8 @@
           {{ _("HelpChain s’intègre progressivement à votre organisation, avec un périmètre maîtrisé, des accès contrôlés et un accompagnement opérationnel.") }}
         </p>
         <div class="hc-trust-page__actions">
-          <a href="/demo" class="hc-btn hc-btn--primary btn btn-primary">{{ _("Demander un accès pilote") }}</a>
-          <a href="{{ url_for('main.premium_onboarding') }}" class="hc-btn hc-btn--ghost btn btn-secondary">{{ _("Voir le parcours de lancement") }}</a>
+          <a href="/demo" class="hc-btn hc-btn--primary btn btn-primary" data-hc-event="deployment_pilot_cta_clicked" data-hc-cta="hero_pilot_access" data-hc-intent="pilot">{{ _("Demander un accès pilote") }}</a>
+          <a href="{{ url_for('main.premium_onboarding') }}" class="hc-btn hc-btn--ghost btn btn-secondary" data-hc-event="structure_deployment_interest" data-hc-cta="hero_launch_path" data-hc-intent="deployment">{{ _("Voir le parcours de lancement") }}</a>
         </div>
         <ul class="hc-trust-page__chips">
           <li>{{ _("Pas de migration brutale") }}</li>
@@ -155,8 +155,8 @@
           </article>
         </div>
         <div class="hc-case-study__actions">
-          <a href="/demo" class="hc-btn hc-btn--primary btn btn-primary">{{ _("Demander un accès pilote") }}</a>
-          <a href="{{ url_for('main.premium_onboarding') }}" class="hc-btn hc-btn--ghost btn btn-secondary">{{ _("Voir le parcours de lancement") }}</a>
+          <a href="/demo" class="hc-btn hc-btn--primary btn btn-primary" data-hc-event="pilot_exchange_requested" data-hc-cta="case_study_pilot_access" data-hc-intent="pilot">{{ _("Demander un accès pilote") }}</a>
+          <a href="{{ url_for('main.premium_onboarding') }}" class="hc-btn hc-btn--ghost btn btn-secondary" data-hc-event="structure_deployment_interest" data-hc-cta="case_study_launch_path" data-hc-intent="deployment">{{ _("Voir le parcours de lancement") }}</a>
         </div>
       </div>
     </div>
@@ -197,7 +197,7 @@
           </article>
         </div>
         <div class="hc-trust-layer__actions">
-          <a href="{{ url_for('main.securite') }}" class="hc-btn hc-btn--ghost btn btn-secondary">{{ _("Comprendre la sécurité") }}</a>
+          <a href="{{ url_for('main.securite') }}" class="hc-btn hc-btn--ghost btn btn-secondary" data-hc-event="deployment_security_review_requested" data-hc-cta="governance_security_review" data-hc-intent="trust">{{ _("Comprendre la sécurité") }}</a>
         </div>
       </div>
     </div>
@@ -212,8 +212,8 @@
           <p>{{ _("Présentez votre contexte, vos équipes et votre périmètre de départ. Nous vous proposons un scénario de déploiement progressif, réaliste et sans rupture.") }}</p>
         </div>
         <div class="hc-trust-page__actions hc-trust-page__actions--stacked">
-          <a href="/demo" class="hc-btn hc-btn--primary btn btn-primary">{{ _("Demander un accès pilote") }}</a>
-          <a href="{{ url_for('main.contact') }}" class="hc-btn hc-btn--ghost btn btn-secondary">{{ _("Nous contacter") }}</a>
+          <a href="/demo" class="hc-btn hc-btn--primary btn btn-primary" data-hc-event="structure_deployment_interest" data-hc-cta="final_pilot_access" data-hc-intent="deployment">{{ _("Demander un accès pilote") }}</a>
+          <a href="{{ url_for('main.contact') }}" class="hc-btn hc-btn--ghost btn btn-secondary" data-hc-event="governance_contact_cta_clicked" data-hc-cta="final_contact" data-hc-intent="outreach">{{ _("Nous contacter") }}</a>
           <ul class="hc-deploiement__cta-note" aria-label="{{ _('Repères de réassurance') }}">
             <li>{{ _("France-first") }}</li>
             <li>{{ _("Périmètre maîtrisé") }}</li>

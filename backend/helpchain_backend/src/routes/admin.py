@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections import Counter
+from collections import Counter, defaultdict
 import csv
 import html
 import inspect
@@ -189,6 +189,11 @@ from ..services.founder_cockpit import (
 from ..services.daily_founder_queue import (
     build_daily_founder_queue,
     summarize_daily_founder_queue,
+)
+from ..services.revenue_signal_engine import (
+    SIGNAL_LOOKBACK_DAYS,
+    build_revenue_signal_profile,
+    summarize_revenue_signal_profile,
 )
 from ..services.territorial_intelligence import (
     detect_priority_territories,
@@ -10976,6 +10981,8 @@ def _build_founder_cockpit_context(rows: list[SimpleNamespace]) -> dict[str, obj
         dict(item.__dict__) if hasattr(item, "__dict__") else dict(item)
         for item in rows
     ]
+    telemetry_profiles = _build_revenue_signal_profiles()
+    telemetry_summary = summarize_revenue_signal_profile(telemetry_profiles)
 
     return {
         "queue": queue[:8],
@@ -10983,8 +10990,85 @@ def _build_founder_cockpit_context(rows: list[SimpleNamespace]) -> dict[str, obj
         "daily_summary": summarize_daily_founder_queue(daily_source_rows),
         "alerts": build_founder_alerts(rows),
         "territories": group_founder_signals_by_territory(rows)[:6],
+        "hot_this_week": telemetry_summary["hot_this_week"],
+        "silent_high_intent": telemetry_summary["silent_high_intent"],
+        "territory_acceleration": telemetry_summary["territory_acceleration"],
         "summary": summarize_founder_actions(rows),
     }
+
+
+def _build_revenue_signal_profiles(
+    *,
+    lookback_days: int = SIGNAL_LOOKBACK_DAYS,
+) -> list[dict[str, object]]:
+    try:
+        from backend.models_with_analytics import AnalyticsEvent, UserBehavior
+    except Exception:
+        return []
+
+    if not _table_exists("analytics_events"):
+        return []
+
+    since = _now_utc() - timedelta(days=max(1, int(lookback_days or SIGNAL_LOOKBACK_DAYS)))
+    event_rows = (
+        db.session.query(AnalyticsEvent)
+        .filter(AnalyticsEvent.created_at >= since)
+        .filter(AnalyticsEvent.user_session.isnot(None))
+        .filter(AnalyticsEvent.user_session != "")
+        .order_by(AnalyticsEvent.created_at.asc(), AnalyticsEvent.id.asc())
+        .limit(5000)
+        .all()
+    )
+    if not event_rows:
+        return []
+
+    location_lookup: dict[str, str] = {}
+    if UserBehavior is not None and _table_exists("user_behaviors"):
+        behavior_rows = (
+            db.session.query(UserBehavior.session_id, UserBehavior.location)
+            .filter(UserBehavior.session_start >= since)
+            .filter(UserBehavior.session_id.isnot(None))
+            .filter(UserBehavior.session_id != "")
+            .all()
+        )
+        for session_id, location in behavior_rows:
+            territory = normalize_territory_name(_audience_location_city(location))
+            if session_id and territory:
+                location_lookup[str(session_id).strip()] = territory
+
+    grouped_events: dict[str, list[object]] = defaultdict(list)
+    for event in event_rows:
+        session_id = str(getattr(event, "user_session", "") or "").strip()
+        if not session_id:
+            continue
+        grouped_events[session_id].append(event)
+
+    territory_counts = Counter(
+        territory for territory in location_lookup.values() if territory
+    )
+    profiles: list[dict[str, object]] = []
+    for session_id, session_events in grouped_events.items():
+        territory = location_lookup.get(session_id)
+        profile = build_revenue_signal_profile(
+            session_events,
+            territory=territory,
+            territory_repeat_count=territory_counts.get(territory or "", 0),
+            now=_now_utc(),
+        )
+        if not int(profile.get("intent_score") or 0):
+            continue
+        profile["session_id"] = session_id
+        profiles.append(profile)
+
+    profiles.sort(
+        key=lambda item: (
+            int(item.get("intent_score") or 0),
+            int(item.get("pilot_event_count") or 0),
+            int(item.get("recency_score") or 0),
+        ),
+        reverse=True,
+    )
+    return profiles
 
 
 def _revenue_recent_activity_score(last_activity: datetime | None) -> int:

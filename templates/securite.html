@@ -21,8 +21,8 @@
           {{ _("HelpChain structure la coordination sociale dans un environnement maîtrisé, traçable et compatible avec les exigences de gouvernance des structures locales.") }}
         </p>
         <div class="hc-trust-page__actions">
-          <a href="/demo" class="hc-btn hc-btn--primary btn btn-primary">{{ _("Demander un accès pilote") }}</a>
-          <a href="{{ url_for('main.architecture') }}" class="hc-btn hc-btn--ghost btn btn-secondary">{{ _("Voir l’architecture") }}</a>
+          <a href="/demo" class="hc-btn hc-btn--primary btn btn-primary" data-hc-event="security_trust_cta_clicked" data-hc-cta="hero_pilot_access" data-hc-intent="trust">{{ _("Demander un accès pilote") }}</a>
+          <a href="{{ url_for('main.architecture') }}" class="hc-btn hc-btn--ghost btn btn-secondary" data-hc-event="security_architecture_review_requested" data-hc-cta="hero_architecture_review" data-hc-intent="trust">{{ _("Voir l’architecture") }}</a>
         </div>
         <ul class="hc-trust-page__chips">
           <li>{{ _("Cadre RGPD") }}</li>
@@ -161,8 +161,8 @@
           <p>{{ _("Nous présentons l’architecture, les garanties de sécurité et le périmètre de conformité adapté à votre structure.") }}</p>
         </div>
         <div class="hc-trust-page__actions hc-trust-page__actions--stacked">
-          <a href="/demo" class="hc-btn hc-btn--primary btn btn-primary">{{ _("Demander un accès pilote") }}</a>
-          <a href="{{ url_for('main.contact') }}" class="hc-btn hc-btn--ghost btn btn-secondary">{{ _("Nous contacter") }}</a>
+          <a href="/demo" class="hc-btn hc-btn--primary btn btn-primary" data-hc-event="security_trust_cta_clicked" data-hc-cta="final_pilot_access" data-hc-intent="trust">{{ _("Demander un accès pilote") }}</a>
+          <a href="{{ url_for('main.contact') }}" class="hc-btn hc-btn--ghost btn btn-secondary" data-hc-event="governance_contact_cta_clicked" data-hc-cta="final_contact" data-hc-intent="outreach">{{ _("Nous contacter") }}</a>
         </div>
       </div>
       <ul class="hc-trust-page__cta-trust-chips" aria-label="{{ _('Repères de confiance') }}">

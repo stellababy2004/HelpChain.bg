@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
+from backend.models_with_analytics import AnalyticsEvent, UserBehavior
 from backend.helpchain_backend.src.models import (
     OrganizationAccessRequest,
     ProfessionalLead,
@@ -257,3 +258,69 @@ def test_admin_revenue_founder_cockpit_surfaces_alerts_and_territory_watch(
         or "Reinforce governance reassurance" in html
         or "Governance reassurance recommended" in html
     )
+
+
+def test_admin_revenue_renders_revenue_signal_sections(
+    authenticated_admin_client, session
+):
+    now = datetime.now(UTC).replace(tzinfo=None)
+    session.add_all(
+        [
+            UserBehavior(
+                session_id="signal-hot",
+                location="Paris, France",
+                session_start=now - timedelta(days=3),
+            ),
+            UserBehavior(
+                session_id="signal-silent",
+                location="Paris, France",
+                session_start=now - timedelta(days=2),
+            ),
+            AnalyticsEvent(
+                event_type="deployment_pilot_cta_clicked",
+                user_session="signal-hot",
+                page_url="/deploiement",
+                created_at=now - timedelta(days=3),
+            ),
+            AnalyticsEvent(
+                event_type="deployment_pilot_cta_clicked",
+                user_session="signal-hot",
+                page_url="/deploiement",
+                created_at=now - timedelta(days=1),
+            ),
+            AnalyticsEvent(
+                event_type="governance_contact_cta_clicked",
+                user_session="signal-hot",
+                page_url="/contact",
+                created_at=now,
+            ),
+            AnalyticsEvent(
+                event_type="security_trust_cta_clicked",
+                user_session="signal-silent",
+                page_url="/securite",
+                created_at=now - timedelta(days=2),
+            ),
+            AnalyticsEvent(
+                event_type="structure_deployment_interest",
+                user_session="signal-silent",
+                page_url="/pour-les-structures",
+                created_at=now - timedelta(days=1),
+            ),
+            AnalyticsEvent(
+                event_type="deployment_pilot_cta_clicked",
+                user_session="signal-silent",
+                page_url="/deploiement",
+                created_at=now,
+            ),
+        ]
+    )
+    session.commit()
+
+    response = authenticated_admin_client.get("/admin/revenue")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Hot this week" in html
+    assert "Silent high-intent" in html
+    assert "Territory acceleration" in html
+    assert "Paris" in html

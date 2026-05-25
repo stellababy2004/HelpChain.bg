@@ -342,8 +342,8 @@
         </p>
       </div>
       <div class="hc-cta-row">
-        <a href="/demo" class="hc-btn hc-btn--primary">{{ _('Demander un accès pilote') }}</a>
-        <a href="#hc-structures-workflow" class="hc-btn hc-btn--ghost">{{ _('Voir le cadre de fonctionnement') }}</a>
+        <a href="/demo" class="hc-btn hc-btn--primary" data-hc-event="structure_deployment_interest" data-hc-cta="hero_pilot_access" data-hc-intent="deployment">{{ _('Demander un accès pilote') }}</a>
+        <a href="#hc-structures-workflow" class="hc-btn hc-btn--ghost" data-hc-event="structure_operating_model_review_requested" data-hc-cta="hero_operating_model" data-hc-intent="institutional_fit">{{ _('Voir le cadre de fonctionnement') }}</a>
       </div>
       <ul class="hc-audience-row" aria-label="{{ _('Publics concernés') }}">
         <li class="hc-audience-pill">{{ _('CCAS') }}</li>
@@ -588,8 +588,8 @@
           {{ _('Une démonstration permet de visualiser le cadre de traitement. Un pilote permet de l’éprouver sur un périmètre maîtrisé.') }}
         </p>
         <div class="hc-cta-row hc-final-cta__actions">
-          <a href="/demo" class="hc-btn hc-btn--primary">{{ _('Demander un accès pilote') }}</a>
-          <a href="{{ url_for('main.contact') }}" class="hc-btn hc-btn--ghost">{{ _('Nous contacter') }}</a>
+          <a href="/demo" class="hc-btn hc-btn--primary" data-hc-event="pilot_exchange_requested" data-hc-cta="final_pilot_access" data-hc-intent="pilot">{{ _('Demander un accès pilote') }}</a>
+          <a href="{{ url_for('main.contact') }}" class="hc-btn hc-btn--ghost" data-hc-event="governance_contact_cta_clicked" data-hc-cta="final_contact" data-hc-intent="outreach">{{ _('Nous contacter') }}</a>
         </div>
       </div>
     </div>

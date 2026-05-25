@@ -31,10 +31,10 @@
       </p>
 
       <div class="hc-hero__actions">
-        <a href="{{ url_for('main.professionnels_pilote') }}" class="btn btn-primary">
+        <a href="{{ url_for('main.professionnels_pilote') }}" class="btn btn-primary" data-hc-event="structure_deployment_interest" data-hc-cta="hero_structure_access" data-hc-intent="deployment">
           {{ _('Je représente une structure') }}
         </a>
-        <a href="#usecases" class="btn btn-outline-secondary">
+        <a href="#usecases" class="btn btn-outline-secondary" data-hc-event="professional_access_interest" data-hc-cta="hero_professional_usecases" data-hc-intent="institutional_fit">
           {{ _('Je suis un professionnel') }}
         </a>
       </div>
@@ -138,7 +138,7 @@
       <div class="hc-usecases-cta__text">
         <strong>Objectif de la phase pilote :</strong> réduire la fragmentation, améliorer la coordination et renforcer la traçabilité.
       </div>
-      <a class="btn btn-primary btn-lg" href="{{ url_for('main.professionnels_pilote') }}">
+      <a class="btn btn-primary btn-lg" href="{{ url_for('main.professionnels_pilote') }}" data-hc-event="professional_access_interest" data-hc-cta="usecases_professional_access" data-hc-intent="institutional_fit">
         Demander un accès professionnel
       </a>
     </div>
@@ -187,8 +187,8 @@
       </div>
 
       <div class="hc-trust-callout__actions">
-        <a class="btn btn-outline-secondary" href="/gouvernance">{{ _('Consulter la gouvernance') }}</a>
-        <a class="btn btn-primary" href="/contact">{{ _('Demander un accès pilote') }}</a>
+        <a class="btn btn-outline-secondary" href="/gouvernance" data-hc-event="governance_review_requested" data-hc-cta="governance_review" data-hc-intent="trust">{{ _('Consulter la gouvernance') }}</a>
+        <a class="btn btn-primary" href="/contact" data-hc-event="pilot_exchange_requested" data-hc-cta="governance_contact" data-hc-intent="outreach">{{ _('Demander un accès pilote') }}</a>
       </div>
     </div>
 
@@ -251,10 +251,10 @@
       {{ _('Accès étudié manuellement') }} · {{ _('Phase pilote encadrée') }} · {{ _('Déploiement progressif') }}
     </p>
     <div class="hc-hero__actions">
-      <a class="hc-btn hc-btn-primary" href="{{ url_for('main.professionnels_pilote') }}">
+      <a class="hc-btn hc-btn-primary" href="{{ url_for('main.professionnels_pilote') }}" data-hc-event="professional_access_interest" data-hc-cta="final_professional_access" data-hc-intent="institutional_fit">
         {{ _('Demander un accès professionnel') }}
       </a>
-      <a class="hc-btn hc-btn--ghost" href="{{ url_for('main.contact') }}">
+      <a class="hc-btn hc-btn--ghost" href="{{ url_for('main.contact') }}" data-hc-event="governance_contact_cta_clicked" data-hc-cta="final_contact" data-hc-intent="outreach">
         {{ _('Demander un accès pilote') }}
       </a>
     </div>

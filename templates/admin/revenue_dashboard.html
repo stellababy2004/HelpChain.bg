@@ -176,6 +176,90 @@
           {% endfor %}
         </div>
       </div>
+
+      <div class="hc-founder-cockpit__panel">
+        <div class="hc-founder-cockpit__heading">{{ _('Hot this week') }}</div>
+        <div class="hc-founder-cockpit__list">
+          {% for item in founder_cockpit.hot_this_week %}
+            <article class="hc-founder-cockpit__item">
+              <div class="d-flex justify-content-between gap-2">
+                <strong class="text-truncate">{{ item.territory or _('Anonymous territory') }}</strong>
+                <span class="badge text-bg-warning text-dark">{{ item.intent_score }}</span>
+              </div>
+              <div class="hc-muted small mt-1">
+                {{ item.intent_label or item.intent_tier or _('Institutional signal') }}
+                · {{ item.repeated_sessions }} {{ _('repeat session(s)') }}
+                · {{ item.repeated_cta_clicks }} {{ _('repeat CTA(s)') }}
+              </div>
+              <div class="small mt-2">
+                <strong>{{ _('Paths:') }}</strong>
+                {{ (item.top_paths or [])|join(', ') if item.top_paths else _('No path detail available') }}
+              </div>
+            </article>
+          {% else %}
+            <div class="hc-empty-state">
+              <div class="hc-empty-state__title">{{ _('No hot signal this week') }}</div>
+              <div class="hc-empty-state__text">{{ _('Recent repeated institutional engagement will appear here automatically.') }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="hc-founder-cockpit__panel">
+        <div class="hc-founder-cockpit__heading">{{ _('Silent high-intent') }}</div>
+        <div class="hc-founder-cockpit__list">
+          {% for item in founder_cockpit.silent_high_intent %}
+            <article class="hc-founder-cockpit__item">
+              <div class="d-flex justify-content-between gap-2">
+                <strong class="text-truncate">{{ item.territory or _('Anonymous territory') }}</strong>
+                <span class="badge text-bg-light border">{{ item.intent_score }}</span>
+              </div>
+              <div class="hc-muted small mt-1">
+                {{ item.primary_interest|replace('_', ' ') }}
+                · {{ item.governance_event_count }} {{ _('governance touchpoint(s)') }}
+                · {{ item.pilot_event_count }} {{ _('pilot touchpoint(s)') }}
+              </div>
+              <div class="small mt-2">
+                <strong>{{ _('Status:') }}</strong>
+                {{ _('No outreach or contact signal recorded yet') }}
+              </div>
+            </article>
+          {% else %}
+            <div class="hc-empty-state">
+              <div class="hc-empty-state__title">{{ _('No silent high-intent signal') }}</div>
+              <div class="hc-empty-state__text">{{ _('Anonymous institutional evaluation without outreach will surface here when detected.') }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="hc-founder-cockpit__panel">
+        <div class="hc-founder-cockpit__heading">{{ _('Territory acceleration') }}</div>
+        <div class="hc-founder-cockpit__list">
+          {% for item in founder_cockpit.territory_acceleration %}
+            <article class="hc-founder-cockpit__item">
+              <div class="d-flex justify-content-between gap-2">
+                <strong>{{ item.territory }}</strong>
+                <span class="badge text-bg-light border">{{ item.total_intent_score }}</span>
+              </div>
+              <div class="hc-muted small mt-1">
+                {{ item.session_count }} {{ _('active session(s)') }}
+                · {{ item.repeat_session_count }} {{ _('repeat cycle(s)') }}
+                · {{ item.repeated_cta_clicks }} {{ _('repeat CTA(s)') }}
+              </div>
+              <div class="small mt-2">
+                <strong>{{ _('Recommended:') }}</strong>
+                {{ item.recommended_action }}
+              </div>
+            </article>
+          {% else %}
+            <div class="hc-empty-state">
+              <div class="hc-empty-state__title">{{ _('No territory acceleration yet') }}</div>
+              <div class="hc-empty-state__text">{{ _('Grouped territorial momentum will appear here as repeated institutional activity accumulates.') }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
     </div>
   </section>
 

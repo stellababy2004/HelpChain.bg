@@ -9210,3 +9210,62 @@ msgstr "Nous contacter"
 
 msgid "Structurer un déploiement"
 msgstr "Structurer un déploiement"
+msgid "Hot this week"
+msgstr "Signaux chauds de la semaine"
+
+msgid "Silent high-intent"
+msgstr "Intention forte sans prise de contact"
+
+msgid "Territory acceleration"
+msgstr "Accélération territoriale"
+
+msgid "Anonymous territory"
+msgstr "Territoire non identifié"
+
+msgid "repeat session(s)"
+msgstr "session(s) répétée(s)"
+
+msgid "repeat CTA(s)"
+msgstr "CTA répété(s)"
+
+msgid "Paths:"
+msgstr "Parcours :"
+
+msgid "No path detail available"
+msgstr "Aucun détail de parcours disponible"
+
+msgid "No hot signal this week"
+msgstr "Aucun signal chaud cette semaine"
+
+msgid "Recent repeated institutional engagement will appear here automatically."
+msgstr "Les engagements institutionnels récents et répétés apparaîtront ici automatiquement."
+
+msgid "governance touchpoint(s)"
+msgstr "point(s) de contact gouvernance"
+
+msgid "pilot touchpoint(s)"
+msgstr "point(s) de contact pilote"
+
+msgid "Status:"
+msgstr "Statut :"
+
+msgid "No outreach or contact signal recorded yet"
+msgstr "Aucun signal de prise de contact enregistré pour le moment"
+
+msgid "No silent high-intent signal"
+msgstr "Aucun signal d'intention forte silencieuse"
+
+msgid "Anonymous institutional evaluation without outreach will surface here when detected."
+msgstr "Une évaluation institutionnelle anonyme sans prise de contact apparaîtra ici lorsqu'elle sera détectée."
+
+msgid "active session(s)"
+msgstr "session(s) active(s)"
+
+msgid "repeat cycle(s)"
+msgstr "cycle(s) répété(s)"
+
+msgid "No territory acceleration yet"
+msgstr "Aucune accélération territoriale pour le moment"
+
+msgid "Grouped territorial momentum will appear here as repeated institutional activity accumulates."
+msgstr "La dynamique territoriale groupée apparaîtra ici à mesure que l'activité institutionnelle répétée s'accumule."

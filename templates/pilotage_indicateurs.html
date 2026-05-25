@@ -130,8 +130,8 @@
       {{ _("Un échange permet de cadrer les indicateurs utiles, le périmètre initial et les conditions d’un premier pilote maîtrisé pour votre structure ou votre territoire.") }}
     </p>
     <div class="mt-3 d-flex flex-wrap gap-2">
-      <a href="/demo" class="hc-btn hc-btn--primary">{{ _("Demander un accès pilote") }}</a>
-      <a href="{{ url_for('main.deploiement') }}" class="hc-btn hc-btn--ghost">{{ _("Voir le cadre de déploiement") }}</a>
+      <a href="/demo" class="hc-btn hc-btn--primary" data-hc-event="pilot_exchange_requested" data-hc-cta="pilotage_pilot_access" data-hc-intent="pilot">{{ _("Demander un accès pilote") }}</a>
+      <a href="{{ url_for('main.deploiement') }}" class="hc-btn hc-btn--ghost" data-hc-event="structure_deployment_interest" data-hc-cta="pilotage_deployment_review" data-hc-intent="deployment">{{ _("Voir le cadre de déploiement") }}</a>
     </div>
   </section>
 </div>
