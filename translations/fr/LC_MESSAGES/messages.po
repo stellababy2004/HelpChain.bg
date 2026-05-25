@@ -9269,3 +9269,42 @@ msgstr "Aucune accélération territoriale pour le moment"
 
 msgid "Grouped territorial momentum will appear here as repeated institutional activity accumulates."
 msgstr "La dynamique territoriale groupée apparaîtra ici à mesure que l'activité institutionnelle répétée s'accumule."
+
+msgid "Comprendre la sécurité"
+msgstr "Comprendre la sécurité"
+
+msgid "Consulter la gouvernance"
+msgstr "Consulter la gouvernance"
+
+msgid "Demander un accès pilote"
+msgstr "Demander un accès pilote"
+
+msgid "Institutional signal"
+msgstr "Signal institutionnel"
+
+msgid "Recommended:"
+msgstr "Recommandé :"
+
+msgid "Voir le cadre de déploiement"
+msgstr "Voir le cadre de déploiement"
+
+msgid "Voir le cadre de fonctionnement"
+msgstr "Voir le cadre de fonctionnement"
+
+msgid "Voir le parcours de lancement"
+msgstr "Voir le parcours de lancement"
+
+msgid "Voir l’architecture"
+msgstr "Voir l’architecture"
+
+msgid "Comprendre la sÃ©curitÃ©"
+msgstr "Comprendre la sécurité"
+
+msgid "Demander un accÃ¨s pilote"
+msgstr "Demander un accès pilote"
+
+msgid "Voir le cadre de dÃ©ploiement"
+msgstr "Voir le cadre de déploiement"
+
+msgid "Voir lâ€™architecture"
+msgstr "Voir l’architecture"
