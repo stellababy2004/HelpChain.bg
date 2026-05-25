@@ -171,6 +171,12 @@ from ..services.institutional_intent import (
     build_intent_summary,
     normalize_intent_path,
 )
+from ..services.founder_cockpit import (
+    build_founder_alerts,
+    build_founder_priority_queue,
+    group_founder_signals_by_territory,
+    summarize_founder_actions,
+)
 from ..services.territorial_intelligence import (
     detect_priority_territories,
     normalize_territory_name,
@@ -9938,6 +9944,10 @@ def _build_audience_map_context() -> dict:
         "founder_queue_lead_rows": [],
         "territory_summaries": [],
         "priority_territories": [],
+        "founder_priority_queue": [],
+        "founder_alerts": [],
+        "founder_territory_groups": [],
+        "founder_action_summary": {},
     }
     if not _table_exists("analytics_events"):
         return context
@@ -10676,6 +10686,15 @@ def _build_audience_map_context() -> dict:
         context["revenue_radar_insights"].append(
             f"{sessions_repeated_today} session(s) reviennent aujourd'hui."
         )
+    founder_signal_rows = (
+        list(context["founder_queue_lead_rows"])
+        + list(context["founder_queue_account_rows"])
+        + list(context["revenue_radar_rows"])
+    )
+    context["founder_priority_queue"] = build_founder_priority_queue(founder_signal_rows)[:12]
+    context["founder_alerts"] = build_founder_alerts(founder_signal_rows)
+    context["founder_territory_groups"] = group_founder_signals_by_territory(founder_signal_rows)[:8]
+    context["founder_action_summary"] = summarize_founder_actions(founder_signal_rows)
     return context
 
 
@@ -10818,6 +10837,91 @@ def _revenue_audience_score(notes: str | None) -> tuple[int, dict | None]:
     return max(0, min(25, int(raw / 2))), context
 
 
+def _revenue_audience_metadata(audience_context: dict | None) -> dict[str, object]:
+    audience_context = audience_context if isinstance(audience_context, dict) else {}
+    intent_summary = audience_context.get("institutional_intent")
+    if not isinstance(intent_summary, dict):
+        intent_summary = {}
+    territorial_summary = audience_context.get("territorial_intelligence")
+    if not isinstance(territorial_summary, dict):
+        territorial_summary = {}
+    top_paths = intent_summary.get("top_paths")
+    if not isinstance(top_paths, list):
+        raw_paths = audience_context.get("pages_viewed") or []
+        top_paths = [path for path in raw_paths if isinstance(path, str) and path.strip()]
+    return {
+        "intent_score": int(
+            intent_summary.get("score")
+            or audience_context.get("lead_intent_score")
+            or 0
+        ),
+        "intent_tier": str(
+            intent_summary.get("tier")
+            or audience_context.get("lead_intent_tier")
+            or ""
+        ).strip(),
+        "intent_label": str(
+            intent_summary.get("label")
+            or audience_context.get("lead_intent_label")
+            or ""
+        ).strip(),
+        "primary_interest": str(
+            intent_summary.get("primary_interest")
+            or audience_context.get("primary_interest")
+            or "unknown"
+        ).strip()
+        or "unknown",
+        "trust_friction_detected": bool(
+            intent_summary.get("trust_friction_detected")
+            or audience_context.get("trust_friction_detected")
+        ),
+        "friction_reason": (
+            str(
+                intent_summary.get("friction_reason")
+                or audience_context.get("friction_reason")
+                or ""
+            ).strip()
+            or None
+        ),
+        "top_paths": top_paths[:8],
+        "repeated_engagement_detected": bool(
+            territorial_summary.get("repeated_engagement_detected")
+            or audience_context.get("repeat_visit")
+        ),
+        "priority_level": str(territorial_summary.get("priority_level") or "Low").strip() or "Low",
+        "territorial_intensity": str(
+            territorial_summary.get("intensity")
+            or territorial_summary.get("priority_level")
+            or "Low"
+        ).strip()
+        or "Low",
+        "territory_confidence": str(
+            territorial_summary.get("confidence") or "weak"
+        ).strip()
+        or "weak",
+        "pilot_readiness_estimate": str(
+            territorial_summary.get("pilot_readiness_estimate") or "early"
+        ).strip()
+        or "early",
+        "possible_friction": (
+            str(territorial_summary.get("possible_friction") or "").strip() or None
+        ),
+        "territory_recommendation": (
+            str(territorial_summary.get("recommended_action") or "").strip() or None
+        ),
+    }
+
+
+def _build_founder_cockpit_context(rows: list[SimpleNamespace]) -> dict[str, object]:
+    queue = build_founder_priority_queue(rows)
+    return {
+        "queue": queue[:8],
+        "alerts": build_founder_alerts(rows),
+        "territories": group_founder_signals_by_territory(rows)[:6],
+        "summary": summarize_founder_actions(rows),
+    }
+
+
 def _revenue_recent_activity_score(last_activity: datetime | None) -> int:
     activity = _as_aware_utc(last_activity)
     if not activity:
@@ -10913,6 +11017,7 @@ def _revenue_row_from_professional_lead(lead: ProfessionalLead) -> SimpleNamespa
         reasons.append(_revenue_stage_label(stage))
     if not reasons:
         reasons.append("new professional signal")
+    founder_meta = _revenue_audience_metadata(audience_context)
     next_best_action = (
         (intent_summary or {}).get("recommended_action")
         or (audience_context or {}).get("recommended_action")
@@ -10951,6 +11056,20 @@ def _revenue_row_from_professional_lead(lead: ProfessionalLead) -> SimpleNamespa
         action_url=url_for("admin.admin_professional_lead_detail", lead_id=lead.id),
         why_hot=", ".join(reasons),
         next_best_action=next_best_action,
+        intent_score=founder_meta["intent_score"],
+        intent_tier=founder_meta["intent_tier"],
+        intent_label=founder_meta["intent_label"],
+        primary_interest=founder_meta["primary_interest"],
+        trust_friction_detected=founder_meta["trust_friction_detected"],
+        friction_reason=founder_meta["friction_reason"],
+        top_paths=founder_meta["top_paths"],
+        repeated_engagement_detected=founder_meta["repeated_engagement_detected"],
+        priority_level=founder_meta["priority_level"],
+        territorial_intensity=founder_meta["territorial_intensity"],
+        territory_confidence=founder_meta["territory_confidence"],
+        pilot_readiness_estimate=founder_meta["pilot_readiness_estimate"],
+        possible_friction=founder_meta["possible_friction"],
+        territory_recommendation=founder_meta["territory_recommendation"],
     )
 
 
@@ -10986,6 +11105,7 @@ def _revenue_row_from_access_request(row: OrganizationAccessRequest) -> SimpleNa
         reasons.append("follow-up due")
     if stage == "won":
         reasons.append("approved")
+    founder_meta = _revenue_audience_metadata(audience_context)
     next_best_action = (
         (intent_summary or {}).get("recommended_action")
         or (audience_context or {}).get("recommended_action")
@@ -11024,6 +11144,20 @@ def _revenue_row_from_access_request(row: OrganizationAccessRequest) -> SimpleNa
         action_url=url_for("admin.admin_organization_access_request_detail", req_id=row.id),
         why_hot=", ".join(reasons),
         next_best_action=next_best_action,
+        intent_score=founder_meta["intent_score"],
+        intent_tier=founder_meta["intent_tier"],
+        intent_label=founder_meta["intent_label"],
+        primary_interest=founder_meta["primary_interest"],
+        trust_friction_detected=founder_meta["trust_friction_detected"],
+        friction_reason=founder_meta["friction_reason"],
+        top_paths=founder_meta["top_paths"],
+        repeated_engagement_detected=founder_meta["repeated_engagement_detected"],
+        priority_level=founder_meta["priority_level"],
+        territorial_intensity=founder_meta["territorial_intensity"],
+        territory_confidence=founder_meta["territory_confidence"],
+        pilot_readiness_estimate=founder_meta["pilot_readiness_estimate"],
+        possible_friction=founder_meta["possible_friction"],
+        territory_recommendation=founder_meta["territory_recommendation"],
     )
 
 
@@ -11218,6 +11352,7 @@ def admin_revenue():
     }
     all_rows = _build_revenue_pipeline_rows()
     filtered_rows = _filter_revenue_rows(all_rows, filters)
+    founder_cockpit = _build_founder_cockpit_context(all_rows)
     return (
         render_template(
             "admin/revenue_dashboard.html",
@@ -11230,6 +11365,7 @@ def admin_revenue():
             stage_choices=REVENUE_STAGE_ORDER,
             active_filters=any(filters.values()),
             radar=_build_audience_map_context(),
+            founder_cockpit=founder_cockpit,
         ),
         200,
     )
@@ -11419,6 +11555,7 @@ def admin_high_intent_sessions():
             })
 
         sessions.append({
+            "uid": str(session_id),
             "session_id": session_id[:16],
             "score": score,
             "intent": intent,
@@ -11446,6 +11583,20 @@ def admin_high_intent_sessions():
         row["possible_friction"] = summary.get("possible_friction")
         row["pilot_readiness_estimate"] = summary.get("pilot_readiness_estimate")
         row["territorial_recommendation"] = summary.get("recommended_action")
+
+    founder_lookup = {
+        str(item.get("uid") or ""): item
+        for item in build_founder_priority_queue(sessions)
+    }
+    for row in sessions:
+        item = founder_lookup.get(str(row.get("session_id") or ""))
+        if not item:
+            continue
+        row["opportunity_level"] = item.get("opportunity_level")
+        row["operational_maturity"] = item.get("operational_maturity")
+        row["recommended_action"] = item.get("recommended_action")
+        row["possible_friction"] = item.get("possible_friction")
+        row["evidence_summary"] = item.get("evidence_summary")
 
     sessions.sort(key=lambda x: x["score"], reverse=True)
 

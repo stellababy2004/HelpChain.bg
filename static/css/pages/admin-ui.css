@@ -20105,6 +20105,60 @@ body.hc-page-admin .hc-revenue-page .hc-revenue-focus__item{
   background: #fff;
 }
 
+body.hc-page-admin .hc-revenue-page .hc-founder-cockpit{
+  border: 1px solid rgba(15, 23, 42, .08);
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.94));
+}
+
+body.hc-page-admin .hc-revenue-page .hc-founder-cockpit__grid{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .8rem;
+}
+
+body.hc-page-admin .hc-revenue-page .hc-founder-cockpit__panel{
+  min-width: 0;
+}
+
+body.hc-page-admin .hc-revenue-page .hc-founder-cockpit__heading{
+  color: rgba(15, 23, 42, .72);
+  font-size: .74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: .55rem;
+}
+
+body.hc-page-admin .hc-revenue-page .hc-founder-cockpit__list{
+  display: grid;
+  gap: .6rem;
+}
+
+body.hc-page-admin .hc-revenue-page .hc-founder-cockpit__item,
+body.hc-page-admin .hc-revenue-page .hc-founder-cockpit__alert{
+  border: 1px solid rgba(15, 23, 42, .08);
+  border-radius: 14px;
+  padding: .8rem;
+  background: #fff;
+}
+
+body.hc-page-admin .hc-revenue-page .hc-founder-cockpit__alert--attention{
+  background: rgba(255, 247, 237, .9);
+  border-color: rgba(217, 119, 6, .18);
+}
+
+body.hc-page-admin .hc-revenue-page .hc-founder-cockpit__alert--elevated,
+body.hc-page-admin .hc-revenue-page .hc-founder-cockpit__alert--opportunity{
+  background: rgba(239, 246, 255, .92);
+  border-color: rgba(37, 99, 235, .16);
+}
+
+body.hc-page-admin .hc-revenue-page .hc-founder-cockpit__chips{
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+
 body.hc-page-admin .hc-revenue-page .hc-revenue-forecast{
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -20172,6 +20226,10 @@ body.hc-page-admin.hc-admin-sla-page .hc-sla-table :is(th:nth-child(8), td:nth-c
   body.hc-page-admin .hc-revenue-page :is(.hc-revenue-kpis, .hc-revenue-kpi-grid, .hc-revenue-sidegrid),
   body.hc-page-admin .hc-admin-module-page--pipeline .hc-proleads-kpis{
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.hc-page-admin .hc-revenue-page .hc-founder-cockpit__grid{
+    grid-template-columns: 1fr;
   }
 
   body.hc-page-admin .hc-revenue-page :is(.hc-revenue-filtergrid, .hc-revenue-filters){

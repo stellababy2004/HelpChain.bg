@@ -51,6 +51,83 @@
     </article>
   </section>
 
+  <section class="hc-card hc-founder-cockpit mb-3" aria-label="Founder sales cockpit">
+    <div class="hc-card__section hc-card__section--header">
+      <div>
+        <strong>Founder Priority Queue</strong>
+        <div class="hc-muted small">Operational ranking built from institutional intent, territorial strength, repeated engagement, and friction signals.</div>
+      </div>
+      <span class="badge text-bg-light border">{{ founder_cockpit.summary.total_items or 0 }} tracked opportunities</span>
+    </div>
+    <div class="hc-founder-cockpit__grid p-3">
+      <div class="hc-founder-cockpit__panel">
+        <div class="hc-founder-cockpit__heading">Top opportunities</div>
+        <div class="hc-founder-cockpit__list">
+          {% for item in founder_cockpit.queue %}
+            <article class="hc-founder-cockpit__item">
+              <div class="d-flex justify-content-between gap-2">
+                <strong class="text-truncate">{{ item.organization }}</strong>
+                <span class="badge text-bg-light border">{{ item.opportunity_level }}</span>
+              </div>
+              <div class="hc-muted small mt-1">{{ item.territory }} · {{ item.operational_maturity }} · confidence {{ item.confidence }}</div>
+              <div class="small mt-2"><strong>Recommended:</strong> {{ item.recommended_action }}</div>
+              {% if item.evidence_summary %}
+                <div class="hc-founder-cockpit__chips mt-2">
+                  {% for evidence in item.evidence_summary %}
+                    <span class="badge text-bg-light border">{{ evidence }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </article>
+          {% else %}
+            <div class="hc-empty-state">
+              <div class="hc-empty-state__title">No founder queue yet</div>
+              <div class="hc-empty-state__text">Qualified telemetry and captured institutional signals will populate this queue.</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="hc-founder-cockpit__panel">
+        <div class="hc-founder-cockpit__heading">Operational alerts</div>
+        <div class="hc-founder-cockpit__list">
+          {% for alert in founder_cockpit.alerts %}
+            <article class="hc-founder-cockpit__alert hc-founder-cockpit__alert--{{ alert.level }}">
+              <strong>{{ alert.territory }}</strong>
+              <div class="small mt-1">{{ alert.message }}</div>
+            </article>
+          {% else %}
+            <div class="hc-empty-state">
+              <div class="hc-empty-state__title">No elevated founder alerts</div>
+              <div class="hc-empty-state__text">Operational alerts will appear when repeated or strategic patterns are observed.</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="hc-founder-cockpit__panel">
+        <div class="hc-founder-cockpit__heading">Territory watch</div>
+        <div class="hc-founder-cockpit__list">
+          {% for territory in founder_cockpit.territories %}
+            <article class="hc-founder-cockpit__item">
+              <div class="d-flex justify-content-between gap-2">
+                <strong>{{ territory.territory }}</strong>
+                <span class="badge text-bg-light border">{{ territory.top_opportunity_level }}</span>
+              </div>
+              <div class="hc-muted small mt-1">{{ territory.opportunity_count }} opportunity signal(s) · {{ territory.dominant_interest|replace('_', ' ') }}</div>
+              <div class="small mt-2"><strong>Suggested:</strong> {{ territory.recommended_action }}</div>
+            </article>
+          {% else %}
+            <div class="hc-empty-state">
+              <div class="hc-empty-state__title">No priority territories yet</div>
+              <div class="hc-empty-state__text">Territorial grouping will appear as repeated institutional signals accumulate.</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
   <div class="hc-revenue-grid">
     <main>
       <form method="GET" class="hc-card hc-revenue-filterbar hc-revenue-filters mb-3">

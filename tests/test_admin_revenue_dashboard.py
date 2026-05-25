@@ -21,6 +21,7 @@ def test_admin_revenue_empty_state_safe(authenticated_admin_client):
 
     assert response.status_code == 200
     assert "Revenue Control Center" in html
+    assert "Founder Priority Queue" in html
     assert "No revenue signals yet" in html
     assert "Weighted Pipeline" in html
 
@@ -190,3 +191,69 @@ def test_admin_revenue_uses_institutional_intent_recommendation(
     assert response.status_code == 200
     assert "Pilot-ready audience" in html
     assert "Propose a structured pilot conversation" in html
+    assert "Pilot framing" in html or "Structured pilot opportunity" in html
+
+
+def test_admin_revenue_founder_cockpit_surfaces_alerts_and_territory_watch(
+    authenticated_admin_client, session
+):
+    lead = ProfessionalLead(
+        email="founder-cockpit@example.org",
+        full_name="Founder Cockpit",
+        city="Paris",
+        profession="Directrice",
+        status="qualified",
+        notes=append_audience_context_to_notes(
+            None,
+            {
+                "score": 18,
+                "temperature": "Chaud",
+                "pages_viewed": ["/securite", "/confidentialite", "/architecture", "/deploiement"],
+                "institutional_intent": {
+                    "score": 110,
+                    "tier": "operationally_interested",
+                    "label": "Operationally interested",
+                    "primary_interest": "trust_governance",
+                    "trust_friction_detected": True,
+                    "friction_reason": "trust_governance_review_without_conversion",
+                    "top_paths": ["/architecture", "/confidentialite", "/securite", "/deploiement"],
+                    "recommended_action": "Invite toward pilot framing",
+                },
+                "lead_intent_score": 110,
+                "lead_intent_tier": "operationally_interested",
+                "lead_intent_label": "Operationally interested",
+                "recommended_action": "Invite toward pilot framing",
+                "repeat_visit": True,
+                "territorial_intelligence": {
+                    "territory": "Paris",
+                    "intensity": "High",
+                    "priority_level": "Strategic",
+                    "confidence": "strong",
+                    "dominant_interest": "trust_governance",
+                    "possible_friction": "trust_governance_review_without_conversion",
+                    "pilot_readiness_estimate": "elevated",
+                    "repeated_engagement_detected": True,
+                    "recommended_action": "Governance reassurance recommended",
+                },
+            },
+        ),
+        created_at=datetime.now(UTC),
+    )
+    session.add(lead)
+    session.commit()
+
+    response = authenticated_admin_client.get("/admin/revenue")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Operational alerts" in html
+    assert "Territory watch" in html
+    assert "Repeated governance review observed in Paris without a clear conversion step." in html
+    assert (
+        "Prioritize direct founder outreach" in html
+        or "Suggest structured pilot exchange" in html
+        or
+        "Re-engage after trust/governance review" in html
+        or "Reinforce governance reassurance" in html
+        or "Governance reassurance recommended" in html
+    )
