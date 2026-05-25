@@ -4,6 +4,9 @@ from backend.helpchain_backend.src.models import (
     OrganizationAccessRequest,
     ProfessionalLead,
 )
+from backend.helpchain_backend.src.services.prospect_auto_capture import (
+    append_audience_context_to_notes,
+)
 
 
 def test_admin_revenue_requires_admin(client):
@@ -135,3 +138,55 @@ def test_admin_revenue_no_crash_if_telemetry_absent(
     assert response.status_code == 200
     assert "Telemetry Safe" in html
     assert "No hot anonymous sessions available" in html
+
+
+def test_admin_revenue_uses_institutional_intent_recommendation(
+    authenticated_admin_client, session
+):
+    lead = ProfessionalLead(
+        email="intent-revenue@example.org",
+        full_name="Intent Revenue",
+        city="Paris",
+        profession="Directrice",
+        status="qualified",
+        notes=append_audience_context_to_notes(
+            None,
+            {
+                "score": 24,
+                "temperature": "Chaud",
+                "institutional_intent": {
+                    "score": 169,
+                    "tier": "pilot_ready",
+                    "label": "Pilot-ready",
+                    "primary_interest": "deployment_operations",
+                    "trust_friction_detected": False,
+                    "friction_reason": None,
+                    "top_paths": ["/demander-acces", "/deploiement", "/offre"],
+                    "recommended_action": "Propose a structured pilot conversation",
+                },
+                "lead_intent_score": 169,
+                "lead_intent_tier": "pilot_ready",
+                "lead_intent_label": "Pilot-ready",
+                "recommended_action": "Propose a structured pilot conversation",
+                "territorial_intelligence": {
+                    "territory": "Paris",
+                    "priority_level": "High",
+                    "confidence": "strong",
+                    "dominant_interest": "deployment_operations",
+                    "possible_friction": None,
+                    "pilot_readiness_estimate": "elevated",
+                    "recommended_action": "Pilot discussion opportunity",
+                },
+            },
+        ),
+        created_at=datetime.now(UTC),
+    )
+    session.add(lead)
+    session.commit()
+
+    response = authenticated_admin_client.get("/admin/revenue")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Pilot-ready audience" in html
+    assert "Propose a structured pilot conversation" in html

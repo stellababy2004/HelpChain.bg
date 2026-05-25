@@ -10,6 +10,8 @@ from flask import session
 from sqlalchemy import inspect as sa_inspect
 
 from backend.extensions import db
+from .institutional_intent import build_intent_summary, normalize_intent_path
+from .territorial_intelligence import build_territory_summary, normalize_territory_name
 
 try:
     from backend.models_with_analytics import AnalyticsEvent
@@ -141,6 +143,9 @@ def summarize_session_intelligence(
     *,
     now: datetime | None = None,
     lookback_days: int = 30,
+    territory_hint: str | None = None,
+    territory_source: str | None = None,
+    source_kind: str = "session",
 ) -> dict | None:
     sid = (session_id or get_current_audience_session_id() or "").strip()
 
@@ -179,7 +184,15 @@ def summarize_session_intelligence(
     if not rows:
         return None
 
-    paths = [_path(row.page_url) for row in rows]
+    has_submit = bool(
+        db.session.query(AnalyticsEvent.id)
+        .filter(AnalyticsEvent.user_session == sid)
+        .filter(AnalyticsEvent.created_at >= since)
+        .filter(AnalyticsEvent.event_type.like("%_form_submit"))
+        .limit(1)
+        .first()
+    )
+    paths = [normalize_intent_path(row.page_url) or _path(row.page_url) for row in rows]
     unique_pages = list(dict.fromkeys(paths))
     day_counts = Counter(row.created_at.date() for row in rows if row.created_at)
     source = "Direct"
@@ -205,6 +218,25 @@ def summarize_session_intelligence(
         "visited_demander_acces": any(path.startswith("/demander-acces") for path in paths),
         "visited_contact": any(path.startswith("/contact") for path in paths),
     }
+    intent_summary = build_intent_summary(unique_pages, has_submit=has_submit)
+    territory_summary = None
+    normalized_territory = normalize_territory_name(territory_hint)
+    if normalized_territory:
+        territory_summary = build_territory_summary(
+            [
+                {
+                    "territory": normalized_territory,
+                    "territory_source": (territory_source or "organization_hint").strip() or "organization_hint",
+                    "source_kind": (source_kind or "session").strip() or "session",
+                    "session_id": sid,
+                    "paths": unique_pages,
+                    "intent_tier": intent_summary["tier"],
+                    "primary_interest": intent_summary["primary_interest"],
+                    "trust_friction_detected": bool(intent_summary["trust_friction_detected"]),
+                    "repeat_visit": len(paths) > 1 or len(day_counts) > 1,
+                }
+            ]
+        )
     return {
         "version": 1,
         "captured_at": _iso(now),
@@ -220,6 +252,15 @@ def summarize_session_intelligence(
         "repeat_visit": len(paths) > 1 or len(day_counts) > 1,
         "repeat_visit_count": max(0, len(paths) - 1),
         "intent_flags": intent_flags,
+        "institutional_intent": intent_summary,
+        "lead_intent_score": int(intent_summary["score"]),
+        "lead_intent_tier": intent_summary["tier"],
+        "lead_intent_label": intent_summary["label"],
+        "primary_interest": intent_summary["primary_interest"],
+        "recommended_action": intent_summary["recommended_action"],
+        "trust_friction_detected": bool(intent_summary["trust_friction_detected"]),
+        "friction_reason": intent_summary["friction_reason"],
+        "territorial_intelligence": territory_summary,
     }
 
 
@@ -269,7 +310,11 @@ def extract_audience_context(notes: str | None) -> dict | None:
 
 
 def attach_session_intelligence_to_access_request(access_request) -> dict | None:
-    summary = summarize_session_intelligence()
+    summary = summarize_session_intelligence(
+        territory_hint=getattr(access_request, "city", None),
+        territory_source="access_request_city",
+        source_kind="access_request",
+    )
     if not summary:
         return None
     access_request.internal_notes = append_audience_context_to_notes(
@@ -280,7 +325,11 @@ def attach_session_intelligence_to_access_request(access_request) -> dict | None
 
 
 def attach_session_intelligence_to_professional_lead(lead) -> dict | None:
-    summary = summarize_session_intelligence()
+    summary = summarize_session_intelligence(
+        territory_hint=getattr(lead, "city", None),
+        territory_source="professional_lead_city",
+        source_kind="professional_lead",
+    )
     if not summary:
         return None
 

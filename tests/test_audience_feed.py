@@ -61,6 +61,11 @@ def test_audience_map_reads_feed_metrics(app, client):
 
     client.get("/offre", headers=PUBLIC_HEADERS)
     client.get("/demander-acces", headers=PUBLIC_HEADERS)
+    behavior = UserBehavior.query.one()
+    behavior.location = "Boulogne-Billancourt, France"
+    
+    from backend.extensions import db
+    db.session.commit()
 
     with app.app_context():
         payload = _build_audience_map_context()
@@ -72,6 +77,9 @@ def test_audience_map_reads_feed_metrics(app, client):
     assert pages["Offre"] >= 1
     assert any(count >= 1 for label, count in pages.items() if "demander" in label.lower())
     assert any(int(row["pages_count"]) >= 2 for row in revenue_rows)
+    assert payload["territory_summaries"]
+    assert payload["territory_summaries"][0]["territory"] == "Boulogne-Billancourt"
+    assert any(row["territory"] == "Boulogne-Billancourt" for row in revenue_rows)
 
 
 def test_feed_failure_does_not_break_page_rendering(client, monkeypatch):

@@ -167,6 +167,14 @@ from ..services.import_service import (
     source_label,
     target_label,
 )
+from ..services.institutional_intent import (
+    build_intent_summary,
+    normalize_intent_path,
+)
+from ..services.territorial_intelligence import (
+    detect_priority_territories,
+    normalize_territory_name,
+)
 from ..services.notification_jobs import (
     count_notification_job_buckets,
     notification_job_bucket_filter,
@@ -9820,6 +9828,26 @@ def _audience_action_for_lead_score(score: int) -> str:
     return "Garder en observation"
 
 
+def _territorial_priority_label(value: str | None) -> str:
+    normalized = (value or "").strip()
+    if normalized == "Strategic":
+        return "Haute"
+    if normalized == "High":
+        return "Haute"
+    if normalized == "Moderate":
+        return "Moyenne"
+    return "Observation"
+
+
+def _territorial_summary_lookup(territory_summaries: list[dict[str, object]]) -> dict[str, dict[str, object]]:
+    lookup: dict[str, dict[str, object]] = {}
+    for row in territory_summaries or []:
+        territory = normalize_territory_name(row.get("territory"))
+        if territory:
+            lookup[_audience_normalize_text(territory)] = row
+    return lookup
+
+
 def _audience_mask_email(value: str | None) -> str:
     email = (value or "").strip()
     if "@" not in email:
@@ -9908,6 +9936,8 @@ def _build_audience_map_context() -> dict:
         "qualified_signal_rows": [],
         "founder_queue_account_rows": [],
         "founder_queue_lead_rows": [],
+        "territory_summaries": [],
+        "priority_territories": [],
     }
     if not _table_exists("analytics_events"):
         return context
@@ -9942,6 +9972,7 @@ def _build_audience_map_context() -> dict:
     session_intent: Counter[str] = Counter()
     key_page_set: set[str] = set()
     session_events: dict[str, dict] = {}
+    territory_rows: list[dict[str, object]] = []
     for row in event_rows:
         path = _audience_label_page(row.page_url)
         session_id = visitor_key(row)
@@ -10130,12 +10161,29 @@ def _build_audience_map_context() -> dict:
             has_external_referrer=bucket["has_external_referrer"],
             repeated_same_day=repeated_same_day,
         )
+        intent_summary = build_intent_summary(bucket["paths"], has_submit=False)
         temperature = _audience_temperature_for_score(score)
         source = "Direct"
         for label, _count in bucket["referrers"].most_common():
             if label != "Direct":
                 source = label
                 break
+        location_meta = session_locations.get(session_id) or {}
+        territory = normalize_territory_name(location_meta.get("territory"))
+        if territory:
+            territory_rows.append(
+                {
+                    "territory": territory,
+                    "territory_source": "behavior_location",
+                    "source_kind": "anonymous_session",
+                    "session_id": session_id,
+                    "paths": list(dict.fromkeys(intent_summary["top_paths"] or bucket["paths"])),
+                    "intent_tier": intent_summary["tier"],
+                    "primary_interest": intent_summary["primary_interest"],
+                    "trust_friction_detected": bool(intent_summary["trust_friction_detected"]),
+                    "repeat_visit": bool(repeated_same_day or page_count > 1 or len(bucket["day_counts"]) > 1),
+                }
+            )
         revenue_rows.append(
             {
                 "session": session_id,
@@ -10147,11 +10195,19 @@ def _build_audience_map_context() -> dict:
                 "last_activity": bucket["last_activity"],
                 "last_activity_label": _audience_relative_time(bucket["last_activity"], now),
                 "source": source,
-                "action": temperature["action"],
+                "action": intent_summary["recommended_action"],
                 "captured_label": captured_sessions.get(session_id),
+                "intent_score": int(intent_summary["score"]),
+                "intent_tier": intent_summary["tier"],
+                "intent_label": intent_summary["label"],
+                "primary_interest": intent_summary["primary_interest"],
+                "trust_friction_detected": bool(intent_summary["trust_friction_detected"]),
+                "friction_reason": intent_summary["friction_reason"],
+                "territory": territory,
+                "department": location_meta.get("department") or "",
+                "focus_slug": location_meta.get("focus_slug") or "",
             }
         )
-        location_meta = session_locations.get(session_id)
         qualified_paths = [
             path for path in bucket["paths"] if _audience_label_page(path) in AUDIENCE_QUALIFIED_PAGE_WEIGHTS
         ]
@@ -10206,6 +10262,52 @@ def _build_audience_map_context() -> dict:
         reverse=True,
     )
     context["qualified_signal_rows"] = qualified_rows[:24]
+    if _table_exists("organization_access_requests"):
+        since_30d = now - timedelta(days=30)
+        access_rows = (
+            db.session.query(
+                OrganizationAccessRequest.city,
+                OrganizationAccessRequest.created_at,
+                OrganizationAccessRequest.internal_notes,
+            )
+            .filter(OrganizationAccessRequest.created_at >= since_30d)
+            .order_by(OrganizationAccessRequest.created_at.desc())
+            .limit(100)
+            .all()
+        )
+        for row in access_rows:
+            audience_context = extract_audience_context(getattr(row, "internal_notes", None))
+            intent_summary = (
+                audience_context.get("institutional_intent")
+                if isinstance(audience_context, dict)
+                else None
+            )
+            paths = []
+            if isinstance(audience_context, dict):
+                raw_paths = audience_context.get("pages_viewed") or []
+                if isinstance(raw_paths, list):
+                    paths = [path for path in raw_paths if isinstance(path, str) and path.strip()]
+            territory = normalize_territory_name(
+                getattr(row, "city", None)
+                or (audience_context or {}).get("territory_hint")
+            )
+            if not territory:
+                continue
+            if not isinstance(intent_summary, dict):
+                intent_summary = build_intent_summary(paths, has_submit=True)
+            territory_rows.append(
+                {
+                    "territory": territory,
+                    "territory_source": "access_request_city" if getattr(row, "city", None) else "organization_hint",
+                    "source_kind": "access_request",
+                    "session_id": (audience_context or {}).get("session_id"),
+                    "paths": list(intent_summary.get("top_paths") or paths),
+                    "intent_tier": intent_summary.get("tier"),
+                    "primary_interest": intent_summary.get("primary_interest"),
+                    "trust_friction_detected": bool(intent_summary.get("trust_friction_detected")),
+                    "repeat_visit": bool((audience_context or {}).get("repeat_visit")),
+                }
+            )
     if _table_exists("professional_leads"):
         since_30d = now - timedelta(days=30)
         lead_query = (
@@ -10286,6 +10388,24 @@ def _build_audience_map_context() -> dict:
                 (organization_intelligence.get("sales_note") or "").strip()
             )
             email_value = (getattr(row, "email", None) or "").strip()
+            lead_territory = normalize_territory_name(territory_hint or territory)
+            intent_summary = audience_context.get("institutional_intent")
+            if not isinstance(intent_summary, dict):
+                intent_summary = build_intent_summary(pages_viewed, has_submit=True)
+            if lead_territory:
+                territory_rows.append(
+                    {
+                        "territory": lead_territory,
+                        "territory_source": "professional_lead_city" if getattr(row, "city", None) else "organization_hint",
+                        "source_kind": "professional_lead",
+                        "session_id": audience_context.get("session_id"),
+                        "paths": list(intent_summary.get("top_paths") or pages_viewed),
+                        "intent_tier": intent_summary.get("tier"),
+                        "primary_interest": intent_summary.get("primary_interest"),
+                        "trust_friction_detected": bool(intent_summary.get("trust_friction_detected")),
+                        "repeat_visit": bool(audience_context.get("repeat_visit")),
+                    }
+                )
             founder_queue_lead_rows.append(
                 {
                     "organization": display_identity,
@@ -10438,6 +10558,65 @@ def _build_audience_map_context() -> dict:
             row.pop("last_activity_at", None)
         context["founder_queue_account_rows"] = founder_queue_account_rows[:12]
         context["founder_queue_lead_rows"] = founder_queue_lead_rows[:12]
+    territory_summaries = detect_priority_territories(territory_rows)
+    territory_lookup = _territorial_summary_lookup(territory_summaries)
+    context["territory_summaries"] = territory_summaries[:12]
+    context["priority_territories"] = [
+        row for row in territory_summaries if row.get("priority_level") in {"Strategic", "High"}
+    ][:6]
+    for point in context["map_locations"]:
+        summary = territory_lookup.get(_audience_normalize_text(point.get("city")))
+        if not summary:
+            continue
+        observed_signals = max(
+            int(point.get("observed_signals") or 0),
+            int(summary.get("observed_signal_count") or 0),
+        )
+        point["observed_signals"] = observed_signals
+        point["estimated_demands"] = max(int(point.get("estimated_demands") or 0), observed_signals)
+        point["needs"] = max(int(point.get("needs") or 0), observed_signals)
+        point["priority"] = _territorial_priority_label(summary.get("priority_level"))
+        point["recommendation"] = str(summary.get("recommended_action") or point.get("recommendation") or "").strip()
+        point["territorial_intensity"] = summary.get("intensity")
+        point["priority_level"] = summary.get("priority_level")
+        point["confidence"] = summary.get("confidence")
+        point["dominant_interest"] = summary.get("dominant_interest")
+        point["possible_friction"] = summary.get("possible_friction")
+        point["pilot_readiness_estimate"] = summary.get("pilot_readiness_estimate")
+        point["repeated_engagement_detected"] = bool(summary.get("repeated_engagement_detected"))
+        point["intelligence_source"] = "observed_summary"
+    for row in context["revenue_radar_rows"]:
+        summary = territory_lookup.get(_audience_normalize_text(row.get("territory")))
+        if not summary:
+            continue
+        row["priority_level"] = summary.get("priority_level")
+        row["territorial_intensity"] = summary.get("intensity")
+        row["territory_confidence"] = summary.get("confidence")
+        row["dominant_interest"] = summary.get("dominant_interest")
+        row["possible_friction"] = summary.get("possible_friction")
+        row["pilot_readiness_estimate"] = summary.get("pilot_readiness_estimate")
+        row["recommended_action"] = summary.get("recommended_action")
+        row["repeated_engagement_detected"] = bool(summary.get("repeated_engagement_detected"))
+    for row in context["founder_queue_lead_rows"]:
+        summary = territory_lookup.get(_audience_normalize_text(row.get("territory") or row.get("territory_hint")))
+        if not summary:
+            continue
+        row["priority_level"] = summary.get("priority_level")
+        row["territory_confidence"] = summary.get("confidence")
+        row["dominant_interest"] = summary.get("dominant_interest")
+        row["pilot_readiness_estimate"] = summary.get("pilot_readiness_estimate")
+        row["possible_friction"] = summary.get("possible_friction")
+        row["recommended_action"] = summary.get("recommended_action")
+    for row in context["founder_queue_account_rows"]:
+        summary = territory_lookup.get(_audience_normalize_text(row.get("territory_hint")))
+        if not summary:
+            continue
+        row["priority_level"] = summary.get("priority_level")
+        row["territory_confidence"] = summary.get("confidence")
+        row["dominant_interest"] = summary.get("dominant_interest")
+        row["pilot_readiness_estimate"] = summary.get("pilot_readiness_estimate")
+        row["possible_friction"] = summary.get("possible_friction")
+        row["recommended_action"] = summary.get("recommended_action")
     context["kpis"] = {
         "visitors_24h": len(visitors_24h),
         "visitors_7d": len(visitors_7d),
@@ -10458,6 +10637,11 @@ def _build_audience_map_context() -> dict:
     if context["repeat_rows"]:
         context["founder_insights"].append(
             "Des sessions repetent des passages sur les pages d'intention."
+        )
+    if territory_summaries:
+        top_territory = territory_summaries[0]
+        context["founder_insights"].append(
+            f"Territoire prioritaire observe: {top_territory['territory']} ({top_territory['priority_level'].lower()}, confiance {top_territory['confidence']})."
         )
     hot_24h = [
         row
@@ -10610,8 +10794,25 @@ def _revenue_audience_score(notes: str | None) -> tuple[int, dict | None]:
     context = extract_audience_context(notes)
     if not context:
         return 0, None
+    intent_summary = context.get("institutional_intent")
+    if isinstance(intent_summary, dict):
+        tier = (intent_summary.get("tier") or context.get("lead_intent_tier") or "").strip()
+        tier_points = {
+            "cold": 0,
+            "curious": 4,
+            "evaluating": 8,
+            "operationally_interested": 14,
+            "pilot_ready": 20,
+            "high_conversion_probability": 25,
+        }
+        if tier in tier_points:
+            return tier_points[tier], context
     try:
-        raw = int(context.get("score") or 0)
+        raw = int(
+            context.get("lead_intent_score")
+            or context.get("score")
+            or 0
+        )
     except Exception:
         raw = 0
     return max(0, min(25, int(raw / 2))), context
@@ -10697,14 +10898,34 @@ def _revenue_row_from_professional_lead(lead: ProfessionalLead) -> SimpleNamespa
     organization = (getattr(lead, "organization", None) or getattr(lead, "profession", None) or "Professional lead").strip()
     contact = (getattr(lead, "full_name", None) or getattr(lead, "email", None) or "-").strip()
     reasons = []
+    intent_summary = audience_context.get("institutional_intent") if isinstance(audience_context, dict) else None
     if audience_context:
-        reasons.append(f"{audience_context.get('temperature', 'Audience')} audience")
+        audience_label = (
+            (intent_summary or {}).get("label")
+            or audience_context.get("lead_intent_label")
+            or audience_context.get("temperature")
+            or "Audience"
+        )
+        reasons.append(f"{audience_label} audience")
     if next_action_state == "overdue":
         reasons.append("follow-up due")
     if stage in {"qualified", "demo_booked", "demo_done", "pilot_proposed", "negotiation"}:
         reasons.append(_revenue_stage_label(stage))
     if not reasons:
         reasons.append("new professional signal")
+    next_best_action = (
+        (intent_summary or {}).get("recommended_action")
+        or (audience_context or {}).get("recommended_action")
+    )
+    if not next_best_action:
+        if next_action_state == "overdue":
+            next_best_action = "Follow up now"
+        elif stage in {"new", "contacted", "qualified"}:
+            next_best_action = "Book demo"
+        elif stage in {"demo_done", "pilot_proposed", "negotiation"}:
+            next_best_action = "Push pilot decision"
+        else:
+            next_best_action = "Open"
     return SimpleNamespace(
         id=int(lead.id),
         uid=f"professional_lead:{lead.id}",
@@ -10729,15 +10950,7 @@ def _revenue_row_from_professional_lead(lead: ProfessionalLead) -> SimpleNamespa
         weighted_value=int(value * REVENUE_STAGE_WEIGHTS.get(stage, 0.05)),
         action_url=url_for("admin.admin_professional_lead_detail", lead_id=lead.id),
         why_hot=", ".join(reasons),
-        next_best_action=(
-            "Follow up now"
-            if next_action_state == "overdue"
-            else "Book demo"
-            if stage in {"new", "contacted", "qualified"}
-            else "Push pilot decision"
-            if stage in {"demo_done", "pilot_proposed", "negotiation"}
-            else "Open"
-        ),
+        next_best_action=next_best_action,
     )
 
 
@@ -10760,12 +10973,32 @@ def _revenue_row_from_access_request(row: OrganizationAccessRequest) -> SimpleNa
     next_action_state = _revenue_next_action_state(next_action_at)
     value = _revenue_estimated_value(row, "access_request", stage)
     reasons = ["access request submitted"]
+    intent_summary = audience_context.get("institutional_intent") if isinstance(audience_context, dict) else None
     if audience_context:
-        reasons.append(f"{audience_context.get('temperature', 'Audience')} audience")
+        audience_label = (
+            (intent_summary or {}).get("label")
+            or audience_context.get("lead_intent_label")
+            or audience_context.get("temperature")
+            or "Audience"
+        )
+        reasons.append(f"{audience_label} audience")
     if next_action_state == "overdue":
         reasons.append("follow-up due")
     if stage == "won":
         reasons.append("approved")
+    next_best_action = (
+        (intent_summary or {}).get("recommended_action")
+        or (audience_context or {}).get("recommended_action")
+    )
+    if not next_best_action:
+        if stage == "new":
+            next_best_action = "Review and qualify"
+        elif next_action_state == "overdue":
+            next_best_action = "Follow up now"
+        elif stage == "qualified":
+            next_best_action = "Approve or request info"
+        else:
+            next_best_action = "Open"
     return SimpleNamespace(
         id=int(row.id),
         uid=f"access_request:{row.id}",
@@ -10790,15 +11023,7 @@ def _revenue_row_from_access_request(row: OrganizationAccessRequest) -> SimpleNa
         weighted_value=int(value * REVENUE_STAGE_WEIGHTS.get(stage, 0.05)),
         action_url=url_for("admin.admin_organization_access_request_detail", req_id=row.id),
         why_hot=", ".join(reasons),
-        next_best_action=(
-            "Review and qualify"
-            if stage == "new"
-            else "Follow up now"
-            if next_action_state == "overdue"
-            else "Approve or request info"
-            if stage == "qualified"
-            else "Open"
-        ),
+        next_best_action=next_best_action,
     )
 
 
@@ -11077,22 +11302,12 @@ def admin_high_intent_sessions():
 
     from collections import defaultdict
     from datetime import datetime, timedelta
-    from urllib.parse import urlparse
 
     try:
-        from backend.models_with_analytics import AnalyticsEvent
+        from backend.models_with_analytics import AnalyticsEvent, UserBehavior
     except Exception:
+        UserBehavior = None
         return jsonify({"sessions": []})
-
-    def normalize(value):
-        if not value:
-            return "/"
-
-        try:
-            parsed = urlparse(value)
-            return parsed.path or "/"
-        except Exception:
-            return value
 
     def is_internal_path(path):
         if not path:
@@ -11109,40 +11324,6 @@ def admin_high_intent_sessions():
 
         return path.startswith(internal_prefixes)
 
-    def classify_type(paths):
-        joined = " ".join(paths)
-
-        if "/demo" in joined or "/offre" in joined:
-            return "Prospect institutionnel"
-
-        if "/deploiement" in joined or "/securite" in joined:
-            return "Exploration decisionnelle"
-
-        if "/professionnels" in joined or "/collectivites" in joined:
-            return "Exploration secteur"
-
-        return "Signal public"
-
-    def recommendation_for(score, paths):
-        joined = " ".join(paths)
-
-        if "/demo" in joined:
-            return "Verifier si une prise de contact est possible sous 48h"
-
-        if "/offre" in joined and "/deploiement" in joined:
-            return "Qualifier le besoin et proposer un cadrage pilote"
-
-        if "/securite" in joined:
-            return "Mettre en avant le cadre securite, roles et tracabilite"
-
-        if "/professionnels" in joined or "/collectivites" in joined:
-            return "Orienter vers le discours secteur et cas d'usage"
-
-        if score >= 80:
-            return "Surveiller le signal et preparer une relance ciblee"
-
-        return "Observer les prochaines visites"
-
     since = utc_now() - timedelta(days=7)
 
     rows = (
@@ -11152,6 +11333,20 @@ def admin_high_intent_sessions():
         .limit(5000)
         .all()
     )
+    location_lookup: dict[str, str] = {}
+    if UserBehavior is not None and _table_exists("user_behaviors"):
+        behavior_rows = (
+            db.session.query(UserBehavior.session_id, UserBehavior.location)
+            .filter(UserBehavior.session_start >= since)
+            .filter(UserBehavior.session_id.isnot(None))
+            .filter(UserBehavior.location.isnot(None))
+            .filter(UserBehavior.location != "")
+            .all()
+        )
+        for session_id, location in behavior_rows:
+            city = normalize_territory_name(_audience_location_city(location))
+            if session_id and city:
+                location_lookup[str(session_id).strip()] = city
 
     grouped = defaultdict(list)
 
@@ -11160,58 +11355,29 @@ def admin_high_intent_sessions():
         grouped[key].append(row)
 
     sessions = []
+    territory_rows: list[dict[str, object]] = []
 
     for session_id, events in grouped.items():
-
-        score = 0
         public_paths = []
         public_event_count = 0
+        has_submit = False
 
         for event in events:
 
             event_type = event.event_type or ""
-            path = normalize(event.page_url)
+            raw_path = event.page_url or ""
+            if is_internal_path(str(raw_path or "")):
+                continue
+            path = normalize_intent_path(raw_path)
 
-            if is_internal_path(path):
+            if event_type.endswith("_form_submit"):
+                has_submit = True
+
+            if not path:
                 continue
 
             public_event_count += 1
-
-            if path:
-                public_paths.append(path)
-
-            if event_type == "page_view":
-                score += 1
-
-            if event_type == "page_engagement":
-                score += 10
-
-            if event_type == "cta_demo_click":
-                score += 25
-
-            if event_type == "cta_pilot_click":
-                score += 25
-
-            if event_type == "form_start":
-                score += 40
-
-            if event_type == "demo_form_submit":
-                score += 100
-
-            if "/offre" in path:
-                score += 10
-
-            if "/deploiement" in path:
-                score += 15
-
-            if "/demo" in path:
-                score += 20
-
-            if "/securite" in path:
-                score += 12
-
-            if "/professionnels" in path or "/collectivites" in path:
-                score += 8
+            public_paths.append(path)
 
         if not public_paths:
             continue
@@ -11222,30 +11388,64 @@ def admin_high_intent_sessions():
             if not deduped or deduped[-1] != p:
                 deduped.append(p)
 
+        intent_summary = build_intent_summary(deduped, has_submit=has_submit)
+        score = int(intent_summary["score"])
         intent = "low"
 
-        if score >= 35:
+        if score >= 40:
             intent = "medium"
 
         if score >= 80:
             intent = "high"
 
-        if score >= 140:
+        if score >= 130:
             intent = "very_high"
 
         if intent == "low":
             continue
 
+        territory = location_lookup.get(str(session_id).strip(), "")
+        if territory:
+            territory_rows.append({
+                "territory": territory,
+                "territory_source": "behavior_location",
+                "source_kind": "anonymous_session",
+                "session_id": session_id,
+                "paths": list(intent_summary["top_paths"]),
+                "intent_tier": intent_summary["tier"],
+                "primary_interest": intent_summary["primary_interest"],
+                "trust_friction_detected": bool(intent_summary["trust_friction_detected"]),
+                "repeat_visit": len(deduped) > 1,
+            })
+
         sessions.append({
             "session_id": session_id[:16],
             "score": score,
             "intent": intent,
-            "session_type": classify_type(deduped),
-            "recommendation": recommendation_for(score, deduped),
+            "tier": intent_summary["tier"],
+            "label": intent_summary["label"],
+            "primary_interest": intent_summary["primary_interest"],
+            "trust_friction_detected": bool(intent_summary["trust_friction_detected"]),
+            "friction_reason": intent_summary["friction_reason"],
+            "session_type": intent_summary["label"],
+            "recommendation": intent_summary["recommended_action"],
             "path": deduped[:10],
             "events": public_event_count,
             "last_seen": str(events[-1].created_at),
+            "territory": territory or None,
         })
+
+    territory_lookup = _territorial_summary_lookup(detect_priority_territories(territory_rows))
+    for row in sessions:
+        summary = territory_lookup.get(_audience_normalize_text(row.get("territory")))
+        if not summary:
+            continue
+        row["priority_level"] = summary.get("priority_level")
+        row["territory_confidence"] = summary.get("confidence")
+        row["dominant_interest"] = summary.get("dominant_interest")
+        row["possible_friction"] = summary.get("possible_friction")
+        row["pilot_readiness_estimate"] = summary.get("pilot_readiness_estimate")
+        row["territorial_recommendation"] = summary.get("recommended_action")
 
     sessions.sort(key=lambda x: x["score"], reverse=True)
 

@@ -95,6 +95,16 @@ def test_access_request_auto_captures_prior_audience_session(client, session):
     assert context["first_seen_at"]
     assert context["last_seen_at"]
     assert context["intent_flags"]["visited_offre"] is True
+    assert context["lead_intent_tier"] == "operationally_interested"
+    assert context["primary_interest"] == "institutional_fit"
+    assert context["institutional_intent"]["recommended_action"] == "Invite toward pilot framing"
+    assert context["territorial_intelligence"]["territory"] == "Boulogne-Billancourt"
+    assert context["territorial_intelligence"]["confidence"] == "strong"
+    assert context["territorial_intelligence"]["recommended_action"] in {
+        "Pilot discussion opportunity",
+        "Prioritize founder outreach this week",
+        "Confirm institutional fit and pilot perimeter",
+    }
 
 
 def test_access_request_without_prior_session_still_succeeds(client):
@@ -117,6 +127,7 @@ def test_professional_lead_can_receive_session_intelligence(client, session):
     )
     lead = ProfessionalLead(
         email="pro.capture@test.local",
+        city="Paris",
         profession="Coordinatrice",
         status="new",
     )
@@ -145,6 +156,8 @@ def test_professional_lead_can_receive_session_intelligence(client, session):
     assert context["session_id"] == "aud_professional_test"
     assert context["source"] == "ChatGPT"
     assert "/professionnels" in context["pages_viewed"]
+    assert context["institutional_intent"]["primary_interest"] == "institutional_fit"
+    assert context["territorial_intelligence"]["territory"] == "Paris"
 
 
 def test_access_request_detail_renders_captured_audience(app, client):
