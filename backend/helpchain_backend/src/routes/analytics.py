@@ -15,6 +15,11 @@ from flask import (
 from flask_babel import gettext as _
 
 from ..extensions import csrf
+from ..services.telemetry_policy import (
+    classify_public_telemetry_request,
+    extract_event_path,
+    get_client_ip,
+)
 
 analytics_bp = Blueprint(
     "analytics",
@@ -114,13 +119,6 @@ def _hash_ip(value: str | None) -> str | None:
     return sha256(f"{salt}:{value}".encode("utf-8")).hexdigest()[:24]
 
 
-def _client_ip() -> str | None:
-    forwarded = request.headers.get("X-Forwarded-For", "")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.remote_addr
-
-
 @analytics_bp.route("/events", methods=["POST"])
 def collect_event():
     """Collect real first-party analytics events.
@@ -135,6 +133,20 @@ def collect_event():
         from backend.models_with_analytics import AnalyticsEvent
 
         payload = request.get_json(silent=True) or {}
+        event_path = extract_event_path(payload)
+        decision = classify_public_telemetry_request(
+            event_path,
+            user_agent=request.headers.get("User-Agent"),
+            client_ip=get_client_ip(),
+        )
+
+        if not decision.should_persist:
+            current_app.logger.info(
+                "analytics event ignored: reason=%s path=%s",
+                decision.reason,
+                event_path or "-",
+            )
+            return jsonify({"ok": True, "ignored": True}), 200
 
         event_name = (
             payload.get("event")
@@ -157,15 +169,9 @@ def collect_event():
                 or ""
             )[:128],
             user_type="admin" if session.get("admin_logged_in") else "guest",
-            user_ip=_hash_ip(_client_ip()),
+            user_ip=_hash_ip(get_client_ip()),
             user_agent=(request.headers.get("User-Agent") or "")[:500],
-            page_url=str(
-                payload.get("url")
-                or payload.get("page")
-                or props.get("url")
-                or request.headers.get("Referer")
-                or ""
-            )[:500],
+            page_url=str(decision.canonical_path or event_path or "")[:500],
             page_title=str(payload.get("title") or props.get("title") or "")[:255],
             referrer=str(
                 payload.get("referrer")

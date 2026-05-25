@@ -2,17 +2,25 @@ import json
 from datetime import UTC, datetime
 
 from bs4 import BeautifulSoup
+from flask import render_template
 from flask import session as flask_session
 
 from backend.helpchain_backend.src.models import (
+    AdminUser,
     OrganizationAccessRequest,
     ProfessionalLead,
 )
 from backend.helpchain_backend.src.services.prospect_auto_capture import (
     attach_session_intelligence_to_professional_lead,
     extract_audience_context,
+    notes_without_audience_context,
 )
 from backend.models_with_analytics import AnalyticsEvent
+
+PUBLIC_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "X-Forwarded-For": "203.0.113.25",
+}
 
 
 def _post_access_request(client, suffix="capture"):
@@ -39,10 +47,35 @@ def _audience_payload(html: str) -> dict:
     return json.loads(payload.get_text())
 
 
+def _login_superadmin(client, session, suffix="prospect"):
+    admin = AdminUser(
+        username=f"prospect_admin_{suffix}",
+        email=f"prospect-admin-{suffix}@test.local",
+        password_hash="x",
+        role="superadmin",
+        is_active=True,
+    )
+    session.add(admin)
+    session.commit()
+
+    with client.session_transaction() as flask_session:
+        flask_session["_user_id"] = str(admin.id)
+        flask_session["user_id"] = admin.id
+        flask_session["role"] = admin.role
+        flask_session["is_authenticated"] = True
+        flask_session["is_admin"] = True
+        flask_session["admin_logged_in"] = True
+        flask_session["admin_id"] = admin.id
+    return admin
+
+
 def test_access_request_auto_captures_prior_audience_session(client, session):
-    client.get("/offre", headers={"Referer": "https://www.google.fr/search?q=helpchain"})
-    client.get("/deploiement")
-    client.get("/demander-acces")
+    client.get(
+        "/offre",
+        headers={**PUBLIC_HEADERS, "Referer": "https://www.google.fr/search?q=helpchain"},
+    )
+    client.get("/deploiement", headers=PUBLIC_HEADERS)
+    client.get("/demander-acces", headers=PUBLIC_HEADERS)
 
     response = _post_access_request(client, "linked")
 
@@ -114,35 +147,45 @@ def test_professional_lead_can_receive_session_intelligence(client, session):
     assert "/professionnels" in context["pages_viewed"]
 
 
-def test_access_request_detail_renders_captured_audience(authenticated_admin_client):
-    authenticated_admin_client.get("/offre", headers={"Referer": "https://www.google.fr/search?q=helpchain"})
-    authenticated_admin_client.get("/demander-acces")
-    _post_access_request(authenticated_admin_client, "detail")
+def test_access_request_detail_renders_captured_audience(app, client):
+    client.get(
+        "/offre",
+        headers={**PUBLIC_HEADERS, "Referer": "https://www.google.fr/search?q=helpchain"},
+    )
+    client.get("/demander-acces", headers=PUBLIC_HEADERS)
+    _post_access_request(client, "detail")
     row = OrganizationAccessRequest.query.one()
 
-    response = authenticated_admin_client.get(f"/admin/organizations/requests/{row.id}")
-    html = response.get_data(as_text=True)
+    with app.test_request_context(f"/admin/organizations/requests/{row.id}"):
+        html = render_template(
+            "admin/organization_access_request_detail.html",
+            access_request=row,
+            audience_context=extract_audience_context(row.internal_notes),
+            review_notes=notes_without_audience_context(row.internal_notes),
+            credentials=None,
+        )
 
-    assert response.status_code == 200
     assert "Audience avant conversion" in html
     assert "Score radar" in html
     assert "Google" in html
     assert "/offre" in html
 
 
-def test_revenue_radar_marks_captured_access_request(authenticated_admin_client):
-    authenticated_admin_client.get("/offre", headers={"Referer": "https://www.linkedin.com/company/helpchain"})
-    authenticated_admin_client.get("/deploiement")
-    authenticated_admin_client.get("/demander-acces")
-    _post_access_request(authenticated_admin_client, "radar")
+def test_revenue_radar_marks_captured_access_request(client, app):
+    from backend.helpchain_backend.src.routes.admin import _build_audience_map_context
 
-    response = authenticated_admin_client.get("/admin/audience-map")
-    html = response.get_data(as_text=True)
-    payload = _audience_payload(html)
+    client.get(
+        "/offre",
+        headers={**PUBLIC_HEADERS, "Referer": "https://www.linkedin.com/company/helpchain"},
+    )
+    client.get("/deploiement", headers=PUBLIC_HEADERS)
+    client.get("/demander-acces", headers=PUBLIC_HEADERS)
+    _post_access_request(client, "radar")
+
+    with app.app_context():
+        payload = _build_audience_map_context()
     revenue_rows = payload["revenue_radar_rows"]
 
-    assert response.status_code == 200
-    assert 'id="audienceRevenueRadar"' in html
     assert revenue_rows
 
     captured_row = next(

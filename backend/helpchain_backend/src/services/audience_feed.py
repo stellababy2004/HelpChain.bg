@@ -7,6 +7,11 @@ from flask import current_app, request, session
 from sqlalchemy import inspect as sa_inspect
 
 from backend.extensions import db
+from .telemetry_policy import (
+    canonical_public_commercial_path,
+    classify_public_telemetry_request,
+    get_client_ip,
+)
 
 try:
     from backend.models_with_analytics import AnalyticsEvent, UserBehavior, utc_now
@@ -18,21 +23,20 @@ except Exception:  # pragma: no cover - analytics module is optional in some env
         return datetime.now(UTC).replace(tzinfo=None)
 
 
-TRACKED_AUDIENCE_PATHS = {
-    "/",
-    "/offre",
-    "/deploiement",
-    "/professionnels",
-    "/demander-acces",
-    "/contact",
-}
-
 HIGH_INTENT_AUDIENCE_PATHS = {
     "/offre",
     "/deploiement",
     "/professionnels",
+    "/professionnels/pilote",
     "/demander-acces",
     "/contact",
+    "/demo",
+    "/securite",
+    "/confidentialite",
+    "/architecture",
+    "/cas-usage",
+    "/pilotage-indicateurs",
+    "/pour-les-structures",
 }
 
 
@@ -41,8 +45,12 @@ def should_track_audience_page_view(path: str | None, method: str | None, status
         return False
     if status_code >= 400:
         return False
-    normalized = (path or "").rstrip("/") or "/"
-    return normalized in TRACKED_AUDIENCE_PATHS
+    decision = classify_public_telemetry_request(
+        path,
+        user_agent=request.headers.get("User-Agent"),
+        client_ip=get_client_ip(),
+    )
+    return decision.should_persist
 
 
 def _analytics_tables_available() -> bool:
@@ -84,7 +92,12 @@ def track_audience_page_view() -> bool:
     returns False on any unavailable table or write failure.
     """
     path = (request.path or "").rstrip("/") or "/"
-    if not should_track_audience_page_view(path, request.method, 200):
+    decision = classify_public_telemetry_request(
+        path,
+        user_agent=request.headers.get("User-Agent"),
+        client_ip=get_client_ip(),
+    )
+    if not decision.should_persist:
         return False
     if not _analytics_tables_available():
         return False
@@ -95,18 +108,19 @@ def track_audience_page_view() -> bool:
     user_agent = (request.headers.get("User-Agent") or "").strip()[:500] or None
     ip_address = (request.remote_addr or "").strip()[:45] or None
     device_type = _device_type(user_agent)
+    canonical_path = canonical_public_commercial_path(path) or path
 
     try:
         event = AnalyticsEvent(
             event_type="page_view",
             event_category="audience",
-            event_action="view",
-            event_label="high_intent" if path in HIGH_INTENT_AUDIENCE_PATHS else "public",
+            event_action="page_view",
+            event_label="high_intent" if canonical_path in HIGH_INTENT_AUDIENCE_PATHS else "public",
             user_session=session_id,
             user_type="guest",
             user_ip=ip_address,
             user_agent=user_agent,
-            page_url=path,
+            page_url=canonical_path,
             referrer=referrer,
             device_type=device_type,
             created_at=now,
@@ -122,7 +136,7 @@ def track_audience_page_view() -> bool:
                 ip_address=ip_address,
                 user_agent=user_agent,
                 device_info=device_type,
-                entry_page=path,
+                entry_page=canonical_path,
                 session_start=now,
                 last_activity=now,
                 pages_visited=0,
@@ -130,7 +144,7 @@ def track_audience_page_view() -> bool:
             db.session.add(behavior)
         behavior.pages_visited = (behavior.pages_visited or 0) + 1
         behavior.last_activity = now
-        behavior.exit_page = path
+        behavior.exit_page = canonical_path
         if behavior.pages_visited > 1:
             behavior.bounce_rate = False
 
