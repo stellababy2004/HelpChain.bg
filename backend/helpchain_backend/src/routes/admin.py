@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from collections import Counter
 import csv
@@ -171,6 +171,10 @@ from ..services.institutional_intent import (
     build_intent_summary,
     normalize_intent_path,
 )
+from ..services.account_intelligence import (
+    build_account_intelligence,
+)
+
 from ..services.founder_cockpit import (
     build_founder_alerts,
     build_founder_priority_queue,
@@ -10691,6 +10695,29 @@ def _build_audience_map_context() -> dict:
         + list(context["founder_queue_account_rows"])
         + list(context["revenue_radar_rows"])
     )
+
+    for row in founder_signal_rows:
+        try:
+            account_intelligence = build_account_intelligence(
+                {
+                    "email": row.get("email"),
+                    "organization": (
+                        row.get("organization")
+                        or row.get("organization_name")
+                        or row.get("company")
+                    ),
+                    "paths": row.get("paths") or row.get("visited_paths") or [],
+                }
+            )
+
+            row["account_intelligence"] = account_intelligence
+            row["account_category"] = account_intelligence.get("account_category")
+            row["account_strength"] = account_intelligence.get("account_strength")
+            row["operational_intent"] = account_intelligence.get("operational_intent")
+            row["account_recommendation"] = account_intelligence.get("recommendation")
+
+        except Exception:
+            continue
     context["founder_priority_queue"] = build_founder_priority_queue(founder_signal_rows)[:12]
     context["founder_alerts"] = build_founder_alerts(founder_signal_rows)
     context["founder_territory_groups"] = group_founder_signals_by_territory(founder_signal_rows)[:8]
