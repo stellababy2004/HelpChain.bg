@@ -22,7 +22,7 @@
           {{ _("Pilotez localement aujourd’hui. Déployez à l’échelle demain.") }}
         </p>
         <div class="hc-offre__actions">
-          <a href="/demo" class="hc-offre__btn hc-offre__btn--primary">{{ _("Demander un accès pilote") }}</a>
+          <a href="/demo" class="hc-offre__btn hc-offre__btn--primary" data-hc-event="revenue_cta_click" data-hc-cta="offer_pilot_access" data-hc-surface="offre">{{ _("Demander un accès pilote") }}</a>
           <a href="{{ url_for('main.deploiement') }}" class="hc-offre__btn hc-offre__btn--secondary">{{ _("Voir le déploiement") }}</a>
         </div>
         <ul class="hc-offre__hero-chips" aria-label="{{ _('Repères institutionnels') }}">
@@ -86,7 +86,7 @@
             <li><i class="fas fa-check-circle" aria-hidden="true"></i><span>{{ _("Support prioritaire") }}</span></li>
           </ul>
           <div class="hc-offre__card-cta">
-            <a href="{{ url_for('main.contact') }}" class="hc-offre__btn hc-offre__btn--secondary">{{ _("Lancer un pilote") }}</a>
+            <a href="{{ url_for('main.contact') }}" class="hc-offre__btn hc-offre__btn--secondary" data-hc-event="revenue_cta_click" data-hc-cta="offer_pilot_launch" data-hc-surface="offre">{{ _("Lancer un pilote") }}</a>
           </div>
         </article>
 
@@ -105,7 +105,7 @@
             <li><i class="fas fa-check-circle" aria-hidden="true"></i><span>{{ _("Pilotage activité") }}</span></li>
           </ul>
           <div class="hc-offre__card-cta">
-            <a href="/demo" class="hc-offre__btn hc-offre__btn--primary">{{ _("Demander un accès pilote") }}</a>
+            <a href="/demo" class="hc-offre__btn hc-offre__btn--primary" data-hc-event="revenue_cta_click" data-hc-cta="offer_pilot_access" data-hc-surface="offre">{{ _("Demander un accès pilote") }}</a>
           </div>
         </article>
 
@@ -122,7 +122,7 @@
             <li><i class="fas fa-check-circle" aria-hidden="true"></i><span>{{ _("Roadmap personnalisée") }}</span></li>
           </ul>
           <div class="hc-offre__card-cta">
-            <a href="{{ url_for('main.contact') }}" class="hc-offre__btn hc-offre__btn--secondary">{{ _("Structurer un déploiement") }}</a>
+            <a href="{{ url_for('main.contact') }}" class="hc-offre__btn hc-offre__btn--secondary" data-hc-event="revenue_cta_click" data-hc-cta="offer_deployment_structuring" data-hc-surface="offre">{{ _("Structurer un déploiement") }}</a>
           </div>
         </article>
       </div>
@@ -177,8 +177,8 @@
         <h2>{{ _("Présentez votre contexte et recevez une proposition adaptée.") }}</h2>
         <p>{{ _("Nous cadrons avec vous le bon niveau d’engagement selon votre organisation, vos équipes, votre gouvernance et votre trajectoire de déploiement.") }}</p>
         <div class="hc-offre__actions">
-          <a href="/demo" class="hc-offre__btn hc-offre__btn--primary">{{ _("Demander un accès pilote") }}</a>
-          <a href="{{ url_for('main.contact') }}" class="hc-offre__btn hc-offre__btn--secondary">{{ _("Nous contacter") }}</a>
+          <a href="/demo" class="hc-offre__btn hc-offre__btn--primary" data-hc-event="revenue_cta_click" data-hc-cta="offer_pilot_access" data-hc-surface="offre">{{ _("Demander un accès pilote") }}</a>
+          <a href="{{ url_for('main.contact') }}" class="hc-offre__btn hc-offre__btn--secondary" data-hc-event="revenue_cta_click" data-hc-cta="offer_contact" data-hc-surface="offre">{{ _("Nous contacter") }}</a>
         </div>
         <ul class="hc-offre__final-chips" aria-label="{{ _('Repères de réassurance') }}">
           <li>{{ _("Réponse sous 24h") }}</li>
