@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}{{ _('À propos') }} | HelpChain{% endblock %}
-{% block meta_description %}{{ _('Découvrez HelpChain : une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour structurer, sécuriser et piloter les situations sociales.') }}{% endblock %}
+{% block meta_description %}{{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations.') }}{% endblock %}
 {% block og_title %}{{ _('À propos de HelpChain') }}{% endblock %}
 {% block og_image %}{{ og_image_url('og-about-1200x630.jpg') }}{% endblock %}
 {% block og_image_alt %}{{ _("Aperçu visuel de la page À propos de HelpChain") }}{% endblock %}
@@ -104,7 +104,7 @@
           <p class="hc-doc-intro__label">{{ _('Infrastructure de coordination') }}</p>
           <h1 class="hc-about__title">{{ _('À propos de HelpChain') }}</h1>
           <p class="hc-about__subtitle">
-            {{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour structurer le traitement des demandes, clarifier les responsabilités et renforcer la visibilité sur l’activité.') }}
+            {{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations.') }}
           </p>
           <p class="hc-about__subtitle">
             {{ _('Pensée pour les structures publiques, associatives et professionnelles opérant en France, la plateforme HelpChain soutient un cadre de traitement lisible, traçable et pilotable.') }}
@@ -269,6 +269,32 @@
         </div>
       </section>
 
+      <section class="hc-about__section" aria-labelledby="about-origin">
+        <header class="hc-about__section-head">
+          <h2 id="about-origin" class="hc-about__h2">{{ _('Origine du projet') }}</h2>
+          <p class="hc-about__lead">
+            {{ _('HelpChain a été conçu à partir d’un constat opérationnel simple : lorsque le suivi repose sur des échanges dispersés, des relances isolées et des coordinations partielles, la continuité devient plus fragile et la traçabilité plus difficile à maintenir.') }}
+          </p>
+        </header>
+
+        <div class="hc-about__split">
+          <div class="hc-about__split-col">
+            <div class="hc-about__card">
+              <p class="hc-about__text">
+                {{ _('Le projet est porté avec une logique d’opérateur : observer où les suivis ralentissent, où les responsabilités deviennent moins lisibles, où la mémoire opérationnelle se fragmente et où la gouvernance perd en visibilité.') }}
+              </p>
+            </div>
+          </div>
+          <div class="hc-about__split-col">
+            <div class="hc-about__card">
+              <p class="hc-about__text">
+                {{ _('HelpChain n’est donc pas présenté comme un récit personnel ou entrepreneurial. La plateforme est développée comme une infrastructure institutionnelle destinée à rendre la coordination multi-acteurs plus relisible, plus traçable et plus gouvernable.') }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="hc-about__section hc-about__section--pilot" aria-labelledby="about-pilot">
         <div class="hc-about__pilot">
           <h2 id="about-pilot" class="hc-about__h2">{{ _('Phase pilote — cadre contrôlé') }}</h2>
@@ -279,7 +305,7 @@
           <ul class="hc-about__list">
             <li>{{ _('Tester la coordination sur des cas réels.') }}</li>
             <li>{{ _('Observer les effets sur la visibilité et le suivi.') }}</li>
-            <li>{{ _('Adapter l’outil aux réalités du terrain.') }}</li>
+            <li>{{ _('Adapter la plateforme aux réalités du terrain.') }}</li>
           </ul>
           <p class="hc-about__text">
             <strong>{{ _('Durée du pilote : 30 à 60 jours') }}</strong><br>
@@ -298,7 +324,7 @@
           <ul class="hc-about__list">
             <li>{{ _('1 structure référente') }}</li>
             <li>{{ _('3 à 10 intervenants impliqués') }}</li>
-            <li>{{ _('10 à 30 demandes suivies dans l’outil') }}</li>
+            <li>{{ _('10 à 30 demandes suivies dans la plateforme') }}</li>
             <li>{{ _('Durée : 30 à 60 jours') }}</li>
           </ul>
           <p class="hc-about__text">

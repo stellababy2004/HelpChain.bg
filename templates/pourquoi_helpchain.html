@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ _("Pourquoi HelpChain") }} | HelpChain{% endblock %}
-{% block meta_description %}{{ _("Pourquoi HelpChain : plateforme de coordination opérationnelle pour structures locales, collectivités, associations et services impliqués dans le suivi des situations sociales.") }}{% endblock %}
+{% block meta_description %}{{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations.') }}{% endblock %}
 {% block og_title %}{{ _("Pourquoi HelpChain") }}{% endblock %}
 {% block og_image %}{{ og_image_url('og-home-1200x630.jpg') }}{% endblock %}
 {% block og_image_alt %}{{ _("Aperçu de la page Pourquoi HelpChain") }}{% endblock %}
@@ -11,10 +11,16 @@
     <p class="hc-doc-intro__label">{{ _("Cadre opérationnel") }}</p>
     <h1 class="hc-doc-intro__title">{{ _("Pourquoi HelpChain") }}</h1>
     <p class="hc-doc-intro__lead">
+      {{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations.') }}
+    </p>
+    <p class="hc-doc-intro__lead">
       {{ _("Dans de nombreux territoires, les structures locales doivent coordonner des demandes, suivre des situations et organiser des actions impliquant plusieurs acteurs.") }}
     </p>
     <p class="hc-doc-intro__lead">
       {{ _("Ce suivi repose souvent sur des échanges dispersés, des fichiers multiples ou des circuits peu lisibles, rendant la continuité opérationnelle plus complexe dans la durée.") }}
+    </p>
+    <p class="hc-doc-intro__lead">
+      {{ _("Lorsque les demandes augmentent, les outils improvisés cassent : les relances deviennent inégales, la coordination multi-acteurs dérive, les responsabilités se brouillent et la mémoire opérationnelle dépend trop souvent des personnes qui tiennent encore le suivi.") }}
     </p>
   </header>
 
@@ -27,6 +33,14 @@
       <li>{{ _("suivre les situations dans le temps") }}</li>
       <li>{{ _("conserver une visibilité claire sur les actions engagées.") }}</li>
     </ul>
+    <p class="mt-3 mb-0">{{ _("Dans ce contexte, la difficulté n’est pas seulement de recevoir une demande. Elle est de conserver une continuité opérationnelle lisible lorsque plusieurs équipes, services ou partenaires interviennent dans le temps.") }}</p>
+  </div></section>
+
+  <section class="card mb-3"><div class="card-body">
+    <h2 class="h5 mb-3">{{ _("Pourquoi la fragmentation devient un risque opérationnel") }}</h2>
+    <p class="mb-2">{{ _("Une situation peut rester officiellement ouverte tout en devenant progressivement moins lisible : une relance est faite dans un canal séparé, une reprise n’est pas documentée au bon endroit, un arbitrage n’est connu que localement ou un changement d’interlocuteur rompt la continuité de suivi.") }}</p>
+    <p class="mb-2">{{ _("Le problème n’est pas uniquement technique. Il tient à la fragmentation opérationnelle : des éléments utiles au suivi existent, mais ils restent dispersés entre messages, tableaux, habitudes locales, souvenirs d’équipe et circuits de coordination partiels.") }}</p>
+    <p class="mb-0">{{ _("C’est dans cet espace que se créent les dérives de suivi, les relances tardives, la perte de mémoire opérationnelle et, à terme, le silence opérationnel autour de situations pourtant actives.") }}</p>
   </div></section>
 
   <section class="card mb-3"><div class="card-body">
@@ -38,24 +52,35 @@
       <li>{{ _("associations") }}</li>
       <li>{{ _("professionnels et partenaires territoriaux.") }}</li>
     </ul>
+    <p class="mt-3 mb-0">{{ _("La plateforme agit comme une infrastructure HelpChain de coordination institutionnelle : elle rend les statuts, les relances, les responsabilités et les points de reprise relisibles dans un cadre commun plutôt que de laisser le suivi se reconstituer a posteriori.") }}</p>
+  </div></section>
+
+  <section class="card mb-3"><div class="card-body">
+    <h2 class="h5 mb-3">{{ _("Continuité opérationnelle et mémoire institutionnelle") }}</h2>
+    <p class="mb-2">{{ _("Une coordination durable suppose qu’une situation reste compréhensible au-delà d’une seule personne, d’une seule relance ou d’un seul moment d’activité.") }}</p>
+    <p class="mb-2">{{ _("HelpChain renforce cette continuité en maintenant une mémoire opérationnelle exploitable : ce qui a été fait, ce qui reste à reprendre, qui porte la suite et dans quel contexte la situation a évolué.") }}</p>
+    <p class="mb-0">{{ _("Cette logique de traçabilité native n’a pas pour objet d’alourdir le terrain. Elle vise à soutenir une gouvernance opérationnelle plus fiable lorsque le suivi ralentit, change de mains ou traverse plusieurs niveaux d’intervention.") }}</p>
   </div></section>
 
   <section class="card mb-3"><div class="card-body">
     <h2 class="h5 mb-3">{{ _("Soutenir les organisations existantes") }}</h2>
     <p class="mb-2">{{ _("HelpChain n’a pas vocation à remplacer les structures déjà en place ni les décisions métier.") }}</p>
-    <p class="mb-0">{{ _("La plateforme HelpChain agit comme une infrastructure de coordination opérationnelle destinée à améliorer la continuité de suivi, la circulation de l’information et la lisibilité des responsabilités.") }}</p>
+    <p class="mb-2">{{ _("La plateforme HelpChain agit comme une infrastructure de coordination opérationnelle destinée à améliorer la continuité de suivi, la circulation de l’information et la lisibilité des responsabilités.") }}</p>
+    <p class="mb-0">{{ _("L’objectif n’est pas de réécrire les pratiques institutionnelles existantes, mais de leur apporter un cadre plus stable lorsque la coordination devient plus dense, plus multi-acteurs et plus exposée aux ruptures de suivi.") }}</p>
   </div></section>
 
   <section class="card mb-3"><div class="card-body">
     <h2 class="h5 mb-3">{{ _("Une approche responsable") }}</h2>
     <p class="mb-2">{{ _("Le projet est développé selon des principes de confidentialité, de contrôle des accès, de traçabilité et de minimisation des données.") }}</p>
+    <p class="mb-2">{{ _("Cette doctrine de continuité opérationnelle repose sur une idée simple : une situation ne doit pas devenir invisible parce qu’elle ralentit, change d’intervenant ou traverse plusieurs espaces de coordination.") }}</p>
     <p class="mb-0">{{ _("L’objectif est de proposer une infrastructure exploitable, lisible et compatible avec les exigences opérationnelles et réglementaires des structures.") }}</p>
   </div></section>
 
   <section class="card mb-3"><div class="card-body">
     <h2 class="h5 mb-3">{{ _("Conclusion") }}</h2>
     <p class="mb-2">{{ _("HelpChain vise à rendre la coordination territoriale plus structurée, plus lisible et plus pilotable.") }}</p>
-    <p class="mb-0">{{ _("La plateforme soutient l’organisation, l’orientation et le suivi des situations sociales dans un cadre numérique partagé entre acteurs autorisés.") }}</p>
+    <p class="mb-2">{{ _("La plateforme soutient l’organisation, l’orientation et le suivi des situations sociales dans un cadre numérique partagé entre acteurs autorisés.") }}</p>
+    <p class="mb-0">{{ _("La logique est celle d’une infrastructure de continuité opérationnelle : réduire la fragmentation opérationnelle, rendre les relances visibles, préserver une mémoire institutionnelle utile et renforcer la coordination institutionnelle dans la durée.") }}</p>
   </div></section>
 </div>
 {% endblock %}
