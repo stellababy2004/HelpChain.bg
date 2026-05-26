@@ -146,6 +146,61 @@
     </div>
   </section>
 
+  <section class="hc-trust-page__section hc-trust-page__section--compact" aria-labelledby="hc-simop-queue-title">
+    <div class="hc-trust-page__shell">
+      <div class="hc-trust-layer hc-simop__queue-layer">
+        <p class="hc-trust-layer__eyebrow">{{ _("VUE OPÉRATIONNELLE CONCRÈTE") }}</p>
+        <h2 id="hc-simop-queue-title" class="hc-trust-layer__title">{{ _("Vue opérationnelle concrète") }}</h2>
+        <p class="hc-trust-layer__intro">
+          {{ _("Un exemple de lecture opérationnelle simple, telle qu’une équipe peut la consulter lorsqu’un suivi ralentit et doit être repris sans perdre la chronologie ni le contexte.") }}
+        </p>
+
+        <article class="hc-simop__queue-card" aria-label="{{ _('File opérationnelle') }}">
+          <div class="hc-simop__queue-head">
+            <div>
+              <p class="hc-simop__queue-label">{{ _("File opérationnelle") }}</p>
+              <h3>{{ _("Situation à relancer") }}</h3>
+            </div>
+            <span class="hc-simop__queue-badge">{{ _("suivi actif mais ralenti") }}</span>
+          </div>
+
+          <dl class="hc-simop__queue-grid">
+            <div class="hc-simop__queue-item">
+              <dt>{{ _("Dernière activité") }}</dt>
+              <dd>{{ _("il y a 8 jours") }}</dd>
+            </div>
+            <div class="hc-simop__queue-item">
+              <dt>{{ _("Structure responsable") }}</dt>
+              <dd>{{ _("Association partenaire") }}</dd>
+            </div>
+            <div class="hc-simop__queue-item">
+              <dt>{{ _("Niveau de visibilité") }}</dt>
+              <dd>{{ _("suivi actif mais ralenti") }}</dd>
+            </div>
+            <div class="hc-simop__queue-item">
+              <dt>{{ _("Signal détecté") }}</dt>
+              <dd>{{ _("absence de reprise visible") }}</dd>
+            </div>
+            <div class="hc-simop__queue-item">
+              <dt>{{ _("Action suggérée") }}</dt>
+              <dd>{{ _("relance coordinateur") }}</dd>
+            </div>
+            <div class="hc-simop__queue-item">
+              <dt>{{ _("Historique") }}</dt>
+              <dd>{{ _("3 actions enregistrées") }}<span>{{ _("2 intervenants impliqués") }}</span></dd>
+            </div>
+            <div class="hc-simop__queue-item hc-simop__queue-item--full">
+              <dt>{{ _("Continuité") }}</dt>
+              <dd>{{ _("chronologie consultable") }}</dd>
+            </div>
+          </dl>
+        </article>
+
+        <p class="hc-simop__queue-note">{{ _("Les équipes retrouvent une lecture commune des suivis à reprendre.") }}</p>
+      </div>
+    </div>
+  </section>
+
   <section class="hc-trust-page__section hc-trust-page__section--compact" aria-labelledby="hc-simop-before-after-title">
     <div class="hc-trust-page__shell">
       <div class="hc-deploiement__comparison hc-trust-layer">

@@ -99,7 +99,8 @@ body.hc-page-simulation-operationnelle .hc-trust-page__cta-card h2 {
 }
 
 body.hc-page-simulation-operationnelle .hc-simop__timeline-block,
-body.hc-page-simulation-operationnelle .hc-simop__actors-block {
+body.hc-page-simulation-operationnelle .hc-simop__actors-block,
+body.hc-page-simulation-operationnelle .hc-simop__queue-layer {
   padding: clamp(2rem, 3.4vw, 2.8rem);
   border-radius: 30px;
 }
@@ -213,6 +214,116 @@ body.hc-page-simulation-operationnelle .hc-trust-page__cta-card {
   border-radius: 28px;
 }
 
+body.hc-page-simulation-operationnelle .hc-simop__queue-card {
+  display: grid;
+  gap: 1.35rem;
+  margin-top: 1.9rem;
+  padding: clamp(1.45rem, 2.4vw, 1.9rem);
+  border: 1px solid rgba(20, 55, 95, 0.1);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(248, 251, 255, 0.88), rgba(255, 255, 255, 0.96)),
+    rgba(255, 255, 255, 0.94);
+  box-shadow:
+    0 18px 40px rgba(15, 35, 70, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+body.hc-page-simulation-operationnelle .hc-simop__queue-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid rgba(20, 55, 95, 0.08);
+}
+
+body.hc-page-simulation-operationnelle .hc-simop__queue-head h3 {
+  margin: 0.3rem 0 0;
+  color: var(--hc-simop-ink);
+  font-size: clamp(1.3rem, 2vw, 1.6rem);
+}
+
+body.hc-page-simulation-operationnelle .hc-simop__queue-label {
+  margin: 0;
+  color: #4e6582;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+body.hc-page-simulation-operationnelle .hc-simop__queue-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  max-width: 100%;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid rgba(20, 55, 95, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.84);
+  color: #365372;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+body.hc-page-simulation-operationnelle .hc-simop__queue-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.95rem;
+  margin: 0;
+}
+
+body.hc-page-simulation-operationnelle .hc-simop__queue-item {
+  display: grid;
+  gap: 0.38rem;
+  min-width: 0;
+  padding: 1rem 1.05rem;
+  border: 1px solid rgba(20, 55, 95, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+body.hc-page-simulation-operationnelle .hc-simop__queue-item--full {
+  grid-column: 1 / -1;
+}
+
+body.hc-page-simulation-operationnelle .hc-simop__queue-item dt {
+  margin: 0;
+  color: #4b6281;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+body.hc-page-simulation-operationnelle .hc-simop__queue-item dd {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+  margin: 0;
+  color: var(--hc-simop-ink);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+body.hc-page-simulation-operationnelle .hc-simop__queue-item dd span {
+  color: var(--hc-simop-muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+body.hc-page-simulation-operationnelle .hc-simop__queue-note {
+  margin: 1rem 0 0;
+  color: #4f6684;
+  font-size: 0.98rem;
+  line-height: 1.65;
+}
+
 body.hc-page-simulation-operationnelle .hc-simop__actor-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
@@ -280,7 +391,8 @@ body.hc-page-simulation-operationnelle .hc-simop__memory-card h3 {
 @media (max-width: 991.98px) {
   body.hc-page-simulation-operationnelle .hc-simop__step,
   body.hc-page-simulation-operationnelle .hc-simop__actor-grid,
-  body.hc-page-simulation-operationnelle .hc-simop__memory-grid {
+  body.hc-page-simulation-operationnelle .hc-simop__memory-grid,
+  body.hc-page-simulation-operationnelle .hc-simop__queue-grid {
     grid-template-columns: 1fr;
   }
 
@@ -306,6 +418,7 @@ body.hc-page-simulation-operationnelle .hc-simop__memory-card h3 {
 
   body.hc-page-simulation-operationnelle .hc-simop__timeline-block,
   body.hc-page-simulation-operationnelle .hc-simop__actors-block,
+  body.hc-page-simulation-operationnelle .hc-simop__queue-layer,
   body.hc-page-simulation-operationnelle .hc-trust-layer,
   body.hc-page-simulation-operationnelle .hc-trust-page__cta-card {
     padding: 1.4rem;
@@ -318,6 +431,12 @@ body.hc-page-simulation-operationnelle .hc-simop__memory-card h3 {
 
   body.hc-page-simulation-operationnelle .hc-simop__card {
     padding: 1.2rem;
+    border-radius: 18px;
+  }
+
+  body.hc-page-simulation-operationnelle .hc-simop__queue-card,
+  body.hc-page-simulation-operationnelle .hc-simop__queue-item {
+    padding: 1.1rem;
     border-radius: 18px;
   }
 }

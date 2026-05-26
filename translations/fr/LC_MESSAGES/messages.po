@@ -630,6 +630,86 @@ msgstr "Voir comment ce pilotage peut s’installer dans votre structure"
 msgid "Nous cadrons avec vous un premier périmètre, les rôles concernés et les situations à suivre pour tester une continuité opérationnelle réaliste, progressive et gouvernable."
 msgstr "Nous cadrons avec vous un premier périmètre, les rôles concernés et les situations à suivre pour tester une continuité opérationnelle réaliste, progressive et gouvernable."
 
+#: templates/simulation_operationnelle.html:144
+msgid "VUE OPÉRATIONNELLE CONCRÈTE"
+msgstr "VUE OPÉRATIONNELLE CONCRÈTE"
+
+#: templates/simulation_operationnelle.html:145
+msgid "Vue opérationnelle concrète"
+msgstr "Vue opérationnelle concrète"
+
+#: templates/simulation_operationnelle.html:147
+msgid "Un exemple de lecture opérationnelle simple, telle qu’une équipe peut la consulter lorsqu’un suivi ralentit et doit être repris sans perdre la chronologie ni le contexte."
+msgstr "Un exemple de lecture opérationnelle simple, telle qu’une équipe peut la consulter lorsqu’un suivi ralentit et doit être repris sans perdre la chronologie ni le contexte."
+
+#: templates/simulation_operationnelle.html:150
+msgid "File opérationnelle"
+msgstr "File opérationnelle"
+
+#: templates/simulation_operationnelle.html:153
+msgid "Situation à relancer"
+msgstr "Situation à relancer"
+
+#: templates/simulation_operationnelle.html:155 templates/simulation_operationnelle.html:166
+msgid "suivi actif mais ralenti"
+msgstr "suivi actif mais ralenti"
+
+#: templates/simulation_operationnelle.html:159
+msgid "Dernière activité"
+msgstr "Dernière activité"
+
+#: templates/simulation_operationnelle.html:160
+msgid "il y a 8 jours"
+msgstr "il y a 8 jours"
+
+#: templates/simulation_operationnelle.html:163
+msgid "Structure responsable"
+msgstr "Structure responsable"
+
+#: templates/simulation_operationnelle.html:164
+msgid "Association partenaire"
+msgstr "Association partenaire"
+
+#: templates/simulation_operationnelle.html:167
+msgid "Niveau de visibilité"
+msgstr "Niveau de visibilité"
+
+#: templates/simulation_operationnelle.html:171
+msgid "Signal détecté"
+msgstr "Signal détecté"
+
+#: templates/simulation_operationnelle.html:172
+msgid "absence de reprise visible"
+msgstr "absence de reprise visible"
+
+#: templates/simulation_operationnelle.html:175
+msgid "Action suggérée"
+msgstr "Action suggérée"
+
+#: templates/simulation_operationnelle.html:176
+msgid "relance coordinateur"
+msgstr "relance coordinateur"
+
+#: templates/simulation_operationnelle.html:180
+msgid "3 actions enregistrées"
+msgstr "3 actions enregistrées"
+
+#: templates/simulation_operationnelle.html:180
+msgid "2 intervenants impliqués"
+msgstr "2 intervenants impliqués"
+
+#: templates/simulation_operationnelle.html:183
+msgid "Continuité"
+msgstr "Continuité"
+
+#: templates/simulation_operationnelle.html:184
+msgid "chronologie consultable"
+msgstr "chronologie consultable"
+
+#: templates/simulation_operationnelle.html:188
+msgid "Les équipes retrouvent une lecture commune des suivis à reprendre."
+msgstr "Les équipes retrouvent une lecture commune des suivis à reprendre."
+
 #: templates/base.html:655 templates/base.html:707
 msgid "Visualiser comment une situation ralentit, est relancée puis retrouve une continuité visible."
 msgstr "Visualiser comment une situation ralentit, est relancée puis retrouve une continuité visible."
