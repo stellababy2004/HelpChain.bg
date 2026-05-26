@@ -451,7 +451,7 @@ msgstr "Assurer une continuité opérationnelle grâce à la traçabilité des a
 msgid "Pilotage opérationnel"
 msgstr "Pilotage opérationnel"
 
-msgid "Pilotage opÃ©rationnel"
+msgid "Pilotage opérationnel"
 msgstr "Pilotage opérationnel"
 
 #: templates/about.html:100
@@ -9198,7 +9198,7 @@ msgstr "Les opportunités institutionnelles apparaîtront ici automatiquement."
 msgid "No operational founder queue yet"
 msgstr "Aucune file opérationnelle fondateur pour le moment"
 
-msgid "Ã€ contacter aujourdâ€™hui"
+msgid "À contacter aujourd’hui"
 msgstr "À contacter aujourd’hui"
 msgid "À contacter aujourd’hui"
 msgstr "À contacter aujourd’hui"
@@ -9300,16 +9300,16 @@ msgstr "Voir le parcours de lancement"
 msgid "Voir l’architecture"
 msgstr "Voir l’architecture"
 
-msgid "Comprendre la sÃ©curitÃ©"
+msgid "Comprendre la sécurité"
 msgstr "Comprendre la sécurité"
 
-msgid "Demander un accÃ¨s pilote"
+msgid "Demander un accès pilote"
 msgstr "Demander un accès pilote"
 
-msgid "Voir le cadre de dÃ©ploiement"
+msgid "Voir le cadre de déploiement"
 msgstr "Voir le cadre de déploiement"
 
-msgid "Voir lâ€™architecture"
+msgid "Voir l’architecture"
 msgstr "Voir l’architecture"
 
 
@@ -9432,7 +9432,7 @@ msgstr "Piloter sans surcharger"
 msgid "Donner aux équipes une vision exploitable sans multiplier les fichiers ou tableaux manuels."
 msgstr "Donner aux équipes une vision exploitable sans multiplier les fichiers ou tableaux manuels."
 
-msgid "Suivi opÃ©rationnel"
+msgid "Suivi opérationnel"
 msgstr "Suivi opérationnel"
 
 msgid "HelpChain aide les équipes à rendre les priorités, les situations en attente et la continuité de coordination plus lisibles dans la durée."
