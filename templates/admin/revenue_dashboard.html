@@ -373,6 +373,72 @@
           {% endfor %}
         </div>
       </div>
+
+      <div class="hc-founder-cockpit__panel">
+        <div class="hc-founder-cockpit__heading">{{ _('Relationship State') }}</div>
+        <div class="hc-founder-cockpit__list">
+          {% for state, count in founder_cockpit.relationship_state_summary.items() %}
+            <article class="hc-founder-cockpit__item">
+              <div class="d-flex justify-content-between gap-2">
+                <strong>{{ state|replace('_', ' ') }}</strong>
+                <span class="badge text-bg-light border">{{ count }}</span>
+              </div>
+              <div class="hc-muted small mt-1">{{ _('institutional account(s)') }}</div>
+            </article>
+          {% else %}
+            <div class="hc-empty-state">
+              <div class="hc-empty-state__title">{{ _('No relationship state yet') }}</div>
+              <div class="hc-empty-state__text">{{ _('Relationship state distribution will appear here as operational continuity signals accumulate.') }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="hc-founder-cockpit__panel">
+        <div class="hc-founder-cockpit__heading">{{ _('Pilot Progression') }}</div>
+        <div class="hc-founder-cockpit__list">
+          {% for state, count in founder_cockpit.pilot_progression_summary.items() %}
+            <article class="hc-founder-cockpit__item">
+              <div class="d-flex justify-content-between gap-2">
+                <strong>{{ state|replace('_', ' ') }}</strong>
+                <span class="badge text-bg-light border">{{ count }}</span>
+              </div>
+              <div class="hc-muted small mt-1">{{ _('institutional account(s)') }}</div>
+            </article>
+          {% else %}
+            <div class="hc-empty-state">
+              <div class="hc-empty-state__title">{{ _('No pilot progression yet') }}</div>
+              <div class="hc-empty-state__text">{{ _('Pilot progression stages will appear here as deployment discussions mature.') }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="hc-founder-cockpit__panel">
+        <div class="hc-founder-cockpit__heading">{{ _('Next Founder Actions') }}</div>
+        <div class="hc-founder-cockpit__list">
+          {% for item in founder_cockpit.next_founder_actions %}
+            <article class="hc-founder-cockpit__item">
+              <div class="d-flex justify-content-between gap-2">
+                <strong class="text-truncate">{{ item.organization or _('Institutional account') }}</strong>
+                <span class="badge text-bg-light border">{{ item.relationship_state|replace('_', ' ') }}</span>
+              </div>
+              <div class="hc-muted small mt-1">
+                {{ item.pilot_progression|replace('_', ' ') }}
+              </div>
+              <div class="small mt-2">
+                <strong>{{ _('Next:') }}</strong>
+                {{ item.next_recommended_action }}
+              </div>
+            </article>
+          {% else %}
+            <div class="hc-empty-state">
+              <div class="hc-empty-state__title">{{ _('No next founder action yet') }}</div>
+              <div class="hc-empty-state__text">{{ _('Action sequencing will appear here once institutional opportunities require continuity.') }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
     </div>
   </section>
 

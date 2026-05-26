@@ -207,4 +207,8 @@ def test_founder_cockpit_context_includes_operational_founder_sections(monkeypat
     assert context["recommended_founder_actions"]
     assert context["relationship_temperature_rows"]
     assert context["institutional_memory_timeline"]
+    assert context["founder_operational_state"]
+    assert context["relationship_state_summary"]
+    assert context["pilot_progression_summary"]
+    assert context["next_founder_actions"]
     assert context["recommended_founder_actions"][0]["recommended_founder_action"] == "Re-contact deployment lead"

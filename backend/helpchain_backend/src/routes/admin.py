@@ -187,6 +187,10 @@ from ..services.founder_memory_engine import (
     detect_stalled_opportunities,
     summarize_founder_memory,
 )
+from ..services.founder_operational_state import (
+    build_founder_operational_state,
+    summarize_founder_operational_state,
+)
 
 from ..services.founder_cockpit import (
     build_founder_alerts,
@@ -11063,6 +11067,21 @@ def _build_founder_operational_context(rows: list[dict[str, object]]) -> dict[st
         )
 
     action_queue = build_founder_action_queue(operational_rows, now=current_time, limit=8)
+    founder_operational_state = [
+        build_founder_operational_state(
+            item,
+            memory_summary=item.get("founder_memory"),
+            action_payload={
+                "action_label": item.get("recommended_founder_action"),
+                "action_code": item.get("recommended_founder_action_code"),
+                "urgency": item.get("followup_urgency"),
+            },
+            previous_state=item.get("founder_operational_state"),
+            now=current_time,
+        )
+        for item in action_queue
+    ]
+    state_summary = summarize_founder_operational_state(founder_operational_state, now=current_time)
     stalled = detect_stalled_opportunities(action_queue, now=current_time)[:6]
     temperature_rows = sorted(
         action_queue,
@@ -11088,6 +11107,11 @@ def _build_founder_operational_context(rows: list[dict[str, object]]) -> dict[st
         "stalled_opportunities": stalled,
         "relationship_temperature_rows": temperature_rows,
         "institutional_memory_timeline": memory_timeline,
+        "founder_operational_state": founder_operational_state,
+        "relationship_state_summary": state_summary["relationship_state_summary"],
+        "pilot_progression_summary": state_summary["pilot_progression_summary"],
+        "state_transitions": state_summary["state_transitions"],
+        "next_founder_actions": state_summary["next_founder_actions"],
         "action_summary": summarize_founder_operational_actions(operational_rows, now=current_time, limit=8),
     }
 
@@ -11115,6 +11139,11 @@ def _build_founder_cockpit_context(rows: list[SimpleNamespace]) -> dict[str, obj
         "recommended_founder_actions": operational_context["action_queue"],
         "relationship_temperature_rows": operational_context["relationship_temperature_rows"],
         "institutional_memory_timeline": operational_context["institutional_memory_timeline"],
+        "founder_operational_state": operational_context["founder_operational_state"],
+        "relationship_state_summary": operational_context["relationship_state_summary"],
+        "pilot_progression_summary": operational_context["pilot_progression_summary"],
+        "state_transitions": operational_context["state_transitions"],
+        "next_founder_actions": operational_context["next_founder_actions"],
         "operational_action_summary": operational_context["action_summary"],
         "summary": summarize_founder_opportunity_actions(rows),
     }

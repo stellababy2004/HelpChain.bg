@@ -9369,3 +9369,36 @@ msgstr "Aucune m?moire institutionnelle pour le moment"
 
 msgid "Chronological founder memory will appear here as operational touchpoints are recorded."
 msgstr "La m?moire fondateur chronologique appara?tra ici ? mesure que les points de contact op?rationnels sont enregistr?s."
+
+msgid "Relationship State"
+msgstr "État de la relation"
+
+msgid "institutional account(s)"
+msgstr "compte(s) institutionnel(s)"
+
+msgid "No relationship state yet"
+msgstr "Aucun état relationnel pour le moment"
+
+msgid "Relationship state distribution will appear here as operational continuity signals accumulate."
+msgstr "La distribution des états relationnels apparaîtra ici à mesure que les signaux de continuité opérationnelle s'accumulent."
+
+msgid "Pilot Progression"
+msgstr "Progression pilote"
+
+msgid "No pilot progression yet"
+msgstr "Aucune progression pilote pour le moment"
+
+msgid "Pilot progression stages will appear here as deployment discussions mature."
+msgstr "Les étapes de progression pilote apparaîtront ici à mesure que les discussions de déploiement mûrissent."
+
+msgid "Next Founder Actions"
+msgstr "Prochaines actions fondateur"
+
+msgid "Next:"
+msgstr "Suite :"
+
+msgid "No next founder action yet"
+msgstr "Aucune prochaine action fondateur pour le moment"
+
+msgid "Action sequencing will appear here once institutional opportunities require continuity."
+msgstr "Le séquencement des actions apparaîtra ici dès que les opportunités institutionnelles exigeront une continuité."

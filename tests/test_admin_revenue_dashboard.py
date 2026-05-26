@@ -29,6 +29,9 @@ def test_admin_revenue_empty_state_safe(authenticated_admin_client):
     assert "Recommended founder actions" in html
     assert "Relationship temperature" in html
     assert "Institutional memory timeline" in html
+    assert "Relationship State" in html
+    assert "Pilot Progression" in html
+    assert "Next Founder Actions" in html
 
 
 def test_admin_revenue_unified_rows_display(authenticated_admin_client, session):
@@ -387,6 +390,9 @@ def test_admin_revenue_renders_operational_founder_sections(
     assert "Recommended founder actions" in html
     assert "Relationship temperature" in html
     assert "Institutional memory timeline" in html
+    assert "Relationship State" in html
+    assert "Pilot Progression" in html
+    assert "Next Founder Actions" in html
     assert "Ville de Paris" in html
     assert "Re-contact deployment lead" in html
     assert "Hot this week" in html
