@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Step 13 - SEO & Social preview -->
-    <meta name="description" content="{% block meta_description %}{{ _('Orientation structurée, coordination traçable, pilotage responsable. Conçu et opéré depuis la France, avec une infrastructure sécurisée adaptée aux usages institutionnels.') }}{% endblock %}">
+    <meta name="description" content="{% block meta_description %}{{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations. Suivi multi-acteurs, gouvernance opérationnelle, coordination institutionnelle et traçabilité native.') }}{% endblock %}">
     <meta name="robots" content="index,follow">
 
     <meta property="og:site_name" content="HelpChain">
@@ -79,7 +79,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
 
-    <title>{% block title %}HelpChain — Infrastructure numérique de coordination{% endblock %}</title>
+    <title>{% block title %}HelpChain — Plateforme de coordination opérationnelle{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fonts/inter.css') }}">
     <!-- Bootstrap CSS -->
     <link
@@ -483,6 +483,25 @@
       }
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/public-v3.css') }}?v=20260519-v3-nav-surface">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "HelpChain",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "url": "{{ request.url_root.rstrip('/') }}",
+        "description": {{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations, avec suivi multi-acteurs, gouvernance opérationnelle et traçabilité native.')|tojson }},
+        "brand": {
+          "@type": "Brand",
+          "name": "HelpChain"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "HelpChain"
+        }
+      }
+    </script>
     {% block head %}{% endblock %}
   <link rel="stylesheet"
 href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
@@ -644,16 +663,16 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                 <div class="hc-nav-mega__grid">
                   <div class="hc-nav-mega__feature">
                     <span class="hc-nav-mega__eyebrow">{{ _('Plateforme') }}</span>
-                    <strong>{{ _('Coordination opérationnelle, gouvernance et pilotage dans un même cadre.') }}</strong>
-                    <p>{{ _('Explorez les surfaces principales de HelpChain et les scénarios de déploiement.') }}</p>
+                    <strong>{{ _('La plateforme HelpChain réunit continuité opérationnelle, gouvernance et pilotage dans un même cadre.') }}</strong>
+                    <p>{{ _('Explorez l’infrastructure HelpChain et ses scénarios de déploiement institutionnel.') }}</p>
                   </div>
                   <div class="hc-nav-mega__links">
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Fonctionnement') }}</strong><span>{{ _('De la demande au suivi traçable.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Fonctionnement') }}</strong><span>{{ _('De la demande au suivi multi-acteurs traçable.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation est relancée et reste visible.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive et gouvernance.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive, gouvernance opérationnelle et continuité.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.offre') }}"><strong>{{ _('Offre') }}</strong><span>{{ _('Cadres pilote, professionnel et institutionnel.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Coordination pour CCAS, collectivités et associations.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi pour acteurs habilités.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Plateforme pour CCAS, collectivités et associations.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi structuré pour acteurs habilités.') }}</span></a>
                   </div>
                 </div>
               </div>
@@ -694,16 +713,16 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                 <div class="hc-nav-mega__grid">
                   <div class="hc-nav-mega__feature">
                     <span class="hc-nav-mega__eyebrow">{{ _('Plateforme') }}</span>
-                    <strong>{{ _('Coordination opérationnelle, gouvernance et pilotage dans un même cadre.') }}</strong>
-                    <p>{{ _('Explorez les surfaces principales de HelpChain et les scénarios de déploiement.') }}</p>
+                    <strong>{{ _('La plateforme HelpChain réunit continuité opérationnelle, gouvernance et pilotage dans un même cadre.') }}</strong>
+                    <p>{{ _('Explorez l’infrastructure HelpChain et ses scénarios de déploiement institutionnel.') }}</p>
                   </div>
                   <div class="hc-nav-mega__links">
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Fonctionnement') }}</strong><span>{{ _('De la demande au suivi traçable.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Fonctionnement') }}</strong><span>{{ _('De la demande au suivi multi-acteurs traçable.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation est relancée et reste visible.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive et gouvernance.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive, gouvernance opérationnelle et continuité.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.offre') }}"><strong>{{ _('Offre') }}</strong><span>{{ _('Cadres pilote, professionnel et institutionnel.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Coordination pour CCAS, collectivités et associations.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi pour acteurs habilités.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Plateforme pour CCAS, collectivités et associations.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi structuré pour acteurs habilités.') }}</span></a>
                   </div>
                 </div>
               </div>
@@ -1595,9 +1614,9 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
       <div class="container">
         <div class="hc-footer__inner">
           <div class="hc-footer__brand">
-            <div class="hc-footer__copyright">&copy; {{ current_year|default(2026) }} HelpChain — Infrastructure de coordination sociale</div>
+            <div class="hc-footer__copyright">&copy; {{ current_year|default(2026) }} HelpChain — Plateforme de coordination opérationnelle</div>
             <p class="hc-footer__trust">
-              {{ _('Infrastructure sécurisée') }} · {{ _('Conformité RGPD') }} · {{ _('Sécurité renforcée') }} · {{ _('Conçu et opéré depuis la France') }}
+              {{ _('Infrastructure de continuité opérationnelle') }} · {{ _('Conformité RGPD') }} · {{ _('Coordination institutionnelle') }} · {{ _('Traçabilité native') }}
             </p>
           </div>
 
