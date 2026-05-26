@@ -117,6 +117,527 @@ msgstr ""
 msgid "Volunteer added successfully!"
 msgstr ""
 
+#: templates/simulation_operationnelle.html:2 templates/simulation_operationnelle.html:4
+#: templates/simulation_operationnelle.html:5 templates/simulation_operationnelle.html:18
+msgid "Simulation opérationnelle"
+msgstr "Simulation opérationnelle"
+
+#: templates/simulation_operationnelle.html:3
+msgid "Simulation opérationnelle HelpChain : continuité visible, relances structurées, signaux faibles, coordination multi-acteurs et mémoire opérationnelle dans le temps."
+msgstr "Simulation opérationnelle HelpChain : continuité visible, relances structurées, signaux faibles, coordination multi-acteurs et mémoire opérationnelle dans le temps."
+
+#: templates/simulation_operationnelle.html:6
+msgid "Aperçu de la page Simulation opérationnelle"
+msgstr "Aperçu de la page Simulation opérationnelle"
+
+#: templates/simulation_operationnelle.html:19
+msgid "Une situation ne disparaît plus dans le silence opérationnel"
+msgstr "Une situation ne disparaît plus dans le silence opérationnel"
+
+#: templates/simulation_operationnelle.html:21
+msgid "HelpChain structure la continuité opérationnelle dans le temps : suivi visible, relances ordonnées, points de coordination lisibles et mémoire institutionnelle consultable lorsque la situation ralentit ou change de mains."
+msgstr "HelpChain structure la continuité opérationnelle dans le temps : suivi visible, relances ordonnées, points de coordination lisibles et mémoire institutionnelle consultable lorsque la situation ralentit ou change de mains."
+
+#: templates/simulation_operationnelle.html:24
+msgid "Échanger sur un pilote"
+msgstr "Échanger sur un pilote"
+
+#: templates/simulation_operationnelle.html:25 templates/pilotage_indicateurs.html:177
+msgid "Voir le cadre de déploiement"
+msgstr "Voir le cadre de déploiement"
+
+#: templates/simulation_operationnelle.html:27
+msgid "Repères de continuité"
+msgstr "Repères de continuité"
+
+#: templates/simulation_operationnelle.html:28
+msgid "Relances visibles"
+msgstr "Relances visibles"
+
+#: templates/simulation_operationnelle.html:29
+msgid "Historique relisible"
+msgstr "Historique relisible"
+
+#: templates/simulation_operationnelle.html:30
+msgid "Responsabilités lisibles"
+msgstr "Responsabilités lisibles"
+
+#: templates/simulation_operationnelle.html:31
+msgid "Continuité inter-équipes"
+msgstr "Continuité inter-équipes"
+
+#: templates/simulation_operationnelle.html:37
+msgid "Lecture opérationnelle"
+msgstr "Lecture opérationnelle"
+
+#: templates/simulation_operationnelle.html:38
+msgid "Un suivi qui reste actif même lorsque le rythme ralentit."
+msgstr "Un suivi qui reste actif même lorsque le rythme ralentit."
+
+#: templates/simulation_operationnelle.html:40
+msgid "Entrée en suivi"
+msgstr "Entrée en suivi"
+
+#: templates/simulation_operationnelle.html:40
+msgid "La situation est enregistrée avec un cadre commun de lecture."
+msgstr "La situation est enregistrée avec un cadre commun de lecture."
+
+#: templates/simulation_operationnelle.html:41
+msgid "Ralentissement détecté"
+msgstr "Ralentissement détecté"
+
+#: templates/simulation_operationnelle.html:41
+msgid "L’absence d’évolution devient un signal visible et partagé."
+msgstr "L’absence d’évolution devient un signal visible et partagé."
+
+#: templates/simulation_operationnelle.html:42
+msgid "Relance structurée"
+msgstr "Relance structurée"
+
+#: templates/simulation_operationnelle.html:42
+msgid "Une action de reprise apparaît dans la file opérationnelle."
+msgstr "Une action de reprise apparaît dans la file opérationnelle."
+
+#: templates/simulation_operationnelle.html:43
+msgid "Continuité préservée"
+msgstr "Continuité préservée"
+
+#: templates/simulation_operationnelle.html:43
+msgid "Le pilotage retrouve une chronologie exploitable et une coordination lisible."
+msgstr "Le pilotage retrouve une chronologie exploitable et une coordination lisible."
+
+#: templates/simulation_operationnelle.html:51
+msgid "SIMULATION OPÉRATIONNELLE"
+msgstr "SIMULATION OPÉRATIONNELLE"
+
+#: templates/simulation_operationnelle.html:52
+msgid "Comment une situation reste visible dans la durée"
+msgstr "Comment une situation reste visible dans la durée"
+
+#: templates/simulation_operationnelle.html:54
+msgid "Ce scénario montre une séquence réaliste : une demande entre dans le dispositif, le suivi ralentit, un signal faible apparaît, la coordination reprend et la continuité redevient lisible."
+msgstr "Ce scénario montre une séquence réaliste : une demande entre dans le dispositif, le suivi ralentit, un signal faible apparaît, la coordination reprend et la continuité redevient lisible."
+
+#: templates/simulation_operationnelle.html:57
+msgid "Chronologie opérationnelle"
+msgstr "Chronologie opérationnelle"
+
+#: templates/simulation_operationnelle.html:60 templates/deploiement.html:127
+msgid "Jour 1"
+msgstr "Jour 1"
+
+#: templates/simulation_operationnelle.html:62
+msgid "Une demande est enregistrée"
+msgstr "Une demande est enregistrée"
+
+#: templates/simulation_operationnelle.html:64 templates/simulation_operationnelle.html:77
+#: templates/simulation_operationnelle.html:90 templates/simulation_operationnelle.html:103
+#: templates/simulation_operationnelle.html:116 templates/simulation_operationnelle.html:129
+msgid "État opérationnel"
+msgstr "État opérationnel"
+
+#: templates/simulation_operationnelle.html:64
+msgid "Situation ouverte et affectée à un premier cadre de suivi."
+msgstr "Situation ouverte et affectée à un premier cadre de suivi."
+
+#: templates/simulation_operationnelle.html:65 templates/simulation_operationnelle.html:78
+#: templates/simulation_operationnelle.html:91 templates/simulation_operationnelle.html:104
+#: templates/simulation_operationnelle.html:117 templates/simulation_operationnelle.html:130
+msgid "Signal visible"
+msgstr "Signal visible"
+
+#: templates/simulation_operationnelle.html:65
+msgid "Origine, date d’entrée et premier niveau de responsabilité sont tracés."
+msgstr "Origine, date d’entrée et premier niveau de responsabilité sont tracés."
+
+#: templates/simulation_operationnelle.html:66 templates/simulation_operationnelle.html:79
+#: templates/simulation_operationnelle.html:92 templates/simulation_operationnelle.html:105
+#: templates/simulation_operationnelle.html:118 templates/simulation_operationnelle.html:131
+msgid "Effet de coordination"
+msgstr "Effet de coordination"
+
+#: templates/simulation_operationnelle.html:66
+msgid "Les acteurs autorisés lisent la même base de départ."
+msgstr "Les acteurs autorisés lisent la même base de départ."
+
+#: templates/simulation_operationnelle.html:67 templates/simulation_operationnelle.html:80
+#: templates/simulation_operationnelle.html:93 templates/simulation_operationnelle.html:106
+#: templates/simulation_operationnelle.html:119 templates/simulation_operationnelle.html:132
+msgid "Conséquence institutionnelle"
+msgstr "Conséquence institutionnelle"
+
+#: templates/simulation_operationnelle.html:67
+msgid "La situation existe immédiatement dans une mémoire commune."
+msgstr "La situation existe immédiatement dans une mémoire commune."
+
+#: templates/simulation_operationnelle.html:73
+msgid "Jour 4"
+msgstr "Jour 4"
+
+#: templates/simulation_operationnelle.html:75
+msgid "Aucune évolution observée"
+msgstr "Aucune évolution observée"
+
+#: templates/simulation_operationnelle.html:77
+msgid "Le suivi reste ouvert, sans nouvelle action enregistrée."
+msgstr "Le suivi reste ouvert, sans nouvelle action enregistrée."
+
+#: templates/simulation_operationnelle.html:78
+msgid "Le temps écoulé depuis le dernier mouvement devient lisible."
+msgstr "Le temps écoulé depuis le dernier mouvement devient lisible."
+
+#: templates/simulation_operationnelle.html:79
+msgid "Le ralentissement n’est plus seulement perçu de manière informelle."
+msgstr "Le ralentissement n’est plus seulement perçu de manière informelle."
+
+#: templates/simulation_operationnelle.html:80
+msgid "Le silence opérationnel commence à être objectivé."
+msgstr "Le silence opérationnel commence à être objectivé."
+
+#: templates/simulation_operationnelle.html:86
+msgid "Jour 7"
+msgstr "Jour 7"
+
+#: templates/simulation_operationnelle.html:88
+msgid "Le système détecte un ralentissement de suivi"
+msgstr "Le système détecte un ralentissement de suivi"
+
+#: templates/simulation_operationnelle.html:90
+msgid "La situation rejoint les suivis à surveiller."
+msgstr "La situation rejoint les suivis à surveiller."
+
+#: templates/simulation_operationnelle.html:91
+msgid "Inactivité, délai répété ou absence de reprise deviennent des repères partagés."
+msgstr "Inactivité, délai répété ou absence de reprise deviennent des repères partagés."
+
+#: templates/simulation_operationnelle.html:92
+msgid "Le besoin de reprise peut être priorisé sans attendre une perte complète de visibilité."
+msgstr "Le besoin de reprise peut être priorisé sans attendre une perte complète de visibilité."
+
+#: templates/simulation_operationnelle.html:93
+msgid "Le risque de rupture de continuité remonte avant la disparition du dossier."
+msgstr "Le risque de rupture de continuité remonte avant la disparition du dossier."
+
+#: templates/simulation_operationnelle.html:99 templates/deploiement.html:145
+msgid "Jour 8"
+msgstr "Jour 8"
+
+#: templates/simulation_operationnelle.html:101
+msgid "Une relance apparaît dans la file opérationnelle"
+msgstr "Une relance apparaît dans la file opérationnelle"
+
+#: templates/simulation_operationnelle.html:103
+msgid "Une action de reprise est rendue visible au bon niveau de suivi."
+msgstr "Une action de reprise est rendue visible au bon niveau de suivi."
+
+#: templates/simulation_operationnelle.html:104
+msgid "La relance n’est plus dissoute dans des messages séparés ou des notes locales."
+msgstr "La relance n’est plus dissoute dans des messages séparés ou des notes locales."
+
+#: templates/simulation_operationnelle.html:105
+msgid "Le coordinateur peut arbitrer, réassigner ou rappeler l’échéance."
+msgstr "Le coordinateur peut arbitrer, réassigner ou rappeler l’échéance."
+
+#: templates/simulation_operationnelle.html:106
+msgid "La reprise devient pilotable et traçable."
+msgstr "La reprise devient pilotable et traçable."
+
+#: templates/simulation_operationnelle.html:112
+msgid "Jour 10"
+msgstr "Jour 10"
+
+#: templates/simulation_operationnelle.html:114
+msgid "Un intervenant reprend la situation"
+msgstr "Un intervenant reprend la situation"
+
+#: templates/simulation_operationnelle.html:116
+msgid "Une nouvelle action est enregistrée avec son contexte."
+msgstr "Une nouvelle action est enregistrée avec son contexte."
+
+#: templates/simulation_operationnelle.html:117
+msgid "La chronologie redémarre à partir d’un point partagé."
+msgstr "La chronologie redémarre à partir d’un point partagé."
+
+#: templates/simulation_operationnelle.html:118
+msgid "Les autres acteurs voient ce qui a été repris, sans reconstituer l’historique."
+msgstr "Les autres acteurs voient ce qui a été repris, sans reconstituer l’historique."
+
+#: templates/simulation_operationnelle.html:119
+msgid "La continuité survit à l’attente et au changement d’interlocuteur."
+msgstr "La continuité survit à l’attente et au changement d’interlocuteur."
+
+#: templates/simulation_operationnelle.html:125
+msgid "Jour 12"
+msgstr "Jour 12"
+
+#: templates/simulation_operationnelle.html:127
+msgid "Le pilotage retrouve une continuité visible"
+msgstr "Le pilotage retrouve une continuité visible"
+
+#: templates/simulation_operationnelle.html:129
+msgid "La situation reste active avec une lecture claire des décisions et prochaines étapes."
+msgstr "La situation reste active avec une lecture claire des décisions et prochaines étapes."
+
+#: templates/simulation_operationnelle.html:130
+msgid "Les relances passées, la reprise et l’état présent sont relisibles ensemble."
+msgstr "Les relances passées, la reprise et l’état présent sont relisibles ensemble."
+
+#: templates/simulation_operationnelle.html:131
+msgid "Les responsables de structure retrouvent une vision partageable du suivi."
+msgstr "Les responsables de structure retrouvent une vision partageable du suivi."
+
+#: templates/simulation_operationnelle.html:132
+msgid "La continuité est maintenue sans dépendre d’une seule mémoire individuelle."
+msgstr "La continuité est maintenue sans dépendre d’une seule mémoire individuelle."
+
+#: templates/simulation_operationnelle.html:138
+msgid "Approfondir ce scénario opérationnel"
+msgstr "Approfondir ce scénario opérationnel"
+
+#: templates/simulation_operationnelle.html:145
+msgid "AVANT / APRÈS"
+msgstr "AVANT / APRÈS"
+
+#: templates/simulation_operationnelle.html:146
+msgid "Une continuité plus lisible dans les opérations réelles"
+msgstr "Une continuité plus lisible dans les opérations réelles"
+
+#: templates/simulation_operationnelle.html:148
+msgid "La différence ne porte pas sur une promesse abstraite. Elle porte sur la façon dont une situation reste suivie, relancée et relisible lorsque plusieurs acteurs interviennent dans le temps."
+msgstr "La différence ne porte pas sur une promesse abstraite. Elle porte sur la façon dont une situation reste suivie, relancée et relisible lorsque plusieurs acteurs interviennent dans le temps."
+
+#: templates/simulation_operationnelle.html:153
+msgid "Avant"
+msgstr "Avant"
+
+#: templates/simulation_operationnelle.html:155
+msgid "suivi dispersé"
+msgstr "suivi dispersé"
+
+#: templates/simulation_operationnelle.html:156
+msgid "relances perdues"
+msgstr "relances perdues"
+
+#: templates/simulation_operationnelle.html:157
+msgid "historique fragmenté"
+msgstr "historique fragmenté"
+
+#: templates/simulation_operationnelle.html:158
+msgid "dépendance humaine"
+msgstr "dépendance humaine"
+
+#: templates/simulation_operationnelle.html:159
+msgid "faible visibilité"
+msgstr "faible visibilité"
+
+#: templates/simulation_operationnelle.html:164
+msgid "Après HelpChain"
+msgstr "Après HelpChain"
+
+#: templates/simulation_operationnelle.html:166
+msgid "continuité visible"
+msgstr "continuité visible"
+
+#: templates/simulation_operationnelle.html:167
+msgid "relances structurées"
+msgstr "relances structurées"
+
+#: templates/simulation_operationnelle.html:168
+msgid "mémoire opérationnelle"
+msgstr "mémoire opérationnelle"
+
+#: templates/simulation_operationnelle.html:169
+msgid "coordination lisible"
+msgstr "coordination lisible"
+
+#: templates/simulation_operationnelle.html:170
+msgid "priorisation plus claire"
+msgstr "priorisation plus claire"
+
+#: templates/simulation_operationnelle.html:179
+msgid "SIGNAUX FAIBLES"
+msgstr "SIGNAUX FAIBLES"
+
+#: templates/simulation_operationnelle.html:180
+msgid "Les ralentissements deviennent des éléments de pilotage"
+msgstr "Les ralentissements deviennent des éléments de pilotage"
+
+#: templates/simulation_operationnelle.html:182
+msgid "HelpChain ne remplace pas l’analyse humaine. La plateforme rend visibles des situations qui, sans cadre commun, restent souvent dispersées entre relances isolées, souvenirs d’équipe et points de coordination tardifs."
+msgstr "HelpChain ne remplace pas l’analyse humaine. La plateforme rend visibles des situations qui, sans cadre commun, restent souvent dispersées entre relances isolées, souvenirs d’équipe et points de coordination tardifs."
+
+#: templates/simulation_operationnelle.html:187
+msgid "Inactivité"
+msgstr "Inactivité"
+
+#: templates/simulation_operationnelle.html:188
+msgid "Une situation reste ouverte sans mouvement observable sur une durée significative."
+msgstr "Une situation reste ouverte sans mouvement observable sur une durée significative."
+
+#: templates/simulation_operationnelle.html:191
+msgid "Retards répétés"
+msgstr "Retards répétés"
+
+#: templates/simulation_operationnelle.html:192
+msgid "Les mêmes échéances se décalent ou les relances se répètent sans stabilisation du suivi."
+msgstr "Les mêmes échéances se décalent ou les relances se répètent sans stabilisation du suivi."
+
+#: templates/simulation_operationnelle.html:195
+msgid "Coordination bloquée"
+msgstr "Coordination bloquée"
+
+#: templates/simulation_operationnelle.html:196
+msgid "Plusieurs acteurs interviennent, mais la situation n’avance plus de façon lisible."
+msgstr "Plusieurs acteurs interviennent, mais la situation n’avance plus de façon lisible."
+
+#: templates/simulation_operationnelle.html:199
+msgid "Situations territoriales récurrentes"
+msgstr "Situations territoriales récurrentes"
+
+#: templates/simulation_operationnelle.html:200
+msgid "Des cas comparables reviennent sur un même périmètre et justifient une lecture plus consolidée."
+msgstr "Des cas comparables reviennent sur un même périmètre et justifient une lecture plus consolidée."
+
+#: templates/simulation_operationnelle.html:203
+msgid "Acteurs surchargés"
+msgstr "Acteurs surchargés"
+
+#: templates/simulation_operationnelle.html:204
+msgid "L’accumulation de suivis en attente ou à relancer signale une tension opérationnelle concrète."
+msgstr "L’accumulation de suivis en attente ou à relancer signale une tension opérationnelle concrète."
+
+#: templates/simulation_operationnelle.html:207
+msgid "Effet de surface"
+msgstr "Effet de surface"
+
+#: templates/simulation_operationnelle.html:208
+msgid "Ces repères remontent dans le pilotage pour soutenir une reprise, un arbitrage ou une réallocation de suivi."
+msgstr "Ces repères remontent dans le pilotage pour soutenir une reprise, un arbitrage ou une réallocation de suivi."
+
+#: templates/simulation_operationnelle.html:217
+msgid "CONTINUITÉ MULTI-ACTEURS"
+msgstr "CONTINUITÉ MULTI-ACTEURS"
+
+#: templates/simulation_operationnelle.html:218
+msgid "Une même situation reste suivable par plusieurs rôles"
+msgstr "Une même situation reste suivable par plusieurs rôles"
+
+#: templates/simulation_operationnelle.html:220
+msgid "Dans une séquence opérationnelle ordinaire, plusieurs personnes interviennent successivement ou en parallèle. HelpChain rend cette continuité lisible sans demander à chacun de reconstruire ce qui a déjà été fait."
+msgstr "Dans une séquence opérationnelle ordinaire, plusieurs personnes interviennent successivement ou en parallèle. HelpChain rend cette continuité lisible sans demander à chacun de reconstruire ce qui a déjà été fait."
+
+#: templates/simulation_operationnelle.html:224
+msgid "Chaîne de coordination"
+msgstr "Chaîne de coordination"
+
+#: templates/simulation_operationnelle.html:225
+msgid "association"
+msgstr "association"
+
+#: templates/simulation_operationnelle.html:226
+msgid "coordinateur"
+msgstr "coordinateur"
+
+#: templates/simulation_operationnelle.html:227
+msgid "intervenant"
+msgstr "intervenant"
+
+#: templates/simulation_operationnelle.html:228
+msgid "responsable structure"
+msgstr "responsable structure"
+
+#: templates/simulation_operationnelle.html:231
+msgid "La continuité survit à l’absence, au turnover, au suivi différé et à la coordination entre plusieurs équipes parce que les décisions, les relances et les reprises restent visibles dans une même chronologie."
+msgstr "La continuité survit à l’absence, au turnover, au suivi différé et à la coordination entre plusieurs équipes parce que les décisions, les relances et les reprises restent visibles dans une même chronologie."
+
+#: templates/simulation_operationnelle.html:233
+msgid "absence"
+msgstr "absence"
+
+#: templates/simulation_operationnelle.html:234
+msgid "turnover"
+msgstr "turnover"
+
+#: templates/simulation_operationnelle.html:235
+msgid "suivi retardé"
+msgstr "suivi retardé"
+
+#: templates/simulation_operationnelle.html:236
+msgid "coordination multi-équipes"
+msgstr "coordination multi-équipes"
+
+#: templates/simulation_operationnelle.html:244
+msgid "MÉMOIRE INSTITUTIONNELLE"
+msgstr "MÉMOIRE INSTITUTIONNELLE"
+
+#: templates/simulation_operationnelle.html:245
+msgid "La situation reste relisible dans le temps"
+msgstr "La situation reste relisible dans le temps"
+
+#: templates/simulation_operationnelle.html:247
+msgid "La valeur opérationnelle ne se limite pas au moment où une action est faite. Elle réside aussi dans la capacité à relire, comprendre et gouverner ce qui s’est passé plusieurs jours ou plusieurs semaines plus tard."
+msgstr "La valeur opérationnelle ne se limite pas au moment où une action est faite. Elle réside aussi dans la capacité à relire, comprendre et gouverner ce qui s’est passé plusieurs jours ou plusieurs semaines plus tard."
+
+#: templates/simulation_operationnelle.html:251
+msgid "Décisions"
+msgstr "Décisions"
+
+#: templates/simulation_operationnelle.html:252
+msgid "Les arbitrages restent associés au contexte dans lequel ils ont été pris."
+msgstr "Les arbitrages restent associés au contexte dans lequel ils ont été pris."
+
+#: templates/simulation_operationnelle.html:255
+msgid "Relances"
+msgstr "Relances"
+
+#: templates/simulation_operationnelle.html:256
+msgid "Les rappels effectués et les reprises attendues restent visibles au fil du temps."
+msgstr "Les rappels effectués et les reprises attendues restent visibles au fil du temps."
+
+#: templates/simulation_operationnelle.html:259
+msgid "Actions"
+msgstr "Actions"
+
+#: templates/simulation_operationnelle.html:260
+msgid "Chaque étape utile contribue à une lecture partagée du suivi réel."
+msgstr "Chaque étape utile contribue à une lecture partagée du suivi réel."
+
+#: templates/simulation_operationnelle.html:263
+msgid "Chronologie"
+msgstr "Chronologie"
+
+#: templates/simulation_operationnelle.html:264
+msgid "La séquence des événements reste compréhensible sans reconstitution manuelle."
+msgstr "La séquence des événements reste compréhensible sans reconstitution manuelle."
+
+#: templates/simulation_operationnelle.html:267
+msgid "Visibilité de gouvernance"
+msgstr "Visibilité de gouvernance"
+
+#: templates/simulation_operationnelle.html:268
+msgid "Les responsables disposent d’une lecture plus fiable de la continuité et des points de fragilité."
+msgstr "Les responsables disposent d’une lecture plus fiable de la continuité et des points de fragilité."
+
+#: templates/simulation_operationnelle.html:277
+msgid "Pilotage opérationnel"
+msgstr "Pilotage opérationnel"
+
+#: templates/simulation_operationnelle.html:278
+msgid "Voir comment ce pilotage peut s’installer dans votre structure"
+msgstr "Voir comment ce pilotage peut s’installer dans votre structure"
+
+#: templates/simulation_operationnelle.html:279
+msgid "Nous cadrons avec vous un premier périmètre, les rôles concernés et les situations à suivre pour tester une continuité opérationnelle réaliste, progressive et gouvernable."
+msgstr "Nous cadrons avec vous un premier périmètre, les rôles concernés et les situations à suivre pour tester une continuité opérationnelle réaliste, progressive et gouvernable."
+
+#: templates/base.html:655 templates/base.html:707
+msgid "Visualiser comment une situation ralentit, est relancée puis retrouve une continuité visible."
+msgstr "Visualiser comment une situation ralentit, est relancée puis retrouve une continuité visible."
+
+#: templates/base.html:653 templates/base.html:704
+msgid "Voir comment une situation est relancée et reste visible."
+msgstr "Voir comment une situation est relancée et reste visible."
+
 #: backend/helpchain_backend/src/routes/admin.py:4209
 msgid "Volunteer deleted successfully!"
 msgstr ""

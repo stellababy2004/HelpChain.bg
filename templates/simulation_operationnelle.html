@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Simulation opérationnelle") }} | HelpChain{% endblock %}
+{% block meta_description %}{{ _("Simulation opérationnelle HelpChain : continuité visible, relances structurées, signaux faibles, coordination multi-acteurs et mémoire opérationnelle dans le temps.") }}{% endblock %}
+{% block og_title %}{{ _("Simulation opérationnelle") }}{% endblock %}
+{% block og_image %}{{ og_image_url('og-home-1200x630.jpg') }}{% endblock %}
+{% block og_image_alt %}{{ _("Aperçu de la page Simulation opérationnelle") }}{% endblock %}
+{% block body_class %}hc-page-trust hc-page-simulation-operationnelle{% endblock %}
+
+{% block extra_css %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/simulation-operationnelle.css') }}">
+{% endblock %}
+
+{% block content %}
+<main class="hc-trust-page hc-simop">
+  <section class="hc-trust-page__hero">
+    <div class="hc-trust-page__shell hc-trust-page__hero-grid">
+      <div class="hc-trust-page__hero-copy">
+        <p class="hc-trust-page__eyebrow">{{ _("Simulation opérationnelle") }}</p>
+        <h1>{{ _("Une situation ne disparaît plus dans le silence opérationnel") }}</h1>
+        <p class="hc-trust-page__lead">
+          {{ _("HelpChain structure la continuité opérationnelle dans le temps : suivi visible, relances ordonnées, points de coordination lisibles et mémoire institutionnelle consultable lorsque la situation ralentit ou change de mains.") }}
+        </p>
+        <div class="hc-trust-page__actions">
+          <a href="/demo" class="hc-btn hc-btn--primary btn btn-primary" data-hc-event="simulation_pilot_cta_clicked" data-hc-cta="hero_pilot_exchange" data-hc-intent="pilot">{{ _("Échanger sur un pilote") }}</a>
+          <a href="{{ url_for('main.deploiement') }}" class="hc-btn hc-btn--ghost btn btn-secondary" data-hc-event="simulation_deployment_cta_clicked" data-hc-cta="hero_deployment_frame" data-hc-intent="deployment">{{ _("Voir le cadre de déploiement") }}</a>
+        </div>
+        <ul class="hc-trust-page__chips" aria-label="{{ _('Repères de continuité') }}">
+          <li>{{ _("Relances visibles") }}</li>
+          <li>{{ _("Historique relisible") }}</li>
+          <li>{{ _("Responsabilités lisibles") }}</li>
+          <li>{{ _("Continuité inter-équipes") }}</li>
+        </ul>
+      </div>
+
+      <aside class="hc-trust-page__hero-panel">
+        <div class="hc-trust-page__panel-card">
+          <div class="hc-trust-page__panel-head">
+            <span>{{ _("Lecture opérationnelle") }}</span>
+            <strong>{{ _("Un suivi qui reste actif même lorsque le rythme ralentit.") }}</strong>
+          </div>
+          <ol class="hc-trust-page__timeline-mini">
+            <li><strong>{{ _("Entrée en suivi") }}</strong><span>{{ _("La situation est enregistrée avec un cadre commun de lecture.") }}</span></li>
+            <li><strong>{{ _("Ralentissement détecté") }}</strong><span>{{ _("L’absence d’évolution devient un signal visible et partagé.") }}</span></li>
+            <li><strong>{{ _("Relance structurée") }}</strong><span>{{ _("Une action de reprise apparaît dans la file opérationnelle.") }}</span></li>
+            <li><strong>{{ _("Continuité préservée") }}</strong><span>{{ _("Le pilotage retrouve une chronologie exploitable et une coordination lisible.") }}</span></li>
+          </ol>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="hc-trust-page__section hc-trust-page__section--soft" aria-labelledby="hc-simop-timeline-title">
+    <div class="hc-trust-page__shell">
+      <div class="hc-case-study hc-simop__timeline-block">
+        <p class="hc-case-study__eyebrow">{{ _("SIMULATION OPÉRATIONNELLE") }}</p>
+        <h2 id="hc-simop-timeline-title" class="hc-case-study__title">{{ _("Comment une situation reste visible dans la durée") }}</h2>
+        <p class="hc-case-study__intro">
+          {{ _("Ce scénario montre une séquence réaliste : une demande entre dans le dispositif, le suivi ralentit, un signal faible apparaît, la coordination reprend et la continuité redevient lisible.") }}
+        </p>
+
+        <div class="hc-simop__timeline" aria-label="{{ _('Chronologie opérationnelle') }}">
+          <article class="hc-simop__step">
+            <p class="hc-simop__day">{{ _("Jour 1") }}</p>
+            <div class="hc-simop__card">
+              <h3>{{ _("Une demande est enregistrée") }}</h3>
+              <dl class="hc-simop__details">
+                <div><dt>{{ _("État opérationnel") }}</dt><dd>{{ _("Situation ouverte et affectée à un premier cadre de suivi.") }}</dd></div>
+                <div><dt>{{ _("Signal visible") }}</dt><dd>{{ _("Origine, date d’entrée et premier niveau de responsabilité sont tracés.") }}</dd></div>
+                <div><dt>{{ _("Effet de coordination") }}</dt><dd>{{ _("Les acteurs autorisés lisent la même base de départ.") }}</dd></div>
+                <div><dt>{{ _("Conséquence institutionnelle") }}</dt><dd>{{ _("La situation existe immédiatement dans une mémoire commune.") }}</dd></div>
+              </dl>
+            </div>
+          </article>
+
+          <article class="hc-simop__step">
+            <p class="hc-simop__day">{{ _("Jour 4") }}</p>
+            <div class="hc-simop__card">
+              <h3>{{ _("Aucune évolution observée") }}</h3>
+              <dl class="hc-simop__details">
+                <div><dt>{{ _("État opérationnel") }}</dt><dd>{{ _("Le suivi reste ouvert, sans nouvelle action enregistrée.") }}</dd></div>
+                <div><dt>{{ _("Signal visible") }}</dt><dd>{{ _("Le temps écoulé depuis le dernier mouvement devient lisible.") }}</dd></div>
+                <div><dt>{{ _("Effet de coordination") }}</dt><dd>{{ _("Le ralentissement n’est plus seulement perçu de manière informelle.") }}</dd></div>
+                <div><dt>{{ _("Conséquence institutionnelle") }}</dt><dd>{{ _("Le silence opérationnel commence à être objectivé.") }}</dd></div>
+              </dl>
+            </div>
+          </article>
+
+          <article class="hc-simop__step">
+            <p class="hc-simop__day">{{ _("Jour 7") }}</p>
+            <div class="hc-simop__card">
+              <h3>{{ _("Le système détecte un ralentissement de suivi") }}</h3>
+              <dl class="hc-simop__details">
+                <div><dt>{{ _("État opérationnel") }}</dt><dd>{{ _("La situation rejoint les suivis à surveiller.") }}</dd></div>
+                <div><dt>{{ _("Signal visible") }}</dt><dd>{{ _("Inactivité, délai répété ou absence de reprise deviennent des repères partagés.") }}</dd></div>
+                <div><dt>{{ _("Effet de coordination") }}</dt><dd>{{ _("Le besoin de reprise peut être priorisé sans attendre une perte complète de visibilité.") }}</dd></div>
+                <div><dt>{{ _("Conséquence institutionnelle") }}</dt><dd>{{ _("Le risque de rupture de continuité remonte avant la disparition du dossier.") }}</dd></div>
+              </dl>
+            </div>
+          </article>
+
+          <article class="hc-simop__step">
+            <p class="hc-simop__day">{{ _("Jour 8") }}</p>
+            <div class="hc-simop__card">
+              <h3>{{ _("Une relance apparaît dans la file opérationnelle") }}</h3>
+              <dl class="hc-simop__details">
+                <div><dt>{{ _("État opérationnel") }}</dt><dd>{{ _("Une action de reprise est rendue visible au bon niveau de suivi.") }}</dd></div>
+                <div><dt>{{ _("Signal visible") }}</dt><dd>{{ _("La relance n’est plus dissoute dans des messages séparés ou des notes locales.") }}</dd></div>
+                <div><dt>{{ _("Effet de coordination") }}</dt><dd>{{ _("Le coordinateur peut arbitrer, réassigner ou rappeler l’échéance.") }}</dd></div>
+                <div><dt>{{ _("Conséquence institutionnelle") }}</dt><dd>{{ _("La reprise devient pilotable et traçable.") }}</dd></div>
+              </dl>
+            </div>
+          </article>
+
+          <article class="hc-simop__step">
+            <p class="hc-simop__day">{{ _("Jour 10") }}</p>
+            <div class="hc-simop__card">
+              <h3>{{ _("Un intervenant reprend la situation") }}</h3>
+              <dl class="hc-simop__details">
+                <div><dt>{{ _("État opérationnel") }}</dt><dd>{{ _("Une nouvelle action est enregistrée avec son contexte.") }}</dd></div>
+                <div><dt>{{ _("Signal visible") }}</dt><dd>{{ _("La chronologie redémarre à partir d’un point partagé.") }}</dd></div>
+                <div><dt>{{ _("Effet de coordination") }}</dt><dd>{{ _("Les autres acteurs voient ce qui a été repris, sans reconstituer l’historique.") }}</dd></div>
+                <div><dt>{{ _("Conséquence institutionnelle") }}</dt><dd>{{ _("La continuité survit à l’attente et au changement d’interlocuteur.") }}</dd></div>
+              </dl>
+            </div>
+          </article>
+
+          <article class="hc-simop__step">
+            <p class="hc-simop__day">{{ _("Jour 12") }}</p>
+            <div class="hc-simop__card">
+              <h3>{{ _("Le pilotage retrouve une continuité visible") }}</h3>
+              <dl class="hc-simop__details">
+                <div><dt>{{ _("État opérationnel") }}</dt><dd>{{ _("La situation reste active avec une lecture claire des décisions et prochaines étapes.") }}</dd></div>
+                <div><dt>{{ _("Signal visible") }}</dt><dd>{{ _("Les relances passées, la reprise et l’état présent sont relisibles ensemble.") }}</dd></div>
+                <div><dt>{{ _("Effet de coordination") }}</dt><dd>{{ _("Les responsables de structure retrouvent une vision partageable du suivi.") }}</dd></div>
+                <div><dt>{{ _("Conséquence institutionnelle") }}</dt><dd>{{ _("La continuité est maintenue sans dépendre d’une seule mémoire individuelle.") }}</dd></div>
+              </dl>
+            </div>
+          </article>
+        </div>
+
+        <div class="hc-case-study__actions">
+          <a href="/demo" class="hc-btn hc-btn--ghost btn btn-secondary" data-hc-event="simulation_timeline_engaged" data-hc-cta="timeline_operational_walkthrough" data-hc-intent="operational_fit">{{ _("Approfondir ce scénario opérationnel") }}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hc-trust-page__section hc-trust-page__section--compact" aria-labelledby="hc-simop-before-after-title">
+    <div class="hc-trust-page__shell">
+      <div class="hc-deploiement__comparison hc-trust-layer">
+        <p class="hc-trust-layer__eyebrow">{{ _("AVANT / APRÈS") }}</p>
+        <h2 id="hc-simop-before-after-title" class="hc-trust-layer__title">{{ _("Une continuité plus lisible dans les opérations réelles") }}</h2>
+        <p class="hc-trust-layer__intro">
+          {{ _("La différence ne porte pas sur une promesse abstraite. Elle porte sur la façon dont une situation reste suivie, relancée et relisible lorsque plusieurs acteurs interviennent dans le temps.") }}
+        </p>
+
+        <div class="hc-deploiement__comparison-grid">
+          <article class="hc-deploiement__comparison-card">
+            <h3>{{ _("Avant") }}</h3>
+            <ul class="hc-deploiement__comparison-list">
+              <li>{{ _("suivi dispersé") }}</li>
+              <li>{{ _("relances perdues") }}</li>
+              <li>{{ _("historique fragmenté") }}</li>
+              <li>{{ _("dépendance humaine") }}</li>
+              <li>{{ _("faible visibilité") }}</li>
+            </ul>
+          </article>
+
+          <article class="hc-deploiement__comparison-card hc-deploiement__comparison-card--positive">
+            <h3>{{ _("Après HelpChain") }}</h3>
+            <ul class="hc-deploiement__comparison-list">
+              <li>{{ _("continuité visible") }}</li>
+              <li>{{ _("relances structurées") }}</li>
+              <li>{{ _("mémoire opérationnelle") }}</li>
+              <li>{{ _("coordination lisible") }}</li>
+              <li>{{ _("priorisation plus claire") }}</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hc-trust-page__section hc-trust-page__section--compact" aria-labelledby="hc-simop-signals-title">
+    <div class="hc-trust-page__shell">
+      <div class="hc-trust-layer">
+        <p class="hc-trust-layer__eyebrow">{{ _("SIGNAUX FAIBLES") }}</p>
+        <h2 id="hc-simop-signals-title" class="hc-trust-layer__title">{{ _("Les ralentissements deviennent des éléments de pilotage") }}</h2>
+        <p class="hc-trust-layer__intro">
+          {{ _("HelpChain ne remplace pas l’analyse humaine. La plateforme rend visibles des situations qui, sans cadre commun, restent souvent dispersées entre relances isolées, souvenirs d’équipe et points de coordination tardifs.") }}
+        </p>
+        <div class="hc-trust-layer__grid">
+          <article class="hc-trust-card">
+            <h3 class="hc-trust-card__title">{{ _("Inactivité") }}</h3>
+            <p class="hc-trust-card__text">{{ _("Une situation reste ouverte sans mouvement observable sur une durée significative.") }}</p>
+          </article>
+          <article class="hc-trust-card">
+            <h3 class="hc-trust-card__title">{{ _("Retards répétés") }}</h3>
+            <p class="hc-trust-card__text">{{ _("Les mêmes échéances se décalent ou les relances se répètent sans stabilisation du suivi.") }}</p>
+          </article>
+          <article class="hc-trust-card">
+            <h3 class="hc-trust-card__title">{{ _("Coordination bloquée") }}</h3>
+            <p class="hc-trust-card__text">{{ _("Plusieurs acteurs interviennent, mais la situation n’avance plus de façon lisible.") }}</p>
+          </article>
+          <article class="hc-trust-card">
+            <h3 class="hc-trust-card__title">{{ _("Situations territoriales récurrentes") }}</h3>
+            <p class="hc-trust-card__text">{{ _("Des cas comparables reviennent sur un même périmètre et justifient une lecture plus consolidée.") }}</p>
+          </article>
+          <article class="hc-trust-card">
+            <h3 class="hc-trust-card__title">{{ _("Acteurs surchargés") }}</h3>
+            <p class="hc-trust-card__text">{{ _("L’accumulation de suivis en attente ou à relancer signale une tension opérationnelle concrète.") }}</p>
+          </article>
+          <article class="hc-trust-card">
+            <h3 class="hc-trust-card__title">{{ _("Effet de surface") }}</h3>
+            <p class="hc-trust-card__text">{{ _("Ces repères remontent dans le pilotage pour soutenir une reprise, un arbitrage ou une réallocation de suivi.") }}</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hc-trust-page__section hc-trust-page__section--soft" aria-labelledby="hc-simop-actors-title">
+    <div class="hc-trust-page__shell">
+      <div class="hc-case-study hc-simop__actors-block">
+        <p class="hc-case-study__eyebrow">{{ _("CONTINUITÉ MULTI-ACTEURS") }}</p>
+        <h2 id="hc-simop-actors-title" class="hc-case-study__title">{{ _("Une même situation reste suivable par plusieurs rôles") }}</h2>
+        <p class="hc-case-study__intro">
+          {{ _("Dans une séquence opérationnelle ordinaire, plusieurs personnes interviennent successivement ou en parallèle. HelpChain rend cette continuité lisible sans demander à chacun de reconstruire ce qui a déjà été fait.") }}
+        </p>
+
+        <div class="hc-simop__actor-grid">
+          <div class="hc-simop__actor-flow" aria-label="{{ _('Chaîne de coordination') }}">
+            <div class="hc-simop__actor">{{ _("association") }}</div>
+            <div class="hc-simop__actor">{{ _("coordinateur") }}</div>
+            <div class="hc-simop__actor">{{ _("intervenant") }}</div>
+            <div class="hc-simop__actor">{{ _("responsable structure") }}</div>
+          </div>
+          <div class="hc-simop__actor-copy">
+            <p>{{ _("La continuité survit à l’absence, au turnover, au suivi différé et à la coordination entre plusieurs équipes parce que les décisions, les relances et les reprises restent visibles dans une même chronologie.") }}</p>
+            <ul class="hc-simop__bullet-list">
+              <li>{{ _("absence") }}</li>
+              <li>{{ _("turnover") }}</li>
+              <li>{{ _("suivi retardé") }}</li>
+              <li>{{ _("coordination multi-équipes") }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hc-trust-page__section hc-trust-page__section--compact" aria-labelledby="hc-simop-memory-title">
+    <div class="hc-trust-page__shell">
+      <div class="hc-trust-layer">
+        <p class="hc-trust-layer__eyebrow">{{ _("MÉMOIRE INSTITUTIONNELLE") }}</p>
+        <h2 id="hc-simop-memory-title" class="hc-trust-layer__title">{{ _("La situation reste relisible dans le temps") }}</h2>
+        <p class="hc-trust-layer__intro">
+          {{ _("La valeur opérationnelle ne se limite pas au moment où une action est faite. Elle réside aussi dans la capacité à relire, comprendre et gouverner ce qui s’est passé plusieurs jours ou plusieurs semaines plus tard.") }}
+        </p>
+        <div class="hc-simop__memory-grid">
+          <article class="hc-simop__memory-card">
+            <h3>{{ _("Décisions") }}</h3>
+            <p>{{ _("Les arbitrages restent associés au contexte dans lequel ils ont été pris.") }}</p>
+          </article>
+          <article class="hc-simop__memory-card">
+            <h3>{{ _("Relances") }}</h3>
+            <p>{{ _("Les rappels effectués et les reprises attendues restent visibles au fil du temps.") }}</p>
+          </article>
+          <article class="hc-simop__memory-card">
+            <h3>{{ _("Actions") }}</h3>
+            <p>{{ _("Chaque étape utile contribue à une lecture partagée du suivi réel.") }}</p>
+          </article>
+          <article class="hc-simop__memory-card">
+            <h3>{{ _("Chronologie") }}</h3>
+            <p>{{ _("La séquence des événements reste compréhensible sans reconstitution manuelle.") }}</p>
+          </article>
+          <article class="hc-simop__memory-card">
+            <h3>{{ _("Visibilité de gouvernance") }}</h3>
+            <p>{{ _("Les responsables disposent d’une lecture plus fiable de la continuité et des points de fragilité.") }}</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hc-trust-page__section hc-trust-page__section--cta-light">
+    <div class="hc-trust-page__shell">
+      <div class="hc-trust-page__cta-card">
+        <div>
+          <p>{{ _("Pilotage opérationnel") }}</p>
+          <h2>{{ _("Voir comment ce pilotage peut s’installer dans votre structure") }}</h2>
+          <p>{{ _("Nous cadrons avec vous un premier périmètre, les rôles concernés et les situations à suivre pour tester une continuité opérationnelle réaliste, progressive et gouvernable.") }}</p>
+        </div>
+        <div class="hc-trust-page__actions hc-trust-page__actions--stacked">
+          <a href="/demo" class="hc-btn hc-btn--primary btn btn-primary" data-hc-event="simulation_operational_interest" data-hc-cta="final_pilot_access" data-hc-intent="pilot">{{ _("Demander un accès pilote") }}</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

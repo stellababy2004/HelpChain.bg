@@ -5329,6 +5329,11 @@ def deploiement():
     return render_template("deploiement.html")
 
 
+@main_bp.get("/simulation-operationnelle")
+def simulation_operationnelle():
+    return render_template("simulation_operationnelle.html")
+
+
 def _safe_get_model(name: str):
     try:
         from .. import models as route_models
