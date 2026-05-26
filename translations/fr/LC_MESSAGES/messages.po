@@ -451,6 +451,9 @@ msgstr "Assurer une continuité opérationnelle grâce à la traçabilité des a
 msgid "Pilotage opérationnel"
 msgstr "Pilotage opérationnel"
 
+msgid "Pilotage opÃ©rationnel"
+msgstr "Pilotage opérationnel"
+
 #: templates/about.html:100
 msgid "Offrir une visibilité terrain via des indicateurs, des alertes et une gouvernance de traitement."
 msgstr "Offrir une visibilité terrain via des indicateurs, des alertes et une gouvernance de traitement."
