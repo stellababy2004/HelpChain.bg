@@ -9402,3 +9402,47 @@ msgstr "Aucune prochaine action fondateur pour le moment"
 
 msgid "Action sequencing will appear here once institutional opportunities require continuity."
 msgstr "Le séquencement des actions apparaîtra ici dès que les opportunités institutionnelles exigeront une continuité."
+msgid "Un suivi qui ne laisse pas les signaux se perdre"
+msgstr "Un suivi qui ne laisse pas les signaux se perdre"
+
+msgid "HelpChain aide les équipes à conserver une lecture claire des situations, des suivis à réaliser et des signaux qui se répètent dans le temps. L’objectif n’est pas d’ajouter un tableau de plus, mais de rendre les priorités plus lisibles."
+msgstr "HelpChain aide les équipes à conserver une lecture claire des situations, des suivis à réaliser et des signaux qui se répètent dans le temps. L’objectif n’est pas d’ajouter un tableau de plus, mais de rendre les priorités plus lisibles."
+
+msgid "Prioriser les suivis"
+msgstr "Prioriser les suivis"
+
+msgid "Identifier les situations qui nécessitent une relance ou une attention opérationnelle."
+msgstr "Identifier les situations qui nécessitent une relance ou une attention opérationnelle."
+
+msgid "Conserver la continuité"
+msgstr "Conserver la continuité"
+
+msgid "Garder une trace lisible des interactions, décisions et étapes importantes."
+msgstr "Garder une trace lisible des interactions, décisions et étapes importantes."
+
+msgid "Repérer les signaux faibles"
+msgstr "Repérer les signaux faibles"
+
+msgid "Faire émerger les situations récurrentes, bloquées ou à fort enjeu territorial."
+msgstr "Faire émerger les situations récurrentes, bloquées ou à fort enjeu territorial."
+
+msgid "Piloter sans surcharger"
+msgstr "Piloter sans surcharger"
+
+msgid "Donner aux équipes une vision exploitable sans multiplier les fichiers ou tableaux manuels."
+msgstr "Donner aux équipes une vision exploitable sans multiplier les fichiers ou tableaux manuels."
+
+msgid "Suivi opÃ©rationnel"
+msgstr "Suivi opérationnel"
+
+msgid "HelpChain aide les équipes à rendre les priorités, les situations en attente et la continuité de coordination plus lisibles dans la durée."
+msgstr "HelpChain aide les équipes à rendre les priorités, les situations en attente et la continuité de coordination plus lisibles dans la durée."
+
+msgid "Priorisation des suivis à relancer"
+msgstr "Priorisation des suivis à relancer"
+
+msgid "Lecture continue des situations en attente"
+msgstr "Lecture continue des situations en attente"
+
+msgid "Repérage de signaux faibles et récurrents"
+msgstr "Repérage de signaux faibles et récurrents"
