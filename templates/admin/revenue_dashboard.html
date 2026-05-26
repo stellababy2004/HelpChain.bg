@@ -260,6 +260,119 @@
           {% endfor %}
         </div>
       </div>
+
+      <div class="hc-founder-cockpit__panel">
+        <div class="hc-founder-cockpit__heading">{{ _('Stalled opportunities') }}</div>
+        <div class="hc-founder-cockpit__list">
+          {% for item in founder_cockpit.stalled_opportunities %}
+            <article class="hc-founder-cockpit__item">
+              <div class="d-flex justify-content-between gap-2">
+                <strong class="text-truncate">{{ item.organization }}</strong>
+                <span class="badge text-bg-light border">{{ item.stalled_days }} {{ _('day(s)') }}</span>
+              </div>
+              <div class="hc-muted small mt-1">
+                {{ item.territory or _('Anonymous territory') }}
+                · {{ _('Intent') }} {{ item.intent_score }}
+                · {{ _('Relationship stalled') }}
+              </div>
+              <div class="small mt-2">
+                <strong>{{ _('Reason:') }}</strong>
+                {{ item.reason }}
+              </div>
+            </article>
+          {% else %}
+            <div class="hc-empty-state">
+              <div class="hc-empty-state__title">{{ _('No stalled opportunity detected') }}</div>
+              <div class="hc-empty-state__text">{{ _('Qualified accounts with delayed response will appear here automatically.') }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="hc-founder-cockpit__panel">
+        <div class="hc-founder-cockpit__heading">{{ _('Recommended founder actions') }}</div>
+        <div class="hc-founder-cockpit__list">
+          {% for item in founder_cockpit.recommended_founder_actions %}
+            <article class="hc-founder-cockpit__item">
+              <div class="d-flex justify-content-between gap-2">
+                <strong class="text-truncate">{{ item.organization or _('Institutional account') }}</strong>
+                <span class="badge text-bg-primary">{{ item.urgency_score }}</span>
+              </div>
+              <div class="hc-muted small mt-1">
+                {{ item.relationship_temperature|replace('_', ' ') }}
+                · {{ item.urgency_level }}
+                · {{ item.outreach_cadence|replace('_', ' ') }}
+              </div>
+              <div class="small mt-2">
+                <strong>{{ _('Recommended:') }}</strong>
+                {{ item.recommended_founder_action }}
+              </div>
+            </article>
+          {% else %}
+            <div class="hc-empty-state">
+              <div class="hc-empty-state__title">{{ _('No founder action recommended yet') }}</div>
+              <div class="hc-empty-state__text">{{ _('Recommended outreach and follow-up actions will surface here automatically.') }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="hc-founder-cockpit__panel">
+        <div class="hc-founder-cockpit__heading">{{ _('Relationship temperature') }}</div>
+        <div class="hc-founder-cockpit__list">
+          {% for item in founder_cockpit.relationship_temperature_rows %}
+            <article class="hc-founder-cockpit__item">
+              <div class="d-flex justify-content-between gap-2">
+                <strong class="text-truncate">{{ item.organization or _('Institutional account') }}</strong>
+                <span class="badge text-bg-light border">{{ item.relationship_temperature|replace('_', ' ') }}</span>
+              </div>
+              <div class="hc-muted small mt-1">
+                {{ _('Intent') }} {{ item.intent_score or item.score or 0 }}
+                · {{ _('Urgency') }} {{ item.urgency_level }}
+              </div>
+              <div class="small mt-2">
+                <strong>{{ _('Last signal:') }}</strong>
+                {{ item.last_timeline_event or _('No institutional memory event yet') }}
+              </div>
+            </article>
+          {% else %}
+            <div class="hc-empty-state">
+              <div class="hc-empty-state__title">{{ _('No relationship temperature yet') }}</div>
+              <div class="hc-empty-state__text">{{ _('Relationship maturity will appear here as founder memory accumulates.') }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="hc-founder-cockpit__panel">
+        <div class="hc-founder-cockpit__heading">{{ _('Institutional memory timeline') }}</div>
+        <div class="hc-founder-cockpit__list">
+          {% for item in founder_cockpit.institutional_memory_timeline %}
+            <article class="hc-founder-cockpit__item">
+              <div class="d-flex justify-content-between gap-2">
+                <strong class="text-truncate">{{ item.organization or _('Institutional account') }}</strong>
+                <span class="badge text-bg-light border">{{ item.relationship_temperature|replace('_', ' ') }}</span>
+              </div>
+              {% if item.timeline_events %}
+                <div class="hc-founder-cockpit__chips mt-2">
+                  {% for event in item.timeline_events %}
+                    <span class="badge text-bg-light border">{{ event.label }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <div class="small mt-2">
+                <strong>{{ _('Last signal:') }}</strong>
+                {{ item.last_timeline_event or _('No institutional memory event yet') }}
+              </div>
+            </article>
+          {% else %}
+            <div class="hc-empty-state">
+              <div class="hc-empty-state__title">{{ _('No institutional memory yet') }}</div>
+              <div class="hc-empty-state__text">{{ _('Chronological founder memory will appear here as operational touchpoints are recorded.') }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
     </div>
   </section>
 

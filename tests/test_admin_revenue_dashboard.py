@@ -25,6 +25,10 @@ def test_admin_revenue_empty_state_safe(authenticated_admin_client):
     assert "Founder Priority Queue" in html
     assert "No revenue signals yet" in html
     assert "Weighted Pipeline" in html
+    assert "Stalled opportunities" in html
+    assert "Recommended founder actions" in html
+    assert "Relationship temperature" in html
+    assert "Institutional memory timeline" in html
 
 
 def test_admin_revenue_unified_rows_display(authenticated_admin_client, session):
@@ -320,6 +324,71 @@ def test_admin_revenue_renders_revenue_signal_sections(
     html = response.get_data(as_text=True)
 
     assert response.status_code == 200
+    assert "Hot this week" in html
+    assert "Silent high-intent" in html
+    assert "Territory acceleration" in html
+
+
+def test_admin_revenue_renders_operational_founder_sections(
+    authenticated_admin_client, session
+):
+    now = datetime.now(UTC)
+    lead = ProfessionalLead(
+        email="ops-memory@example.org",
+        full_name="Ops Memory",
+        city="Paris",
+        profession="Directrice",
+        organization="Ville de Paris",
+        source="professionnels",
+        status="qualified",
+        contacted_at=now - timedelta(days=11),
+        notes=append_audience_context_to_notes(
+            None,
+            {
+                "score": 20,
+                "repeat_visit": True,
+                "pages_viewed": ["/offre", "/deploiement", "/securite"],
+                "institutional_intent": {
+                    "score": 88,
+                    "tier": "pilot_ready",
+                    "label": "Pilot-ready",
+                    "primary_interest": "deployment_operations",
+                    "trust_friction_detected": False,
+                    "friction_reason": None,
+                    "top_paths": ["/offre", "/deploiement", "/securite"],
+                    "recommended_action": "Propose a structured pilot conversation",
+                },
+                "lead_intent_score": 88,
+                "lead_intent_tier": "pilot_ready",
+                "lead_intent_label": "Pilot-ready",
+                "recommended_action": "Propose a structured pilot conversation",
+                "territorial_intelligence": {
+                    "territory": "Paris",
+                    "priority_level": "Strategic",
+                    "confidence": "strong",
+                    "dominant_interest": "deployment_operations",
+                    "possible_friction": None,
+                    "pilot_readiness_estimate": "elevated",
+                    "repeated_engagement_detected": True,
+                    "recommended_action": "Pilot discussion opportunity",
+                },
+            },
+        ),
+        created_at=now - timedelta(days=14),
+    )
+    session.add(lead)
+    session.commit()
+
+    response = authenticated_admin_client.get("/admin/revenue")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Stalled opportunities" in html
+    assert "Recommended founder actions" in html
+    assert "Relationship temperature" in html
+    assert "Institutional memory timeline" in html
+    assert "Ville de Paris" in html
+    assert "Re-contact deployment lead" in html
     assert "Hot this week" in html
     assert "Silent high-intent" in html
     assert "Territory acceleration" in html

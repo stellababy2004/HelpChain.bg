@@ -9311,3 +9311,61 @@ msgstr "Voir le cadre de déploiement"
 
 msgid "Voir lâ€™architecture"
 msgstr "Voir l’architecture"
+
+
+msgid "Stalled opportunities"
+msgstr "Opportunit?s en attente"
+
+msgid "day(s)"
+msgstr "jour(s)"
+
+msgid "Intent"
+msgstr "Intention"
+
+msgid "Relationship stalled"
+msgstr "Relation en attente"
+
+msgid "Reason:"
+msgstr "Motif :"
+
+msgid "No stalled opportunity detected"
+msgstr "Aucune opportunit? en attente d?tect?e"
+
+msgid "Qualified accounts with delayed response will appear here automatically."
+msgstr "Les comptes qualifi?s avec r?ponse retard?e appara?tront ici automatiquement."
+
+msgid "Recommended founder actions"
+msgstr "Actions fondateur recommand?es"
+
+msgid "No founder action recommended yet"
+msgstr "Aucune action fondateur recommand?e pour le moment"
+
+msgid "Recommended outreach and follow-up actions will surface here automatically."
+msgstr "Les recommandations de prise de contact et de suivi appara?tront ici automatiquement."
+
+msgid "Relationship temperature"
+msgstr "Temp?rature relationnelle"
+
+msgid "Urgency"
+msgstr "Urgence"
+
+msgid "Last signal:"
+msgstr "Dernier signal :"
+
+msgid "No institutional memory event yet"
+msgstr "Aucun ?v?nement m?moire institutionnelle pour le moment"
+
+msgid "No relationship temperature yet"
+msgstr "Aucune temp?rature relationnelle pour le moment"
+
+msgid "Relationship maturity will appear here as founder memory accumulates."
+msgstr "La maturit? relationnelle appara?tra ici ? mesure que la m?moire fondateur s'accumule."
+
+msgid "Institutional memory timeline"
+msgstr "Chronologie m?moire institutionnelle"
+
+msgid "No institutional memory yet"
+msgstr "Aucune m?moire institutionnelle pour le moment"
+
+msgid "Chronological founder memory will appear here as operational touchpoints are recorded."
+msgstr "La m?moire fondateur chronologique appara?tra ici ? mesure que les points de contact op?rationnels sont enregistr?s."

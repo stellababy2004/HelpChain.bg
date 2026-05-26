@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 
 from backend.helpchain_backend.src.routes import admin as admin_routes
 from backend.helpchain_backend.src.services.revenue_signal_engine import (
@@ -174,3 +175,36 @@ def test_founder_cockpit_context_includes_revenue_signal_sections(monkeypatch):
     assert context["silent_high_intent"]
     assert context["territory_acceleration"]
     assert context["territory_acceleration"][0]["territory"] == "Paris"
+
+
+def test_founder_cockpit_context_includes_operational_founder_sections(monkeypatch):
+    monkeypatch.setattr(admin_routes, "_build_revenue_signal_profiles", lambda **kwargs: [])
+    monkeypatch.setattr(admin_routes, "_revenue_founder_activity_map", lambda rows: {})
+
+    context = admin_routes._build_founder_cockpit_context(
+        [
+            SimpleNamespace(
+                uid="professional_lead:1",
+                id=1,
+                kind="professional_lead",
+                organization="Ville de Paris",
+                city="Paris",
+                territory="Paris",
+                stage="qualified",
+                score=88,
+                intent_score=88,
+                primary_interest="deployment_operations",
+                repeated_engagement_detected=True,
+                created_at=datetime(2026, 5, 10, 9, 0, 0),
+                contacted_at=datetime(2026, 5, 14, 9, 0, 0),
+                last_activity=datetime(2026, 5, 14, 9, 0, 0),
+                timeline_paths=["/offre", "/deploiement"],
+            )
+        ]
+    )
+
+    assert context["stalled_opportunities"]
+    assert context["recommended_founder_actions"]
+    assert context["relationship_temperature_rows"]
+    assert context["institutional_memory_timeline"]
+    assert context["recommended_founder_actions"][0]["recommended_founder_action"] == "Re-contact deployment lead"

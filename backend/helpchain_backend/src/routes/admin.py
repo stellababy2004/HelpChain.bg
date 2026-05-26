@@ -178,6 +178,15 @@ from ..services.account_intelligence import (
 from ..services.relationship_memory import (
     build_relationship_memory,
 )
+from ..services.founder_action_engine import (
+    build_founder_action_queue,
+    summarize_founder_actions as summarize_founder_operational_actions,
+)
+from ..services.founder_memory_engine import (
+    build_founder_memory_timeline,
+    detect_stalled_opportunities,
+    summarize_founder_memory,
+)
 
 from ..services.founder_cockpit import (
     build_founder_alerts,
@@ -195,6 +204,8 @@ from ..services.revenue_signal_engine import (
     build_revenue_signal_profile,
     summarize_revenue_signal_profile,
 )
+
+summarize_founder_opportunity_actions = summarize_founder_actions
 from ..services.territorial_intelligence import (
     detect_priority_territories,
     normalize_territory_name,
@@ -10975,6 +10986,112 @@ def _revenue_audience_metadata(audience_context: dict | None) -> dict[str, objec
     }
 
 
+def _revenue_founder_activity_map(rows: list[dict[str, object]]) -> dict[str, list[dict[str, object]]]:
+    lead_ids = sorted(
+        {
+            int(row.get("id") or 0)
+            for row in rows
+            if str(row.get("kind") or "") == "professional_lead" and int(row.get("id") or 0) > 0
+        }
+    )
+    if not lead_ids or not _professional_lead_activity_enabled():
+        return {}
+
+    activity_rows = (
+        ProfessionalLeadActivity.query.with_entities(
+            ProfessionalLeadActivity.professional_lead_id,
+            ProfessionalLeadActivity.action,
+            ProfessionalLeadActivity.payload_json,
+            ProfessionalLeadActivity.created_at,
+        )
+        .filter(ProfessionalLeadActivity.professional_lead_id.in_(lead_ids))
+        .order_by(
+            ProfessionalLeadActivity.created_at.asc(),
+            ProfessionalLeadActivity.id.asc(),
+        )
+        .all()
+    )
+    output: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in activity_rows:
+        lead_id = int(getattr(row, "professional_lead_id", 0) or 0)
+        if lead_id <= 0:
+            continue
+        payload = {}
+        raw_payload = getattr(row, "payload_json", None)
+        if raw_payload:
+            try:
+                parsed = json.loads(raw_payload)
+            except (TypeError, ValueError):
+                parsed = {}
+            if isinstance(parsed, dict):
+                payload = parsed
+        note = (
+            str(payload.get("note") or payload.get("message") or "").strip()
+            or _professional_lead_activity_label(getattr(row, "action", None))
+        )
+        output[f"professional_lead:{lead_id}"].append(
+            {
+                "timestamp": getattr(row, "created_at", None),
+                "event_type": "founder_manual_note",
+                "label": "founder note added",
+                "note": note,
+            }
+        )
+    return output
+
+
+def _build_founder_operational_context(rows: list[dict[str, object]]) -> dict[str, object]:
+    manual_notes_by_uid = _revenue_founder_activity_map(rows)
+    current_time = _now_utc()
+    operational_rows: list[dict[str, object]] = []
+    for row in rows:
+        payload = dict(row)
+        timeline = build_founder_memory_timeline(
+            payload,
+            manual_notes=manual_notes_by_uid.get(str(payload.get("uid") or ""), []),
+            now=current_time,
+        )
+        memory_summary = summarize_founder_memory(timeline, row=payload, now=current_time)
+        operational_rows.append(
+            {
+                **payload,
+                **memory_summary,
+                "timeline_events": timeline,
+                "last_founder_touch": memory_summary.get("last_founder_touch"),
+                "founder_action_state": dict(memory_summary.get("founder_action_state") or {}),
+            }
+        )
+
+    action_queue = build_founder_action_queue(operational_rows, now=current_time, limit=8)
+    stalled = detect_stalled_opportunities(action_queue, now=current_time)[:6]
+    temperature_rows = sorted(
+        action_queue,
+        key=lambda item: (
+            int(item.get("urgency_score") or 0),
+            str(item.get("relationship_temperature") or ""),
+            int(item.get("intent_score") or item.get("score") or 0),
+        ),
+        reverse=True,
+    )[:6]
+    memory_timeline = [
+        {
+            "uid": str(item.get("uid") or ""),
+            "organization": str(item.get("organization") or "Institutional account"),
+            "relationship_temperature": str(item.get("relationship_temperature") or "cold"),
+            "timeline_events": list(item.get("timeline_events") or [])[:4],
+            "last_timeline_event": item.get("last_timeline_event"),
+        }
+        for item in action_queue[:4]
+    ]
+    return {
+        "action_queue": action_queue,
+        "stalled_opportunities": stalled,
+        "relationship_temperature_rows": temperature_rows,
+        "institutional_memory_timeline": memory_timeline,
+        "action_summary": summarize_founder_operational_actions(operational_rows, now=current_time, limit=8),
+    }
+
+
 def _build_founder_cockpit_context(rows: list[SimpleNamespace]) -> dict[str, object]:
     queue = build_founder_priority_queue(rows)
     daily_source_rows = [
@@ -10983,6 +11100,7 @@ def _build_founder_cockpit_context(rows: list[SimpleNamespace]) -> dict[str, obj
     ]
     telemetry_profiles = _build_revenue_signal_profiles()
     telemetry_summary = summarize_revenue_signal_profile(telemetry_profiles)
+    operational_context = _build_founder_operational_context(daily_source_rows)
 
     return {
         "queue": queue[:8],
@@ -10993,7 +11111,12 @@ def _build_founder_cockpit_context(rows: list[SimpleNamespace]) -> dict[str, obj
         "hot_this_week": telemetry_summary["hot_this_week"],
         "silent_high_intent": telemetry_summary["silent_high_intent"],
         "territory_acceleration": telemetry_summary["territory_acceleration"],
-        "summary": summarize_founder_actions(rows),
+        "stalled_opportunities": operational_context["stalled_opportunities"],
+        "recommended_founder_actions": operational_context["action_queue"],
+        "relationship_temperature_rows": operational_context["relationship_temperature_rows"],
+        "institutional_memory_timeline": operational_context["institutional_memory_timeline"],
+        "operational_action_summary": operational_context["action_summary"],
+        "summary": summarize_founder_opportunity_actions(rows),
     }
 
 
@@ -11194,6 +11317,9 @@ def _revenue_row_from_professional_lead(lead: ProfessionalLead) -> SimpleNamespa
         score=score,
         score_bucket=bucket["label"],
         score_class=bucket["class"],
+        created_at=getattr(lead, "created_at", None),
+        contacted_at=getattr(lead, "contacted_at", None),
+        last_touched_at=getattr(lead, "last_touched_at", None),
         last_activity=last_activity,
         last_activity_label=_format_demo_touch_elapsed(last_activity),
         next_action_at=next_action_at,
@@ -11219,6 +11345,7 @@ def _revenue_row_from_professional_lead(lead: ProfessionalLead) -> SimpleNamespa
         pilot_readiness_estimate=founder_meta["pilot_readiness_estimate"],
         possible_friction=founder_meta["possible_friction"],
         territory_recommendation=founder_meta["territory_recommendation"],
+        has_demo=stage in {"demo_booked", "demo_done", "pilot_proposed", "negotiation"},
     )
 
 
@@ -11282,6 +11409,9 @@ def _revenue_row_from_access_request(row: OrganizationAccessRequest) -> SimpleNa
         score=score,
         score_bucket=bucket["label"],
         score_class=bucket["class"],
+        created_at=getattr(row, "created_at", None),
+        contacted_at=None,
+        last_touched_at=getattr(row, "reviewed_at", None) or getattr(row, "updated_at", None),
         last_activity=last_activity,
         last_activity_label=_format_demo_touch_elapsed(last_activity),
         next_action_at=next_action_at,
@@ -11307,6 +11437,7 @@ def _revenue_row_from_access_request(row: OrganizationAccessRequest) -> SimpleNa
         pilot_readiness_estimate=founder_meta["pilot_readiness_estimate"],
         possible_friction=founder_meta["possible_friction"],
         territory_recommendation=founder_meta["territory_recommendation"],
+        has_demo=stage in {"qualified", "won"},
     )
 
 
