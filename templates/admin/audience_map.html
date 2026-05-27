@@ -183,8 +183,8 @@
           <div class="audience-side-module">
             <div class="audience-module-header">
               <div>
-                <h2 class="h6 mb-1">Territorial Priorities</h2>
-                <div class="hc-muted small">Comptes probables, signaux qualifies et territoires a suivre.</div>
+                <h2 class="h6 mb-1">Priorités territoriales</h2>
+                <div class="hc-muted small">Comptes probables, signaux qualifiés et territoires à suivre.</div>
               </div>
               <span class="audience-data-tag audience-data-tag--estimated" id="audienceFounderQueueMode">Analyse territoriale</span>
             </div>
@@ -201,7 +201,7 @@
 
           <div class="audience-side-module">
             <div class="audience-module-header">
-              <h2 class="h6 mb-0">Actions recommandees</h2>
+              <h2 class="h6 mb-0">Actions recommandées</h2>
               <span class="audience-data-tag audience-data-tag--estimated">Analyse territoriale</span>
             </div>
             <div class="audience-action-list" id="audienceRecommendations" aria-live="polite"></div>
@@ -209,14 +209,14 @@
 
           <div class="audience-side-module">
             <div class="audience-module-header">
-              <h2 class="h6 mb-0">Tendances recentes</h2>
+              <h2 class="h6 mb-0">Tendances récentes</h2>
               <span class="audience-data-tag audience-data-tag--estimated">Analyse territoriale</span>
             </div>
             <div class="audience-forecast-card" id="audienceForecastPanel" aria-live="polite"></div>
           </div>
 
           <div class="audience-side-module">
-            <h2 class="h6 mb-2">Priorites immediates</h2>
+            <h2 class="h6 mb-2">Priorités immédiates</h2>
             <div class="audience-shortlist" id="audienceProspectionShortlist" aria-live="polite"></div>
           </div>
         </div>
@@ -232,7 +232,7 @@
       <div class="hc-card h-100 hc-audience-intelligence-panel">
         <div class="hc-card__section hc-card__section--header">
           <strong>Signaux territoriaux</strong>
-          <span class="hc-muted small">Villes, departements et regions detectes.</span>
+          <span class="hc-muted small">Villes, départements et régions détectés.</span>
         </div>
         <div class="p-3">
           <div class="hc-audience-detailCard mb-3" id="audienceMapDetailCard">
@@ -248,7 +248,7 @@
                 <strong id="audienceMapDetailStructures">8</strong>
               </div>
               <div class="hc-audience-detailMetric audience-kpi-card">
-                <span class="hc-audience-detailMetric__label">Departement</span>
+                <span class="hc-audience-detailMetric__label">Département</span>
                 <strong id="audienceMapDetailDepartment">75</strong>
               </div>
               <div class="hc-audience-detailMetric audience-kpi-card">
@@ -261,11 +261,11 @@
               </div>
             </div>
             <div class="hc-audience-detailLine">
-              <span class="hc-audience-detailLine__label">Recommandation operationnelle</span>
-              <p id="audienceMapDetailRecommendation" class="hc-audience-detailRecommendation mb-0">Prioriser les comptes publics deja engages et proposer un cadrage pilote.</p>
+              <span class="hc-audience-detailLine__label">Recommandation opérationnelle</span>
+              <p id="audienceMapDetailRecommendation" class="hc-audience-detailRecommendation mb-0">Prioriser les comptes publics déjà engagés et proposer un cadrage pilote.</p>
             </div>
             <div class="hc-audience-detailLine">
-              <span class="hc-audience-detailLine__label">Action suggeree</span>
+              <span class="hc-audience-detailLine__label">Action suggérée</span>
               <p id="audienceMapDetailAction" class="hc-audience-detailRecommendation mb-0">Planifier une prise de contact cette semaine.</p>
             </div>
           </div>
@@ -273,11 +273,11 @@
           <h2 class="h6 mb-2">Top villes</h2>
           <div class="audience-city-list mb-3" id="audienceMapCityList" aria-live="polite"></div>
 
-          <h2 class="h6 mb-2">Departements prioritaires</h2>
+          <h2 class="h6 mb-2">Départements prioritaires</h2>
           <div class="audience-opportunity-grid mb-0" id="audienceDepartmentScores" aria-live="polite"></div>
 
           {% if audience.unmapped_locations %}
-            <h2 class="h6 mt-3 mb-2">Localisations non cartographiees</h2>
+            <h2 class="h6 mt-3 mb-2">Localisations non cartographiées</h2>
             <div class="d-flex flex-wrap gap-2">
               {% for row in audience.unmapped_locations %}
                 <span class="badge text-bg-light border">{{ row.label }} - {{ row.count }}</span>
@@ -291,8 +291,8 @@
   <div class="hc-admin-card__header">
     <div>
       <div class="hc-section-eyebrow">INTELLIGENCE LIVE</div>
-      <h2>Sessions qualifiees</h2>
-      <p>Parcours recents, niveau d'intention et signaux utiles pour prioriser l'action territoriale.</p>
+      <h2>Sessions qualifiées</h2>
+      <p>Parcours récents, niveau d'intention et signaux utiles pour prioriser l'action territoriale.</p>
     </div>
     <span class="hc-pill">Live ? 30s</span>
   </div>
@@ -304,7 +304,7 @@
           </div>
 
           <div class="audience-sidebar-footer mt-3">
-            <span class="hc-muted small">Derniere mise a jour: Aujourd'hui 10:42</span>
+            <span class="hc-muted small">Dernière mise à jour : Aujourd'hui 10:42</span>
           </div>
         </div>
       </div>

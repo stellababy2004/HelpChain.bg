@@ -837,9 +837,9 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                   </a>
                   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminConsoleDropdown">
                     <li><a class="dropdown-item {{ 'active' if ep == 'admin.admin_structures' or ep.startswith('admin.admin_structure_') else '' }}" href="{{ url_for('admin.admin_structures') }}">{{ _('Structures') }}</a></li>
-                    <li><a class="dropdown-item {{ 'active' if ep == 'admin.admin_organization_access_requests' else '' }}" href="{{ url_for('admin.admin_organization_access_requests') }}">{{ _('Demandes d acces') }}</a></li>
+                    <li><a class="dropdown-item {{ 'active' if ep == 'admin.admin_organization_access_requests' else '' }}" href="{{ url_for('admin.admin_organization_access_requests') }}">{{ _('Demandes d’accès') }}</a></li>
                     <li><a class="dropdown-item {{ 'active' if ep in ['admin.admin_intervenants', 'admin.admin_volunteers'] else '' }}" href="{{ url_for('admin.admin_intervenants') }}">{{ _('Intervenants') }}</a></li>
-                    <li><a class="dropdown-item {{ 'active' if ep == 'admin.admin_roles' else '' }}" href="{{ url_for('admin.admin_roles') }}">{{ _('Roles') }}</a></li>
+                    <li><a class="dropdown-item {{ 'active' if ep == 'admin.admin_roles' else '' }}" href="{{ url_for('admin.admin_roles') }}">{{ _('Rôles') }}</a></li>
                     <li><a class="dropdown-item {{ 'active' if ep == 'admin.admin_sla_breakdown' else '' }}" href="{{ url_for('admin.admin_sla_breakdown') }}">{{ _('SLA') }}</a></li>
                     <li><a class="dropdown-item {{ 'active' if ep == 'admin.admin_demo_leads' else '' }}" href="{{ url_for('admin.admin_demo_leads') }}">{{ _('Demandes de démonstration') }}</a></li>
                     <li><a class="dropdown-item {{ 'active' if ep == 'admin.admin_system_health' else '' }}" href="{{ url_for('admin.admin_system_health') }}">{{ _('Santé du système') }}</a></li>

@@ -1,5 +1,5 @@
 {% extends "layouts/admin_workspace.html" %}
-{% block title %}Previsualisation import | Admin{% endblock %}
+{% block title %}Prévisualisation import | Admin{% endblock %}
 {% block admin_workspace_css %}
   <style>
     .hc-import-preview-grid {
@@ -205,7 +205,7 @@
   <div class="hc-card hc-page-hero mb-3">
     <div class="hc-row hc-admin-headerTop">
       <div>
-        <h1 class="hc-admin-title">Previsualisation du lot #{{ batch.id }}</h1>
+        <h1 class="hc-admin-title">Prévisualisation du lot #{{ batch.id }}</h1>
         <div class="hc-muted">{{ batch.filename }} · {{ source_label(batch.source_type) }} vers {{ target_label(batch.target_type) }}</div>
       </div>
       <div class="d-flex gap-2">
@@ -217,7 +217,7 @@
 
   <div class="hc-import-preview-grid">
     <div class="hc-import-preview-kpi">
-      <div class="hc-import-preview-kpi__label">Lignes detectees</div>
+      <div class="hc-import-preview-kpi__label">Lignes détectées</div>
       <div class="hc-import-preview-kpi__value">{{ preview.rows_detected }}</div>
     </div>
     <div class="hc-import-preview-kpi">
@@ -229,7 +229,7 @@
       <div class="hc-import-preview-kpi__value">{{ preview.warning_rows }}</div>
     </div>
     <div class="hc-import-preview-kpi">
-      <div class="hc-import-preview-kpi__label">Rejetees / ignorees</div>
+      <div class="hc-import-preview-kpi__label">Rejetées / ignorées</div>
       <div class="hc-import-preview-kpi__value">{{ preview.rejected_rows + preview.skipped_empty_rows }}</div>
     </div>
   </div>
@@ -264,7 +264,7 @@
     <div class="hc-card mb-3">
       <div class="hc-card__header">
         <div>
-          <h2 class="h6 mb-1">Apercu des 20 premieres lignes</h2>
+          <h2 class="h6 mb-1">Aperçu des 20 premières lignes</h2>
           <div class="hc-muted">Les lignes rejetees ne seront pas importees.</div>
         </div>
       </div>
@@ -278,7 +278,7 @@
                 {% set mapped_field = (preview.mapping.get(header) or 'unmapped')|replace('_', '-') %}
                 <th class="hc-import-col hc-import-col--{{ mapped_field }}">{{ header }}</th>
               {% endfor %}
-              <th class="hc-import-control-col">Controles</th>
+              <th class="hc-import-control-col">Contrôles</th>
             </tr>
           </thead>
           <tbody>
@@ -325,7 +325,7 @@
                 <td colspan="{{ preview.headers|length + 3 }}" class="py-4 text-center">
                   <div class="hc-empty-state">
                     <div class="hc-empty-state__title">Aucune ligne exploitable</div>
-                    <div class="hc-empty-state__text">Le CSV ne contient actuellement aucune donnee importable apres nettoyage.</div>
+                  <div class="hc-empty-state__text">Le CSV ne contient actuellement aucune donnée importable après nettoyage.</div>
                   </div>
                 </td>
               </tr>
@@ -339,8 +339,8 @@
       <div class="hc-card mb-3">
         <div class="hc-card__header">
           <div>
-            <h2 class="h6 mb-1">Alertes detectees</h2>
-            <div class="hc-muted">Resume des lignes rejetees, en doublon ou en guardrail.</div>
+            <h2 class="h6 mb-1">Alertes détectées</h2>
+            <div class="hc-muted">Résumé des lignes rejetées, en doublon ou en guardrail.</div>
           </div>
         </div>
         <div class="p-3">

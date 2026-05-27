@@ -50,8 +50,8 @@
   <div class="hc-card mb-3 p-3 hc-cases-toolbar-card hc-ops-toolbar-card{% if city %} hc-cases-toolbar-card--territorial{% endif %}">
     <div class="hc-section-intro">
       <div>
-        <h2 class="hc-section-title">Reperes de priorisation</h2>
-        <p class="hc-section-subtitle">Reperez les situations critiques, non attribuees ou sans action recente avant de filtrer la file.</p>
+        <h2 class="hc-section-title">Repères de priorisation</h2>
+        <p class="hc-section-subtitle">Repérez les situations critiques, non attribuées ou sans action récente avant de filtrer la file.</p>
       </div>
     </div>
     <div class="hc-risk-overview mb-3">
@@ -90,7 +90,7 @@
         </select>
       </div>
       <div class="col-12 col-md-6 col-xl-2">
-        <label class="form-label">Priorite</label>
+        <label class="form-label">Priorité</label>
         <select name="priority" class="form-select form-select-sm">
           <option value="">Toutes</option>
           {% for p in priorities %}
@@ -102,14 +102,14 @@
         <label class="form-label">Responsable</label>
         <select name="owner" class="form-select form-select-sm">
           <option value="">Tous</option>
-          <option value="none" {% if owner == 'none' %}selected{% endif %}>Non attribue</option>
+          <option value="none" {% if owner == 'none' %}selected{% endif %}>Non attribué</option>
           {% for o in owners %}
             <option value="{{ o[0] }}" {% if owner == (o[0]|string) %}selected{% endif %}>{{ o[1] }}</option>
           {% endfor %}
         </select>
       </div>
       <div class="col-12 col-md-6 col-xl-2">
-        <label class="form-label">Categorie</label>
+        <label class="form-label">Catégorie</label>
         <select name="category" class="form-select form-select-sm">
           <option value="">Toutes</option>
           {% for code, label in REQUEST_CATEGORY_CHOICES %}
@@ -133,7 +133,7 @@
           <span class="form-check-label">Sans action 72h</span>
         </label>
         <button class="btn btn-primary btn-sm" type="submit">Filtrer</button>
-        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for(cases_endpoint, city=city or None) }}" data-hc-filter-clear>Reinitialiser</a>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for(cases_endpoint, city=city or None) }}" data-hc-filter-clear>Réinitialiser</a>
       </div>
     </form>
     {% if active_filter_labels %}
@@ -145,8 +145,8 @@
       </div>
     {% endif %}
     <div class="hc-section-thread" aria-label="Continuite cases">
-      <span class="hc-section-thread__label">Besoin d'une vue de deploiement structuree</span>
-      <a class="hc-section-thread__link" href="{{ url_for('ops.ops_workspace') if request.path.startswith('/ops') else url_for('admin.admin_sla_breakdown') }}">Echanger sur un deploiement pilote</a>
+      <span class="hc-section-thread__label">Besoin d'une vue de déploiement structurée</span>
+      <a class="hc-section-thread__link" href="{{ url_for('ops.ops_workspace') if request.path.startswith('/ops') else url_for('admin.admin_sla_breakdown') }}">Échanger sur un déploiement pilote</a>
     </div>
   </div>
 
@@ -170,9 +170,9 @@
             <th class="request-col col-request">Titre</th>
             <th class="city-col col-city">Ville</th>
             <th class="status-col col-status">Statut</th>
-            <th class="priority-col">Priorite</th>
+            <th class="priority-col">Priorité</th>
             <th class="owner-col">Responsable</th>
-            <th class="activity-col col-activity">Derniere action</th>
+            <th class="activity-col col-activity">Dernière action</th>
             <th class="actions-col col-action text-end">Action</th>
           </tr>
         </thead>
@@ -247,13 +247,13 @@
                   </span>
                 </div>
               </td>
-              <td class="owner-col" title="{% if c.owner_user %}{{ c.owner_user.username }}{% elif c.owner_user_id %}#{{ c.owner_user_id }}{% else %}Non attribue{% endif %}">
+              <td class="owner-col" title="{% if c.owner_user %}{{ c.owner_user.username }}{% elif c.owner_user_id %}#{{ c.owner_user_id }}{% else %}Non attribué{% endif %}">
                 {% if c.owner_user %}
                   {{ c.owner_user.username }}
                 {% elif c.owner_user_id %}
                   #{{ c.owner_user_id }}
                 {% else %}
-                  <span class="hc-owner-empty">Non attribue</span>
+                  <span class="hc-owner-empty">Non attribué</span>
                 {% endif %}
               </td>
               <td class="activity-col col-activity" title="{{ activity_ref|format_datetime_fr }}">
@@ -262,7 +262,7 @@
               </td>
               <td class="actions-col col-action text-end">
                 {% if config.DEMO_MODE %}
-                  <span class="btn btn-sm btn-outline-secondary disabled" aria-disabled="true">Apercu</span>
+                  <span class="btn btn-sm btn-outline-secondary disabled" aria-disabled="true">Aperçu</span>
                 {% else %}
                   <a class="btn btn-sm btn-primary" href="{{ case_detail_href }}" data-no-rowclick>Ouvrir</a>
                 {% endif %}
@@ -273,8 +273,8 @@
             <tr>
               <td colspan="8" class="hc-cases-empty-cell">
                 <div class="hc-empty-state">
-                  <div class="hc-empty-state__title">Aucun cas a afficher</div>
-                  <div class="hc-empty-state__text">Aucune situation ne correspond actuellement aux filtres actifs dans la console operateur.</div>
+                  <div class="hc-empty-state__title">Aucun cas à afficher</div>
+                  <div class="hc-empty-state__text">Aucune situation ne correspond actuellement aux filtres actifs dans la console opérateur.</div>
                 </div>
               </td>
             </tr>

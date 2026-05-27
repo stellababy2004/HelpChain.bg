@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ _('Admin panel') }} | HelpChain{% endblock %}
+{% block title %}{{ _('Tableau de bord admin') }} | HelpChain{% endblock %}
 {% block head %}
   {{ super() }}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/admin-ui.css') }}" />
@@ -25,9 +25,9 @@
 <div class="hc-admin-wrap hc-admin-dashboard hc-admin-shell">
   <div class="hc-card mb-3">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-      <h1 class="hc-admin-title mb-0">{{ _('Admin dashboard') }}</h1>
+      <h1 class="hc-admin-title mb-0">{{ _('Tableau de bord admin') }}</h1>
       <div class="small text-muted">
-      <i class="fas fa-shield-alt me-1"></i> HelpChain Admin
+      <i class="fas fa-shield-alt me-1"></i> {{ _('Administration HelpChain') }}
       </div>
     </div>
     <div id="dash-alert" class="alert d-none mt-3 mb-0" role="alert"></div>
@@ -38,7 +38,7 @@
       <div class="col-12 col-md-4">
         <div class="card shadow-sm">
           <div class="card-body">
-            <div class="text-muted small">{{ _('Total requests') }}</div>
+            <div class="text-muted small">{{ _('Demandes totales') }}</div>
             <div class="fs-2 fw-bold kpi-value" id="kpi-total-requests" data-kpi="total_requests">0</div>
           </div>
         </div>
@@ -47,7 +47,7 @@
       <div class="col-12 col-md-4">
         <div class="card shadow-sm">
           <div class="card-body">
-            <div class="text-muted small">{{ _('Pending requests') }}</div>
+            <div class="text-muted small">{{ _('Demandes en attente') }}</div>
             <div class="fs-2 fw-bold kpi-value" data-kpi="pending_requests">0</div>
           </div>
         </div>
@@ -56,7 +56,7 @@
       <div class="col-12 col-md-4">
         <div class="card shadow-sm">
           <div class="card-body">
-            <div class="text-muted small">{{ _('Total volunteers') }}</div>
+            <div class="text-muted small">{{ _('Intervenants totaux') }}</div>
             <div class="fs-2 fw-bold kpi-value" id="kpi-total-volunteers" data-kpi="total_volunteers">0</div>
           </div>
         </div>
@@ -169,11 +169,11 @@
     <div class="card shadow-sm">
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between">
-          <h5 class="mb-0">Заявки по статус</h5>
-          <span id="empty-status" class="text-warning small d-none">Няма данни</span>
+          <h5 class="mb-0">{{ _('Demandes par statut') }}</h5>
+          <span id="empty-status" class="text-warning small d-none">{{ _('Aucune donnée') }}</span>
         </div>
         <div id="chart-status" class="hc-minh-320"></div>
-        <div class="text-muted small mt-2" id="dashboard-updated">Последно обновяване: -</div>
+        <div class="text-muted small mt-2" id="dashboard-updated">{{ _('Dernière mise à jour :') }} -</div>
       </div>
     </div>
   </div>
@@ -198,7 +198,7 @@
       <h5 class="card-title mb-2">{{ _('Requests by city (Top 10)') }}</h5>
       <div id="chart-city" class="hc-minh-320"></div>
       <div id="empty-city" class="text-muted small d-none">
-        Няма данни.
+        {{ _('Aucune donnée.') }}
       </div>
     </div>
   </div>
@@ -208,22 +208,22 @@
       <h3 class="h5 mb-3">{{ _(' Requests trend (last 30 days)') }}</h3>
       <div id="chart-ts"></div>
       <div id="empty-ts" class="text-muted mt-2 d-none">
-        Няма данни за периода.
+        {{ _('Aucune donnée pour la période.') }}
       </div>
     </div>
   </section>
 
-  <h3 class="h5 mb-2">{{ _('Заявки') }}</h3>
+  <h3 class="h5 mb-2">{{ _('Demandes') }}</h3>
   <div class="hc-card p-0">
   <div class="table-responsive hc-admin-tablewrap">
     <table class="table table-hover align-middle hc-admin-table mb-0">
       <thead>
         <tr>
           <th>ID</th>
-          <th>{{ _('Име') }}</th>
-          <th>{{ _('Описание') }}</th>
+          <th>{{ _('Nom') }}</th>
+          <th>{{ _('Description') }}</th>
           <th>{{ _('Статус') }}</th>
-          <th>{{ _('История') }}</th>
+          <th>{{ _('Historique') }}</th>
           <th class="actions-col">{{ _('Actions') }}</th>
         </tr>
       </thead>
@@ -233,8 +233,8 @@
           {% for req in req_items %}
           <tr>
             <td>{{ req.id }}</td>
-            <td>{{ req.name or _('Без име') }}</td>
-            <td class="text-truncate truncate-desc">{{ req.description or _('Без описание') }}</td>
+            <td>{{ req.name or _('Sans nom') }}</td>
+            <td class="text-truncate truncate-desc">{{ req.description or _('Sans description') }}</td>
             <td>
               {% set s = (req.status or '')|lower %}
               {% set status_class = {
@@ -279,7 +279,7 @@
           {% endfor %}
         {% else %}
           <tr>
-            <td colspan="6" class="text-center text-muted">{{ _('Няма намерени заявки') }}</td>
+            <td colspan="6" class="text-center text-muted">{{ _('Aucune demande trouvée') }}</td>
           </tr>
         {% endif %}
       </tbody>
@@ -287,18 +287,18 @@
   </div>
   </div>
 
-  <h3 class="h5 mt-4 mb-2">{{ _('Доброволци') }}</h3>
+  <h3 class="h5 mt-4 mb-2">{{ _('Intervenants') }}</h3>
   <div class="hc-card p-0">
   <div class="table-responsive hc-admin-tablewrap">
     <table class="table table-hover align-middle hc-admin-table mb-0">
       <thead>
         <tr>
           <th>ID</th>
-          <th>{{ _('Име') }}</th>
-          <th>{{ _('Имейл') }}</th>
-          <th>{{ _('Телефон') }}</th>
-          <th>{{ _('Локация') }}</th>
-          <th>{{ _('Умения') }}</th>
+          <th>{{ _('Nom') }}</th>
+          <th>{{ _('Email') }}</th>
+          <th>{{ _('Téléphone') }}</th>
+          <th>{{ _('Localisation') }}</th>
+          <th>{{ _('Compétences') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -323,7 +323,7 @@
           {% endfor %}
         {% else %}
           <tr>
-            <td colspan="6" class="text-center text-muted">{{ _('Няма намерени доброволци') }}</td>
+            <td colspan="6" class="text-center text-muted">{{ _('Aucun intervenant trouvé') }}</td>
           </tr>
         {% endif %}
       </tbody>
@@ -430,7 +430,7 @@
 
     const options = {
       chart: { type: "bar", height: 320 },
-      series: [{ name: "Заявки", data: series }],
+      series: [{ name: "Demandes", data: series }],
       xaxis: { categories: labels },
       plotOptions: { bar: { distributed: true } }
     };
@@ -459,7 +459,7 @@
 
     const options = {
       chart: { type: "area", height: 320 },
-      series: [{ name: "Заявки", data: values }],
+      series: [{ name: "Demandes", data: values }],
       xaxis: { categories: labels },
       dataLabels: { enabled: false }
     };

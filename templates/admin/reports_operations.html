@@ -1,21 +1,21 @@
 {% extends "layouts/admin_workspace.html" %}
 
-{% block title %}Rapport operationnel | HelpChain{% endblock %}
+{% block title %}Rapport opérationnel | HelpChain{% endblock %}
 {% block admin_body_class %} hc-admin-reports-page{% endblock %}
 
 {% block admin_content %}
   <div class="hc-admin-page-header hc-report-page-header">
     <div>
       <div class="hc-admin-kicker">Rapports institutionnels</div>
-      <h1 class="hc-admin-title">Rapport operationnel</h1>
+      <h1 class="hc-admin-title">Rapport opérationnel</h1>
       <p class="hc-muted mb-0">
-        Support de pilotage territorial pour lecture immediate de l'etat operationnel, des risques,
+        Support de pilotage territorial pour lecture immédiate de l'état opérationnel, des risques,
         des actions prioritaires et de la pression par zone.
       </p>
     </div>
     <div class="d-flex gap-2 align-items-end flex-wrap">
       <form method="get" class="d-flex gap-2 align-items-end" id="hcOperationsReportFilters">
-        <label class="form-label mb-0 small text-muted" for="days">Periode</label>
+        <label class="form-label mb-0 small text-muted" for="days">Période</label>
         <select class="form-select form-select-sm" id="days" name="days" data-report-period-select>
           <option value="7" {% if days == 7 %}selected{% endif %}>7 jours</option>
           <option value="14" {% if days == 14 %}selected{% endif %}>14 jours</option>
@@ -44,19 +44,19 @@
       </div>
       <div class="hc-report-hero__meta">
         <div class="hc-report-chip">
-          <span class="hc-report-chip__label">Perimetre</span>
+          <span class="hc-report-chip__label">Périmètre</span>
           <strong>{{ report.scope.structure_name or "Toutes les structures visibles" }}</strong>
         </div>
         <div class="hc-report-chip">
-          <span class="hc-report-chip__label">Fenetre</span>
+          <span class="hc-report-chip__label">Fenêtre</span>
           <strong>{{ report.period.days }} jours</strong>
         </div>
         <div class="hc-report-chip">
-          <span class="hc-report-chip__label">Generation</span>
+          <span class="hc-report-chip__label">Génération</span>
           <strong>{{ report.generated_at[:16]|replace('T', ' ') }}</strong>
         </div>
         <div class="hc-report-status hc-report-status--{{ 'critical' if report.operational_severity.level == 'critical' else 'watch' if report.operational_severity.level == 'warning' else 'calm' }}">
-          <span class="hc-report-status__label">Stabilite</span>
+          <span class="hc-report-status__label">Stabilité</span>
           <strong>{{ report.operational_conclusion.stability }}</strong>
         </div>
       </div>
@@ -82,8 +82,8 @@
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
         <div>
           <div class="hc-admin-kicker mb-1">Alertes SLA</div>
-          <h2 class="hc-section-title mb-1">Risques operationnels detectes</h2>
-          <p class="hc-muted mb-0">Situations necessitant une attention prioritaire selon les regles de suivi.</p>
+          <h2 class="hc-section-title mb-1">Risques opérationnels détectés</h2>
+          <p class="hc-muted mb-0">Situations nécessitant une attention prioritaire selon les règles de suivi.</p>
         </div>
         <span class="hc-severity-pill hc-severity-pill--{{ report['sla_alerts']['severity'] }}">
           {{ report['sla_alerts']['severity']|upper }}
@@ -112,9 +112,9 @@
       <section class="hc-card hc-card-pad h-100">
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
           <div>
-            <div class="hc-admin-kicker mb-1">Decisions prioritaires</div>
+            <div class="hc-admin-kicker mb-1">Décisions prioritaires</div>
             <h2 class="hc-section-title mb-1">Actions prioritaires</h2>
-            <p class="hc-muted mb-0">Actions immediates de pilotage triees par gravite.</p>
+            <p class="hc-muted mb-0">Actions immédiates de pilotage triées par gravité.</p>
           </div>
         </div>
         <div class="hc-report-stack">
@@ -141,7 +141,7 @@
           <div>
             <div class="hc-admin-kicker mb-1">Analyse automatique</div>
             <h2 class="hc-section-title mb-1">Analyse automatique</h2>
-            <p class="hc-muted mb-0">Lecture assistee orientee pilotage, sans modifier les arbitrages metier.</p>
+            <p class="hc-muted mb-0">Lecture assistée orientée pilotage, sans modifier les arbitrages métier.</p>
           </div>
         </div>
         <div class="hc-report-stack">
@@ -167,8 +167,8 @@
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
       <div>
         <div class="hc-admin-kicker mb-1">Tendances temporelles</div>
-        <h2 class="hc-section-title mb-1">Comparaison avec la periode precedente</h2>
-        <p class="hc-muted mb-0">Lecture immediate des variations de flux, delais et assignation.</p>
+        <h2 class="hc-section-title mb-1">Comparaison avec la période précédente</h2>
+        <p class="hc-muted mb-0">Lecture immédiate des variations de flux, délais et assignation.</p>
       </div>
       <div class="hc-muted small">
         {{ report.period.previous_start[:10] }} au {{ report.period.previous_end[:10] }}
@@ -180,28 +180,28 @@
         <div class="hc-report-trend__label">Situations ouvertes</div>
         <div class="hc-report-trend__value">{{ report.trends.open_requests.current }}</div>
         <div class="hc-report-trend__delta hc-report-trend__delta--{{ report.trends.open_requests.semantic }}">{{ report.trends.open_requests.label }}</div>
-        <div class="hc-muted small">{{ report.trends.open_requests.previous }} sur la periode precedente</div>
+        <div class="hc-muted small">{{ report.trends.open_requests.previous }} sur la période précédente</div>
       </article>
 
       <article class="hc-card hc-card-pad hc-report-trend">
         <div class="hc-report-trend__label">Non assignees</div>
         <div class="hc-report-trend__value">{{ report.trends.unassigned_requests.current }}</div>
         <div class="hc-report-trend__delta hc-report-trend__delta--{{ report.trends.unassigned_requests.semantic }}">{{ report.trends.unassigned_requests.label }}</div>
-        <div class="hc-muted small">{{ report.trends.unassigned_requests.previous }} sur la periode precedente</div>
+        <div class="hc-muted small">{{ report.trends.unassigned_requests.previous }} sur la période précédente</div>
       </article>
 
       <article class="hc-card hc-card-pad hc-report-trend">
         <div class="hc-report-trend__label">Temps moyen de resolution</div>
         <div class="hc-report-trend__value">{{ report.trends.avg_resolution_hours.current }}h</div>
         <div class="hc-report-trend__delta hc-report-trend__delta--{{ report.trends.avg_resolution_hours.semantic }}">{{ report.trends.avg_resolution_hours.label }}</div>
-        <div class="hc-muted small">{{ report.trends.avg_resolution_hours.previous }}h sur la periode precedente</div>
+        <div class="hc-muted small">{{ report.trends.avg_resolution_hours.previous }}h sur la période précédente</div>
       </article>
 
       <article class="hc-card hc-card-pad hc-report-trend">
         <div class="hc-report-trend__label">SLA depasses</div>
         <div class="hc-report-trend__value">{{ report.trends.sla_breaches.current }}</div>
         <div class="hc-report-trend__delta hc-report-trend__delta--{{ report.trends.sla_breaches.semantic }}">{{ report.trends.sla_breaches.label }}</div>
-        <div class="hc-muted small">{{ report.trends.sla_breaches.previous }} sur la periode precedente</div>
+        <div class="hc-muted small">{{ report.trends.sla_breaches.previous }} sur la période précédente</div>
       </article>
     </div>
 

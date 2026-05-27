@@ -8,8 +8,8 @@
     <div class="hc-row hc-admin-headerTop">
       <div>
         <h1 class="hc-admin-title">Nouvel intervenant</h1>
-        <div class="hc-muted">Creer un intervenant visible dans la liste, la carte et l'affectation.</div>
-        <div class="small text-muted mt-1">Les champs principaux sont regroupes pour une saisie rapide, puis les details de localisation.</div>
+        <div class="hc-muted">Créer un intervenant visible dans la liste, la carte et l'affectation.</div>
+        <div class="small text-muted mt-1">Les champs principaux sont regroupés pour une saisie rapide, puis les détails de localisation.</div>
       </div>
 
       <div class="hc-admin-actions">
@@ -21,7 +21,7 @@
   <div class="hc-card hc-admin-form-shell">
     <div class="hc-card__section hc-card__section--header hc-intervenants-formHeader">
       <strong>Informations de l'intervenant</strong>
-      <span class="hc-muted small">Identite, contact, profession et zone d'intervention.</span>
+      <span class="hc-muted small">Identité, contact, profession et zone d'intervention.</span>
     </div>
 
     <form
@@ -51,7 +51,7 @@
         <div class="hc-field">
           <label class="form-label" for="full_name">Nom complet</label>
           <input class="form-control" id="full_name" name="full_name" value="{{ form_data.get('full_name', '') }}" required>
-          <div class="form-text">Nom affiche dans la liste des intervenants.</div>
+          <div class="form-text">Nom affiché dans la liste des intervenants.</div>
         </div>
       </div>
 
@@ -59,15 +59,15 @@
         <div class="hc-field">
           <label class="form-label" for="email">Email</label>
           <input class="form-control" id="email" name="email" type="email" value="{{ form_data.get('email', '') }}">
-          <div class="form-text">Utilise pour les coordonnees et le suivi.</div>
+          <div class="form-text">Utilisé pour les coordonnées et le suivi.</div>
         </div>
       </div>
 
       <div class="col-12 col-lg-6">
         <div class="hc-field">
-          <label class="form-label" for="phone">Telephone</label>
+          <label class="form-label" for="phone">Téléphone</label>
           <input class="form-control" id="phone" name="phone" value="{{ form_data.get('phone', '') }}">
-          <div class="form-text">Numero visible dans la fiche et les vues de contact.</div>
+          <div class="form-text">Numéro visible dans la fiche et les vues de contact.</div>
         </div>
       </div>
 
@@ -80,7 +80,7 @@
             <option value="{{ value }}" {% if profession_value == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
-          <div class="form-text">Categorie utilisee dans les vues admin et la carte.</div>
+          <div class="form-text">Catégorie utilisée dans les vues admin et la carte.</div>
         </div>
       </div>
 
@@ -102,21 +102,21 @@
 
       <div class="col-12 col-lg-6">
         <div class="hc-field">
-          <label class="form-label" for="availability">Disponibilite</label>
+          <label class="form-label" for="availability">Disponibilité</label>
           {% set availability_value = form_data.get('availability', 'available') %}
           <select class="form-select" id="availability" name="availability">
             {% for value, label in availability_options %}
             <option value="{{ value }}" {% if availability_value == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
-          <div class="form-text">Etat affiche dans la liste et les vues d'affectation.</div>
+          <div class="form-text">État affiché dans la liste et les vues d'affectation.</div>
         </div>
       </div>
 
       <div class="col-12">
         <div class="hc-card hc-intervenants-geoCard">
           <div class="hc-card__section hc-card__section--header hc-intervenants-geoHeader">
-            <strong>Coordonnees</strong>
+            <strong>Coordonnées</strong>
             <span class="hc-muted small">Champs secondaires pour le positionnement sur la carte.</span>
           </div>
           <div class="row g-3 hc-intervenants-geoRow">
@@ -144,7 +144,7 @@
 
       <div class="col-12">
         <div class="hc-admin-actions mt-2 hc-intervenants-formActions">
-          <button type="submit" class="btn btn-primary btn-sm">Creer</button>
+          <button type="submit" class="btn btn-primary btn-sm">Créer</button>
           <a href="{{ url_for('admin.admin_intervenants') }}" class="btn btn-outline-secondary btn-sm">Annuler</a>
         </div>
       </div>

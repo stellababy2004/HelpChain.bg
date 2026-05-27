@@ -1,5 +1,5 @@
 {% extends "layouts/admin_workspace.html" %}
-{% block title %}Delais et depassements SLA | HelpChain{% endblock %}
+{% block title %}Délais et dépassements SLA | HelpChain{% endblock %}
 {% block admin_body_class %} hc-admin-requests-page hc-admin-table-page hc-admin-list-page hc-admin-sla-page hc-density-compact{% endblock %}
 
 {% block admin_content %}
@@ -7,9 +7,9 @@
   <div class="hc-card hc-page-hero">
     <div class="hc-row hc-admin-headerTop">
       <div>
-        <div class="hc-admin-kicker">Pilotage operationnel</div>
-        <h1 class="hc-admin-title">Delais et depassements SLA</h1>
-        <div class="hc-muted">Lecture concentree des demandes en retard et des echeances proches sur la fenetre selectionnee.</div>
+        <div class="hc-admin-kicker">Pilotage opérationnel</div>
+        <h1 class="hc-admin-title">Délais et dépassements SLA</h1>
+        <div class="hc-muted">Lecture concentrée des demandes en retard et des échéances proches sur la fenêtre sélectionnée.</div>
         <div class="small text-muted mt-1">{{ breach_label }} · Fenetre : {{ days }} jours</div>
       </div>
       <div class="hc-admin-actions">
@@ -22,25 +22,25 @@
     <div class="hc-section-intro">
       <div>
         <h2 class="hc-section-title">Repères SLA</h2>
-        <p class="hc-section-subtitle">Isolez les retards de resolution, d'attribution responsable et d'attribution intervenant sans perdre la lisibilite operationnelle.</p>
+        <p class="hc-section-subtitle">Isolez les retards de résolution, d'attribution responsable et d'attribution intervenant sans perdre la lisibilité opérationnelle.</p>
       </div>
     </div>
 
     <div class="hc-kpis hc-sla-kpi-grid" aria-label="Synthese SLA">
       <a class="hc-sla-kpi text-decoration-none text-reset" href="{{ safe_url_for('admin.admin_requests', queue='sla', sla_kind='resolution_overdue', sla_days=days) }}">
-        <div class="hc-kpi__label">Resolution en retard</div>
+        <div class="hc-kpi__label">Résolution en retard</div>
         <div class="hc-kpi__value">{{ resolve_count }}</div>
-        <div class="hc-kpi__context">Echeance proche : {{ prediction_counts.resolution_overdue }}</div>
+        <div class="hc-kpi__context">Échéance proche : {{ prediction_counts.resolution_overdue }}</div>
       </a>
       <a class="hc-sla-kpi text-decoration-none text-reset" href="{{ safe_url_for('admin.admin_requests', queue='sla', sla_kind='owner_assignment_overdue', sla_days=days) }}">
         <div class="hc-kpi__label">Attribution responsable</div>
         <div class="hc-kpi__value">{{ owner_assign_count }}</div>
-        <div class="hc-kpi__context">Echeance proche : {{ prediction_counts.owner_assignment_overdue }}</div>
+        <div class="hc-kpi__context">Échéance proche : {{ prediction_counts.owner_assignment_overdue }}</div>
       </a>
       <a class="hc-sla-kpi text-decoration-none text-reset" href="{{ safe_url_for('admin.admin_requests', queue='sla', sla_kind='volunteer_assignment_overdue', sla_days=days) }}">
         <div class="hc-kpi__label">Attribution intervenant</div>
         <div class="hc-kpi__value">{{ volunteer_assign_count }}</div>
-        <div class="hc-kpi__context">Echeance proche : {{ prediction_counts.volunteer_assignment_overdue }}</div>
+        <div class="hc-kpi__context">Échéance proche : {{ prediction_counts.volunteer_assignment_overdue }}</div>
       </a>
     </div>
 
@@ -50,13 +50,13 @@
         <label class="form-label">Type</label>
         <select class="form-select form-select-sm" name="type">
           <option value="all" {% if breach_type == 'all' %}selected{% endif %}>Tous</option>
-          <option value="resolve" {% if breach_type == 'resolve' %}selected{% endif %}>Resolution</option>
+          <option value="resolve" {% if breach_type == 'resolve' %}selected{% endif %}>Résolution</option>
           <option value="owner_assign" {% if breach_type == 'owner_assign' %}selected{% endif %}>Attribution responsable</option>
           <option value="volunteer_assign" {% if breach_type == 'volunteer_assign' %}selected{% endif %}>Attribution intervenant</option>
         </select>
       </div>
       <div class="col-12 col-md-4 col-xl-2">
-        <label class="form-label">Fenetre</label>
+        <label class="form-label">Fenêtre</label>
         <select class="form-select form-select-sm" name="days">
           <option value="7" {% if days == 7 %}selected{% endif %}>7 j</option>
           <option value="30" {% if days == 30 %}selected{% endif %}>30 j</option>
@@ -72,7 +72,7 @@
       </div>
       <div class="col-12 col-xl-auto ms-xl-auto d-flex gap-2 align-items-center hc-ops-filters__actions">
         <button class="btn btn-primary btn-sm" type="submit">Filtrer</button>
-        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_sla_breakdown') }}">Reinitialiser</a>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_sla_breakdown') }}">Réinitialiser</a>
       </div>
     </form>
   </div>
@@ -80,8 +80,8 @@
   <div class="hc-card hc-admin-table-shell hc-sla-table-shell">
     <div class="hc-card__header hc-admin-table-toolbar">
       <div>
-        <h2 class="hc-section-title mb-1">Demandes en depassement</h2>
-        <div class="hc-section-subtitle">Vue operationnelle des lignes en retard avec type de breach, statut actuel et action rapide.</div>
+        <h2 class="hc-section-title mb-1">Demandes en dépassement</h2>
+        <div class="hc-section-subtitle">Vue opérationnelle des lignes en retard avec type de breach, statut actuel et action rapide.</div>
       </div>
       <span class="badge text-bg-light border">{{ rows|length }} lignes</span>
     </div>
@@ -92,9 +92,9 @@
             <th>ID</th>
             <th>Titre</th>
             <th>Type</th>
-            <th>Categorie</th>
+            <th>Catégorie</th>
             <th>Statut</th>
-            <th>Cree le</th>
+            <th>Créé le</th>
             <th>Retard</th>
             <th class="text-end">Action</th>
           </tr>
@@ -106,7 +106,7 @@
               <td>{{ r.title or "-" }}</td>
               <td>
                 {% if r.breach_type == "resolve" %}
-                  <span class="badge text-bg-danger">Resolution</span>
+                  <span class="badge text-bg-danger">Résolution</span>
                 {% elif r.breach_type == "owner_assign" %}
                   <span class="badge text-bg-warning text-dark">Attribution responsable</span>
                 {% elif r.breach_type == "volunteer_assign" %}

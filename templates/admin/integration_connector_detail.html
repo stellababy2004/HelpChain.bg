@@ -1,6 +1,6 @@
 {% extends "layouts/admin_workspace.html" %}
 
-{% block title %}Detail connecteur | HelpChain{% endblock %}
+{% block title %}Détail connecteur | HelpChain{% endblock %}
 {% block admin_body_class %} hc-admin-integrations-page{% endblock %}
 
 {% block admin_content %}
@@ -17,7 +17,7 @@
     <div class="hc-row hc-admin-headerTop">
       <div>
         <h1 class="hc-admin-title">{{ connector.name }}</h1>
-        <div class="hc-muted">Connecteur leger rattache au relais de coordination.</div>
+        <div class="hc-muted">Connecteur léger rattaché au relais de coordination.</div>
       </div>
       <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_integrations') }}">Retour aux connecteurs</a>
     </div>
@@ -25,22 +25,22 @@
 
   {% if one_time_secret %}
     <div class="alert alert-success" role="alert">
-      <div class="fw-semibold mb-2">Cle secrete generee</div>
+      <div class="fw-semibold mb-2">Clé secrète générée</div>
       <div class="mb-2">Conservez cette cle maintenant. Elle ne sera plus reaffichee.</div>
       <code>{{ one_time_secret }}</code>
     </div>
   {% endif %}
 
-  <div class="hc-command-grid mb-3" aria-label="Synthese connecteur">
+  <div class="hc-command-grid mb-3" aria-label="Synthèse connecteur">
     <section class="hc-card hc-command-panel">
       <div class="hc-command-panel__kicker">Statut</div>
       <h2 class="hc-command-panel__title">{{ connector.status }}</h2>
-      <div class="hc-muted">Etat courant du connecteur</div>
+      <div class="hc-muted">État courant du connecteur</div>
     </section>
     <section class="hc-card hc-command-panel">
-      <div class="hc-command-panel__kicker">Derniere activite</div>
+      <div class="hc-command-panel__kicker">Dernière activité</div>
       <h2 class="hc-command-panel__title">{{ connector.last_seen_at|format_datetime_fr if connector.last_seen_at else "—" }}</h2>
-      <div class="hc-muted">Derniere authentification reussie observee</div>
+      <div class="hc-muted">Dernière authentification réussie observée</div>
     </section>
     <section class="hc-card hc-command-panel">
       <div class="hc-command-panel__kicker">Dernier evenement</div>
@@ -89,7 +89,7 @@
     </section>
 
     <section class="hc-card p-3">
-      <h2 class="h6 mb-3">Champs autorises</h2>
+      <h2 class="h6 mb-3">Champs autorisés</h2>
       {% if allowed_fields %}
         <ul class="mb-0">
           {% for field_name in allowed_fields %}
@@ -97,7 +97,7 @@
           {% endfor %}
         </ul>
       {% else %}
-        <div class="hc-muted">Aucun sous-ensemble specifique configure. Le connecteur utilise la sanitisation standard du relais.</div>
+        <div class="hc-muted">Aucun sous-ensemble spécifique configuré. Le connecteur utilise la sanitisation standard du relais.</div>
       {% endif %}
     </section>
   </div>
@@ -107,27 +107,27 @@
     {% if connector.notes %}
       <div>{{ connector.notes }}</div>
     {% else %}
-      <div class="hc-muted">Aucune note interne enregistree pour ce connecteur.</div>
+      <div class="hc-muted">Aucune note interne enregistrée pour ce connecteur.</div>
     {% endif %}
   </div>
 
   <div class="hc-card hc-admin-table-shell mt-3">
     <div class="hc-card__header">
-      <h2 class="h6 mb-1">Evenements recents</h2>
-      <div class="hc-muted">Derniers signaux operationnels recus via ce connecteur.</div>
+      <h2 class="h6 mb-1">Événements récents</h2>
+      <div class="hc-muted">Derniers signaux opérationnels reçus via ce connecteur.</div>
     </div>
     <div class="table-responsive">
       <table class="table align-middle mb-0">
         <thead>
           <tr>
-            <th>Recu le</th>
-            <th>Reference externe</th>
+            <th>Reçu le</th>
+            <th>Référence externe</th>
             <th>Statut</th>
-            <th>Priorite</th>
-            <th>Categorie</th>
+            <th>Priorité</th>
+            <th>Catégorie</th>
             <th>Structure</th>
             <th>Sync status</th>
-            <th class="text-end">Detail</th>
+            <th class="text-end">Détail</th>
           </tr>
         </thead>
         <tbody>

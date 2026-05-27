@@ -15,7 +15,7 @@
     <div class="hc-row hc-admin-headerTop">
       <div>
         <h1 class="hc-admin-title">Connecteurs</h1>
-        <div class="hc-muted">Supervision du relais de coordination et des connecteurs legers rattaches aux structures.</div>
+        <div class="hc-muted">Supervision du relais de coordination et des connecteurs légers rattachés aux structures.</div>
       </div>
     </div>
   </div>
@@ -23,25 +23,25 @@
   <div class="hc-card mb-3 p-3">
     <div class="hc-ops-summary mb-3">
       <div class="hc-ops-summary__item">
-        <div class="hc-ops-summary__label">Evenements relayes</div>
+        <div class="hc-ops-summary__label">Événements relayés</div>
         <div class="hc-ops-summary__value">{{ total_events or 0 }}</div>
-        <div class="hc-muted small">Total enregistre dans le relais operationnel</div>
+        <div class="hc-muted small">Total enregistré dans le relais opérationnel</div>
       </div>
       <div class="hc-ops-summary__item">
-        <div class="hc-ops-summary__label">Recus</div>
+        <div class="hc-ops-summary__label">Reçus</div>
         <div class="hc-ops-summary__value">{{ received_count or 0 }}</div>
-        <div class="hc-muted small">Evenements en attente d'un traitement aval</div>
+        <div class="hc-muted small">Événements en attente d'un traitement aval</div>
       </div>
       <div class="hc-ops-summary__item">
         <div class="hc-ops-summary__label">Traites</div>
         <div class="hc-ops-summary__value">{{ processed_count or 0 }}</div>
-        <div class="hc-muted small">Evenements marques comme traites</div>
+        <div class="hc-muted small">Événements marqués comme traités</div>
       </div>
       <div class="hc-ops-summary__item">
         <div class="hc-ops-summary__label">Rejetes</div>
         <div class="hc-ops-summary__value {{ 'is-alert' if rejected_count }}">{{ rejected_count or 0 }}</div>
         <div class="hc-muted small">
-          Derniere reception :
+          Dernière réception :
           {% if latest_received_at %}
             {{ latest_received_at|format_datetime_fr }}
           {% else %}
@@ -57,11 +57,11 @@
 
     {% if not connectors_available %}
       <div class="alert alert-warning mt-3 mb-0" role="alert">
-        La table <code>integration_connectors</code> n'est pas encore disponible sur cette base. Executez la migration avant de configurer des connecteurs.
+        La table <code>integration_connectors</code> n'est pas encore disponible sur cette base. Exécutez la migration avant de configurer des connecteurs.
       </div>
     {% elif not relay_available %}
       <div class="alert alert-warning mt-3 mb-0" role="alert">
-        La table <code>relay_events</code> n'est pas encore disponible sur cette base. Executez la migration avant d'utiliser le relais de coordination.
+        La table <code>relay_events</code> n'est pas encore disponible sur cette base. Exécutez la migration avant d'utiliser le relais de coordination.
       </div>
     {% endif %}
   </div>
@@ -69,7 +69,7 @@
   {% if can_manage_connectors and connectors_available %}
     <div class="hc-card mb-3 p-3">
       <div class="hc-card__header px-0 pt-0">
-        <h2 class="h6 mb-1">Creer un connecteur</h2>
+        <h2 class="h6 mb-1">Créer un connecteur</h2>
         <div class="hc-muted">La cle secrete est generee une seule fois puis uniquement stockee sous forme de hash.</div>
       </div>
       <form method="post" action="{{ url_for('admin.admin_create_integration_connector') }}" class="row g-3">
@@ -101,7 +101,7 @@
           <div class="form-text">Exemple: <code>ccas-paris-relai</code></div>
         </div>
         <div class="col-md-6">
-          <label class="form-label" for="connector-allowed-fields">Champs autorises</label>
+          <label class="form-label" for="connector-allowed-fields">Champs autorisés</label>
           <textarea class="form-control" id="connector-allowed-fields" name="allowed_fields" rows="3" placeholder="status, priority, category, relance_at, summary_label"></textarea>
           <div class="form-text">Valeurs admises: {{ connector_allowed_fields|join(', ') }}</div>
         </div>
@@ -110,7 +110,7 @@
           <textarea class="form-control" id="connector-notes" name="notes" rows="3"></textarea>
         </div>
         <div class="col-12">
-          <button class="btn btn-primary" type="submit">Creer le connecteur</button>
+          <button class="btn btn-primary" type="submit">Créer le connecteur</button>
         </div>
       </form>
     </div>
@@ -118,7 +118,7 @@
 
   <div class="hc-card hc-admin-table-shell mb-3">
     <div class="hc-card__header">
-      <h2 class="h6 mb-1">Connecteurs configures</h2>
+      <h2 class="h6 mb-1">Connecteurs configurés</h2>
       <div class="hc-muted">Connecteurs actifs, suspendus ou revoques par structure.</div>
     </div>
     <div class="table-responsive">
@@ -129,10 +129,10 @@
             <th>Slug source</th>
             <th>Statut</th>
             <th>Structure</th>
-            <th>Derniere activite</th>
+            <th>Dernière activité</th>
             <th>Dernier evenement</th>
-            <th>Evenements</th>
-            <th class="text-end">Detail</th>
+            <th>Événements</th>
+            <th class="text-end">Détail</th>
           </tr>
         </thead>
         <tbody>
@@ -154,8 +154,8 @@
             <tr>
               <td colspan="8" class="py-4">
                 <div class="hc-empty-state">
-                  <div class="hc-empty-state__title">Aucun connecteur configure pour le moment.</div>
-                  <div class="hc-empty-state__text">La liste apparaitra des que les premiers connecteurs seront crees.</div>
+                  <div class="hc-empty-state__title">Aucun connecteur configuré pour le moment.</div>
+                  <div class="hc-empty-state__text">La liste apparaîtra dès que les premiers connecteurs seront créés.</div>
                 </div>
               </td>
             </tr>
@@ -167,24 +167,24 @@
 
   <div class="hc-card hc-admin-table-shell">
     <div class="hc-card__header">
-      <h2 class="h6 mb-1">Boite de reception du relais</h2>
-      <div class="hc-muted">Flux recents recus via les connecteurs de coordination.</div>
+      <h2 class="h6 mb-1">Boîte de réception du relais</h2>
+      <div class="hc-muted">Flux récents reçus via les connecteurs de coordination.</div>
     </div>
     <div class="table-responsive">
       <table class="table align-middle mb-0">
         <thead>
           <tr>
-            <th>Recu le</th>
+            <th>Reçu le</th>
             <th>Source</th>
             <th>Connecteur</th>
-            <th>Reference externe</th>
+            <th>Référence externe</th>
             <th>Statut</th>
-            <th>Priorite</th>
-            <th>Categorie</th>
+            <th>Priorité</th>
+            <th>Catégorie</th>
             <th>Structure</th>
             <th>Sync status</th>
             <th>Champs rejetes</th>
-            <th class="text-end">Detail</th>
+            <th class="text-end">Détail</th>
           </tr>
         </thead>
         <tbody>

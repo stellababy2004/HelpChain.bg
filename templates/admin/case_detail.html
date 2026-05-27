@@ -9,10 +9,10 @@
     'professional_assigned': 'Professionnel assigne',
     'owner_assigned': 'Responsable assigne',
     'status_changed': 'Statut mis a jour',
-    'priority_changed': 'Priorite mise a jour',
+    'priority_changed': 'Priorité mise à jour',
     'participant_added': 'Participant ajoute',
     'note_added': 'Note interne ajoutee',
-    'case_resolved': 'Dossier resolu',
+    'case_resolved': 'Dossier résolu',
     'case_closed': 'Dossier cloture'
   }.get(ev.event_type, (ev.event_type or 'Activite')|replace('_', ' ')|title) }}
 {%- endmacro %}
@@ -33,7 +33,7 @@
   {% elif ev.event_type == 'status_changed' %}
     Le statut operationnel du dossier a ete mis a jour.
   {% elif ev.event_type == 'case_resolved' %}
-    Le dossier a ete marque comme resolu.
+    Le dossier a été marqué comme résolu.
   {% elif ev.event_type == 'case_closed' %}
     Le dossier a ete cloture.
   {% elif ev.event_type == 'note_added' %}
@@ -108,7 +108,7 @@
             <strong><span class="hc-case-status-badge hc-status-pill--{{ case_status_key }}" title="{{ case_row.status }}">{{ case_status_label }}</span></strong>
           </div>
           <div class="hc-case-overview-item">
-            <span>Priorite</span>
+            <span>Priorité</span>
             <strong>{{ case_row.priority }}</strong>
           </div>
           <div class="hc-case-overview-item">
@@ -148,9 +148,9 @@
         {% if risk_ai_suggestion and risk_ai_suggestion.emergency_detected %}
           <div class="hc-risk-emergency-alert mb-3" aria-label="Alerte prioritaire">
             <div class="hc-risk-emergency-alert__eyebrow">Alerte prioritaire</div>
-            <div class="hc-risk-emergency-alert__title">Situation critique detectee</div>
-            <p class="mb-1">{{ risk_ai_suggestion.emergency_reason_summary or 'Protection immediate a evaluer.' }}</p>
-            <p class="mb-0 hc-risk-emergency-alert__hint">Revue operateur immediate recommandee.</p>
+            <div class="hc-risk-emergency-alert__title">Situation critique détectée</div>
+            <p class="mb-1">{{ risk_ai_suggestion.emergency_reason_summary or 'Protection immédiate à évaluer.' }}</p>
+            <p class="mb-0 hc-risk-emergency-alert__hint">Revue opérateur immédiate recommandée.</p>
           </div>
         {% endif %}
         <div class="hc-case-summary-grid">
@@ -169,7 +169,7 @@
         </div>
         {% if risk_ai_suggestion and risk_ai_suggestion.has_suggestion %}
           <div class="hc-case-signal-panel">
-            <strong>Suggestion de categorie:</strong> {{ risk_ai_suggestion.suggested_category_label }}
+            <strong>Suggestion de catégorie :</strong> {{ risk_ai_suggestion.suggested_category_label }}
             {% if risk_ai_suggestion.matched_rules %}
               <div class="hc-case-chiprow mt-2">
                 {% for rule in risk_ai_suggestion.matched_rules[:4] %}
@@ -220,7 +220,7 @@
         <div class="hc-case-section-head">
           <div>
             <div class="hc-section-kicker">Risques de traitement</div>
-            <h2 class="hc-section-title">Blocages operationnels detectes</h2>
+            <h2 class="hc-section-title">Blocages opérationnels détectés</h2>
           </div>
         </div>
         {% if operational_blockages and operational_blockages.has_blockage %}
@@ -241,7 +241,7 @@
         <div class="hc-case-section-head">
           <div>
             <div class="hc-section-kicker">Matching explicable</div>
-            <h2 class="hc-section-title">Professionnels suggeres</h2>
+            <h2 class="hc-section-title">Professionnels suggérés</h2>
           </div>
           <span class="small text-muted">{{ suggested_professionals|length }} options</span>
         </div>
@@ -298,7 +298,7 @@
         <div class="hc-case-section-head">
           <div>
             <div class="hc-section-kicker">Coordination</div>
-            <h2 class="hc-section-title">Participants supplementaires</h2>
+            <h2 class="hc-section-title">Participants supplémentaires</h2>
           </div>
           <span class="small text-muted">{{ participants|length }} participants</span>
         </div>
@@ -346,7 +346,7 @@
         <div class="hc-case-section-head">
           <div>
             <div class="hc-section-kicker">Suivi interne</div>
-            <h2 class="hc-section-title">Echanges internes</h2>
+            <h2 class="hc-section-title">Échanges internes</h2>
             <p class="mb-0 text-muted">Centralisez les informations utiles au suivi du dossier.</p>
           </div>
           <span class="small text-muted">{{ coordination_events|length }} notes</span>
@@ -379,7 +379,7 @@
                 <div class="hc-case-journal__message">{{ ev.message }}</div>
               </article>
             {% else %}
-              <div class="text-muted">Aucun echange interne pour le moment.</div>
+              <div class="text-muted">Aucun échange interne pour le moment.</div>
             {% endfor %}
           </div>
         </div>
@@ -391,7 +391,7 @@
             <div class="hc-section-kicker">Journal</div>
             <h2 class="hc-section-title">Chronologie</h2>
           </div>
-          <span class="small text-muted">{{ events|length }} evenements</span>
+          <span class="small text-muted">{{ events|length }} événements</span>
         </div>
         <div class="hc-timeline-track">
           {% for group_label, group_items in grouped_events.items() %}
@@ -434,7 +434,7 @@
     <aside class="hc-case-detail-aside">
       <div class="hc-case-action-rail">
         <section class="hc-card hc-case-detail-card hc-case-detail-card--sla">
-          <h2 class="hc-section-title">Delai cible</h2>
+          <h2 class="hc-section-title">Délai cible</h2>
           <div class="hc-case-rail-metric">
             <span>Cible</span>
             <strong>{{ case_sla.target_label }}</strong>
@@ -454,7 +454,7 @@
             <div><strong>Assigned:</strong> {{ case_row.assigned_at|format_datetime_fr }}</div>
             <div><strong>Resolved:</strong> {{ case_row.resolved_at|format_datetime_fr }}</div>
             <div><strong>Closed:</strong> {{ case_row.closed_at|format_datetime_fr }}</div>
-            <div><strong>Derniere activite:</strong> <span title="{{ case_activity_ref|format_datetime_fr }}">{{ case_activity_ref|format_datetime_fr }}</span></div>
+            <div><strong>Dernière activité :</strong> <span title="{{ case_activity_ref|format_datetime_fr }}">{{ case_activity_ref|format_datetime_fr }}</span></div>
           </div>
 
           <form method="post" action="{{ url_for('admin.admin_case_set_status', case_id=case_row.id) }}" class="hc-case-control-form">
@@ -466,20 +466,20 @@
                   <option value="{{ s }}" {% if case_row.status == s %}selected{% endif %}>{{ status_display_labels.get(s, s|replace('_', ' ')|title) }}</option>
                 {% endfor %}
               </select>
-              <button class="btn btn-primary btn-sm" type="submit">Mettre a jour</button>
+              <button class="btn btn-primary btn-sm" type="submit">Mettre à jour</button>
             </div>
           </form>
 
           <form method="post" action="{{ url_for('admin.admin_case_set_priority', case_id=case_row.id) }}" class="hc-case-control-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <label class="form-label">Priorite</label>
+            <label class="form-label">Priorité</label>
             <div class="hc-case-control-row">
               <select name="priority" class="form-select form-select-sm">
                 {% for p in priorities %}
                   <option value="{{ p }}" {% if case_row.priority == p %}selected{% endif %}>{{ p }}</option>
                 {% endfor %}
               </select>
-              <button class="btn btn-primary btn-sm" type="submit">Mettre a jour</button>
+              <button class="btn btn-primary btn-sm" type="submit">Mettre à jour</button>
             </div>
           </form>
 
@@ -499,7 +499,7 @@
 
           <form method="post" action="{{ url_for('admin.admin_case_assign_professional', case_id=case_row.id) }}" class="hc-case-control-form mb-0">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <label class="form-label">Referent professionnel principal</label>
+            <label class="form-label">Référent professionnel principal</label>
             <div class="hc-case-control-row">
               <select name="assigned_professional_lead_id" class="form-select form-select-sm">
                 <option value="">Non attribue</option>
@@ -520,18 +520,18 @@
             <form method="post" action="{{ url_for('admin.admin_case_set_status', case_id=case_row.id) }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="status" value="resolved">
-              <button class="btn btn-outline-success btn-sm" type="submit">Marquer comme resolu</button>
+              <button class="btn btn-outline-success btn-sm" type="submit">Marquer comme résolu</button>
             </form>
             <form method="post" action="{{ url_for('admin.admin_case_set_status', case_id=case_row.id) }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="status" value="closed">
-              <button class="btn btn-outline-secondary btn-sm" type="submit">Cloturer le cas</button>
+              <button class="btn btn-outline-secondary btn-sm" type="submit">Clôturer le cas</button>
             </form>
           </div>
         </section>
 
         <section class="hc-card hc-case-detail-card hc-case-detail-card--structures">
-          <h2 class="hc-section-title">Structures associees</h2>
+          <h2 class="hc-section-title">Structures associées</h2>
           <ul class="hc-case-structure-list">
             {% for name, role in collaborators %}
               <li>
