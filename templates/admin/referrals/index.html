@@ -8,6 +8,40 @@
 
 {% block admin_content %}
 <div class="hc-admin-wrap hc-admin-wrap--wide hc-referrals">
+  {% set status_labels = {
+    "sent": "Transmise",
+    "received": "Consultée",
+    "accepted": "Acceptée",
+    "in_progress": "Prise en charge",
+    "completed": "Clôturée",
+    "refused": "Refusée",
+    "cancelled": "Annulée",
+    "suspended": "Suspendue"
+  } %}
+  {% set ns = namespace(
+    pending=0,
+    active=0,
+    closed=0,
+    recently_updated=[],
+    partner_names=[]
+  ) %}
+  {% for referral in referrals %}
+    {% set status_key = (referral.operational_status or referral.status or "sent")|lower %}
+    {% if status_key in ["sent", "received"] %}
+      {% set ns.pending = ns.pending + 1 %}
+    {% elif status_key in ["accepted", "in_progress"] %}
+      {% set ns.active = ns.active + 1 %}
+    {% elif status_key in ["completed", "refused", "cancelled", "suspended"] %}
+      {% set ns.closed = ns.closed + 1 %}
+    {% endif %}
+    {% if ns.recently_updated|length < 3 %}
+      {% set _ = ns.recently_updated.append(referral) %}
+    {% endif %}
+    {% if referral.to_structure and referral.to_structure.name not in ns.partner_names %}
+      {% set _ = ns.partner_names.append(referral.to_structure.name) %}
+    {% endif %}
+  {% endfor %}
+
   <nav class="hc-admin-breadcrumb" aria-label="Fil d'Ariane">
     <a href="{{ url_for('admin.admin_home') }}">Accueil</a>
     <span>/</span>
@@ -18,9 +52,53 @@
     <div>
       <p class="hc-admin-kicker">Coordination inter-structures</p>
       <h1>Orientations partenaires</h1>
-      <p class="hc-muted">Suivi des orientations reçues et envoyées entre structures partenaires.</p>
+      <p class="hc-muted">Pilotage des transmissions encadrées, du suivi partagé et de la continuité opérationnelle entre structures autorisées.</p>
     </div>
   </header>
+
+  <section class="hc-card hc-referral-hero">
+    <div class="hc-referral-hero__main">
+      <span class="hc-referral-hero__eyebrow">Espace de coordination gouverné</span>
+      <h2>Un flux inter-structures lisible, tracé et cadré</h2>
+      <p>Les orientations partenaires permettent de transmettre une situation utile sans ouvrir l'intégralité du dossier interne. Chaque mise à jour visible reste limitée au périmètre autorisé.</p>
+      <div class="hc-referral-hero__chips" aria-label="Principes de gouvernance">
+        <span class="hc-referral-chip hc-referral-chip--governance">Visibilité ciblée</span>
+        <span class="hc-referral-chip hc-referral-chip--governance">Suivi partagé</span>
+        <span class="hc-referral-chip hc-referral-chip--governance">Traçabilité native</span>
+      </div>
+    </div>
+    <aside class="hc-referral-hero__aside">
+      <h3>Repères de gouvernance</h3>
+      <ul class="hc-referral-governance-list">
+        <li>Les partenaires n'accèdent qu'aux éléments explicitement partagés.</li>
+        <li>Chaque transmission reste rattachée à une structure source et une structure destinataire identifiées.</li>
+        <li>Les statuts visibles servent la coordination sans exposer les notes internes du partenaire.</li>
+      </ul>
+    </aside>
+  </section>
+
+  <section class="hc-referral-summary" aria-label="Synthèse opérationnelle">
+    <article class="hc-card hc-referral-summary__card">
+      <span class="hc-referral-summary__label">Flux observés</span>
+      <strong class="hc-referral-summary__value">{{ referrals|length }}</strong>
+      <p class="hc-referral-summary__hint">Orientations visibles dans votre périmètre actuel.</p>
+    </article>
+    <article class="hc-card hc-referral-summary__card">
+      <span class="hc-referral-summary__label">En attente de prise en compte</span>
+      <strong class="hc-referral-summary__value">{{ ns.pending }}</strong>
+      <p class="hc-referral-summary__hint">Orientations transmises ou consultées avant validation ou relais formalisé.</p>
+    </article>
+    <article class="hc-card hc-referral-summary__card">
+      <span class="hc-referral-summary__label">Coordination active</span>
+      <strong class="hc-referral-summary__value">{{ ns.active }}</strong>
+      <p class="hc-referral-summary__hint">Orientations acceptées ou actuellement prises en charge chez un partenaire.</p>
+    </article>
+    <article class="hc-card hc-referral-summary__card">
+      <span class="hc-referral-summary__label">Stabilisées</span>
+      <strong class="hc-referral-summary__value">{{ ns.closed }}</strong>
+      <p class="hc-referral-summary__hint">Flux clôturés, refusés, suspendus ou interrompus avec une trace lisible.</p>
+    </article>
+  </section>
 
   <section class="hc-referral-tabs" aria-label="Filtres orientations">
     <a class="btn btn-sm {{ 'btn-primary' if active_tab == 'all' else 'btn-outline-secondary' }}" href="{{ url_for('admin.admin_referrals_index') }}">Vue globale</a>
@@ -29,7 +107,60 @@
     <a class="btn btn-sm {{ 'btn-primary' if active_tab == 'partners' else 'btn-outline-secondary' }}" href="{{ url_for('admin.admin_referral_partners') }}">Partenaires</a>
   </section>
 
+  <section class="hc-referral-grid">
+    <article class="hc-card hc-referral-sidecard">
+      <div class="hc-referral-sidecard__header">
+        <span class="hc-referral-sidecard__eyebrow">Cycle de coordination</span>
+        <h2>Lecture commune du parcours</h2>
+      </div>
+      <ol class="hc-referral-mini-lifecycle">
+        <li><strong>Transmission</strong><span>Une structure adresse une orientation utile à un partenaire autorisé.</span></li>
+        <li><strong>Validation ou prise en compte</strong><span>La structure destinataire consulte, accepte ou refuse selon son périmètre d'intervention.</span></li>
+        <li><strong>Suivi partagé</strong><span>Les mises à jour publiques de coordination rendent l'avancement lisible sans exposer l'interne.</span></li>
+        <li><strong>Stabilisation</strong><span>Le flux est clôturé, suspendu ou interrompu avec une trace visible pour les structures concernées.</span></li>
+      </ol>
+    </article>
+
+    <article class="hc-card hc-referral-sidecard">
+      <div class="hc-referral-sidecard__header">
+        <span class="hc-referral-sidecard__eyebrow">Activité récente</span>
+        <h2>Derniers flux visibles</h2>
+      </div>
+      {% if ns.recently_updated %}
+        <ul class="hc-referral-activity-list">
+          {% for referral in ns.recently_updated %}
+            {% set status_key = (referral.operational_status or referral.status or "sent")|lower %}
+            <li>
+              <strong>#{{ referral.id }} · {{ status_labels.get(status_key, referral.status or "Orientation") }}</strong>
+              <span>{{ referral.to_structure.name if referral.to_structure else ("Structure #" ~ referral.to_structure_id) }}</span>
+              <small>{{ referral.created_at|format_datetime_fr }}</small>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="hc-muted mb-0">Les premières orientations visibles apparaîtront ici pour faciliter la lecture de l'activité récente.</p>
+      {% endif %}
+    </article>
+  </section>
+
   <section class="hc-card hc-referral-list">
+    <div class="hc-referral-list__header">
+      <div>
+        <span class="hc-referral-sidecard__eyebrow">Flux opérationnels</span>
+        <h2>Orientations dans le périmètre courant</h2>
+        <p class="hc-muted mb-0">Suivi des transmissions envoyées ou reçues entre structures partenaires, avec lecture commune de l'état opérationnel.</p>
+      </div>
+      {% if ns.partner_names %}
+        <div class="hc-referral-list__partners" aria-label="Structures partenaires visibles">
+          {% for partner_name in ns.partner_names[:3] %}
+            <span class="hc-referral-chip">{{ partner_name }}</span>
+          {% endfor %}
+          {% if ns.partner_names|length > 3 %}
+            <span class="hc-referral-chip">+{{ ns.partner_names|length - 3 }} autres</span>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
     <div class="table-responsive">
       <table class="table align-middle mb-0">
         <thead>
@@ -37,13 +168,14 @@
             <th>Orientation</th>
             <th>Structure destinataire</th>
             <th>Origine</th>
-            <th>Statut</th>
+            <th>Statut opérationnel</th>
             <th>Créée le</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {% for referral in referrals %}
+            {% set status_key = (referral.operational_status or referral.status or "sent")|lower %}
             <tr>
               <td>
                 <strong>#{{ referral.id }}</strong>
@@ -51,7 +183,11 @@
               </td>
               <td>{{ referral.to_structure.name if referral.to_structure else ("#" ~ referral.to_structure_id) }}</td>
               <td>{{ referral.from_structure.name if referral.from_structure else ("#" ~ referral.from_structure_id) }}</td>
-              <td><span class="badge text-bg-secondary">{{ referral.status }}</span></td>
+              <td>
+                <span class="hc-referral-status hc-referral-status--{{ status_key|replace('_', '-') }}">
+                  {{ status_labels.get(status_key, referral.status or "Statut") }}
+                </span>
+              </td>
               <td>{{ referral.created_at|format_datetime_fr }}</td>
               <td class="text-end">
                 <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.admin_referral_detail', referral_id=referral.id) }}">Voir</a>
@@ -59,7 +195,24 @@
             </tr>
           {% else %}
             <tr>
-              <td colspan="6" class="text-center text-muted py-4">Aucune orientation partenaire.</td>
+              <td colspan="6" class="py-0">
+                <div class="hc-referral-empty">
+                  <div class="hc-referral-empty__copy">
+                    <span class="hc-referral-empty__eyebrow">Aucune orientation active</span>
+                    <h3>Préparez un premier flux inter-structures encadré</h3>
+                    <p>Les orientations partenaires servent à transmettre une situation utile vers une structure autorisée, avec validation, suivi partagé et visibilité limitée au périmètre nécessaire.</p>
+                    <ul class="hc-referral-governance-list">
+                      <li>Les structures partenaires doivent être reconnues dans un cadre bilatéral.</li>
+                      <li>Les informations partagées restent limitées à la coordination utile.</li>
+                      <li>Le suivi visible soutient la continuité opérationnelle sans ouvrir le dossier interne.</li>
+                    </ul>
+                  </div>
+                  <div class="hc-referral-empty__actions">
+                    <a class="btn btn-primary" href="{{ url_for('admin.admin_referral_partners') }}">Gérer les partenariats</a>
+                    <p class="hc-muted mb-0">Une fois un partenariat actif, les équipes peuvent envoyer des orientations depuis les demandes concernées.</p>
+                  </div>
+                </div>
+              </td>
             </tr>
           {% endfor %}
         </tbody>

@@ -8,6 +8,29 @@
 
 {% block admin_content %}
 <div class="hc-admin-wrap hc-referrals">
+  {% set capability_labels = {
+    "can_send_referrals": {
+      "title": "Orientation autorisée",
+      "text": "La structure partenaire peut participer à des transmissions encadrées dans le cadre validé."
+    },
+    "can_receive_referrals": {
+      "title": "Réception partenaire",
+      "text": "La structure destinataire peut recevoir et traiter une orientation utile dans son périmètre."
+    },
+    "can_view_status_after_transfer": {
+      "title": "Suivi partagé",
+      "text": "Les structures concernées gardent une lecture commune du statut visible après transmission."
+    },
+    "can_comment": {
+      "title": "Commentaires de coordination",
+      "text": "Des commentaires partagés peuvent être échangés pour soutenir la continuité opérationnelle."
+    },
+    "can_share_documents": {
+      "title": "Documents protégés",
+      "text": "Des documents explicitement autorisés peuvent être partagés dans le cadre de la relation."
+    }
+  } %}
+
   <nav class="hc-admin-breadcrumb" aria-label="Fil d'Ariane">
     <a href="{{ url_for('admin.admin_home') }}">Accueil</a>
     <span>/</span>
@@ -18,41 +41,102 @@
 
   <header class="hc-admin-pagehead">
     <div>
-      <p class="hc-admin-kicker">Demande de connexion partenaire</p>
-      <h1>Ajouter un partenaire</h1>
-      <p class="hc-muted">Créer une demande de connexion avec une structure existante.</p>
+      <p class="hc-admin-kicker">Gouvernance partenariale</p>
+      <h1>Configurer une demande de partenariat</h1>
+      <p class="hc-muted">Préparez une relation inter-structures cadrée, avec validation bilatérale et périmètre de coordination maîtrisé.</p>
     </div>
   </header>
 
-  <section class="hc-card">
-    <form method="post" action="{{ url_for('admin.admin_referral_partner_create') }}" class="hc-referral-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <section class="hc-card hc-referral-hero hc-referral-hero--compact">
+    <div class="hc-referral-hero__main">
+      <span class="hc-referral-hero__eyebrow">Cadre institutionnel</span>
+      <h2>Une connexion partenaire n'est pas un simple paramétrage</h2>
+      <p>Elle formalise qui peut orienter, quel suivi opérationnel reste visible et dans quelles limites la coopération se poursuit entre structures.</p>
+      <div class="hc-referral-hero__chips" aria-label="Garanties de partenariat">
+        <span class="hc-referral-chip hc-referral-chip--governance">Validation bilatérale</span>
+        <span class="hc-referral-chip hc-referral-chip--governance">Périmètre maîtrisé</span>
+        <span class="hc-referral-chip hc-referral-chip--governance">Traçabilité partagée</span>
+      </div>
+    </div>
+  </section>
 
-      <div>
-        <label for="target_structure_id" class="form-label">Structures partenaires</label>
-        <select id="target_structure_id" name="target_structure_id" class="form-select" required>
-          <option value="">Sélectionner une structure</option>
-          {% for structure in structures %}
-            <option value="{{ structure.id }}">{{ structure.name }}</option>
-          {% endfor %}
-        </select>
+  <section class="hc-referral-grid hc-referral-grid--form">
+    <section class="hc-card">
+      <div class="hc-referral-list__header">
+        <div>
+          <span class="hc-referral-sidecard__eyebrow">Demande de connexion</span>
+          <h2>Initier un partenariat autorisé</h2>
+          <p class="hc-muted mb-0">La relation sera créée en attente de validation par la structure partenaire avant toute activation opérationnelle.</p>
+        </div>
       </div>
 
-      <fieldset class="hc-referral-fieldset">
-        <legend>Autoriser l’orientation</legend>
-        {% for key, value in default_permissions.items() %}
-          <label class="form-check">
-            <input class="form-check-input" type="checkbox" checked disabled>
-            <span class="form-check-label">{{ key }}: {{ "oui" if value else "non" }}</span>
-          </label>
-        {% endfor %}
-      </fieldset>
+      <form method="post" action="{{ url_for('admin.admin_referral_partner_create') }}" class="hc-referral-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-      <div class="d-flex gap-2 flex-wrap">
-        <button type="submit" class="btn btn-primary">Ajouter un partenaire</button>
-        <a class="btn btn-outline-secondary" href="{{ url_for('admin.admin_referral_partners') }}">Annuler</a>
+        <div class="hc-referral-form__section">
+          <label for="target_structure_id" class="form-label">Structure partenaire pressentie</label>
+          <select id="target_structure_id" name="target_structure_id" class="form-select" required>
+            <option value="">Sélectionner une structure</option>
+            {% for structure in structures %}
+              <option value="{{ structure.id }}">{{ structure.name }}</option>
+            {% endfor %}
+          </select>
+          <p class="form-text">Choisissez la structure avec laquelle votre organisation souhaite ouvrir un cadre d'orientation partenaire.</p>
+        </div>
+
+        <div class="hc-referral-form__section">
+          <div class="hc-referral-governance-panel">
+            <div class="hc-referral-governance-panel__header">
+              <span class="hc-referral-sidecard__eyebrow">Périmètre initial</span>
+              <h3>Capacités prévues à l'ouverture</h3>
+            </div>
+            <div class="hc-referral-capabilities">
+              {% for key, value in default_permissions.items() %}
+                {% set capability = capability_labels.get(key, {"title": key, "text": "Capacité de coordination configurée pour ce partenariat."}) %}
+                <article class="hc-referral-capability">
+                  <div class="hc-referral-capability__state {{ 'is-enabled' if value else 'is-disabled' }}">
+                    {{ "Oui" if value else "Non" }}
+                  </div>
+                  <div class="hc-referral-capability__body">
+                    <strong>{{ capability.title }}</strong>
+                    <p>{{ capability.text }}</p>
+                  </div>
+                </article>
+              {% endfor %}
+              <article class="hc-referral-capability hc-referral-capability--informative">
+                <div class="hc-referral-capability__state is-protected">Protégé</div>
+                <div class="hc-referral-capability__body">
+                  <strong>Notes internes masquées</strong>
+                  <p>Les éléments internes de traitement restent hors du périmètre partenaire dans ce cadre initial.</p>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap">
+          <button type="submit" class="btn btn-primary">Créer la demande de partenariat</button>
+          <a class="btn btn-outline-secondary" href="{{ url_for('admin.admin_referral_partners') }}">Annuler</a>
+        </div>
+      </form>
+    </section>
+
+    <aside class="hc-card hc-referral-sidecard">
+      <div class="hc-referral-sidecard__header">
+        <span class="hc-referral-sidecard__eyebrow">Cycle de validation</span>
+        <h2>Ce qui se passe ensuite</h2>
       </div>
-    </form>
+      <ol class="hc-referral-mini-lifecycle hc-referral-mini-lifecycle--governance">
+        <li><strong>Demande créée</strong><span>La relation est enregistrée comme proposition de partenariat dans votre périmètre.</span></li>
+        <li><strong>Validation bilatérale attendue</strong><span>La structure cible doit confirmer l'ouverture de la relation avant activation.</span></li>
+        <li><strong>Partenariat actif</strong><span>Les équipes peuvent ensuite orienter des demandes dans le cadre autorisé.</span></li>
+        <li><strong>Suivi maîtrisé</strong><span>Le partenariat peut être suspendu ou révoqué si le cadre opérationnel évolue.</span></li>
+      </ol>
+      <div class="hc-referral-sidecard__note">
+        <strong>Rappel de gouvernance</strong>
+        <p class="mb-0">Cette première phase conserve les capacités par défaut déjà prévues par le backend, mais les présente comme un cadre institutionnel lisible plutôt que comme une liste technique.</p>
+      </div>
+    </aside>
   </section>
 </div>
 {% endblock %}
