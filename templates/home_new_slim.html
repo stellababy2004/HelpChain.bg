@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}{{ _('HelpChain | Plateforme de coordination opérationnelle') }}{% endblock %}
-{% block meta_description %}{{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations. Suivi multi-acteurs, pilotage des situations sociales, gouvernance opérationnelle et traçabilité native.') }}{% endblock %}
+{% block meta_description %}{{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations.') }}{% endblock %}
 {% block og_title %}{{ _('HelpChain | Plateforme de coordination opérationnelle') }}{% endblock %}
 {% block body_class %}hc-page-home{% endblock %}
 
@@ -84,108 +84,361 @@
     }
 
     body.hc-page-home .hc-home-premium__hero {
-      padding-top: 36px !important;
-      padding-bottom: 30px !important;
+      padding-top: 28px !important;
+      padding-bottom: 24px !important;
     }
 
     body.hc-page-home .hc-home-premium__hero-grid {
       display: grid;
-      grid-template-columns: minmax(0, 0.9fr) minmax(560px, 1.1fr);
+      grid-template-columns: minmax(560px, 0.94fr) minmax(760px, 1.08fr);
       align-items: start;
-      gap: clamp(28px, 3vw, 52px);
+      column-gap: clamp(22px, 1.5vw, 28px);
+      row-gap: 12px;
+      max-width: 1860px;
+      margin: 0 auto;
+      padding: clamp(24px, 2vw, 32px);
+      border: 1px solid rgba(16, 36, 59, 0.12);
+      border-radius: clamp(28px, 3vw, 38px);
+      background:
+        radial-gradient(circle at top right, rgba(31, 138, 131, 0.1), transparent 30%),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.985), rgba(241, 247, 253, 0.96));
+      box-shadow: 0 24px 56px rgba(15, 23, 42, 0.07);
+      overflow: hidden;
+      position: relative;
     }
 
     body.hc-page-home .hc-home-premium__hero-copy {
-      display: grid;
-      gap: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
       align-content: start;
-      max-width: 640px;
+      align-self: start;
+      width: 100%;
+      max-width: none;
+      min-width: 0;
+      padding-right: clamp(4px, 0.45vw, 8px);
       position: relative;
       z-index: 2;
     }
 
     body.hc-page-home .hc-home-premium__hero-copy h1 {
-      max-width: 8.6ch;
+      max-width: 18ch;
+      font-size: clamp(1.76rem, 1.34vw, 2.34rem);
+      line-height: 0.99;
+      text-wrap: pretty;
       margin-bottom: 0;
     }
 
     body.hc-page-home .hc-home-premium__lead {
-      max-width: 32rem;
+      max-width: 58ch;
       margin-bottom: 0;
+      font-size: 0.94rem;
+      line-height: 1.46;
     }
 
-    body.hc-page-home .hc-home-premium__hero-actions {
-      margin: 0;
+    body.hc-page-home .hc-home-premium__lead + .hc-home-premium__lead {
+      position: relative;
+      padding-top: 6px;
+      margin-top: 2px;
     }
 
-    body.hc-page-home .hc-home-premium__hero-demo-note {
-      margin: 0;
-      max-width: 54rem;
-    }
-
-    body.hc-page-home .hc-reality-proof {
-      margin: 0;
-      gap: 12px;
-    }
-
-    body.hc-page-home .hc-reality-proof__chip {
-      padding: 12px 16px;
-      font-size: 0.95rem;
-      font-weight: 650;
-      line-height: 1.45;
-    }
-
-    body.hc-page-home .hc-home-premium__trust-list {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px 10px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    body.hc-page-home .hc-home-premium__trust-list li {
-      min-height: 100%;
-      padding: 11px 13px;
-      border: 1px solid rgba(53, 80, 122, 0.12);
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.72);
-      color: #27476d;
-      font-weight: 620;
-      line-height: 1.45;
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
+    body.hc-page-home .hc-home-premium__lead + .hc-home-premium__lead::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 72px;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(53, 80, 122, 0.16), rgba(53, 80, 122, 0));
     }
 
     body.hc-page-home .hc-home-premium__preview {
       display: grid;
-      gap: 10px;
+      gap: 8px;
       align-content: start;
-      justify-self: end;
-      width: min(100%, 930px);
+      justify-self: stretch;
+      align-self: start;
+      width: min(100%, 1120px);
       max-width: 100%;
+      margin-top: 0;
       position: relative;
       z-index: 1;
     }
 
     body.hc-page-home .hc-home-premium__preview-proof {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
     }
 
-    body.hc-page-home .hc-home-premium__preview-proofItem {
-      padding: 10px 12px;
+    body.hc-page-home .hc-home-premium__trust-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    body.hc-page-home .hc-home-premium__trust-list li {
+      min-height: 0;
+      padding: 14px 16px;
       border: 1px solid rgba(53, 80, 122, 0.12);
       border-radius: 18px;
+      background: rgba(255, 255, 255, 0.76);
+      color: #27476d;
+      font-size: 0.92rem;
+      font-weight: 620;
+      line-height: 1.42;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
+    }
+
+    body.hc-page-home .hc-home-premium__hero-support {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: flex-start;
+      margin-top: 0;
+      padding: 5px 0 3px;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      overflow: visible;
+    }
+
+    body.hc-page-home .hc-home-premium__hero-actions {
+      margin: 0;
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 6px;
+      align-items: center;
+      justify-self: start;
+      padding-top: 0;
+      flex: 0 0 auto;
+      width: auto;
+    }
+
+    body.hc-page-home .hc-home-premium__hero-actions .btn {
+      min-height: 40px;
+      padding: 0.56rem 0.98rem;
+      white-space: nowrap;
+      flex: 0 0 auto;
+      width: auto;
+      justify-content: center;
+      text-align: center;
+      font-size: 0.91rem;
+      line-height: 1.08;
+    }
+
+    body.hc-page-home .hc-home-premium__hero-supportInline {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 2px 10px;
+      flex: 1 1 100%;
+      min-width: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    body.hc-page-home .hc-home-premium__hero-demo-note {
+      margin: 0;
+      flex: 1 1 100%;
+      max-width: 26rem;
+      min-width: 0;
+      color: #4f6783;
+      font-size: 0.74rem;
+      line-height: 1.16;
+      text-wrap: pretty;
+      overflow-wrap: normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    body.hc-page-home .hc-home-premium__hero-supportMeta {
+      margin: 0;
+      color: #6b7f97;
+      font-size: 0.68rem;
+      line-height: 1.06;
+      letter-spacing: 0.01em;
+      text-align: left;
+      white-space: normal;
+      max-width: 100%;
+      min-width: 0;
+      flex: 0 1 100%;
+      text-wrap: balance;
+      overflow-wrap: anywhere;
+      opacity: 0.78;
+    }
+
+    body.hc-page-home .hc-home-premium__preview-support {
+      display: grid;
+      gap: 5px;
+      padding: 8px 10px 6px;
+      border: 1px solid rgba(53, 80, 122, 0.12);
+      border-radius: 16px;
+      background: rgba(247, 250, 253, 0.92);
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.04);
+      margin-top: -2px;
+    }
+
+    body.hc-page-home .hc-home-premium__preview-supportTitle {
+      margin: 0;
+      color: #1f4b86;
+      font-size: 0.76rem;
+      font-weight: 750;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    body.hc-page-home .hc-home-premium__preview-supportRail {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    body.hc-page-home .hc-home-premium__preview-supportItem {
+      min-height: 0;
+      margin: 0;
+      padding: 9px 10px;
+      border: 1px solid rgba(53, 80, 122, 0.12);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.84);
+      color: #33506f;
+      font-size: 0.84rem;
+      font-weight: 620;
+      line-height: 1.28;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.03);
+    }
+
+    body.hc-page-home .hc-home-premium__preview-supportFoot {
+      margin: 0;
+      color: #4f6a88;
+      font-size: 0.76rem;
+      line-height: 1.26;
+    }
+
+    body.hc-page-home .hc-home-premium__preview-supportFoot:last-child {
+      margin-bottom: -3px;
+    }
+    body.hc-page-home .hc-home-premium__preview-proofItem {
+      padding: 8px 10px;
+      border: 1px solid rgba(53, 80, 122, 0.12);
+      border-radius: 14px;
       background: rgba(255, 255, 255, 0.82);
       box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
     }
 
+    body.hc-page-home .hc-home-premium__product-visual {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    body.hc-page-home .hc-home-premium__product-visual .hc-home-premium__shot-card {
+      width: min(100%, 1040px);
+      overflow: hidden;
+      border-radius: 24px;
+      box-shadow:
+        0 22px 52px rgba(15, 23, 42, 0.08),
+        0 7px 18px rgba(37, 99, 235, 0.04);
+    }
+
+    body.hc-page-home .hc-home-premium__product-visual .hc-home-premium__shot-bar {
+      min-height: 36px;
+      padding: 6px 12px;
+      gap: 8px;
+    }
+
+    body.hc-page-home .hc-home-premium__product-visual .hc-home-premium__shot-bar span {
+      width: 9px;
+      height: 9px;
+    }
+
+    body.hc-page-home .hc-home-premium__product-visual .hc-home-premium__shot-bar strong {
+      font-size: 0.92rem;
+      line-height: 1.12;
+    }
+
+    body.hc-page-home .hc-home-premium__product-visual .hc-home-premium__shot-img {
+      display: block;
+      width: 112%;
+      max-width: none;
+      height: auto;
+      margin-left: -6%;
+      margin-top: -1%;
+      transform: scale(1.02);
+      transform-origin: center top;
+      object-fit: cover;
+      object-position: center top;
+      background: #f8fbff;
+    }
+
+    body.hc-page-home .hc-home-premium__product-visual .hc-home-premium__shot-img--module-demandes {
+      width: 116%;
+      margin-left: -8%;
+      margin-top: -1.2%;
+      transform: scale(1.03);
+    }
+
+    body.hc-page-home .hc-home-premium__product-visual .hc-home-premium__shot-img--module-securite {
+      width: 114%;
+      margin-left: -7%;
+      margin-top: -1%;
+      transform: scale(1.025);
+    }
+
+    body.hc-page-home .hc-home-premium__shot-card--hero {
+      margin: 0;
+      transform: translateX(0);
+      width: min(100%, 1040px);
+      justify-self: stretch;
+      overflow: hidden;
+      border-radius: 24px;
+      box-shadow:
+        0 22px 52px rgba(15, 23, 42, 0.08),
+        0 7px 18px rgba(37, 99, 235, 0.04);
+    }
+
+    body.hc-page-home .hc-home-premium__shot-card--hero .hc-home-premium__shot-bar {
+      min-height: 36px;
+      padding: 6px 12px;
+      gap: 8px;
+    }
+
+    body.hc-page-home .hc-home-premium__shot-card--hero .hc-home-premium__shot-bar span {
+      width: 9px;
+      height: 9px;
+    }
+
+    body.hc-page-home .hc-home-premium__shot-card--hero .hc-home-premium__shot-bar strong {
+      font-size: 0.92rem;
+      line-height: 1.12;
+    }
+
+    body.hc-page-home .hc-home-premium__shot-img--hero {
+      display: block;
+      width: 118%;
+      max-width: none;
+      height: auto;
+      margin-left: -7%;
+      margin-top: -1.2%;
+      transform: scale(1.03);
+      transform-origin: center top;
+    }
+
     body.hc-page-home .hc-home-premium__preview-proofLabel {
       display: block;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
       color: #1f4b86;
-      font-size: 0.76rem;
+      font-size: 0.7rem;
       font-weight: 750;
       letter-spacing: 0.06em;
       text-transform: uppercase;
@@ -194,40 +447,239 @@
     body.hc-page-home .hc-home-premium__preview-proofText {
       display: block;
       color: #294867;
-      font-size: 0.92rem;
-      line-height: 1.4;
+      font-size: 0.84rem;
+      line-height: 1.24;
     }
 
     body.hc-page-home .hc-home-premium__workflow-points {
       display: grid;
-      gap: 10px;
-      margin: 18px 0 0;
+      gap: 8px;
+      margin: 14px 0 0;
       padding: 0;
       list-style: none;
     }
 
     body.hc-page-home .hc-home-premium__workflow-points li {
-      padding: 12px 14px;
+      padding: 10px 12px;
       border: 1px solid rgba(53, 80, 122, 0.12);
-      border-radius: 16px;
+      border-radius: 18px;
       background: rgba(255, 255, 255, 0.72);
       color: #294867;
       font-weight: 600;
-      line-height: 1.45;
-      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.035);
+      line-height: 1.38;
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.04);
     }
 
     body.hc-page-home .hc-home-premium__workflow-note {
       display: inline-flex;
       align-items: center;
-      margin-top: 18px;
-      padding: 10px 14px;
-      border-radius: 999px;
+      max-width: 46ch;
+      margin-top: 12px;
+      padding: 9px 12px;
+      border-radius: 18px;
       background: rgba(30, 64, 175, 0.08);
       color: #214778;
-      font-size: 0.92rem;
+      font-size: 0.88rem;
       font-weight: 650;
-      line-height: 1.35;
+      line-height: 1.32;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.035);
+    }
+
+    body.hc-page-home .hc-home-premium__section-head--product {
+      display: grid;
+      justify-items: start;
+      text-align: left;
+      gap: 8px;
+      max-width: 1100px;
+      margin-inline: 0;
+    }
+
+    body.hc-page-home .hc-home-premium__section-head--product > p:first-child {
+      margin: 0;
+      font-size: 0.76rem;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #315784;
+    }
+
+    body.hc-page-home .hc-home-premium__section-head--product h2 {
+      margin: 0;
+      max-width: 20ch;
+      text-align: left;
+    }
+
+    body.hc-page-home .hc-home-premium__section-head--product > p:last-child {
+      max-width: 58ch;
+      margin: 0;
+      text-align: left;
+      font-size: 0.95rem;
+      line-height: 1.44;
+      color: #47627f;
+    }
+
+    body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-row,
+    body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-row--reverse {
+      grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+      gap: clamp(24px, 2.5vw, 36px);
+    }
+
+    body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-row--intake {
+      grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
+      gap: clamp(22px, 2.2vw, 32px);
+    }
+
+    body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-row--intake .hc-home-premium__product-visual {
+      width: min(100%, 940px);
+      justify-self: end;
+    }
+
+    body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-row--intake .hc-home-premium__shot-img--module-demandes {
+      width: 108%;
+      margin-left: -4%;
+      margin-top: -0.8%;
+      transform: scale(1.015);
+    }
+
+    body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-row--cases {
+      grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
+      gap: clamp(22px, 2.2vw, 32px);
+    }
+
+    body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-row--cases .hc-home-premium__product-visual {
+      width: min(100%, 900px);
+      justify-self: start;
+    }
+
+    body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-row--cases .hc-home-premium__shot-img:not(.hc-home-premium__shot-img--module-demandes):not(.hc-home-premium__shot-img--module-securite) {
+      width: 104%;
+      margin-left: -2%;
+      margin-top: -0.5%;
+      transform: scale(1.01);
+    }
+
+    body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-row--security {
+      grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
+      gap: clamp(22px, 2.2vw, 32px);
+    }
+
+    body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-row--security .hc-home-premium__product-visual {
+      width: min(100%, 920px);
+      justify-self: end;
+    }
+
+    body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-row--security .hc-home-premium__shot-img--module-securite {
+      width: 108%;
+      margin-left: -4%;
+      margin-top: -0.6%;
+      transform: scale(1.015);
+    }
+
+    body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-copy {
+      align-self: center;
+      max-width: 35rem;
+    }
+
+    body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-row--reverse .hc-home-premium__product-copy {
+      justify-self: start;
+    }
+
+    body.hc-page-home .hc-home-premium__product-copy .hc-home-premium__section-kicker {
+      margin-bottom: 8px;
+    }
+
+    body.hc-page-home .hc-home-premium__product-copy h2 {
+      max-width: 12ch;
+      margin: 0 0 8px;
+      font-size: clamp(2.02rem, 1.24vw + 1.72rem, 2.52rem);
+      line-height: 1.04;
+      letter-spacing: -0.024em;
+      text-wrap: balance;
+    }
+
+    body.hc-page-home .hc-home-premium__product-copy > p:not(.hc-home-premium__section-kicker) {
+      max-width: 47ch;
+      margin: 0;
+      font-size: 0.94rem;
+      line-height: 1.5;
+      color: #4b6784;
+    }
+
+    body.hc-page-home :is(
+      .hc-home-premium__shot-card--hero,
+      .hc-home-premium__product-visual .hc-home-premium__shot-card
+    ) {
+      --hc-shot-pad-x: 20px;
+      --hc-shot-pad-top: 10px;
+      --hc-shot-pad-bottom: 15px;
+    }
+
+    body.hc-page-home :is(
+      .hc-home-premium__shot-card--hero .hc-home-premium__shot-bar,
+      .hc-home-premium__product-visual .hc-home-premium__shot-bar
+    ) {
+      min-height: 54px !important;
+      padding: 11px 18px !important;
+      gap: 9px !important;
+    }
+
+    body.hc-page-home :is(
+      .hc-home-premium__shot-card--hero .hc-home-premium__shot-bar strong,
+      .hc-home-premium__product-visual .hc-home-premium__shot-bar strong
+    ) {
+      display: inline-flex;
+      align-items: center;
+      margin-left: auto;
+      padding-left: 10px;
+      font-size: clamp(0.98rem, 0.16vw + 0.95rem, 1.06rem) !important;
+      line-height: 1.18 !important;
+    }
+
+    body.hc-page-home :is(
+      .hc-home-premium__shot-card--hero .hc-home-premium__shot-bar span,
+      .hc-home-premium__product-visual .hc-home-premium__shot-bar span
+    ) {
+      width: 10px !important;
+      height: 10px !important;
+    }
+
+    body.hc-page-home .hc-home-premium__trust-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      margin-top: 16px;
+      padding: 8px 0 2px;
+      min-height: 0;
+      border: 0;
+      border-top: 1px solid rgba(53, 80, 122, 0.08);
+      background: transparent;
+      box-shadow: none;
+    }
+
+    body.hc-page-home .hc-home-premium__trust-strip strong {
+      margin-right: 4px;
+      color: #496582;
+      font-size: 0.74rem;
+      font-weight: 760;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    body.hc-page-home .hc-home-premium__trust-strip span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0.36rem 0.72rem;
+      border: 1px solid rgba(53, 80, 122, 0.1);
+      border-radius: 999px;
+      background: rgba(248, 251, 255, 0.86);
+      color: #365473;
+      font-size: 0.82rem;
+      font-weight: 620;
+      line-height: 1.1;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.025);
     }
 
     body.hc-page-home {
@@ -540,15 +992,16 @@
     }
 
     body.hc-page-home .hc-home-premium__shot-card--interstructure .hc-home-premium__shot-img {
-      width: 100% !important;
-      max-width: 100% !important;
+      width: 112% !important;
+      max-width: none !important;
       height: auto !important;
       max-height: none !important;
-      object-fit: contain !important;
+      object-fit: cover !important;
       object-position: center top !important;
       padding: 0 !important;
       background: #f8fbff !important;
-      margin: 0 !important;
+      margin: -1% 0 0 -6% !important;
+      transform: scale(1.02) !important;
     }
 
     @media (max-width: 991.98px) {
@@ -584,6 +1037,8 @@
 
       body.hc-page-home .hc-home-premium__hero-grid {
         grid-template-columns: 1fr;
+        padding: 24px;
+        border-radius: 28px;
       }
 
       body.hc-page-home .hc-home-premium__trust-list,
@@ -614,26 +1069,46 @@
 
     @media (min-width: 992px) and (max-width: 1399.98px) {
       body.hc-page-home .hc-home-premium__hero-grid {
-        grid-template-columns: minmax(0, 0.92fr) minmax(500px, 1.08fr);
-        gap: 28px;
+        grid-template-columns: minmax(500px, 0.96fr) minmax(560px, 1fr);
+        column-gap: 22px;
+        row-gap: 12px;
+        max-width: 1680px;
+        padding: 22px;
       }
 
       body.hc-page-home .hc-home-premium__hero-copy {
-        max-width: 560px;
+        max-width: none;
       }
 
       body.hc-page-home .hc-home-premium__hero-copy h1 {
-        max-width: 8.1ch;
-        font-size: clamp(3.15rem, 4.6vw, 4.95rem);
-        line-height: 0.94;
+        max-width: 18ch;
+        font-size: clamp(1.64rem, 1.28vw, 2.08rem);
+        line-height: 0.99;
       }
 
       body.hc-page-home .hc-home-premium__lead {
-        max-width: 29rem;
+        max-width: 54ch;
       }
 
       body.hc-page-home .hc-home-premium__preview {
-        width: min(100%, 820px);
+        width: min(100%, 1000px);
+      }
+
+      body.hc-page-home .hc-home-premium__hero-copy {
+        gap: 5px;
+      }
+
+      body.hc-page-home .hc-home-premium__preview-proof {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      body.hc-page-home .hc-home-premium__hero-support {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      body.hc-page-home .hc-home-premium__hero-supportInline {
+        flex-wrap: wrap;
       }
     }
 
@@ -684,7 +1159,7 @@
       body.hc-page-home .hc-home-premium__hero-copy h1 {
         max-width: none;
         font-size: clamp(2rem, 12vw, 3rem);
-        line-height: 0.98;
+        line-height: 1;
       }
 
       body.hc-page-home .hc-home-premium__lead {
@@ -694,8 +1169,9 @@
       }
 
       body.hc-page-home .hc-home-premium__hero-demo-note {
-        font-size: 0.96rem;
-        line-height: 1.55;
+        max-width: none;
+        font-size: 0.92rem;
+        line-height: 1.46;
       }
 
       body.hc-page-home .hc-home-premium__hero-actions .btn,
@@ -704,11 +1180,25 @@
         min-height: 48px;
       }
 
-      body.hc-page-home .hc-reality-proof {
-        grid-template-columns: 1fr;
+      body.hc-page-home .hc-home-premium__hero-support {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 10px;
       }
 
-      body.hc-page-home .hc-reality-proof__chip,
+      body.hc-page-home .hc-home-premium__hero-actions {
+        flex-wrap: wrap;
+      }
+
+      body.hc-page-home .hc-home-premium__hero-demo-note,
+      body.hc-page-home .hc-home-premium__hero-supportMeta {
+        text-align: left;
+        max-width: none;
+        min-width: 0;
+      }
+
+      body.hc-page-home .hc-home-premium__hero-bottomItem,
       body.hc-page-home .hc-home-premium__trust-list li,
       body.hc-page-home .hc-home-premium__preview-proofItem,
       body.hc-page-home .hc-home-premium__workflow-points li {
@@ -722,6 +1212,10 @@
 
       body.hc-page-home .hc-home-premium__preview-proof {
         gap: 8px;
+      }
+
+      body.hc-page-home .hc-home-premium__preview-supportRail {
+        grid-template-columns: 1fr;
       }
 
       body.hc-page-home .hc-home-premium__section {
@@ -770,6 +1264,7 @@
         <a href="{{ url_for('main.securite') }}">{{ _('Sécurité') }}</a>
         <a href="{{ url_for('main.deploiement') }}">{{ _('Déploiement') }}</a>
         <a href="{{ url_for('main.cas_usage') }}">{{ _('Ressources') }}</a>
+        <a href="{{ url_for('main.analyse_fragmentation') }}">{{ _('Analyses opérationnelles') }}</a>
       </nav>
       <div class="hc-home-premium__nav-actions">
         <a class="hc-btn hc-btn--primary btn btn-primary" href="/demo">{{ _('Demander un accès pilote') }}</a>
@@ -782,40 +1277,26 @@
     <div class="hc-home-premium__hero-copy">
       <p class="hc-home-premium__eyebrow">{{ _('PLATEFORME DE COORDINATION OPÉRATIONNELLE') }}</p>
 
-      <h1 id="hc-home-hero-title">{{ _('HelpChain est la plateforme de continuité opérationnelle des organisations.') }}</h1>
+      <h1 id="hc-home-hero-title">{{ _('Coordonner, suivre et piloter dans une même plateforme.') }}</h1>
 
       <p class="hc-home-premium__lead">
-        {{ _('La plateforme HelpChain fournit un cadre structuré pour recevoir, orienter, suivre et piloter les situations sociales dans un environnement institutionnel.') }}
+        {{ _('HelpChain centralise les demandes, clarifie les responsabilités et maintient la continuité opérationnelle entre équipes, structures et partenaires.') }}
       </p>
 
       <p class="hc-home-premium__lead">
-        {{ _('HelpChain rend les responsabilités visibles, soutient la continuité opérationnelle, organise un suivi multi-acteurs entre équipes et structures, et renforce la gouvernance opérationnelle avec une traçabilité native.') }}
+        {{ _('Pensée pour un cadre pilote institutionnel, la plateforme donne une lecture claire de l’activité, des responsabilités visibles et un historique exploitable pour les équipes qui doivent agir sans rupture de suivi.') }}
       </p>
 
-      <div class="hc-home-premium__hero-actions">
-        <a class="hc-btn hc-btn--primary btn btn-primary" href="/demo" data-hc-event="home_primary_cta">{{ _('Demander un accès pilote') }}</a>
-        <a class="hc-btn hc-btn-outline btn btn-secondary" href="{{ url_for('main.comment_ca_marche') }}" data-hc-event="home_secondary_cta">{{ _('Comprendre le fonctionnement') }}</a>
+      <div class="hc-home-premium__hero-support" aria-label="{{ _('Actions et repères pilote') }}">
+        <div class="hc-home-premium__hero-actions">
+          <a class="hc-btn hc-btn--primary btn btn-primary" href="/demo" data-hc-event="home_primary_cta">{{ _('Demander un accès pilote') }}</a>
+        </div>
+        <div class="hc-home-premium__hero-supportInline">
+          <p class="hc-home-premium__hero-demo-note">{{ _('Pilote type : accueil, responsable opérationnel, premières demandes réelles.') }}</p>
+          <p class="hc-home-premium__hero-supportMeta">{{ _('Conçu pour : CCAS · Collectivités · Associations · Structures multi-sites.') }}</p>
+        </div>
       </div>
-
-      <p class="hc-home-premium__hero-demo-note">{{ _('Exemple de pilote : un service d’accueil, un responsable opérationnel, des professionnels habilités et un premier circuit de demandes réelles dans la plateforme HelpChain.') }}</p>
-
-      
-
-      <div class="hc-reality-proof hc-reality-proof--clean" aria-label="Rep&egrave;res de cr&eacute;dibilit&eacute;">
-        <span class="hc-reality-proof__chip">Périmètre pilote cadré avant extension multi-structure</span>
-        <span class="hc-reality-proof__chip">Continuité opérationnelle, relecture et gouvernance dans un même historique</span>
-      </div>
-
-      <ul class="hc-home-premium__trust-list" aria-label="{{ _('Trust indicators') }}">
-        <li>{{ _('Responsabilités lisibles, relances visibles et continuité de suivi entre les personnes et les services') }}</li>
-        <li>{{ _('Accès par rôles, habilitations et périmètres selon l’organisation réelle') }}</li>
-        <li>{{ _('Déploiement progressif, cadré, avec visibilité multi-acteurs pour le pilotage et la gouvernance') }}</li>
-      </ul>
-
-      <p class="hc-home-premium__hero-demo-note">
-        {{ _('Conçu pour : CCAS · Collectivités · Associations · Structures multi-sites') }}
-      </p>
-</div>
+    </div>
 
     <aside class="hc-home-premium__preview" aria-label="{{ _('Aperçu produit HelpChain') }}">
       <div class="hc-home-premium__shot-card hc-home-premium__shot-card--hero">
@@ -826,7 +1307,7 @@
         <img
           class="hc-home-premium__shot-img hc-home-premium__shot-img--hero"
           src="{{ url_for('static', filename='img/helpchain-hero-final.png') }}?v=20260523-hero-ops"
-          alt="Interface de pilotage HelpChain"
+          alt="{{ _('Interface de pilotage HelpChain') }}"
           width="1481"
           height="1062"
           loading="eager"
@@ -852,18 +1333,26 @@
           <span class="hc-home-premium__preview-proofText">{{ _('Les décisions, relances et changements de statut restent visibles dans le temps.') }}</span>
         </div>
       </div>
+      <div class="hc-home-premium__preview-support" aria-label="{{ _('Rail de support opérationnel') }}">
+        <p class="hc-home-premium__preview-supportTitle">{{ _('Cadre de déploiement') }}</p>
+        <div class="hc-home-premium__preview-supportRail">
+          <p class="hc-home-premium__preview-supportItem">{{ _('Périmètre pilote cadré, accès par rôles et habilitations avant extension multi-structure.') }}</p>
+          <p class="hc-home-premium__preview-supportItem">{{ _('Continuité opérationnelle, relances visibles, visibilité multi-acteurs et gouvernance dans un même historique.') }}</p>
+        </div>
+        <p class="hc-home-premium__preview-supportFoot">{{ _('L’interface, les capacités opérationnelles et le cadre pilote restent réunis dans une même surface de pilotage.') }}</p>
+      </div>
     </aside>
   </div>
 </section>
   <section class="hc-home-premium__section hc-home-premium__section--product" id="product" aria-labelledby="hc-home-product-title">
     <div class="hc-home-premium__section-head hc-home-premium__section-head--product">
       <p>{{ _('SÉQUENCE OPÉRATIONNELLE') }}</p>
-      <h2 id="hc-home-product-title">{{ _('Une même plateforme pour recevoir, orienter, suivre et piloter.') }}</h2>
-      <p>{{ _('Chaque étape renforce la continuité opérationnelle, le suivi multi-acteurs, la coordination institutionnelle et le pilotage des situations sociales.') }}</p>
+      <h2 id="hc-home-product-title">{{ _('Une plateforme unifiée pour la coordination opérationnelle.') }}</h2>
+      <p>{{ _('Réception, orientation, suivi et gouvernance restent visibles dans une même continuité opérationnelle.') }}</p>
     </div>
 
     <div class="hc-home-premium__trust-strip" aria-label="{{ _('Conçu pour les réalités de') }}">
-      <strong>{{ _('Séquence type :') }}</strong>
+      <strong>{{ _('Parcours opératoire :') }}</strong>
       <span>{{ _('Réception') }}</span>
       <span>{{ _('Orientation') }}</span>
       <span>{{ _('Suivi') }}</span>
@@ -873,7 +1362,7 @@
   </section>
 
   <section class="hc-home-premium__section hc-home-premium__section--product" aria-labelledby="hc-home-intake-title">
-    <div class="hc-home-premium__product-row">
+    <div class="hc-home-premium__product-row hc-home-premium__product-row--intake">
       <div class="hc-home-premium__product-copy">
         <p class="hc-home-premium__section-kicker">{{ _('01 · RÉCEPTION OPÉRATIONNELLE') }}</p>
         <h2 id="hc-home-intake-title">{{ _('Centralisez les demandes sans perdre le contexte initial') }}</h2>
@@ -906,7 +1395,7 @@
   </section>
 
   <section class="hc-home-premium__section hc-home-premium__section--product" aria-labelledby="hc-home-case-title">
-    <div class="hc-home-premium__product-row hc-home-premium__product-row--reverse">
+    <div class="hc-home-premium__product-row hc-home-premium__product-row--reverse hc-home-premium__product-row--cases">
       <div class="hc-home-premium__product-visual">
         <div class="hc-home-premium__shot-card">
           <div class="hc-home-premium__shot-bar">
@@ -939,17 +1428,17 @@
   </section>
 
   <section class="hc-home-premium__section hc-home-premium__section--product hc-home-premium__section--trust" aria-labelledby="hc-home-security-title">
-    <div class="hc-home-premium__product-row">
+    <div class="hc-home-premium__product-row hc-home-premium__product-row--security">
       <div class="hc-home-premium__product-copy">
         <p class="hc-home-premium__section-kicker">{{ _('03 · PILOTAGE ET GOUVERNANCE') }}</p>
         <h2 id="hc-home-security-title">{{ _('Gardez un cadre de contrôle compatible avec les usages institutionnels') }}</h2>
-        <p>{{ _('Contrôle des accès, supervision administrative, indicateurs clés et traçabilité native dans la plateforme HelpChain.') }}</p>
+        <p>{{ _('Contrôle des accès, supervision administrative, indicateurs clés, traçabilité native et visibilité de continuité dans la plateforme HelpChain.') }}</p>
         <ul class="hc-home-premium__workflow-points">
           <li>{{ _('Des accès par rôles et périmètres plutôt qu’une visibilité uniforme pour tous.') }}</li>
           <li>{{ _('Des indicateurs utiles pour relire la charge, les délais et les situations en cours.') }}</li>
-          <li>{{ _('Une gouvernance conçue pour des structures qui doivent coordonner sans perdre le contrôle.') }}</li>
+          <li>{{ _('Une gouvernance opérationnelle conçue pour des structures qui doivent coordonner sans perdre le contrôle.') }}</li>
         </ul>
-        <div class="hc-home-premium__workflow-note">{{ _('Le pilotage devient exploitable sans ajouter une couche d’outils séparés.') }}</div>
+        <div class="hc-home-premium__workflow-note">{{ _('Le pilotage devient exploitable sans ajouter une couche parallèle qui fragilise la mémoire opérationnelle.') }}</div>
       </div>
       <div class="hc-home-premium__product-visual">
         <div class="hc-home-premium__shot-card hc-home-premium__shot-card--trust">
@@ -1038,7 +1527,7 @@
       <article class="hc-home-premium__buyer-card">
         <span>{{ _('02') }}</span>
         <h3>{{ _('Associations & réseaux terrain') }}</h3>
-        <p>{{ _('Coordonner les intervenants habilités, éviter les pertes d’information et conserver un historique exploitable des actions, des relances et des décisions.') }}</p>
+        <p>{{ _('Coordonner les intervenants habilités, éviter les pertes d’information et conserver une mémoire opérationnelle exploitable des actions, des relances et des décisions.') }}</p>
       </article>
 
       <article class="hc-home-premium__buyer-card">
@@ -1052,7 +1541,7 @@
     <div class="hc-home-premium__section-head hc-home-premium__section-head--compact">
       <p>{{ _('Transition sans rupture') }}</p>
       <h2 id="hc-home-transition-title">{{ _('Reprenez vos données existantes et démarrez rapidement.') }}</h2>
-      <p>{{ _('HelpChain peut s’intégrer progressivement à vos habitudes de travail, sans imposer de ressaisie manuelle ni de bascule brutale.') }}</p>
+      <p>{{ _('HelpChain peut s’intégrer progressivement à vos habitudes de travail, sans imposer de ressaisie manuelle ni de bascule brutale ni provoquer de perte de continuité.') }}</p>
     </div>
 
     <div class="hc-home-premium__objection-grid">
@@ -1083,7 +1572,7 @@
       <div class="hc-home-premium__section-head hc-home-premium__section-head--compact">
         <p>Vous gardez vos outils. La plateforme HelpChain ajoute l’infrastructure de suivi.</p>
         <h2 id="hc-home-relay-title">Connectée à vos outils, sans remplacer votre organisation</h2>
-        <p class="hc-home-premium__relay-subtitle">HelpChain agit comme une infrastructure de coordination opérationnelle au-dessus de vos outils existants. Les données sensibles restent dans votre environnement, tandis que le suivi utile devient lisible à l’échelle des équipes et de la gouvernance.</p>
+        <p class="hc-home-premium__relay-subtitle">HelpChain agit comme une infrastructure de coordination opérationnelle au-dessus de vos outils existants. Les données sensibles restent dans votre environnement, tandis que le suivi utile devient lisible à l’échelle des équipes, de la gouvernance et de la continuité multi-acteurs.</p>
       </div>
 
       <div class="hc-home-premium__relay-layout">
@@ -1161,7 +1650,7 @@
       <div class="hc-home-premium__section-head hc-home-premium__section-head--compact">
         <p>{{ _('POURQUOI MAINTENANT') }}</p>
         <h2 id="hc-home-revenue-title">{{ _('Quand les demandes augmentent, les outils improvisés cassent.') }}</h2>
-        <p>{{ _('Emails, tableaux partagés et suivis manuels fonctionnent un temps. Puis les responsabilités deviennent floues, les délais s’allongent, les relais se fragilisent et le pilotage devient difficile.') }}</p>
+        <p>{{ _('Emails, tableaux partagés et suivis manuels fonctionnent un temps. Puis les responsabilités deviennent floues, les délais s’allongent, les relais se fragilisent, les relances deviennent moins visibles et le pilotage devient difficile.') }}</p>
       </div>
 
       <ul class="hc-home-premium__outcomes-list hc-home-premium__outcomes-list--revenue">

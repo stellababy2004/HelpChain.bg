@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Step 13 - SEO & Social preview -->
-    <meta name="description" content="{% block meta_description %}{{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations. Suivi multi-acteurs, gouvernance opérationnelle, coordination institutionnelle et traçabilité native.') }}{% endblock %}">
+    <meta name="description" content="{% block meta_description %}{{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations.') }}{% endblock %}">
     <meta name="robots" content="index,follow">
 
     <meta property="og:site_name" content="HelpChain">
@@ -29,6 +29,8 @@
       'main.pilotage_indicateurs',
       'main.simulation_operationnelle',
       'main.partenariats',
+      'main.analyse_fragmentation',
+      'main.analyse_relances_perdues',
       'main.pourquoi_helpchain',
       'main.vision_europeenne',
       'main.securite',
@@ -486,19 +488,30 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": "{{ url_for('main.index', _external=True) }}#organization",
+        "name": "HelpChain",
+        "url": "{{ url_for('main.index', _external=True) }}",
+        "email": "contact@helpchain.live",
+        "description": {{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations.')|tojson }}
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
         "@type": "SoftwareApplication",
+        "@id": "{{ url_for('main.index', _external=True) }}#software",
         "name": "HelpChain",
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Web",
-        "url": "{{ request.url_root.rstrip('/') }}",
-        "description": {{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations, avec suivi multi-acteurs, gouvernance opérationnelle et traçabilité native.')|tojson }},
+        "url": "{{ url_for('main.index', _external=True) }}",
+        "description": {{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations.')|tojson }},
         "brand": {
           "@type": "Brand",
           "name": "HelpChain"
         },
         "publisher": {
-          "@type": "Organization",
-          "name": "HelpChain"
+          "@id": "{{ url_for('main.index', _external=True) }}#organization"
         }
       }
     </script>
@@ -543,6 +556,8 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
       'main.pilotage_indicateurs',
       'main.simulation_operationnelle',
       'main.partenariats',
+      'main.analyse_fragmentation',
+      'main.analyse_relances_perdues',
       'main.faq',
       'main.pourquoi_helpchain',
       'main.vision_europeenne',
@@ -625,6 +640,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
           {% set securite_active = ep.startswith('main.securite') or ep.startswith('main.architecture') or ep.startswith('main.gouvernance') %}
           {% set deploiement_active = ep.startswith('main.deploiement') %}
           {% set ressources_active = ep.startswith('main.cas_usage') or ep.startswith('main.pilotage_indicateurs') or ep.startswith('main.simulation_operationnelle') or ep.startswith('main.partenariats') or ep.startswith('main.faq') or ep.startswith('main.pourquoi_helpchain') or ep.startswith('main.vision_europeenne') %}
+          {% set analyses_active = ep.startswith('main.analyse_fragmentation') or ep.startswith('main.analyse_relances_perdues') %}
           {% if is_ops_shell %}
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
@@ -662,17 +678,17 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
               <div class="hc-nav-mega__panel" id="hcPublicMegaProduct" data-hc-mega-panel hidden>
                 <div class="hc-nav-mega__grid">
                   <div class="hc-nav-mega__feature">
-                    <span class="hc-nav-mega__eyebrow">{{ _('Plateforme') }}</span>
-                    <strong>{{ _('La plateforme HelpChain réunit continuité opérationnelle, gouvernance et pilotage dans un même cadre.') }}</strong>
-                    <p>{{ _('Explorez l’infrastructure HelpChain et ses scénarios de déploiement institutionnel.') }}</p>
+                    <span class="hc-nav-mega__eyebrow">{{ _('Infrastructure opérationnelle') }}</span>
+                    <strong>{{ _('HelpChain structure la continuité opérationnelle, la coordination multi-acteurs et la gouvernance des suivis dans un même cadre traçable.') }}</strong>
+                    <p>{{ _('Accédez au coeur opérationnel de la plateforme : organisation des suivis, continuité institutionnelle et déploiement progressif.') }}</p>
                   </div>
                   <div class="hc-nav-mega__links">
                     <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Fonctionnement') }}</strong><span>{{ _('De la demande au suivi multi-acteurs traçable.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation est relancée et reste visible.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive, gouvernance opérationnelle et continuité.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.offre') }}"><strong>{{ _('Offre') }}</strong><span>{{ _('Cadres pilote, professionnel et institutionnel.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Plateforme pour CCAS, collectivités et associations.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi structuré pour acteurs habilités.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation reste visible, relançable et suivie dans le temps.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive, gouvernance opérationnelle et continuité institutionnelle.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.offre') }}"><strong>{{ _('Cadres de déploiement') }}</strong><span>{{ _('Cadres pilote, professionnel et institutionnel pour structurer l’adoption.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Infrastructure de coordination pour CCAS, collectivités et associations.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi habilité pour acteurs responsables de la continuité.') }}</span></a>
                   </div>
                 </div>
               </div>
@@ -697,6 +713,27 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                 <span class="hc-navlabel">{{ _('Ressources') }}</span>
               </a>
             </li>
+            <li class="nav-item hc-nav-mega hc-nav-mega--analyses {{ 'is-active' if analyses_active else '' }}" data-hc-mega>
+              <button class="hc-nav-mega__trigger" type="button" data-hc-mega-trigger aria-expanded="false" aria-controls="hcPublicMegaAnalyses" {% if analyses_active %}aria-current="page"{% endif %}>
+                <span class="hc-navlabel">{{ _('Analyses opérationnelles') }}</span>
+              </button>
+              <div class="hc-nav-mega__panel" id="hcPublicMegaAnalyses" data-hc-mega-panel hidden>
+                <div class="hc-nav-mega__microintro">{{ _('Analyses institutionnelles sur la continuité opérationnelle, les relances, la gouvernance et le suivi multi-acteurs.') }}</div>
+                <div class="hc-nav-mega__grid">
+                  <div class="hc-nav-mega__feature">
+                    <span class="hc-nav-mega__eyebrow">{{ _('Doctrine') }}</span>
+                    <strong>{{ _('Une lecture opérationnelle des continuités, des dérives de suivi et des fragilités de coordination.') }}</strong>
+                    <p>{{ _('Retrouvez les analyses HelpChain sur la fragmentation opérationnelle, la mémoire opérationnelle et la gouvernance des suivis multi-acteurs.') }}</p>
+                  </div>
+                  <div class="hc-nav-mega__links">
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.analyse_fragmentation') }}"><strong>{{ _('Pourquoi les suivis se fragmentent') }}</strong><span>{{ _('Comprendre comment la continuité se dégrade dans les organisations multi-acteurs.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.analyse_relances_perdues') }}"><strong>{{ _('Le coût invisible des relances perdues') }}</strong><span>{{ _('Analyser ce que coûtent les relances dispersées, les transitions fragiles et la perte de lisibilité.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.pourquoi_helpchain') }}"><strong>{{ _('Pourquoi HelpChain') }}</strong><span>{{ _('Le socle doctrinal et le diagnostic de départ de la plateforme.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation reste lisible, relançable et traçable dans le temps.') }}</span></a>
+                  </div>
+                </div>
+              </div>
+            </li>
           </ul>
           <div class="hc-public-nav-actions d-flex align-items-center gap-2">
             <a class="nav-link hc-nav-cta hc-cta hc-public-nav-demo-cta" href="/demo">
@@ -712,17 +749,17 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
               <div class="hc-nav-mega__panel" id="hcPublicMegaProductAuth" data-hc-mega-panel hidden>
                 <div class="hc-nav-mega__grid">
                   <div class="hc-nav-mega__feature">
-                    <span class="hc-nav-mega__eyebrow">{{ _('Plateforme') }}</span>
-                    <strong>{{ _('La plateforme HelpChain réunit continuité opérationnelle, gouvernance et pilotage dans un même cadre.') }}</strong>
-                    <p>{{ _('Explorez l’infrastructure HelpChain et ses scénarios de déploiement institutionnel.') }}</p>
+                    <span class="hc-nav-mega__eyebrow">{{ _('Infrastructure opérationnelle') }}</span>
+                    <strong>{{ _('HelpChain structure la continuité opérationnelle, la coordination multi-acteurs et la gouvernance des suivis dans un même cadre traçable.') }}</strong>
+                    <p>{{ _('Accédez au coeur opérationnel de la plateforme : organisation des suivis, continuité institutionnelle et déploiement progressif.') }}</p>
                   </div>
                   <div class="hc-nav-mega__links">
                     <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Fonctionnement') }}</strong><span>{{ _('De la demande au suivi multi-acteurs traçable.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation est relancée et reste visible.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive, gouvernance opérationnelle et continuité.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.offre') }}"><strong>{{ _('Offre') }}</strong><span>{{ _('Cadres pilote, professionnel et institutionnel.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Plateforme pour CCAS, collectivités et associations.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi structuré pour acteurs habilités.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation reste visible, relançable et suivie dans le temps.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive, gouvernance opérationnelle et continuité institutionnelle.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.offre') }}"><strong>{{ _('Cadres de déploiement') }}</strong><span>{{ _('Cadres pilote, professionnel et institutionnel pour structurer l’adoption.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Infrastructure de coordination pour CCAS, collectivités et associations.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi habilité pour acteurs responsables de la continuité.') }}</span></a>
                   </div>
                 </div>
               </div>
@@ -746,6 +783,27 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
               <a class="nav-link {{ 'active' if ressources_active else '' }}" href="{{ url_for('main.cas_usage') }}" {% if ressources_active %}aria-current="page"{% endif %}>
                 {{ _('Ressources') }}
               </a>
+            </li>
+            <li class="nav-item hc-nav-mega hc-nav-mega--analyses {{ 'is-active' if analyses_active else '' }}" data-hc-mega>
+              <button class="hc-nav-mega__trigger" type="button" data-hc-mega-trigger aria-expanded="false" aria-controls="hcPublicMegaAnalysesAuth" {% if analyses_active %}aria-current="page"{% endif %}>
+                {{ _('Analyses opérationnelles') }}
+              </button>
+              <div class="hc-nav-mega__panel" id="hcPublicMegaAnalysesAuth" data-hc-mega-panel hidden>
+                <div class="hc-nav-mega__microintro">{{ _('Analyses institutionnelles sur la continuité opérationnelle, les relances, la gouvernance et le suivi multi-acteurs.') }}</div>
+                <div class="hc-nav-mega__grid">
+                  <div class="hc-nav-mega__feature">
+                    <span class="hc-nav-mega__eyebrow">{{ _('Doctrine') }}</span>
+                    <strong>{{ _('Une lecture opérationnelle des continuités, des dérives de suivi et des fragilités de coordination.') }}</strong>
+                    <p>{{ _('Retrouvez les analyses HelpChain sur la fragmentation opérationnelle, la mémoire opérationnelle et la gouvernance des suivis multi-acteurs.') }}</p>
+                  </div>
+                  <div class="hc-nav-mega__links">
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.analyse_fragmentation') }}"><strong>{{ _('Pourquoi les suivis se fragmentent') }}</strong><span>{{ _('Comprendre comment la continuité se dégrade dans les organisations multi-acteurs.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.analyse_relances_perdues') }}"><strong>{{ _('Le coût invisible des relances perdues') }}</strong><span>{{ _('Analyser ce que coûtent les relances dispersées, les transitions fragiles et la perte de lisibilité.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.pourquoi_helpchain') }}"><strong>{{ _('Pourquoi HelpChain') }}</strong><span>{{ _('Le socle doctrinal et le diagnostic de départ de la plateforme.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation reste lisible, relançable et traçable dans le temps.') }}</span></a>
+                  </div>
+                </div>
+              </div>
             </li>
             <li class="nav-item hc-public-nav-cta">
               <a class="nav-link hc-nav-cta hc-cta hc-public-nav-demo-cta" href="/demo">
@@ -1010,6 +1068,9 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
           </li>
           <li class="hc-mobile-nav__item">
             <a class="{{ 'is-active' if ressources_active else '' }}" href="{{ url_for('main.cas_usage') }}" {% if ressources_active %}aria-current="page"{% endif %}>{{ _('Ressources') }}</a>
+          </li>
+          <li class="hc-mobile-nav__item">
+            <a class="{{ 'is-active' if mobile_ep.startswith('main.analyse_fragmentation') else '' }}" href="{{ url_for('main.analyse_fragmentation') }}" {% if mobile_ep.startswith('main.analyse_fragmentation') %}aria-current="page"{% endif %}>{{ _('Analyses opérationnelles') }}</a>
           </li>
           <li class="hc-mobile-nav__item">
             <a class="{{ 'is-active' if mobile_ep.startswith('main.simulation_operationnelle') else '' }}" href="{{ url_for('main.simulation_operationnelle') }}" {% if mobile_ep.startswith('main.simulation_operationnelle') %}aria-current="page"{% endif %}>{{ _('Simulation opérationnelle') }}</a>
@@ -1616,7 +1677,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
           <div class="hc-footer__brand">
             <div class="hc-footer__copyright">&copy; {{ current_year|default(2026) }} HelpChain — Plateforme de coordination opérationnelle</div>
             <p class="hc-footer__trust">
-              {{ _('Infrastructure de continuité opérationnelle') }} · {{ _('Conformité RGPD') }} · {{ _('Coordination institutionnelle') }} · {{ _('Traçabilité native') }}
+              {{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations.') }}
             </p>
           </div>
 

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}{{ _("Le coût invisible des relances perdues") }} | HelpChain{% endblock %}
+{% block meta_description %}{{ _("Le coût invisible des relances perdues : analyse opérationnelle des relances invisibles, de la perte de continuité, de la dérive de suivi et de la mémoire opérationnelle dans les organisations multi-acteurs.") }}{% endblock %}
+{% block og_title %}{{ _("Le coût invisible des relances perdues") }}{% endblock %}
+{% block og_image %}{{ og_image_url('og-home-1200x630.jpg') }}{% endblock %}
+{% block og_image_alt %}{{ _("Aperçu de la page Le coût invisible des relances perdues") }}{% endblock %}
+
+{% block content %}
+<div class="container hc-doc-page public-page-shell">
+  <header class="hc-doc-intro public-page-hero public-page-hero--trust">
+    <p class="hc-doc-intro__label">{{ _("Analyses opérationnelles") }}</p>
+    <h1 class="hc-doc-intro__title">{{ _("Le coût invisible des relances perdues") }}</h1>
+    <p class="hc-doc-intro__lead">
+      {{ _("Les situations ne deviennent pas critiques en une seule fois. La dégradation est souvent progressive et peu visible.") }}
+    </p>
+    <p class="hc-doc-intro__lead">
+      {{ _("Dans les organisations multi-acteurs, la continuité ne se dégrade pas uniquement lorsqu’une situation s’arrête. Elle se fragilise aussi lorsque les relances se dispersent, que la chronologie devient partielle et que le suivi reste actif sans rester pleinement lisible.") }}
+    </p>
+  </header>
+
+  <section class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5 mb-3">{{ _("Une érosion souvent peu visible au départ") }}</h2>
+      <p class="mb-2">
+        {{ _("Le coût des relances perdues n’apparaît pas immédiatement. Une situation peut sembler suivie, plusieurs acteurs peuvent rester mobilisés, et pourtant la continuité opérationnelle commence déjà à se fragiliser.") }}
+      </p>
+      <p class="mb-0">
+        {{ _("Cette érosion prend souvent la forme de rappels dispersés, de transitions incomplètes, d’actions non réinscrites dans un cadre commun et d’une mémoire opérationnelle qui repose de plus en plus sur les personnes plutôt que sur une chronologie partageable.") }}
+      </p>
+    </div>
+  </section>
+
+  <section class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5 mb-3">{{ _("Comment les relances deviennent invisibles") }}</h2>
+      <p class="mb-2">
+        {{ _("Une relance ne disparaît pas toujours au sens strict. Elle devient souvent moins visible parce qu’elle change de canal, reste locale à une équipe, n’est pas reliée au bon suivi ou ne rejoint pas la lecture de gouvernance de la situation.") }}
+      </p>
+      <ul class="mb-0">
+        <li>{{ _("un rappel est envoyé par courriel sans être réinscrit dans la chronologie commune ;") }}</li>
+        <li>{{ _("une reprise est attendue mais reste connue seulement par un interlocuteur ;") }}</li>
+        <li>{{ _("le suivi change de main sans transmission pleinement relisible ;") }}</li>
+        <li>{{ _("plusieurs canaux parallèles créent une lecture partielle de ce qui a déjà été relancé.") }}</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5 mb-3">{{ _("Pourquoi le coût reste d’abord difficile à mesurer") }}</h2>
+      <p class="mb-2">
+        {{ _("Le coût des relances perdues n’est pas toujours immédiatement comptable. Il ne se traduit pas d’abord par un incident spectaculaire, mais par une accumulation de micro-fragilités : efforts dupliqués, délais allongés, arbitrages plus hésitants, relectures plus longues et coordination plus lourde.") }}
+      </p>
+      <p class="mb-0">
+        {{ _("Ce qui se perd n’est pas seulement un rappel. C’est la lisibilité de la continuité, c’est-à-dire la capacité à comprendre rapidement ce qui a été fait, ce qui a déjà été demandé, ce qui reste à reprendre et qui porte réellement la suite.") }}
+      </p>
+    </div>
+  </section>
+
+  <section class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5 mb-3">{{ _("Les conséquences institutionnelles") }}</h2>
+      <p class="mb-2">
+        {{ _("Lorsque les relances deviennent invisibles, les effets dépassent le simple retard ponctuel. Ils touchent la gouvernance, la coordination multi-acteurs et la capacité de l’organisation à maintenir une continuité stable dans le temps.") }}
+      </p>
+      <ul class="mb-0">
+        <li>{{ _("la chronologie devient plus difficile à reconstruire clairement ;") }}</li>
+        <li>{{ _("des relances sont répétées sans toujours être reliées entre elles ;") }}</li>
+        <li>{{ _("la responsabilité opérationnelle se fragmente entre plusieurs acteurs ;") }}</li>
+        <li>{{ _("la visibilité de gouvernance devient moins fiable ;") }}</li>
+        <li>{{ _("la perte de continuité entre intervenants devient plus probable.") }}</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5 mb-3">{{ _("Ce dont les organisations ont besoin") }}</h2>
+      <p class="mb-2">
+        {{ _("La réponse à cette difficulté n’est pas simplement d’ajouter davantage de notifications. Ce qui manque le plus souvent n’est pas le signal brut, mais la capacité à maintenir une lecture commune du suivi dans la durée.") }}
+      </p>
+      <p class="mb-2">
+        {{ _("Les organisations ont besoin de relances traçables, d’une chronologie partageable, d’une mémoire opérationnelle réutilisable, d’une visibilité de continuité et d’un cadre de coordination suffisamment stable pour rester lisible malgré les transitions, les délais et les changements d’acteurs.") }}
+      </p>
+      <p class="mb-0">
+        {{ _("Autrement dit, elles ont besoin d’une infrastructure de continuité plutôt que d’une accumulation de rappels séparés difficilement gouvernables ensemble.") }}
+      </p>
+    </div>
+  </section>
+
+  <section class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5 mb-3">{{ _("La logique portée par HelpChain") }}</h2>
+      <p class="mb-2">
+        {{ _("HelpChain a été conçu pour rendre les relances, les transitions et les suivis durablement lisibles dans le temps.") }}
+      </p>
+      <p class="mb-2">
+        {{ _("L’objectif n’est pas de produire plus de bruit opérationnel. Il s’agit de préserver une continuité visible : ce qui a été relancé, ce qui a été repris, ce qui reste en attente et la façon dont la situation a évolué entre plusieurs acteurs.") }}
+      </p>
+      <p class="mb-0">
+        {{ _("Cette logique s’inscrit dans une doctrine de continuité opérationnelle : limiter la dérive de suivi, réduire la fragmentation opérationnelle et renforcer une mémoire partagée suffisamment lisible pour le terrain comme pour la gouvernance.") }}
+      </p>
+    </div>
+  </section>
+
+  <section class="card mb-3">
+    <div class="card-body">
+      <h2 class="h5 mb-3">{{ _("Conclusion") }}</h2>
+      <p class="mb-2">
+        {{ _("Le coût des relances perdues est qualifié d’invisible parce qu’il ne se révèle pas toujours au moment où la relance se disperse. Il apparaît plus tard, lorsque la chronologie devient moins exploitable, lorsque la coordination se charge, lorsque les responsabilités deviennent moins lisibles et lorsque la continuité doit être reconstruite au lieu d’être maintenue.") }}
+      </p>
+      <p class="mb-2">
+        {{ _("Nommer ce coût permet de mieux comprendre que l’enjeu n’est pas seulement de relancer plus, mais de relancer dans un cadre qui reste traçable, partageable et gouvernable.") }}
+      </p>
+      <p class="mb-0">
+        {{ _("Pour les organisations multi-acteurs, préserver la continuité opérationnelle suppose donc de rendre les relances visibles, les transitions relisibles et la mémoire du suivi suffisamment stable pour ne pas dépendre d’un seul canal ou d’une seule personne.") }}
+      </p>
+    </div>
+  </section>
+
+  <section class="public-cta-card mb-3">
+    <h2 class="h5 mb-2">{{ _("Poursuivre la lecture") }}</h2>
+    <p class="mb-0">
+      {{ _("Cette analyse complète la doctrine de continuité opérationnelle de HelpChain sur la fragmentation, la mémoire opérationnelle et la lisibilité de gouvernance.") }}
+    </p>
+    <div class="mt-3 d-flex flex-wrap gap-2">
+      <a href="{{ url_for('main.analyse_fragmentation') }}" class="hc-btn hc-btn--ghost">{{ _("Lire Pourquoi les suivis se fragmentent") }}</a>
+      <a href="{{ url_for('main.simulation_operationnelle') }}" class="hc-btn hc-btn--ghost">{{ _("Voir la simulation opérationnelle") }}</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

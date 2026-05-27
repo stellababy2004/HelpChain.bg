@@ -5698,6 +5698,24 @@ def partenariats():
     return render_template("partenariats.html")
 
 
+@main_bp.get(
+    "/analyses-operationnelles/pourquoi-les-suivis-se-fragmentent",
+    endpoint="analyse_fragmentation",
+)
+@main_bp.get("/analyses_operationnelles/pourquoi_les_suivis_se_fragmentent")
+def analyse_fragmentation():
+    return render_template("analyses/pourquoi_les_suivis_se_fragmentent.html")
+
+
+@main_bp.get(
+    "/analyses-operationnelles/le-cout-invisible-des-relances-perdues",
+    endpoint="analyse_relances_perdues",
+)
+@main_bp.get("/analyses_operationnelles/le_cout_invisible_des_relances_perdues")
+def analyse_relances_perdues():
+    return render_template("analyses/le_cout_invisible_des_relances_perdues.html")
+
+
 @main_bp.get("/pourquoi-helpchain")
 @main_bp.get("/pourquoi_helpchain")
 def pourquoi_helpchain():
