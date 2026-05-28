@@ -34,7 +34,7 @@
     {% elif status_key in ["completed", "refused", "cancelled", "suspended"] %}
       {% set ns.closed = ns.closed + 1 %}
     {% endif %}
-    {% if ns.recently_updated|length < 3 %}
+    {% if ns.recently_updated|length < 4 %}
       {% set _ = ns.recently_updated.append(referral) %}
     {% endif %}
     {% if referral.to_structure and referral.to_structure.name not in ns.partner_names %}
@@ -52,39 +52,131 @@
     <div>
       <p class="hc-admin-kicker">Coordination inter-structures</p>
       <h1>Orientations partenaires</h1>
-      <p class="hc-muted">Pilotage des transmissions encadrées, du suivi partagé et de la continuité opérationnelle entre structures autorisées.</p>
+      <p class="hc-muted">Pilotage des transmissions encadrées, de la validation partenaire et de la continuité opérationnelle entre structures autorisées.</p>
     </div>
   </header>
 
-  <section class="hc-card hc-referral-hero">
-    <div class="hc-referral-hero__main">
-      <span class="hc-referral-hero__eyebrow">Espace de coordination gouverné</span>
-      <h2>Un flux inter-structures lisible, tracé et cadré</h2>
-      <p>Les orientations partenaires permettent de transmettre une situation utile sans ouvrir l'intégralité du dossier interne. Chaque mise à jour visible reste limitée au périmètre autorisé.</p>
-      <div class="hc-referral-hero__chips" aria-label="Principes de gouvernance">
-        <span class="hc-referral-chip hc-referral-chip--governance">Visibilité ciblée</span>
-        <span class="hc-referral-chip hc-referral-chip--governance">Suivi partagé</span>
-        <span class="hc-referral-chip hc-referral-chip--governance">Traçabilité native</span>
+  {% if has_action_required %}
+    <section class="hc-card hc-referral-workqueue" aria-label="Actions requises">
+      <div class="hc-referral-workqueue__header">
+        <div>
+          <span class="hc-referral-workqueue__eyebrow">Action requise</span>
+          <h2>Les prochaines validations sont prêtes</h2>
+          <p>
+            {% set actionable_count = actionable_partner_requests|length + actionable_referrals|length %}
+            {{ actionable_count }} action{{ "s" if actionable_count > 1 else "" }} nécessite{{ "nt" if actionable_count > 1 else "" }} votre attention pour débloquer ou poursuivre la coordination.
+          </p>
+        </div>
+        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.admin_referral_partners') }}">Voir le registre partenarial</a>
       </div>
-    </div>
-    <aside class="hc-referral-hero__aside">
-      <h3>Repères de gouvernance</h3>
-      <ul class="hc-referral-governance-list">
-        <li>Les partenaires n'accèdent qu'aux éléments explicitement partagés.</li>
-        <li>Chaque transmission reste rattachée à une structure source et une structure destinataire identifiées.</li>
-        <li>Les statuts visibles servent la coordination sans exposer les notes internes du partenaire.</li>
-      </ul>
-    </aside>
-  </section>
+
+      <div class="hc-referral-workqueue__grid">
+        {% for connection in actionable_partner_requests %}
+          <article class="hc-referral-queue-card">
+            <div class="hc-referral-queue-card__meta">
+              <span class="hc-referral-queue-card__type">Validation partenaire requise</span>
+              <span class="hc-referral-status hc-referral-status--pending-connection">{{ status_label(connection.status) }}</span>
+            </div>
+            <h3>{{ connection.source_structure.name if connection.source_structure else ("Structure #" ~ connection.source_structure_id) }}</h3>
+            <p>Demande de connexion reçue pour ouvrir un cadre d'orientation encadré vers votre structure.</p>
+            <dl class="hc-referral-queue-card__definition">
+              <div>
+                <dt>Créée le</dt>
+                <dd>{{ connection.created_at|format_datetime_fr }}</dd>
+              </div>
+              <div>
+                <dt>Capacités</dt>
+                <dd>{{ permissions_summary(connection) }}</dd>
+              </div>
+            </dl>
+            <div class="hc-referral-queue-card__actions">
+              <form method="post" action="{{ url_for('admin.admin_referral_partner_accept', connection_id=connection.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary btn-sm">Accepter</button>
+              </form>
+              <form method="post" action="{{ url_for('admin.admin_referral_partner_refuse', connection_id=connection.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-danger btn-sm">Refuser</button>
+              </form>
+              <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_referral_partners') }}">Voir le partenariat</a>
+            </div>
+          </article>
+        {% endfor %}
+
+        {% for referral in actionable_referrals %}
+          {% set status_key = (referral.operational_status or referral.status or "sent")|lower %}
+          <article class="hc-referral-queue-card hc-referral-queue-card--referral">
+            <div class="hc-referral-queue-card__meta">
+              <span class="hc-referral-queue-card__type">Orientation à traiter</span>
+              <span class="hc-referral-status hc-referral-status--{{ status_key|replace('_', '-') }}">{{ status_labels.get(status_key, referral.status or "Statut") }}</span>
+            </div>
+            <h3>{{ referral.from_structure.name if referral.from_structure else ("Structure #" ~ referral.from_structure_id) }} → {{ referral.to_structure.name if referral.to_structure else ("Structure #" ~ referral.to_structure_id) }}</h3>
+            <p>{{ referral.reason or "Orientation partenaire en attente de prise en compte." }}</p>
+            <dl class="hc-referral-queue-card__definition">
+              <div>
+                <dt>Dernière mise à disposition</dt>
+                <dd>{{ (referral.last_public_update_at or referral.updated_at or referral.created_at)|format_datetime_fr }}</dd>
+              </div>
+              <div>
+                <dt>Action attendue</dt>
+                <dd>Validation ou ouverture de l'orientation par votre structure.</dd>
+              </div>
+            </dl>
+            <div class="hc-referral-queue-card__actions">
+              <a class="btn btn-primary btn-sm" href="{{ url_for('admin.admin_referral_detail', referral_id=referral.id) }}">Ouvrir l'orientation</a>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% elif awaiting_counterpart_partner_requests %}
+    <section class="hc-card hc-referral-workqueue hc-referral-workqueue--blocked" aria-label="Validations en attente">
+      <div class="hc-referral-workqueue__header">
+        <div>
+          <span class="hc-referral-workqueue__eyebrow">Validation en attente</span>
+          <h2>La coordination reste bloquée jusqu'à confirmation partenaire</h2>
+          <p>{{ awaiting_counterpart_partner_requests|length }} demande{{ "s" if awaiting_counterpart_partner_requests|length > 1 else "" }} de partenariat attend{{ "ent" if awaiting_counterpart_partner_requests|length > 1 else "" }} encore la validation de la structure cible.</p>
+        </div>
+        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.admin_referral_partners') }}">Suivre les demandes</a>
+      </div>
+      <div class="hc-referral-workqueue__grid">
+        {% for connection in awaiting_counterpart_partner_requests[:3] %}
+          <article class="hc-referral-queue-card hc-referral-queue-card--waiting">
+            <div class="hc-referral-queue-card__meta">
+              <span class="hc-referral-queue-card__type">En attente chez le partenaire</span>
+              <span class="hc-referral-status hc-referral-status--pending-connection">{{ status_label(connection.status) }}</span>
+            </div>
+            <h3>{{ connection.target_structure.name if connection.target_structure else ("Structure #" ~ connection.target_structure_id) }}</h3>
+            <p>La demande de partenariat a été transmise et attend une confirmation bilatérale avant toute orientation.</p>
+            <dl class="hc-referral-queue-card__definition">
+              <div>
+                <dt>Créée le</dt>
+                <dd>{{ connection.created_at|format_datetime_fr }}</dd>
+              </div>
+              <div>
+                <dt>Capacités prévues</dt>
+                <dd>{{ permissions_summary(connection) }}</dd>
+              </div>
+            </dl>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
 
   <section class="hc-referral-summary" aria-label="Synthèse opérationnelle">
     <article class="hc-card hc-referral-summary__card">
-      <span class="hc-referral-summary__label">Flux observés</span>
-      <strong class="hc-referral-summary__value">{{ referrals|length }}</strong>
-      <p class="hc-referral-summary__hint">Orientations visibles dans votre périmètre actuel.</p>
+      <span class="hc-referral-summary__label">Validations partenaires</span>
+      <strong class="hc-referral-summary__value">{{ pending_partner_count }}</strong>
+      <p class="hc-referral-summary__hint">Relations en attente de validation bilatérale dans votre périmètre partenaire.</p>
     </article>
     <article class="hc-card hc-referral-summary__card">
-      <span class="hc-referral-summary__label">En attente de prise en compte</span>
+      <span class="hc-referral-summary__label">Partenariats actifs</span>
+      <strong class="hc-referral-summary__value">{{ active_partner_count }}</strong>
+      <p class="hc-referral-summary__hint">Cadres de coopération déjà ouverts pour transmettre et suivre des orientations.</p>
+    </article>
+    <article class="hc-card hc-referral-summary__card">
+      <span class="hc-referral-summary__label">Orientations en attente</span>
       <strong class="hc-referral-summary__value">{{ ns.pending }}</strong>
       <p class="hc-referral-summary__hint">Orientations transmises ou consultées avant validation ou relais formalisé.</p>
     </article>
@@ -92,11 +184,6 @@
       <span class="hc-referral-summary__label">Coordination active</span>
       <strong class="hc-referral-summary__value">{{ ns.active }}</strong>
       <p class="hc-referral-summary__hint">Orientations acceptées ou actuellement prises en charge chez un partenaire.</p>
-    </article>
-    <article class="hc-card hc-referral-summary__card">
-      <span class="hc-referral-summary__label">Stabilisées</span>
-      <strong class="hc-referral-summary__value">{{ ns.closed }}</strong>
-      <p class="hc-referral-summary__hint">Flux clôturés, refusés, suspendus ou interrompus avec une trace lisible.</p>
     </article>
   </section>
 
@@ -107,39 +194,87 @@
     <a class="btn btn-sm {{ 'btn-primary' if active_tab == 'partners' else 'btn-outline-secondary' }}" href="{{ url_for('admin.admin_referral_partners') }}">Partenaires</a>
   </section>
 
-  <section class="hc-referral-grid">
-    <article class="hc-card hc-referral-sidecard">
-      <div class="hc-referral-sidecard__header">
-        <span class="hc-referral-sidecard__eyebrow">Cycle de coordination</span>
-        <h2>Lecture commune du parcours</h2>
+  {% if active_partner_connections %}
+    <section class="hc-card hc-referral-partner-surface">
+      <div class="hc-referral-list__header">
+        <div>
+          <span class="hc-referral-sidecard__eyebrow">Partenariats actifs</span>
+          <h2>Cadres de coordination actuellement ouverts</h2>
+          <p class="hc-muted mb-0">Ces partenariats peuvent déjà soutenir l'envoi d'orientations et le suivi partagé entre structures.</p>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_referral_partners') }}">Voir tous les partenariats</a>
       </div>
-      <ol class="hc-referral-mini-lifecycle">
-        <li><strong>Transmission</strong><span>Une structure adresse une orientation utile à un partenaire autorisé.</span></li>
-        <li><strong>Validation ou prise en compte</strong><span>La structure destinataire consulte, accepte ou refuse selon son périmètre d'intervention.</span></li>
-        <li><strong>Suivi partagé</strong><span>Les mises à jour publiques de coordination rendent l'avancement lisible sans exposer l'interne.</span></li>
-        <li><strong>Stabilisation</strong><span>Le flux est clôturé, suspendu ou interrompu avec une trace visible pour les structures concernées.</span></li>
-      </ol>
-    </article>
+      <div class="hc-referral-partner-cards">
+        {% for connection in active_partner_connections[:4] %}
+          {% set partner = connection.target_structure if current_user.structure_id == connection.source_structure_id else connection.source_structure %}
+          <article class="hc-referral-partner-card">
+            <div class="hc-referral-partner-card__header">
+              <h3>{{ partner.name if partner else ("Structure #" ~ (connection.target_structure_id if current_user.structure_id == connection.source_structure_id else connection.source_structure_id)) }}</h3>
+              <span class="hc-referral-status hc-referral-status--active-connection">{{ status_label(connection.status) }}</span>
+            </div>
+            <p>Partenariat bilatéral actif pour la coordination d'orientations utiles entre structures autorisées.</p>
+            <div class="hc-referral-hero__chips" aria-label="Capacités actives">
+              <span class="hc-referral-chip hc-referral-chip--governance">Orientation active</span>
+              <span class="hc-referral-chip hc-referral-chip--governance">Suivi partagé</span>
+              <span class="hc-referral-chip hc-referral-chip--governance">Validation bilatérale</span>
+              <span class="hc-referral-chip hc-referral-chip--governance">Coordination opérationnelle</span>
+            </div>
+            <div class="hc-referral-partner-card__capabilities">
+              {% for item in permissions_summary(connection).split(", ") %}
+                <span class="hc-referral-chip">{{ item }}</span>
+              {% endfor %}
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
 
+  <section class="hc-referral-grid hc-referral-grid--workspace">
     <article class="hc-card hc-referral-sidecard">
       <div class="hc-referral-sidecard__header">
         <span class="hc-referral-sidecard__eyebrow">Activité récente</span>
         <h2>Derniers flux visibles</h2>
       </div>
       {% if ns.recently_updated %}
-        <ul class="hc-referral-activity-list">
+        <ul class="hc-referral-activity-list hc-referral-activity-list--timeline">
           {% for referral in ns.recently_updated %}
             {% set status_key = (referral.operational_status or referral.status or "sent")|lower %}
             <li>
-              <strong>#{{ referral.id }} · {{ status_labels.get(status_key, referral.status or "Orientation") }}</strong>
-              <span>{{ referral.to_structure.name if referral.to_structure else ("Structure #" ~ referral.to_structure_id) }}</span>
-              <small>{{ referral.created_at|format_datetime_fr }}</small>
+              <strong>{{ referral.from_structure.name if referral.from_structure else ("Structure #" ~ referral.from_structure_id) }} → {{ referral.to_structure.name if referral.to_structure else ("Structure #" ~ referral.to_structure_id) }}</strong>
+              <span>{{ referral.reason or "Orientation partenaire en cours de coordination." }}</span>
+              <div class="hc-referral-activity-list__meta">
+                <span class="hc-referral-status hc-referral-status--{{ status_key|replace('_', '-') }}">{{ status_labels.get(status_key, referral.status or "Statut") }}</span>
+                <small>{{ (referral.last_public_update_at or referral.updated_at or referral.created_at)|format_datetime_fr }}</small>
+              </div>
             </li>
           {% endfor %}
         </ul>
+      {% elif workspace_state == "pending" %}
+        <p class="hc-muted mb-0">Aucune orientation ne circule encore : le flux reste en attente de validation partenariale avant démarrage opérationnel.</p>
+      {% elif workspace_state == "empty" %}
+        <p class="hc-muted mb-0">Les premiers flux visibles apparaîtront ici dès qu'un partenariat sera ouvert puis utilisé pour transmettre une orientation.</p>
       {% else %}
-        <p class="hc-muted mb-0">Les premières orientations visibles apparaîtront ici pour faciliter la lecture de l'activité récente.</p>
+        <p class="hc-muted mb-0">Les prochaines orientations ou mises à jour publiques de coordination apparaîtront ici dès qu'un flux sera engagé.</p>
       {% endif %}
+    </article>
+
+    <article class="hc-card hc-referral-sidecard">
+      <div class="hc-referral-sidecard__header">
+        <span class="hc-referral-sidecard__eyebrow">Repères de gouvernance</span>
+        <h2>Cadre de coopération maîtrisé</h2>
+      </div>
+      <ul class="hc-referral-governance-list">
+        <li>Les partenaires n'accèdent qu'aux éléments explicitement partagés.</li>
+        <li>Chaque transmission reste rattachée à une structure source et une structure destinataire identifiées.</li>
+        <li>Les statuts visibles servent la coordination sans exposer les notes internes du partenaire.</li>
+      </ul>
+      <ol class="hc-referral-mini-lifecycle">
+        <li><strong>Transmission</strong><span>Une structure adresse une orientation utile à un partenaire autorisé.</span></li>
+        <li><strong>Validation ou prise en compte</strong><span>La structure destinataire consulte, accepte ou refuse selon son périmètre d'intervention.</span></li>
+        <li><strong>Suivi partagé</strong><span>Les mises à jour publiques de coordination rendent l'avancement lisible sans exposer l'interne.</span></li>
+        <li><strong>Stabilisation</strong><span>Le flux est clôturé, suspendu ou interrompu avec une trace visible pour les structures concernées.</span></li>
+      </ol>
     </article>
   </section>
 
@@ -196,22 +331,52 @@
           {% else %}
             <tr>
               <td colspan="6" class="py-0">
-                <div class="hc-referral-empty">
-                  <div class="hc-referral-empty__copy">
-                    <span class="hc-referral-empty__eyebrow">Aucune orientation active</span>
-                    <h3>Préparez un premier flux inter-structures encadré</h3>
-                    <p>Les orientations partenaires servent à transmettre une situation utile vers une structure autorisée, avec validation, suivi partagé et visibilité limitée au périmètre nécessaire.</p>
-                    <ul class="hc-referral-governance-list">
-                      <li>Les structures partenaires doivent être reconnues dans un cadre bilatéral.</li>
-                      <li>Les informations partagées restent limitées à la coordination utile.</li>
-                      <li>Le suivi visible soutient la continuité opérationnelle sans ouvrir le dossier interne.</li>
-                    </ul>
+                {% if workspace_state == "empty" %}
+                  <div class="hc-referral-empty">
+                    <div class="hc-referral-empty__copy">
+                      <span class="hc-referral-empty__eyebrow">Espace prêt à configurer</span>
+                      <h3>Créez un premier partenariat pour ouvrir le workspace</h3>
+                      <p>Aucune relation partenaire ni aucune orientation n'est encore active dans votre périmètre. Le prochain jalon consiste à formaliser un premier cadre de coopération.</p>
+                      <ul class="hc-referral-governance-list">
+                        <li>La validation bilatérale ouvre un cadre sûr pour les transmissions futures.</li>
+                        <li>Les informations partagées restent limitées à la coordination utile.</li>
+                        <li>Le suivi opérationnel deviendra visible ici dès la première orientation.</li>
+                      </ul>
+                    </div>
+                    <div class="hc-referral-empty__actions">
+                      {% if current_user.structure_id %}
+                        <a class="btn btn-primary" href="{{ url_for('admin.admin_referral_partner_new') }}">Créer un premier partenariat</a>
+                      {% else %}
+                        <a class="btn btn-primary" href="{{ url_for('admin.admin_referral_partners') }}">Voir les partenariats</a>
+                      {% endif %}
+                      <p class="hc-muted mb-0">Cette étape initialise la coordination inter-structures sans modifier le dossier interne de référence.</p>
+                    </div>
                   </div>
-                  <div class="hc-referral-empty__actions">
-                    <a class="btn btn-primary" href="{{ url_for('admin.admin_referral_partners') }}">Gérer les partenariats</a>
-                    <p class="hc-muted mb-0">Une fois un partenariat actif, les équipes peuvent envoyer des orientations depuis les demandes concernées.</p>
+                {% elif workspace_state == "pending" %}
+                  <div class="hc-referral-empty hc-referral-empty--blocked">
+                    <div class="hc-referral-empty__copy">
+                      <span class="hc-referral-empty__eyebrow">Coordination bloquée</span>
+                      <h3>Aucune orientation n'est encore possible tant que la validation reste en attente</h3>
+                      <p>Le registre partenaire contient des demandes en attente. Les orientations apparaîtront ici dès qu'un partenariat aura été confirmé de part et d'autre.</p>
+                    </div>
+                    <div class="hc-referral-empty__actions">
+                      <a class="btn btn-primary" href="{{ url_for('admin.admin_referral_partners') }}">Suivre les demandes en attente</a>
+                      <p class="hc-muted mb-0">Le workspace passera automatiquement en mode opérationnel dès qu'une relation sera active.</p>
+                    </div>
                   </div>
-                </div>
+                {% else %}
+                  <div class="hc-referral-empty hc-referral-empty--active">
+                    <div class="hc-referral-empty__copy">
+                      <span class="hc-referral-empty__eyebrow">Coordination prête</span>
+                      <h3>Les partenariats sont actifs, mais aucune orientation n'a encore été engagée</h3>
+                      <p>Le cadre de coopération est prêt. Les premières orientations envoyées ou reçues apparaîtront ici avec leur statut, leur traçabilité et leur suivi partagé.</p>
+                    </div>
+                    <div class="hc-referral-empty__actions">
+                      <a class="btn btn-primary" href="{{ url_for('admin.admin_requests') }}">Ouvrir les demandes</a>
+                      <p class="hc-muted mb-0">Depuis une demande de votre structure, utilisez l'action d'orientation partenaire pour démarrer un flux actif.</p>
+                    </div>
+                  </div>
+                {% endif %}
               </td>
             </tr>
           {% endfor %}

@@ -557,12 +557,60 @@ def admin_referrals_index():
         .limit(100)
         .all()
     )
+    pending_connections = (
+        _connection_query()
+        .filter(OrganizationConnection.status == "pending")
+        .order_by(OrganizationConnection.created_at.desc())
+        .all()
+    )
+    active_connections = (
+        _connection_query()
+        .filter(OrganizationConnection.status == "active")
+        .order_by(OrganizationConnection.accepted_at.desc(), OrganizationConnection.created_at.desc())
+        .all()
+    )
+    actionable_partner_requests = [
+        connection for connection in pending_connections if _can_accept_or_refuse_connection(connection)
+    ]
+    awaiting_counterpart_partner_requests = [
+        connection for connection in pending_connections if connection not in actionable_partner_requests
+    ]
+    actionable_referrals = [
+        referral
+        for referral in (
+            _scope_for_direction("received")
+            .order_by(CaseReferral.updated_at.desc(), CaseReferral.created_at.desc())
+            .limit(12)
+            .all()
+        )
+        if _can_accept_or_refuse(referral) and _effective_operational_status(referral) in {"sent", "received"}
+    ]
+    has_partner_history = bool(active_connections or pending_connections)
+    workspace_state = "active"
+    if not referrals and not has_partner_history:
+        workspace_state = "empty"
+    elif pending_connections and not referrals:
+        workspace_state = "pending"
+    elif not referrals and active_connections:
+        workspace_state = "active"
     return render_template(
         "admin/referrals/index.html",
         referrals=referrals,
         active_tab="all",
         received_count=received_count,
         sent_count=sent_count,
+        pending_partner_requests=pending_connections,
+        actionable_partner_requests=actionable_partner_requests,
+        awaiting_counterpart_partner_requests=awaiting_counterpart_partner_requests,
+        actionable_referrals=actionable_referrals,
+        active_partner_connections=active_connections,
+        pending_partner_count=len(pending_connections),
+        active_partner_count=len(active_connections),
+        workspace_state=workspace_state,
+        has_action_required=bool(actionable_partner_requests or actionable_referrals),
+        can_accept_or_refuse_connection=_can_accept_or_refuse_connection,
+        permissions_summary=_connection_permissions_summary,
+        status_label=_connection_status_label,
     )
 
 
