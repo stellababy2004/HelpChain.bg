@@ -147,7 +147,7 @@
               <span class="hc-referral-status hc-referral-status--pending-connection">{{ status_label(connection.status) }}</span>
             </div>
             <h3>{{ connection.target_structure.name if connection.target_structure else ("Structure #" ~ connection.target_structure_id) }}</h3>
-            <p>La demande de partenariat a été transmise et attend une confirmation bilatérale avant toute orientation.</p>
+            <p>{{ connection_status_note(connection) }}</p>
             <dl class="hc-referral-queue-card__definition">
               <div>
                 <dt>Créée le</dt>
@@ -176,14 +176,14 @@
       <p class="hc-referral-summary__hint">Cadres de coopération déjà ouverts pour transmettre et suivre des orientations.</p>
     </article>
     <article class="hc-card hc-referral-summary__card">
-      <span class="hc-referral-summary__label">Orientations en attente</span>
-      <strong class="hc-referral-summary__value">{{ ns.pending }}</strong>
-      <p class="hc-referral-summary__hint">Orientations transmises ou consultées avant validation ou relais formalisé.</p>
+      <span class="hc-referral-summary__label">Flux clôturés</span>
+      <strong class="hc-referral-summary__value">{{ network_completed_count }}</strong>
+      <p class="hc-referral-summary__hint">Orientations arrivées à un terme visible dans votre réseau actif.</p>
     </article>
     <article class="hc-card hc-referral-summary__card">
-      <span class="hc-referral-summary__label">Coordination active</span>
-      <strong class="hc-referral-summary__value">{{ ns.active }}</strong>
-      <p class="hc-referral-summary__hint">Orientations acceptées ou actuellement prises en charge chez un partenaire.</p>
+      <span class="hc-referral-summary__label">Dernière activité réseau</span>
+      <strong class="hc-referral-summary__value hc-referral-summary__value--meta">{{ network_last_activity|format_datetime_fr if network_last_activity else "—" }}</strong>
+      <p class="hc-referral-summary__hint">Dernier jalon visible sur un partenariat actif ou un flux associé.</p>
     </article>
   </section>
 
@@ -198,21 +198,40 @@
     <section class="hc-card hc-referral-partner-surface">
       <div class="hc-referral-list__header">
         <div>
-          <span class="hc-referral-sidecard__eyebrow">Partenariats actifs</span>
+          <span class="hc-referral-sidecard__eyebrow">Réseau actif</span>
           <h2>Cadres de coordination actuellement ouverts</h2>
-          <p class="hc-muted mb-0">Ces partenariats peuvent déjà soutenir l'envoi d'orientations et le suivi partagé entre structures.</p>
+          <p class="hc-muted mb-0">Chaque partenariat actif expose un historique de validation, une dernière activité visible et une mémoire minimale des flux déjà engagés.</p>
         </div>
         <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_referral_partners') }}">Voir tous les partenariats</a>
       </div>
       <div class="hc-referral-partner-cards">
         {% for connection in active_partner_connections[:4] %}
           {% set partner = connection.target_structure if current_user.structure_id == connection.source_structure_id else connection.source_structure %}
+          {% set snapshot = active_partner_snapshots.get(connection.id, {}) %}
           <article class="hc-referral-partner-card">
             <div class="hc-referral-partner-card__header">
               <h3>{{ partner.name if partner else ("Structure #" ~ (connection.target_structure_id if current_user.structure_id == connection.source_structure_id else connection.source_structure_id)) }}</h3>
               <span class="hc-referral-status hc-referral-status--active-connection">{{ status_label(connection.status) }}</span>
             </div>
-            <p>Partenariat bilatéral actif pour la coordination d'orientations utiles entre structures autorisées.</p>
+            <p>{{ snapshot.get("status_note") or connection_status_note(connection) }}</p>
+            <div class="hc-referral-partner-card__metrics">
+              <div>
+                <span>Actif depuis</span>
+                <strong>{{ snapshot.get("active_since")|format_datetime_fr if snapshot.get("active_since") else "—" }}</strong>
+              </div>
+              <div>
+                <span>Dernière activité</span>
+                <strong>{{ snapshot.get("last_activity_at")|format_datetime_fr if snapshot.get("last_activity_at") else "—" }}</strong>
+              </div>
+              <div>
+                <span>Validations et prises en charge</span>
+                <strong>{{ snapshot.get("accepted_count", 0) }}</strong>
+              </div>
+              <div>
+                <span>Flux clôturés</span>
+                <strong>{{ snapshot.get("completed_count", 0) }}</strong>
+              </div>
+            </div>
             <div class="hc-referral-hero__chips" aria-label="Capacités actives">
               <span class="hc-referral-chip hc-referral-chip--governance">Orientation active</span>
               <span class="hc-referral-chip hc-referral-chip--governance">Suivi partagé</span>
@@ -224,6 +243,17 @@
                 <span class="hc-referral-chip">{{ item }}</span>
               {% endfor %}
             </div>
+            {% if snapshot.get("timeline") %}
+              <ol class="hc-referral-mini-lifecycle hc-referral-mini-lifecycle--compact">
+                {% for item in snapshot.get("timeline", [])[:3] %}
+                  <li>
+                    <strong>{{ item.label }}</strong>
+                    <span>{{ item.detail }}</span>
+                    <small>{{ item.at|format_datetime_fr }}</small>
+                  </li>
+                {% endfor %}
+              </ol>
+            {% endif %}
           </article>
         {% endfor %}
       </div>

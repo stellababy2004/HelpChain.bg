@@ -263,6 +263,11 @@
   line-height: 1;
 }
 
+.hc-referral-summary__value--meta {
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
 .hc-referral-summary__hint {
   color: #5f7084;
   font-size: 0.92rem;
@@ -301,6 +306,39 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+}
+
+.hc-referral-partner-card__metrics,
+.hc-referral-detail-summary {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.hc-referral-partner-card__metrics > div,
+.hc-referral-detail-summary__item {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.84);
+}
+
+.hc-referral-partner-card__metrics span,
+.hc-referral-detail-summary__item span {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.hc-referral-partner-card__metrics strong,
+.hc-referral-detail-summary__item strong {
+  color: #16233b;
+  font-size: 0.96rem;
+  line-height: 1.45;
 }
 
 .hc-referral-tabs {
@@ -360,6 +398,34 @@
 
 .hc-referral-mini-lifecycle--governance li {
   border-left-color: rgba(147, 197, 253, 0.72);
+}
+
+.hc-referral-mini-lifecycle--compact {
+  gap: 0.7rem;
+}
+
+.hc-referral-mini-lifecycle--compact li {
+  gap: 0.18rem;
+}
+
+.hc-referral-mini-lifecycle--compact small,
+.hc-referral-mini-lifecycle--inline small {
+  color: #64748b;
+  display: block;
+  margin-top: 0.15rem;
+}
+
+.hc-referral-mini-lifecycle--inline {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.hc-referral-mini-lifecycle--inline li {
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-left: 2px solid rgba(191, 219, 254, 0.9);
+  border-radius: 14px;
+  padding: 0.75rem 0.85rem;
 }
 
 .hc-referral-activity-list {
@@ -750,13 +816,57 @@
   font-size: 0.875rem;
 }
 
+.hc-referral-trace-list {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.hc-referral-trace-list li {
+  display: grid;
+  gap: 0.28rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.82);
+}
+
+.hc-referral-trace-list__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.hc-referral-trace-list p {
+  margin: 0;
+  color: #526277;
+  line-height: 1.55;
+}
+
+.hc-referral-trace-list small {
+  color: #64748b;
+}
+
+.hc-referral-row-detail td {
+  background: rgba(248, 250, 252, 0.72);
+  padding-top: 0.25rem;
+  padding-bottom: 1rem;
+}
+
 @media (max-width: 1100px) {
   .hc-referral-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hc-referral-workqueue__grid,
-  .hc-referral-partner-cards {
+  .hc-referral-partner-cards,
+  .hc-referral-mini-lifecycle--inline,
+  .hc-referral-partner-card__metrics,
+  .hc-referral-detail-summary {
     grid-template-columns: 1fr;
   }
 

@@ -8,8 +8,10 @@
 
 {% block admin_content %}
 <div class="hc-admin-wrap hc-admin-wrap--wide hc-referrals">
-  {% set ns = namespace(pending=0, active=0, suspended=0, revoked=0, actionable=0) %}
+  {% set ns = namespace(pending=0, active=0, suspended=0, revoked=0, actionable=0, completed=0) %}
   {% for connection in connections %}
+    {% set snapshot = connection_snapshots.get(connection.id, {}) %}
+    {% set ns.completed = ns.completed + (snapshot.get("completed_count", 0) or 0) %}
     {% if connection.status == "pending" %}
       {% set ns.pending = ns.pending + 1 %}
       {% if can_accept_or_refuse_connection(connection) %}
@@ -65,14 +67,14 @@
       <p class="hc-referral-summary__hint">Relations déjà ouvertes pour transmettre des orientations dans un cadre maîtrisé.</p>
     </article>
     <article class="hc-card hc-referral-summary__card">
-      <span class="hc-referral-summary__label">Suspendus</span>
-      <strong class="hc-referral-summary__value">{{ ns.suspended }}</strong>
-      <p class="hc-referral-summary__hint">Cadres temporairement interrompus en attente de reprise ou de décision.</p>
+      <span class="hc-referral-summary__label">Flux clôturés</span>
+      <strong class="hc-referral-summary__value">{{ ns.completed }}</strong>
+      <p class="hc-referral-summary__hint">Historique de clôture déjà visible sur les partenariats du périmètre courant.</p>
     </article>
     <article class="hc-card hc-referral-summary__card">
-      <span class="hc-referral-summary__label">Révoqués</span>
-      <strong class="hc-referral-summary__value">{{ ns.revoked }}</strong>
-      <p class="hc-referral-summary__hint">Relations clôturées de manière formalisée dans le registre partenarial.</p>
+      <span class="hc-referral-summary__label">Coordination interrompue</span>
+      <strong class="hc-referral-summary__value">{{ ns.suspended + ns.revoked }}</strong>
+      <p class="hc-referral-summary__hint">Cadres suspendus ou clôturés formellement, à relire pour la continuité de réseau.</p>
     </article>
   </section>
 
@@ -82,6 +84,59 @@
     <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.admin_referrals_sent') }}">Envoyées</a>
     <a class="btn btn-sm btn-primary" href="{{ url_for('admin.admin_referral_partners') }}">Partenaires</a>
   </section>
+
+  {% if connections %}
+    <section class="hc-card hc-referral-partner-surface">
+      <div class="hc-referral-list__header">
+        <div>
+          <span class="hc-referral-sidecard__eyebrow">Réseau partenaire</span>
+          <h2>Continuité et mémoire du réseau visible</h2>
+          <p class="hc-muted mb-0">Chaque relation expose son statut, sa dernière activité visible et les flux déjà clôturés dans le cadre bilatéral.</p>
+        </div>
+      </div>
+      <div class="hc-referral-partner-cards">
+        {% for connection in connections[:4] %}
+          {% set snapshot = connection_snapshots.get(connection.id, {}) %}
+          <article class="hc-referral-partner-card">
+            <div class="hc-referral-partner-card__header">
+              <h3>{{ connection.source_structure.name if connection.source_structure else ("#" ~ connection.source_structure_id) }} ↔ {{ connection.target_structure.name if connection.target_structure else ("#" ~ connection.target_structure_id) }}</h3>
+              <span class="hc-referral-status hc-referral-status--{{ connection.status }}">{{ status_label(connection.status) }}</span>
+            </div>
+            <p>{{ snapshot.get("status_note") or connection_status_note(connection) }}</p>
+            <div class="hc-referral-partner-card__metrics">
+              <div>
+                <span>Actif depuis</span>
+                <strong>{{ snapshot.get("active_since")|format_datetime_fr if snapshot.get("active_since") else "—" }}</strong>
+              </div>
+              <div>
+                <span>Dernière activité visible</span>
+                <strong>{{ snapshot.get("last_activity_at")|format_datetime_fr if snapshot.get("last_activity_at") else "—" }}</strong>
+              </div>
+              <div>
+                <span>Orientations visibles</span>
+                <strong>{{ snapshot.get("sent_count", 0) }}</strong>
+              </div>
+              <div>
+                <span>Flux clôturés</span>
+                <strong>{{ snapshot.get("completed_count", 0) }}</strong>
+              </div>
+            </div>
+            {% if snapshot.get("timeline") %}
+              <ol class="hc-referral-mini-lifecycle hc-referral-mini-lifecycle--compact">
+                {% for item in snapshot.get("timeline", [])[:3] %}
+                  <li>
+                    <strong>{{ item.label }}</strong>
+                    <span>{{ item.detail }}</span>
+                    <small>{{ item.at|format_datetime_fr }}</small>
+                  </li>
+                {% endfor %}
+              </ol>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
 
   <section class="hc-card hc-referral-list">
     <div class="hc-referral-list__header">
@@ -106,8 +161,12 @@
         </thead>
         <tbody>
           {% for connection in connections %}
+            {% set snapshot = connection_snapshots.get(connection.id, {}) %}
             <tr class="{{ 'hc-referral-row--pending' if connection.status == 'pending' else '' }}">
-              <td>{{ connection.source_structure.name if connection.source_structure else ("#" ~ connection.source_structure_id) }}</td>
+              <td>
+                <strong>{{ connection.source_structure.name if connection.source_structure else ("#" ~ connection.source_structure_id) }}</strong>
+                <div class="text-muted small">{{ snapshot.get("status_note") or connection_status_note(connection) }}</div>
+              </td>
               <td>{{ connection.target_structure.name if connection.target_structure else ("#" ~ connection.target_structure_id) }}</td>
               <td><span class="hc-referral-status hc-referral-status--{{ connection.status }}">{{ status_label(connection.status) }}</span></td>
               <td>{{ permissions_summary(connection) }}</td>
@@ -146,6 +205,21 @@
                 </div>
               </td>
             </tr>
+            {% if snapshot.get("timeline") %}
+              <tr class="hc-referral-row-detail">
+                <td colspan="7">
+                  <ol class="hc-referral-mini-lifecycle hc-referral-mini-lifecycle--inline">
+                    {% for item in snapshot.get("timeline", []) %}
+                      <li>
+                        <strong>{{ item.label }}</strong>
+                        <span>{{ item.detail }}</span>
+                        <small>{{ item.at|format_datetime_fr }}</small>
+                      </li>
+                    {% endfor %}
+                  </ol>
+                </td>
+              </tr>
+            {% endif %}
           {% else %}
             <tr>
               <td colspan="7" class="py-0">

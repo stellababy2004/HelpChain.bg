@@ -53,6 +53,16 @@ DEFAULT_CONNECTION_PERMISSIONS = {
     "can_comment": False,
     "can_share_documents": False,
 }
+SHARED_SCOPE_LABELS = {
+    "share_identity": "Identité strictement nécessaire",
+    "share_contact": "Coordonnées de contact",
+    "share_category": "Catégorie d'orientation",
+    "share_priority": "Niveau de priorité",
+    "share_summary": "Résumé partagé",
+    "share_documents": "Documents partagés",
+    "share_internal_notes": "Notes internes",
+    "share_risk_level": "Niveau de vigilance",
+}
 
 
 def _admin_structure_id() -> int | None:
@@ -325,6 +335,210 @@ def _connection_status_label(status: str | None) -> str:
     }.get((status or "").strip().lower(), status or "—")
 
 
+def _connection_status_note(connection: OrganizationConnection) -> str:
+    status = (getattr(connection, "status", None) or "").strip().lower()
+    if status == "pending":
+        return "Cadre propose en attente de validation bilaterale."
+    if status == "active":
+        return "Cadre bilateral confirme pour transmettre et suivre des orientations."
+    if status == "suspended":
+        return "Cadre suspendu en attente de reevalation operationnelle."
+    if status == "revoked":
+        return "Relation cloturee formellement et retiree du reseau actif."
+    return "Cadre partenarial visible dans le registre."
+
+
+def _connection_last_activity(
+    connection: OrganizationConnection,
+    partner_referrals: list[CaseReferral] | None = None,
+):
+    referrals = partner_referrals or []
+    timestamps = [
+        getattr(connection, "revoked_at", None),
+        getattr(connection, "accepted_at", None),
+        getattr(connection, "created_at", None),
+    ]
+    timestamps.extend(
+        [_operational_last_update(referral) for referral in referrals if _operational_last_update(referral)]
+    )
+    timestamps = [value for value in timestamps if value is not None]
+    return max(timestamps) if timestamps else None
+
+
+def _connection_timeline(
+    connection: OrganizationConnection,
+    partner_referrals: list[CaseReferral] | None = None,
+) -> list[dict]:
+    timeline = [
+        {
+            "label": "Partenariat propose",
+            "at": getattr(connection, "created_at", None),
+            "detail": "Cadre de cooperation initie par une structure source.",
+        }
+    ]
+    if getattr(connection, "accepted_at", None):
+        timeline.append(
+            {
+                "label": "Validation acceptee",
+                "at": getattr(connection, "accepted_at", None),
+                "detail": "Validation bilaterale confirmee pour ouvrir les orientations.",
+            }
+        )
+    referrals = partner_referrals or []
+    sent_count = len(referrals)
+    completed_count = len(
+        [row for row in referrals if _effective_operational_status(row) == "completed"]
+    )
+    if sent_count:
+        timestamps = [
+            _operational_last_update(row) for row in referrals if _operational_last_update(row)
+        ]
+        timeline.append(
+            {
+                "label": "Flux engages",
+                "at": max(timestamps) if timestamps else None,
+                "detail": f"{sent_count} orientation{'s' if sent_count > 1 else ''} visible{'s' if sent_count > 1 else ''} dans ce cadre.",
+            }
+        )
+    if completed_count:
+        completed_timestamps = [
+            getattr(row, "completed_at", None)
+            for row in referrals
+            if getattr(row, "completed_at", None)
+        ]
+        timeline.append(
+            {
+                "label": "Flux clotures",
+                "at": max(completed_timestamps) if completed_timestamps else None,
+                "detail": f"{completed_count} flux cloture{'s' if completed_count > 1 else ''} dans ce cadre partenarial.",
+            }
+        )
+    if getattr(connection, "status", None) == "suspended":
+        timeline.append(
+            {
+                "label": "Coordination suspendue",
+                "at": _connection_last_activity(connection, referrals),
+                "detail": "Cadre suspendu en attente de reprise ou de reevaluation.",
+            }
+        )
+    if getattr(connection, "revoked_at", None):
+        timeline.append(
+            {
+                "label": "Relation cloturee",
+                "at": getattr(connection, "revoked_at", None),
+                "detail": "Cadre retire du reseau actif avec effet formalise.",
+            }
+        )
+    return [item for item in timeline if item.get("at")]
+
+
+def _connection_partner_snapshot(
+    connection: OrganizationConnection,
+    partner_referrals: list[CaseReferral] | None = None,
+) -> dict:
+    referrals = partner_referrals or []
+    completed_count = len(
+        [row for row in referrals if _effective_operational_status(row) == "completed"]
+    )
+    accepted_count = len(
+        [row for row in referrals if _effective_operational_status(row) in {"accepted", "in_progress", "completed"}]
+    )
+    in_progress_count = len(
+        [row for row in referrals if _effective_operational_status(row) == "in_progress"]
+    )
+    return {
+        "active_since": getattr(connection, "accepted_at", None) or getattr(connection, "created_at", None),
+        "last_activity_at": _connection_last_activity(connection, referrals),
+        "sent_count": len(referrals),
+        "accepted_count": accepted_count,
+        "completed_count": completed_count,
+        "in_progress_count": in_progress_count,
+        "status_note": _connection_status_note(connection),
+        "timeline": _connection_timeline(connection, referrals),
+    }
+
+
+def _shared_scope_rows(referral: CaseReferral) -> list[dict]:
+    scope = referral.shared_scope_json or default_referral_shared_scope()
+    rows = []
+    for key, value in scope.items():
+        rows.append(
+            {
+                "key": key,
+                "label": SHARED_SCOPE_LABELS.get(key, key),
+                "value": bool(value),
+            }
+        )
+    return rows
+
+
+def _referral_pending_action_hint(referral: CaseReferral) -> str:
+    status = _effective_operational_status(referral)
+    if _can_accept_or_refuse(referral) and status in {"sent", "received"}:
+        return "Votre structure doit accepter ou refuser cette orientation."
+    if _can_update_operational_status(referral) and status == "accepted":
+        return "Votre structure peut demarrer la prise en charge et publier une mise a jour visible."
+    if _can_update_operational_status(referral) and status == "in_progress":
+        return "Votre structure peut enrichir le suivi partage ou cloturer le flux."
+    if _can_cancel(referral):
+        return "Votre structure peut encore interrompre l'orientation avant acceptation."
+    if status in {"completed", "refused", "cancelled"}:
+        return "Aucune action immediate : le flux dispose deja d'un etat final visible."
+    return "Lecture et suivi du flux visibles dans votre perimetre."
+
+
+def _referral_current_owner_label(referral: CaseReferral) -> str:
+    status = _effective_operational_status(referral)
+    if status in {"sent", "received", "accepted", "in_progress", "completed", "refused"}:
+        return referral.to_structure.name if referral.to_structure else f"Structure #{referral.to_structure_id}"
+    return referral.from_structure.name if referral.from_structure else f"Structure #{referral.from_structure_id}"
+
+
+def _referral_activity_label(action: str) -> str:
+    return {
+        "created": "Orientation preparee",
+        "sent": "Orientation transmise",
+        "viewed": "Orientation consultee",
+        "accepted": "Prise en charge acceptee",
+        "refused": "Orientation refusee",
+        "cancelled": "Orientation annulee",
+        "in_progress": "Prise en charge demarree",
+        "completed": "Flux cloture",
+        "public_note": "Mise a jour publique publiee",
+    }.get(action, action)
+
+
+def _referral_activity_consequence(activity: ReferralActivity) -> str:
+    action = (getattr(activity, "action", None) or "").strip().lower()
+    if action == "created":
+        return "Le flux a ete prepare dans le cadre d'une coordination partenaire."
+    if action == "sent":
+        return "La structure cible peut desormais consulter l'orientation."
+    if action == "viewed":
+        return "La structure destinataire a ouvert l'orientation dans son perimetre."
+    if action == "accepted":
+        return "La structure partenaire devient responsable du suivi operationnel visible."
+    if action == "refused":
+        return "La coordination s'arrete cote partenaire avec un refus formalise."
+    if action == "cancelled":
+        return "La structure source a interrompu le flux avant sa prise en charge."
+    if action == "in_progress":
+        return "Le dossier est officiellement en cours de traitement cote partenaire."
+    if action == "completed":
+        return "Le flux dispose desormais d'un etat final de cloture visible."
+    if action == "public_note":
+        return "Une note publique de coordination enrichit le suivi partage."
+    return "Evenement de coordination enregistre dans l'historique visible."
+
+
+def _referral_activity_actor(activity: ReferralActivity) -> str:
+    if getattr(activity, "actor_admin", None) and getattr(activity.actor_admin, "username", None):
+        return activity.actor_admin.username
+    if getattr(activity, "actor_structure", None) and getattr(activity.actor_structure, "name", None):
+        return activity.actor_structure.name
+    return "Acteur systeme"
+
+
 def _audit_connection_action(
     connection: OrganizationConnection,
     action: str,
@@ -593,6 +807,36 @@ def admin_referrals_index():
         workspace_state = "pending"
     elif not referrals and active_connections:
         workspace_state = "active"
+    partner_referrals_map = {}
+    for connection in active_connections:
+        partner_referrals_map[connection.id] = [
+            referral
+            for referral in referrals
+            if {
+                referral.from_structure_id,
+                referral.to_structure_id,
+            }
+            == {connection.source_structure_id, connection.target_structure_id}
+        ]
+    active_partner_snapshots = {
+        connection.id: _connection_partner_snapshot(
+            connection,
+            partner_referrals_map.get(connection.id, []),
+        )
+        for connection in active_connections
+    }
+    network_last_activity = max(
+        [
+            snapshot.get("last_activity_at")
+            for snapshot in active_partner_snapshots.values()
+            if snapshot.get("last_activity_at") is not None
+        ],
+        default=None,
+    )
+    network_completed_count = sum(
+        int(snapshot.get("completed_count") or 0)
+        for snapshot in active_partner_snapshots.values()
+    )
     return render_template(
         "admin/referrals/index.html",
         referrals=referrals,
@@ -611,6 +855,10 @@ def admin_referrals_index():
         can_accept_or_refuse_connection=_can_accept_or_refuse_connection,
         permissions_summary=_connection_permissions_summary,
         status_label=_connection_status_label,
+        connection_status_note=_connection_status_note,
+        active_partner_snapshots=active_partner_snapshots,
+        network_last_activity=network_last_activity,
+        network_completed_count=network_completed_count,
     )
 
 
@@ -627,6 +875,22 @@ def admin_referrals_received():
         active_tab="received",
         received_count=len(referrals),
         sent_count=_scope_for_direction("sent").count(),
+        pending_partner_requests=[],
+        actionable_partner_requests=[],
+        awaiting_counterpart_partner_requests=[],
+        actionable_referrals=[],
+        active_partner_connections=[],
+        pending_partner_count=0,
+        active_partner_count=0,
+        workspace_state="active" if referrals else "empty",
+        has_action_required=False,
+        can_accept_or_refuse_connection=_can_accept_or_refuse_connection,
+        permissions_summary=_connection_permissions_summary,
+        status_label=_connection_status_label,
+        connection_status_note=_connection_status_note,
+        active_partner_snapshots={},
+        network_last_activity=None,
+        network_completed_count=0,
     )
 
 
@@ -643,6 +907,22 @@ def admin_referrals_sent():
         active_tab="sent",
         received_count=_scope_for_direction("received").count(),
         sent_count=len(referrals),
+        pending_partner_requests=[],
+        actionable_partner_requests=[],
+        awaiting_counterpart_partner_requests=[],
+        actionable_referrals=[],
+        active_partner_connections=[],
+        pending_partner_count=0,
+        active_partner_count=0,
+        workspace_state="active" if referrals else "empty",
+        has_action_required=False,
+        can_accept_or_refuse_connection=_can_accept_or_refuse_connection,
+        permissions_summary=_connection_permissions_summary,
+        status_label=_connection_status_label,
+        connection_status_note=_connection_status_note,
+        active_partner_snapshots={},
+        network_last_activity=None,
+        network_completed_count=0,
     )
 
 
@@ -657,6 +937,22 @@ def admin_referral_partners():
         .order_by(OrganizationConnection.created_at.desc())
         .all()
     )
+    scoped_referrals = _scope_for_direction(None).all()
+    connection_snapshots = {
+        connection.id: _connection_partner_snapshot(
+            connection,
+            [
+                referral
+                for referral in scoped_referrals
+                if {
+                    referral.from_structure_id,
+                    referral.to_structure_id,
+                }
+                == {connection.source_structure_id, connection.target_structure_id}
+            ],
+        )
+        for connection in connections
+    }
     return render_template(
         "admin/referrals/partners.html",
         connections=connections,
@@ -666,6 +962,8 @@ def admin_referral_partners():
         can_accept_or_refuse_connection=_can_accept_or_refuse_connection,
         can_suspend_or_revoke_connection=_can_suspend_or_revoke_connection,
         can_reactivate_connection=_can_reactivate_connection,
+        connection_status_note=_connection_status_note,
+        connection_snapshots=connection_snapshots,
     )
 
 
@@ -887,6 +1185,27 @@ def admin_referral_detail(referral_id: int):
         _set_referral_operational_status(referral, "received")
         _log_referral_activity(referral, "viewed")
         db.session.commit()
+    partner_connection = (
+        OrganizationConnection.query.filter(
+            OrganizationConnection.connection_type == "referral",
+            or_(
+                (
+                    (OrganizationConnection.source_structure_id == referral.from_structure_id)
+                    & (OrganizationConnection.target_structure_id == referral.to_structure_id)
+                ),
+                (
+                    (OrganizationConnection.source_structure_id == referral.to_structure_id)
+                    & (OrganizationConnection.target_structure_id == referral.from_structure_id)
+                ),
+            ),
+        )
+        .order_by(OrganizationConnection.id.desc())
+        .first()
+    )
+    partner_snapshot = _connection_partner_snapshot(
+        partner_connection,
+        [referral],
+    ) if partner_connection else None
     return render_template(
         "admin/referrals/detail.html",
         referral=referral,
@@ -898,6 +1217,16 @@ def admin_referral_detail(referral_id: int):
         operational_status_note=_operational_status_note(referral),
         operational_last_update=_operational_last_update(referral),
         operational_timeline=_operational_timeline(referral),
+        shared_scope_rows=_shared_scope_rows(referral),
+        pending_action_hint=_referral_pending_action_hint(referral),
+        current_owner_label=_referral_current_owner_label(referral),
+        referral_activity_label=_referral_activity_label,
+        referral_activity_consequence=_referral_activity_consequence,
+        referral_activity_actor=_referral_activity_actor,
+        partner_connection=partner_connection,
+        partner_snapshot=partner_snapshot,
+        connection_status_label=_connection_status_label,
+        connection_status_note=_connection_status_note,
     )
 
 
