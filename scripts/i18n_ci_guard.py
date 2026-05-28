@@ -35,7 +35,13 @@ def parse_args() -> argparse.Namespace:
 
 
 def _run_git(args: list[str]) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(["git", *args], capture_output=True, text=True, check=False)
+    return subprocess.run(
+        ["git", *args],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
 
 
 def resolve_base_ref(preferred: str) -> str:
