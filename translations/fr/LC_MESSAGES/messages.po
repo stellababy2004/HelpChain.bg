@@ -10047,3 +10047,375 @@ msgstr "Lecture continue des situations en attente"
 
 msgid "Repérage de signaux faibles et récurrents"
 msgstr "Repérage de signaux faibles et récurrents"
+
+msgid "Transmise"
+msgstr "Transmise"
+
+msgid "Consultée"
+msgstr "Consultée"
+
+msgid "Acceptée"
+msgstr "Acceptée"
+
+msgid "Prise en charge"
+msgstr "Prise en charge"
+
+msgid "Clôturée"
+msgstr "Clôturée"
+
+msgid "Refusée"
+msgstr "Refusée"
+
+msgid "Annulée"
+msgstr "Annulée"
+
+msgid "Suspendue"
+msgstr "Suspendue"
+
+msgid "Orientations partenaires"
+msgstr "Orientations partenaires"
+
+msgid "Orientations reçues"
+msgstr "Orientations reçues"
+
+msgid "Orientations envoyées"
+msgstr "Orientations envoyées"
+
+msgid "Lecture opérationnelle des flux, validations partenaires et continuité visible entre structures autorisées."
+msgstr "Lecture opérationnelle des flux, validations partenaires et continuité visible entre structures autorisées."
+
+msgid "Flux reçus par votre structure, avec signal prioritaire sur les validations et les prises en charge attendues."
+msgstr "Flux reçus par votre structure, avec signal prioritaire sur les validations et les prises en charge attendues."
+
+msgid "Coordination inter-structures"
+msgstr "Coordination inter-structures"
+
+msgid "Action requise"
+msgstr "Action requise"
+
+msgid "Décisions immédiates à traiter"
+msgstr "Décisions immédiates à traiter"
+
+msgid "1 action peut débloquer ou faire avancer la coordination."
+msgstr "1 action peut débloquer ou faire avancer la coordination."
+
+msgid "Voir le registre partenarial"
+msgstr "Voir le registre partenarial"
+
+msgid "Validation partenaire requise"
+msgstr "Validation partenaire requise"
+
+msgid "Créée"
+msgstr "Créée"
+
+msgid "Capacités"
+msgstr "Capacités"
+
+msgid "Accepter"
+msgstr "Accepter"
+
+msgid "Refuser"
+msgstr "Refuser"
+
+msgid "Orientation à traiter"
+msgstr "Orientation à traiter"
+
+msgid "→"
+msgstr "→"
+
+msgid "Orientation partenaire en attente de prise en compte."
+msgstr "Orientation partenaire en attente de prise en compte."
+
+msgid "Dernière mise à jour"
+msgstr "Dernière mise à jour"
+
+msgid "Action attendue"
+msgstr "Action attendue"
+
+msgid "Décisions immédiates côté validation ou prise en compte."
+msgstr "Décisions immédiates côté validation ou prise en compte."
+
+msgid "Validation partenaire"
+msgstr "Validation partenaire"
+
+msgid "Coordination active"
+msgstr "Coordination active"
+
+msgid "Flux acceptés ou pris en charge dans le périmètre visible."
+msgstr "Flux acceptés ou pris en charge dans le périmètre visible."
+
+msgid "Sans activité récente"
+msgstr "Sans activité récente"
+
+msgid "Flux ouverts restés silencieux au-delà du rythme normal."
+msgstr "Flux ouverts restés silencieux au-delà du rythme normal."
+
+msgid "Flux bloqués"
+msgstr "Flux bloqués"
+
+msgid "Refus, annulations ou suspensions visibles."
+msgstr "Refus, annulations ou suspensions visibles."
+
+msgid "Dernières mises à jour"
+msgstr "Dernières mises à jour"
+
+msgid "Clôtures récentes et évolutions visibles du réseau."
+msgstr "Clôtures récentes et évolutions visibles du réseau."
+
+msgid "Pilotage global"
+msgstr "Pilotage global"
+
+msgid "Reçues"
+msgstr "Reçues"
+
+msgid "Envoyées"
+msgstr "Envoyées"
+
+msgid "Partenaires"
+msgstr "Partenaires"
+
+msgid "Rythme opérationnel visible"
+msgstr "Rythme opérationnel visible"
+
+msgid "·"
+msgstr "·"
+
+msgid "Orientation partenaire en cours de coordination."
+msgstr "Orientation partenaire en cours de coordination."
+
+msgid "Capacité réseau"
+msgstr "Capacité réseau"
+
+msgid "Cadres ouverts et continuité"
+msgstr "Cadres ouverts et continuité"
+
+msgid "Validations partenaires"
+msgstr "Validations partenaires"
+
+msgid "Partenariats actifs"
+msgstr "Partenariats actifs"
+
+msgid "Flux clôturés réseau"
+msgstr "Flux clôturés réseau"
+
+msgid "Dernière activité réseau"
+msgstr "Dernière activité réseau"
+
+msgid "Les statuts visibles soutiennent la coordination sans exposer les notes internes des partenaires."
+msgstr "Les statuts visibles soutiennent la coordination sans exposer les notes internes des partenaires."
+
+msgid "Réseau actuellement mobilisé"
+msgstr "Réseau actuellement mobilisé"
+
+msgid "Voir tous les partenariats"
+msgstr "Voir tous les partenariats"
+
+msgid "Actif depuis"
+msgstr "Actif depuis"
+
+msgid "Pris en charge"
+msgstr "Pris en charge"
+
+msgid "Clôturés"
+msgstr "Clôturés"
+
+msgid "Flux opérationnels"
+msgstr "Flux opérationnels"
+
+msgid "Lecture compacte du périmètre courant"
+msgstr "Lecture compacte du périmètre courant"
+
+msgid "Flux"
+msgstr "Flux"
+
+msgid "Signal"
+msgstr "Signal"
+
+msgid "Responsable visible"
+msgstr "Responsable visible"
+
+msgid "—"
+msgstr "—"
+
+msgid "Voir"
+msgstr "Voir"
+
+msgid "Espace prêt à configurer"
+msgstr "Espace prêt à configurer"
+
+msgid "Créez un premier partenariat pour ouvrir le workspace"
+msgstr "Créez un premier partenariat pour ouvrir le workspace"
+
+msgid "Créer un premier partenariat"
+msgstr "Créer un premier partenariat"
+
+msgid "Voir les partenariats"
+msgstr "Voir les partenariats"
+
+msgid "La validation bilatérale ouvrira ensuite les premiers flux visibles."
+msgstr "La validation bilatérale ouvrira ensuite les premiers flux visibles."
+
+msgid "Suivre les demandes en attente"
+msgstr "Suivre les demandes en attente"
+
+msgid "Coordination prête"
+msgstr "Coordination prête"
+
+msgid "Le cadre de coopération est prêt pour les premières orientations envoyées ou reçues."
+msgstr "Le cadre de coopération est prêt pour les premières orientations envoyées ou reçues."
+
+msgid "Ouvrir les demandes"
+msgstr "Ouvrir les demandes"
+
+msgid "Structures partenaires"
+msgstr "Structures partenaires"
+
+msgid "Registre compact des cadres bilatéraux utilisés pour autoriser, suivre et relire les orientations à grande échelle."
+msgstr "Registre compact des cadres bilatéraux utilisés pour autoriser, suivre et relire les orientations à grande échelle."
+
+msgid "Ajouter un partenaire"
+msgstr "Ajouter un partenaire"
+
+msgid "Des demandes attendent votre décision"
+msgstr "Des demandes attendent votre décision"
+
+msgid "1 demande peut être acceptée ou refusée immédiatement."
+msgstr "1 demande peut être acceptée ou refusée immédiatement."
+
+msgid "Demandes ciblant votre structure et prêtes à être traitées."
+msgstr "Demandes ciblant votre structure et prêtes à être traitées."
+
+msgid "Partenariats déjà ouverts pour orienter et suivre."
+msgstr "Partenariats déjà ouverts pour orienter et suivre."
+
+msgid "Cadres actifs peu mobilisés dans la période récente."
+msgstr "Cadres actifs peu mobilisés dans la période récente."
+
+msgid "Relations récemment activées ou réutilisées."
+msgstr "Relations récemment activées ou réutilisées."
+
+msgid "Coordination interrompue"
+msgstr "Coordination interrompue"
+
+msgid "Cadres suspendus ou révoqués à relire si le réseau évolue."
+msgstr "Cadres suspendus ou révoqués à relire si le réseau évolue."
+
+msgid "Réseau lisible"
+msgstr "Réseau lisible"
+
+msgid "Partenariats récemment mobilisés"
+msgstr "Partenariats récemment mobilisés"
+
+msgid "↔"
+msgstr "↔"
+
+msgid "Statut du cadre"
+msgstr "Statut du cadre"
+
+msgid "Flux visibles"
+msgstr "Flux visibles"
+
+msgid "Registre partenarial"
+msgstr "Registre partenarial"
+
+msgid "Lecture dense des relations visibles"
+msgstr "Lecture dense des relations visibles"
+
+msgid "Chaque ligne priorise le partenaire, le signal opérationnel, la dernière activité et les actions disponibles."
+msgstr "Chaque ligne priorise le partenaire, le signal opérationnel, la dernière activité et les actions disponibles."
+
+msgid "Partenariat"
+msgstr "Partenariat"
+
+msgid "Suspendre"
+msgstr "Suspendre"
+
+msgid "Réactiver"
+msgstr "Réactiver"
+
+msgid "Révoquer"
+msgstr "Révoquer"
+
+msgid "Aucun cadre partenaire"
+msgstr "Aucun cadre partenaire"
+
+msgid "Le registre partenarial est encore vide"
+msgstr "Le registre partenarial est encore vide"
+
+msgid "Coordination opérationnelle"
+msgstr "Coordination opérationnelle"
+
+msgid "Orientation partenaire"
+msgstr "Orientation partenaire"
+
+msgid "vers"
+msgstr "vers"
+
+msgid "État du flux"
+msgstr "État du flux"
+
+msgid "Lecture opérationnelle partagée"
+msgstr "Lecture opérationnelle partagée"
+
+msgid "Dernière coordination"
+msgstr "Dernière coordination"
+
+msgid "Cadre partenaire"
+msgstr "Cadre partenaire"
+
+msgid "Conséquence opérationnelle"
+msgstr "Conséquence opérationnelle"
+
+msgid "Résumé partagé"
+msgstr "Résumé partagé"
+
+msgid "Statut"
+msgstr "Statut"
+
+msgid "Structure destinataire"
+msgstr "Structure destinataire"
+
+msgid "Demande source"
+msgstr "Demande source"
+
+msgid "Périmètre de partage"
+msgstr "Périmètre de partage"
+
+msgid "Les éléments non partagés restent hors du périmètre visible par la structure partenaire."
+msgstr "Les éléments non partagés restent hors du périmètre visible par la structure partenaire."
+
+msgid "Conséquence"
+msgstr "Conséquence"
+
+msgid "Motif de refus"
+msgstr "Motif de refus"
+
+msgid "Mise à jour publique"
+msgstr "Mise à jour publique"
+
+msgid "Marquer pris en charge"
+msgstr "Marquer pris en charge"
+
+msgid "Note de clôture publique"
+msgstr "Note de clôture publique"
+
+msgid "Marquer clôturé"
+msgstr "Marquer clôturé"
+
+msgid "Commentaire public de coordination"
+msgstr "Commentaire public de coordination"
+
+msgid "Publier la mise à jour"
+msgstr "Publier la mise à jour"
+
+msgid "Lecture seule pour votre structure."
+msgstr "Lecture seule pour votre structure."
+
+msgid "Chronologie visible"
+msgstr "Chronologie visible"
+
+msgid "Historique opérationnel condensé"
+msgstr "Historique opérationnel condensé"
+
+msgid "Aucune activité enregistrée."
+msgstr "Aucune activité enregistrée."

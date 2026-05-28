@@ -28,18 +28,7 @@
     "received": _("Flux reçus par votre structure, avec signal prioritaire sur les validations et les prises en charge attendues."),
     "sent": _("Flux transmis à des partenaires, avec lecture compacte de l'état visible et de l'activité récente.")
   } %}
-  {% set ns = namespace(
-    pending=0,
-    active=0,
-    closed=0,
-    recent=0,
-    quiet=0,
-    blocked=0,
-    action=actionable_partner_requests|length,
-    validation=awaiting_counterpart_partner_requests|length,
-    recent_rows=[],
-    partner_names=[]
-  ) %}
+  {% set ns = namespace(pending=0, active=0, closed=0, recent=0, quiet=0, blocked=0, action=actionable_partner_requests|length, validation=awaiting_counterpart_partner_requests|length, recent_rows=[], partner_names=[]) %}
   {% for referral in referrals %}
     {% set status_key = (referral.operational_status or referral.status or "sent")|lower %}
     {% set signal = referral_signal(referral) %}
@@ -263,7 +252,7 @@
             <span class="hc-referral-chip hc-referral-chip--compact">{{ partner_name }}</span>
           {% endfor %}
           {% if ns.partner_names|length > 5 %}
-            <span class="hc-referral-chip hc-referral-chip--compact">+{{ ns.partner_names|length - 5 }} autres</span>
+            <span class="hc-referral-chip hc-referral-chip--compact">{{ _("+%(count)s autres", count=ns.partner_names|length - 5) }}</span>
           {% endif %}
         </div>
       {% endif %}
