@@ -749,7 +749,7 @@
 
       <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
 
-        {{ _('Export') }}
+        {{ _('Exporter la file') }}
 
       </button>
 
@@ -827,7 +827,7 @@
 
           <a class="dropdown-item" href="{{ url_for('admin.admin_audit', entity='export') }}">
 
-            {{ _('View export logs') }}
+            {{ _('Historique des exports') }}
 
           </a>
 
@@ -903,7 +903,7 @@
 
       <div class="col-xl-2 col-lg-12 d-grid">
 
-        <button class="btn btn-primary" type="submit">{{ _('Apply filters') }}</button>
+        <button class="btn btn-primary" type="submit">{{ _('Actualiser la lecture') }}</button>
 
       </div>
 
@@ -961,15 +961,15 @@
 
       <input class="form-check-input" type="checkbox" id="hcSelectAllVisible">
 
-      <span class="form-check-label ms-1">{{ _('Select visible') }}</span>
+      <span class="form-check-label ms-1">{{ _('Sélection opérateur') }}</span>
 
     </label>
 
-    <span class="hc-bulkbar__count" id="hcBulkCount">{{ _('0 selected') }}</span>
+    <span class="hc-bulkbar__count" id="hcBulkCount">{{ _('0 élément sélectionné') }}</span>
 
     <select class="form-select form-select-sm hc-bulkbar__select" id="hcBulkAction">
 
-      <option value="">Action groupée</option>
+      <option value="">Action de coordination</option>
 
       <option value="claim_me">{{ _('Claim ownership (me)') }}</option>
 
@@ -991,9 +991,9 @@
 
     </select>
 
-    <button type="button" class="btn btn-sm btn-primary" id="hcBulkApply">{{ _('Apply') }}</button>
+    <button type="button" class="btn btn-sm btn-primary" id="hcBulkApply">{{ _('Exécuter') }}</button>
 
-    <button type="button" class="btn btn-sm btn-outline-secondary" id="hcBulkClear">Effacer la slection</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" id="hcBulkClear">Effacer la sélection</button>
 
     <span class="hc-bulkbar__hint">{{ _('/ search j/k move Enter open') }}</span>
 
