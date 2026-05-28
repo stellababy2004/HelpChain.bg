@@ -20450,3 +20450,37 @@ body[data-hc-page^="/admin/requests"] .hc-requests-table-shell .list-group-item:
     grid-template-columns: 1fr;
   }
 }
+
+/* Requests queue: calm operational pulse */
+.hc-queue-pulse{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin:14px 0 18px;
+  padding:10px 12px;
+  border:1px solid rgba(15,23,42,.06);
+  border-radius:14px;
+  background:rgba(255,255,255,.72);
+  backdrop-filter:blur(10px);
+}
+
+.hc-queue-pulse__item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(248,250,252,.92);
+}
+
+.hc-queue-pulse__label{
+  font-size:12px;
+  color:rgba(15,23,42,.62);
+  white-space:nowrap;
+}
+
+.hc-queue-pulse__value{
+  font-size:13px;
+  font-weight:700;
+  color:rgba(15,23,42,.92);
+}

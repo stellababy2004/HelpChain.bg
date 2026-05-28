@@ -219,6 +219,25 @@
 
     </div>
 
+    <div class="hc-queue-pulse" aria-label="État opérationnel de la file">
+      <div class="hc-queue-pulse__item">
+        <span class="hc-queue-pulse__label">Sans responsable</span>
+        <strong class="hc-queue-pulse__value">{{ queue_ns.no_owner or 0 }}</strong>
+      </div>
+      <div class="hc-queue-pulse__item">
+        <span class="hc-queue-pulse__label">Sans activité récente</span>
+        <strong class="hc-queue-pulse__value">{{ queue_ns.stale or 0 }}</strong>
+      </div>
+      <div class="hc-queue-pulse__item">
+        <span class="hc-queue-pulse__label">Blocages visibles</span>
+        <strong class="hc-queue-pulse__value">{{ queue_ns.blocked or 0 }}</strong>
+      </div>
+      <div class="hc-queue-pulse__item">
+        <span class="hc-queue-pulse__label">Coordination active</span>
+        <strong class="hc-queue-pulse__value">{{ queue_ns.coordination_active or 0 }}</strong>
+      </div>
+    </div>
+
     <div class="hc-queue-groups" aria-label="Repères de coordination">
       <a class="hc-queue-group-card hc-queue-group-card--critical" href="{{ url_for('admin.admin_requests', risk_level='critical') }}">
         <span class="hc-queue-group-card__label">Action requise</span>
