@@ -208,6 +208,79 @@
   }
 }
 
+.hc-queue-groups{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(15,23,42,.07);
+}
+
+.hc-queue-group-card{
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  color: rgba(15,23,42,.9);
+  text-decoration: none;
+  border: 1px solid rgba(15,23,42,.10);
+  border-radius: 12px;
+  background: rgba(255,255,255,.94);
+}
+
+.hc-queue-group-card:hover,
+.hc-queue-group-card:focus-visible{
+  color: rgba(15,23,42,.96);
+  border-color: rgba(37,99,235,.25);
+  box-shadow: 0 10px 22px rgba(15,23,42,.08);
+}
+
+.hc-queue-group-card__label{
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: rgba(15,23,42,.58);
+}
+
+.hc-queue-group-card__value{
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.hc-queue-group-card__hint{
+  font-size: 12px;
+  line-height: 1.3;
+  color: rgba(15,23,42,.62);
+}
+
+.hc-queue-group-card--critical{
+  border-color: rgba(220,38,38,.18);
+  background: linear-gradient(180deg, rgba(254,242,242,.96) 0%, rgba(255,255,255,.96) 100%);
+}
+
+.hc-queue-group-card--warning{
+  border-color: rgba(245,158,11,.18);
+  background: linear-gradient(180deg, rgba(255,251,235,.96) 0%, rgba(255,255,255,.96) 100%);
+}
+
+.hc-queue-group-card--success{
+  border-color: rgba(34,197,94,.18);
+  background: linear-gradient(180deg, rgba(240,253,244,.96) 0%, rgba(255,255,255,.96) 100%);
+}
+
+@media (max-width: 1100px){
+  .hc-queue-groups{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px){
+  .hc-queue-groups{
+    grid-template-columns: 1fr;
+  }
+}
+
 .hc-admin-filters{
   display: flex;
   gap: 12px;
@@ -20279,3 +20352,101 @@ body.hc-page-admin.hc-admin-sla-page .hc-sla-table :is(th:nth-child(8), td:nth-c
   }
 }
 
+body[data-hc-page^="/admin/requests"] .hc-requests-table-shell .list-group-item{
+  border-radius: 16px;
+  border-color: rgba(15,23,42,.08);
+  box-shadow: 0 6px 18px rgba(15,23,42,.05);
+}
+
+body[data-hc-page^="/admin/requests"] .hc-requests-table-shell .list-group-item:hover,
+body[data-hc-page^="/admin/requests"] .hc-requests-table-shell .list-group-item:focus-within{
+  border-color: rgba(37,99,235,.22);
+  box-shadow: 0 12px 26px rgba(15,23,42,.08);
+}
+
+.hc-row-bucket{
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,.35);
+  background: rgba(241,245,249,.9);
+  color: rgba(51,65,85,.88);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.hc-row-bucket--critical{
+  border-color: rgba(220,38,38,.32);
+  background: rgba(254,226,226,.92);
+  color: rgba(153,27,27,.92);
+}
+
+.hc-row-bucket--warning{
+  border-color: rgba(245,158,11,.30);
+  background: rgba(255,251,235,.92);
+  color: rgba(146,64,14,.92);
+}
+
+.hc-row-bucket--active{
+  border-color: rgba(14,165,233,.26);
+  background: rgba(240,249,255,.94);
+  color: rgba(3,105,161,.92);
+}
+
+.hc-row-bucket--success{
+  border-color: rgba(34,197,94,.28);
+  background: rgba(240,253,244,.92);
+  color: rgba(21,128,61,.92);
+}
+
+.hc-pill--next{
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hc-request-spine-grid{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.hc-request-spine-card{
+  border: 1px solid rgba(15,23,42,.08);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(248,250,252,.72);
+}
+
+.hc-request-spine-card--action{
+  background: linear-gradient(180deg, rgba(239,246,255,.92) 0%, rgba(248,250,252,.86) 100%);
+  border-color: rgba(37,99,235,.16);
+}
+
+.hc-request-spine-card__label{
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  color: rgba(15,23,42,.58);
+}
+
+.hc-request-context-list{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 13px;
+  color: rgba(15,23,42,.72);
+}
+
+@media (max-width: 900px){
+  .hc-request-spine-grid{
+    grid-template-columns: 1fr;
+  }
+}

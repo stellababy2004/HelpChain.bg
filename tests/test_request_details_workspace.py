@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from datetime import UTC, datetime
 
@@ -47,10 +47,10 @@ def test_request_details_workspace_renders_sections(authenticated_admin_client, 
     resp = authenticated_admin_client.get(f"/admin/requests/{req.id}")
     assert resp.status_code == 200
     html = resp.get_data(as_text=True)
-    assert "Résumé de la situation" in html
-    assert "Informations opérationnelles" in html
-    assert "Actions bénévoles" in html
-    assert "Historique de la situation" in html
+    assert "État opérationnel actuel" in html
+    assert "Cadre de traitement" in html
+    assert "Prochaines actions de coordination" in html
+    assert "Chronologie de coordination" in html
 
 
 def test_ops_dropdown_exposes_canonical_and_legacy_request_links(
@@ -83,3 +83,5 @@ def test_ops_dropdown_exposes_canonical_and_legacy_request_links(
 
     assert links.get("Demandes") == "/admin/requests"
     assert links.get("Accès historique demandes") == "/requests"
+
+

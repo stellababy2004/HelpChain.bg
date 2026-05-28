@@ -1,4 +1,4 @@
-{% extends "layouts/admin_workspace.html" %}
+﻿{% extends "layouts/admin_workspace.html" %}
 
 {% block title %}{{ _('Admin') }}  {{ _('Requests') }} | HelpChain{% endblock %}
 
@@ -7,6 +7,59 @@
 {% block admin_content %}
 
 {% set current_requests_url = request.full_path if request.query_string else request.path %}
+{% set queue_ns = namespace(action_required=0, no_owner=0, coordination_active=0, sla_risk=0, stale=0, blocked=0, recent_escalation=0, closure_recent=0) %}
+{% for r in requests %}
+  {% set queue_status_raw = ((r.status or '')|lower) %}
+  {% if queue_status_raw in ['new', 'pending'] %}
+    {% set queue_status = 'pending' %}
+  {% elif queue_status_raw in ['approved', 'in_progress', 'in progress'] %}
+    {% set queue_status = 'in_progress' %}
+  {% elif queue_status_raw in ['done', 'completed'] %}
+    {% set queue_status = 'done' %}
+  {% elif queue_status_raw in ['rejected', 'cancelled', 'canceled', 'closed'] %}
+    {% set queue_status = 'rejected' %}
+  {% else %}
+    {% set queue_status = queue_status_raw %}
+  {% endif %}
+  {% set owner_missing = (owner_missing_by_id or {}).get(r.id, (not r.owner_id)) %}
+  {% set age_days = age_days_by_id.get(r.id, 0) %}
+  {% set not_seen_hours = (not_seen_hours_by_id or {}).get(r.id, 0) %}
+  {% set stale_72h = (stale_72h_by_id or {}).get(r.id, false) %}
+  {% set risk_level_key = (r.risk_level or 'standard')|lower %}
+  {% set is_terminal = queue_status in ['done', 'rejected'] %}
+  {% set unassigned_48h = owner_missing and age_days >= 2 and not is_terminal %}
+  {% set blocked_row = (owner_missing and queue_status == 'in_progress') or ((not r.assigned_volunteer_id) and queue_status == 'in_progress') %}
+  {% set escalation_recent = (risk_level_key == 'critical') and not is_terminal %}
+  {% set closure_ref = r.completed_at or r.closed_at or r.updated_at %}
+  {% set closure_recent = false %}
+  {% if is_terminal and closure_ref and (((now_aware.timestamp() - closure_ref.timestamp()) / 3600)|int <= 168) %}
+    {% set closure_recent = true %}
+  {% endif %}
+  {% if (owner_missing and (stale_72h or escalation_recent)) or (blocked_row and escalation_recent) %}
+    {% set queue_ns.action_required = queue_ns.action_required + 1 %}
+  {% endif %}
+  {% if owner_missing and not is_terminal %}
+    {% set queue_ns.no_owner = queue_ns.no_owner + 1 %}
+  {% endif %}
+  {% if queue_status == 'in_progress' and (r.owner_id or r.assigned_volunteer_id) and not stale_72h %}
+    {% set queue_ns.coordination_active = queue_ns.coordination_active + 1 %}
+  {% endif %}
+  {% if unassigned_48h or (queue_status == 'in_progress' and stale_72h) %}
+    {% set queue_ns.sla_risk = queue_ns.sla_risk + 1 %}
+  {% endif %}
+  {% if stale_72h and not is_terminal %}
+    {% set queue_ns.stale = queue_ns.stale + 1 %}
+  {% endif %}
+  {% if blocked_row and not is_terminal %}
+    {% set queue_ns.blocked = queue_ns.blocked + 1 %}
+  {% endif %}
+  {% if escalation_recent %}
+    {% set queue_ns.recent_escalation = queue_ns.recent_escalation + 1 %}
+  {% endif %}
+  {% if closure_recent %}
+    {% set queue_ns.closure_recent = queue_ns.closure_recent + 1 %}
+  {% endif %}
+{% endfor %}
 
 <div class="hc-admin-wrap hc-admin-wrap--wide hc-admin-wrap--requests hc-density-compact" data-hc-autosync="true" data-hc-autosync-interval="90000">
 
@@ -46,7 +99,7 @@
 
         <h1 class="hc-admin-title">{{ _('Requests') }}</h1>
 
-        <div class="hc-muted">Pilotage oprationnel des situations par priorit, service et responsable</div>
+        <div class="hc-muted">Queue de coordination opérationnelle priorisée par responsabilité, vigilance de traitement et continuité de suivi.</div>
 
         {% if scope_label %}
 
@@ -166,6 +219,49 @@
 
     </div>
 
+    <div class="hc-queue-groups" aria-label="Repères de coordination">
+      <a class="hc-queue-group-card hc-queue-group-card--critical" href="{{ url_for('admin.admin_requests', risk_level='critical') }}">
+        <span class="hc-queue-group-card__label">Action requise</span>
+        <strong class="hc-queue-group-card__value">{{ queue_ns.action_required }}</strong>
+        <span class="hc-queue-group-card__hint">Situations à débloquer immédiatement</span>
+      </a>
+      <a class="hc-queue-group-card" href="{{ url_for('admin.admin_requests', no_owner='1') }}">
+        <span class="hc-queue-group-card__label">Sans responsable</span>
+        <strong class="hc-queue-group-card__value">{{ queue_ns.no_owner }}</strong>
+        <span class="hc-queue-group-card__hint">Pilotage opérateur à attribuer</span>
+      </a>
+      <a class="hc-queue-group-card" href="{{ url_for('admin.admin_requests', status='in_progress') }}">
+        <span class="hc-queue-group-card__label">Coordination active</span>
+        <strong class="hc-queue-group-card__value">{{ queue_ns.coordination_active }}</strong>
+        <span class="hc-queue-group-card__hint">Suivi déjà engagé</span>
+      </a>
+      <a class="hc-queue-group-card hc-queue-group-card--warning" href="{{ url_for('admin.admin_requests', queue='sla', sla_kind='owner_assignment_overdue', sla_days=sla_days or 30) }}">
+        <span class="hc-queue-group-card__label">Risque SLA</span>
+        <strong class="hc-queue-group-card__value">{{ queue_ns.sla_risk }}</strong>
+        <span class="hc-queue-group-card__hint">Retard d’attribution ou de relance</span>
+      </a>
+      <a class="hc-queue-group-card hc-queue-group-card--warning" href="{{ url_for('admin.admin_requests', not_seen_72h='1') }}">
+        <span class="hc-queue-group-card__label">Sans activité récente</span>
+        <strong class="hc-queue-group-card__value">{{ queue_ns.stale }}</strong>
+        <span class="hc-queue-group-card__hint">Dernier mouvement à reprendre</span>
+      </a>
+      <a class="hc-queue-group-card hc-queue-group-card--warning" href="{{ url_for('admin.admin_requests', status='in_progress') }}">
+        <span class="hc-queue-group-card__label">Blocages détectés</span>
+        <strong class="hc-queue-group-card__value">{{ queue_ns.blocked }}</strong>
+        <span class="hc-queue-group-card__hint">Coordination ouverte sans continuité</span>
+      </a>
+      <a class="hc-queue-group-card hc-queue-group-card--critical" href="{{ url_for('admin.admin_requests', risk_level='critical') }}">
+        <span class="hc-queue-group-card__label">Escalade récente</span>
+        <strong class="hc-queue-group-card__value">{{ queue_ns.recent_escalation }}</strong>
+        <span class="hc-queue-group-card__hint">Vigilance critique dans la file</span>
+      </a>
+      <a class="hc-queue-group-card hc-queue-group-card--success" href="{{ url_for('admin.admin_requests', status='done') }}">
+        <span class="hc-queue-group-card__label">Clôture récente</span>
+        <strong class="hc-queue-group-card__value">{{ queue_ns.closure_recent }}</strong>
+        <span class="hc-queue-group-card__hint">Situations sorties du flux actif</span>
+      </a>
+    </div>
+
   </div>
 
 
@@ -184,7 +280,7 @@
 
        href="{{ url_for('admin.admin_requests', status=status or None, q=q or None, deleted='1' if show_deleted else None, risk=risk or None, category=request.args.get('category') or None) }}">
 
-      Rinitialiser les filtres
+      Réinitialiser les filtres
 
     </a>
 
@@ -502,7 +598,7 @@
       aria-pressed="{{ 'true' if not_seen_72h else 'false' }}"
     >{{ _('Sans activité 72h') }} (<span data-risk-count="stale">{{ not_seen_72h_count or 0 }}</span>)</a>
 
-    <a class="btn btn-outline-secondary btn-sm ms-auto" href="{{ url_for('admin.admin_requests') }}" data-admin-request-clear data-hc-filter-clear>Rinitialiser les filtres</a>
+    <a class="btn btn-outline-secondary btn-sm ms-auto" href="{{ url_for('admin.admin_requests') }}" data-admin-request-clear data-hc-filter-clear>Réinitialiser les filtres</a>
 
   </div>
 
@@ -726,7 +822,7 @@
 
     <a class="btn btn-primary btn-sm ms-auto" href="{{ url_for('admin.admin_request_new') }}">Nouvelle demande</a>
 
-    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_requests') }}">Rinitialiser</a>
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_requests') }}">Réinitialiser</a>
 
   </div>
 
@@ -900,7 +996,7 @@
 
     <button type="button" class="hc-quickchip" data-quick-filter="inactive_cases" data-hc-filter-card data-filter-key="inactive" data-filter-value="1" data-admin-request-filter="filter" aria-pressed="false">{{ _('Cas inactifs') }}</button>
 
-    <button type="button" class="hc-quickchip hc-quickchip--ghost" data-quick-filter="clear" data-admin-request-clear data-hc-filter-clear>{{ _('Clear quick filters') }}</button>
+    <button type="button" class="hc-quickchip hc-quickchip--ghost" data-quick-filter="clear" data-admin-request-clear data-hc-filter-clear>Effacer les raccourcis actifs</button>
 
   </div>
 
@@ -919,9 +1015,9 @@
 
       <div>
 
-        <h2 class="hc-section-title mb-1">File des demandes</h2>
+        <h2 class="hc-section-title mb-1">Queue de coordination</h2>
 
-        <div class="hc-section-subtitle">Vue consolide des demandes, risques, signaux et actions prioritaires.</div>
+        <div class="hc-section-subtitle">Lecture dense de la file active avec priorité, responsable, continuité de traitement et prochaine action utile.</div>
 
       </div>
 
@@ -1048,6 +1144,46 @@
         {% set is_terminal_row = row_status_bucket in ['COMPLETED', 'CLOSED'] %}
         {% set unassigned_48h = owner_missing and age_days >= 2 and not is_terminal_row %}
         {% set sla_attr = 'owner_assignment_overdue' if unassigned_48h else '' %}
+        {% set blocked_row = (owner_missing and row_status == 'in_progress') or ((not r.assigned_volunteer_id) and row_status == 'in_progress') %}
+        {% set escalation_recent = ((r.risk_level or 'standard')|lower == 'critical') and not is_terminal_row %}
+        {% if owner_missing and (stale_72h or escalation_recent) %}
+          {% set queue_bucket_label = 'Action requise' %}
+          {% set queue_bucket_class = 'hc-row-bucket hc-row-bucket--critical' %}
+        {% elif owner_missing %}
+          {% set queue_bucket_label = 'Sans responsable' %}
+          {% set queue_bucket_class = 'hc-row-bucket hc-row-bucket--warning' %}
+        {% elif stale_72h %}
+          {% set queue_bucket_label = 'Sans activité récente' %}
+          {% set queue_bucket_class = 'hc-row-bucket hc-row-bucket--warning' %}
+        {% elif blocked_row %}
+          {% set queue_bucket_label = 'Blocage détecté' %}
+          {% set queue_bucket_class = 'hc-row-bucket hc-row-bucket--warning' %}
+        {% elif escalation_recent %}
+          {% set queue_bucket_label = 'Escalade récente' %}
+          {% set queue_bucket_class = 'hc-row-bucket hc-row-bucket--critical' %}
+        {% elif row_status == 'done' %}
+          {% set queue_bucket_label = 'Clôture récente' %}
+          {% set queue_bucket_class = 'hc-row-bucket hc-row-bucket--success' %}
+        {% elif row_status == 'in_progress' %}
+          {% set queue_bucket_label = 'Coordination active' %}
+          {% set queue_bucket_class = 'hc-row-bucket hc-row-bucket--active' %}
+        {% else %}
+          {% set queue_bucket_label = 'Suivi à qualifier' %}
+          {% set queue_bucket_class = 'hc-row-bucket' %}
+        {% endif %}
+        {% if owner_missing %}
+          {% set next_step_label = 'Attribuer un responsable de suivi' %}
+        {% elif stale_72h %}
+          {% set next_step_label = 'Reprendre le dossier et consigner une relance' %}
+        {% elif blocked_row %}
+          {% set next_step_label = 'Clarifier la continuité de mobilisation' %}
+        {% elif r.assigned_volunteer_id %}
+          {% set next_step_label = 'Mettre à jour le suivi avec le bénévole référent' %}
+        {% elif row_status == 'in_progress' %}
+          {% set next_step_label = 'Documenter la prochaine étape de traitement' %}
+        {% else %}
+          {% set next_step_label = 'Qualifier la suite opérationnelle' %}
+        {% endif %}
 
         <tr class="{% if highlight and highlight|int == r.id %}table-success{% endif %}"
             data-hc-filter-row
@@ -1191,6 +1327,7 @@
                       <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
 
                         <span class="text-muted small fw-semibold">#{{ r.id }}</span>
+                        <span class="{{ queue_bucket_class }}">{{ queue_bucket_label }}</span>
 
                         {% if category_label %}
 
@@ -1234,7 +1371,7 @@
 
                           <span class="hc-chip hc-chip--pos" title="{{ _('Available volunteers') }}">
 
-                            <span class="hc-chip__dot"></span> +{{ ch }} CAN_HELP
+                            <span class="hc-chip__dot"></span> +{{ ch }} disponibles
 
                           </span>
 
@@ -1244,7 +1381,7 @@
 
                           <span class="hc-chip hc-chip--neg" title="{{ _('Unavailable volunteers') }}">
 
-                            <span class="hc-chip__dot"></span> +{{ cc }} CANT_HELP
+                            <span class="hc-chip__dot"></span> +{{ cc }} indisponibles
 
                           </span>
 
@@ -1274,7 +1411,7 @@
 
                         {% if owner_missing and age_days >= SLA_WARN_NO_OWNER_DAYS and r.status not in ['done','rejected'] %}
 
-                          <span class="badge text-bg-warning" title="Aucun responsable assign">Sans responsable</span>
+                          <span class="badge text-bg-warning" title="Aucun responsable assigné">Sans responsable</span>
 
                         {% endif %}
 
@@ -1286,9 +1423,11 @@
 
                         {% if r.closed_at %}
 
-                          <span class="badge text-bg-success" title="{{ _('Closed') }}: {{ r.closed_at|format_datetime_fr }}">{{ _('Closed') }}</span>
+                          <span class="badge text-bg-success" title="Sortie du flux actif">Clôturée</span>
 
                         {% endif %}
+
+                        <span class="hc-pill hc-pill--muted hc-pill--next" title="Prochaine étape attendue">{{ next_step_label }}</span>
 
                       </div>
 
@@ -1360,15 +1499,15 @@
 
                     {% if owner_missing %}
 
-                      <span class="badge text-bg-primary" data-request-owner-badge>Sans responsable</span>
+                      <span class="badge text-bg-primary" data-request-owner-badge>À attribuer</span>
 
                     {% elif r.owner_id == current_user.id %}
 
-                      <span class="badge text-bg-success" data-request-owner-badge>{{ _('Mine') }}</span>
+                      <span class="badge text-bg-success" data-request-owner-badge>Responsable actif</span>
 
                     {% else %}
 
-                      <span class="badge text-bg-secondary" data-request-owner-badge>{{ _('Taken') }}</span>
+                      <span class="badge text-bg-secondary" data-request-owner-badge>Suivi attribué</span>
 
                     {% endif %}
 
@@ -1381,6 +1520,17 @@
                   <div class="small text-muted">{{ activity_label }}</div>
 
                   <div class="fw-semibold">{{ activity_at|format_datetime_fr }}</div>
+                  <div class="small text-muted mt-1">
+                    {% if not_seen_hours >= 72 %}
+                      Sans reprise depuis {{ not_seen_hours }} h
+                    {% elif not_seen_hours >= 24 %}
+                      Dernière reprise il y a {{ not_seen_hours }} h
+                    {% elif row_status == 'done' %}
+                      Sortie récente du flux actif
+                    {% else %}
+                      Rythme de suivi nominal
+                    {% endif %}
+                  </div>
 
                   <div class="d-flex flex-wrap align-items-center justify-content-xl-end gap-2 mt-3 hc-request-primary-action" data-request-primary-action>
 
@@ -1413,16 +1563,16 @@
                         data-no-rowclick
                         data-loading-text="{{ _('Traitement...') }}"
                         data-success-label="{{ _('Ouvrir') }}"
-                        title="{% if owner_missing %}{{ _('Assign yourself as owner') }}{% elif r.owner_id == current_user.id %}{{ _('Already assigned to you') }}{% else %}{{ _('Already assigned to another owner') }}{% endif %}"
-                        aria-label="{% if owner_missing %}{{ _('Assign yourself as owner') }}{% elif r.owner_id == current_user.id %}{{ _('Already assigned to you') }}{% else %}{{ _('Already assigned to another owner') }}{% endif %}"
+                        title="{% if owner_missing %}Prendre la coordination{% elif r.owner_id == current_user.id %}Coordination déjà portée par vous{% else %}Coordination déjà attribuée{% endif %}"
+                        aria-label="{% if owner_missing %}Prendre la coordination{% elif r.owner_id == current_user.id %}Coordination déjà portée par vous{% else %}Coordination déjà attribuée{% endif %}"
                         {% if not owner_missing %}disabled aria-disabled="true"{% endif %}
                       >
                         {% if owner_missing %}
-                          {{ _("Me l'attribuer") }}
+                          Prendre la coordination
                         {% elif r.owner_id == current_user.id %}
                           {{ _("Déjà à moi") }}
                         {% else %}
-                          {{ _("Pris par") }} {{ owner_label }}
+                          Suivi attribué à {{ owner_label }}
                         {% endif %}
                       </button>
                     </form>
@@ -1453,7 +1603,7 @@
                   aria-label="{{ _('Open request details') }}"
                 >
 
-                  {{ _('Ouvrir le dossier') }}
+                  Ouvrir la fiche de coordination
 
                 </a>
 
@@ -1475,7 +1625,7 @@
                       title="{{ _('Remettre cette demande dans la file') }}"
                       aria-label="{{ _('Remettre cette demande dans la file') }}"
                     >
-                      {{ _('Remettre dans la file') }}
+                      Rendre à la file active
                     </button>
                   </form>
                 {% endif %}
@@ -1520,7 +1670,7 @@
                       {% if already_assigned or is_closed %}disabled aria-disabled="true"{% endif %}
                     >
 
-                      {{ _('Attribuer un responsable') }} #{{ sig.volunteer_id }}
+                      Mobiliser le bénévole #{{ sig.volunteer_id }}
 
                     </button>
 
@@ -1549,7 +1699,7 @@
                       data-loading-text="{{ _('Traitement...') }}"
                       aria-label="{{ _('Relancer intervenant') }}"
                     >
-                      {{ _('Relancer intervenant') }}
+                      Envoyer une relance de coordination
                     </button>
                   </form>
                 {% else %}
@@ -1561,7 +1711,7 @@
                     disabled
                     aria-disabled="true"
                   >
-                    {{ _('Aucun intervenant à relancer') }}
+                    Aucun référent à relancer
                   </button>
                 {% endif %}
 
@@ -1595,11 +1745,11 @@
 
             <div class="hc-empty-state">
 
-              <h3>Aucune demande à afficher</h3>
+              <h3>File stabilisée</h3>
 
-              <p>Cette file est vide pour les filtres actuels. Rinitialisez les filtres ou crez une nouvelle demande.</p>
+              <p>Aucune situation ne nécessite actuellement de traitement dans ce périmètre. Réinitialisez les filtres ou ouvrez une nouvelle demande si un nouveau flux doit être enregistré.</p>
 
-              <a class="btn btn-primary btn-sm" href="{{ url_for('admin.admin_request_new') }}">Crer une demande</a>
+              <a class="btn btn-primary btn-sm" href="{{ url_for('admin.admin_request_new') }}">Enregistrer une nouvelle demande</a>
 
             </div>
 
@@ -1714,3 +1864,4 @@
 <script src="{{ url_for('static', filename='js/admin-autosync.js') }}" defer></script>
 
 {% endblock %}
+

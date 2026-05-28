@@ -666,6 +666,11 @@ def admin_requests():
     last_signal_by_req = {}
     engagement_by_request = {}
     nudge_ui = {}
+    owner_missing_by_id = {}
+    last_activity_at_by_id = {}
+    not_seen_hours_by_id = {}
+    operational_bucket_by_id = {}
+    activities_supported = _table_has_column("request_activities", "volunteer_id")
     volunteer_actions_supported = _table_exists("volunteer_actions")
     if requests and volunteer_actions_supported:
         req_ids = [r.id for r in requests]
@@ -695,7 +700,72 @@ def admin_requests():
             if action.request_id not in last_signal_by_req:
                 last_signal_by_req[action.request_id] = action
 
+    if requests and activities_supported:
+        req_ids = [r.id for r in requests]
+        activity_rows = (
+            db.session.query(
+                RequestActivity.request_id,
+                func.max(RequestActivity.created_at).label("last_activity_at"),
+            )
+            .filter(RequestActivity.request_id.in_(req_ids))
+            .group_by(RequestActivity.request_id)
+            .all()
+        )
+        last_activity_at_by_id = {
+            int(row.request_id): row.last_activity_at
+            for row in activity_rows
+            if getattr(row, "request_id", None) is not None
+        }
+
     if requests:
+        for r in requests:
+            owner_missing = not bool(getattr(r, "owner_id", None))
+            owner_missing_by_id[int(r.id)] = owner_missing
+            last_signal = last_signal_by_req.get(r.id)
+            activity_at = (
+                last_activity_at_by_id.get(int(r.id))
+                or getattr(r, "updated_at", None)
+                or getattr(last_signal, "updated_at", None)
+                or getattr(last_signal, "created_at", None)
+                or getattr(r, "created_at", None)
+            )
+            if activity_at is not None:
+                last_activity_at_by_id[int(r.id)] = activity_at
+            status_key = normalize_request_status(getattr(r, "status", None))
+            is_terminal = status_key in request_terminal_status_read_values()
+            if activity_at is not None and not is_terminal:
+                try:
+                    not_seen_hours_by_id[int(r.id)] = max(
+                        int((now_aware - activity_at).total_seconds() // 3600),
+                        0,
+                    )
+                except Exception:
+                    not_seen_hours_by_id[int(r.id)] = 0
+            else:
+                not_seen_hours_by_id[int(r.id)] = 0
+
+            risk_key = (getattr(r, "risk_level", None) or "standard").strip().lower()
+            has_assigned_resource = bool(getattr(r, "assigned_volunteer_id", None))
+            is_stale_row = bool(stale_72h_by_id.get(int(r.id)))
+            if is_terminal:
+                operational_bucket_by_id[int(r.id)] = "closure_recent"
+            elif owner_missing and (risk_key == "critical" or is_stale_row):
+                operational_bucket_by_id[int(r.id)] = "action_required"
+            elif owner_missing:
+                operational_bucket_by_id[int(r.id)] = "no_owner"
+            elif is_stale_row:
+                operational_bucket_by_id[int(r.id)] = "stale"
+            elif status_key == "in_progress" and has_assigned_resource:
+                operational_bucket_by_id[int(r.id)] = "coordination_active"
+            elif risk_key == "critical":
+                operational_bucket_by_id[int(r.id)] = "recent_escalation"
+            elif status_key == "in_progress":
+                operational_bucket_by_id[int(r.id)] = "sla_risk"
+            elif not has_assigned_resource and status_key in {"new", "pending", "open"}:
+                operational_bucket_by_id[int(r.id)] = "blocked"
+            else:
+                operational_bucket_by_id[int(r.id)] = "coordination_active"
+
         assigned_volunteer_ids = sorted(
             {
                 int(r.assigned_volunteer_id)
@@ -836,6 +906,10 @@ def admin_requests():
         SLA_STALE_DAYS=sla_stale_days,
         volunteer_action_counts=action_counts,
         last_signal_by_req=last_signal_by_req,
+        owner_missing_by_id=owner_missing_by_id,
+        last_activity_at_by_id=last_activity_at_by_id,
+        not_seen_hours_by_id=not_seen_hours_by_id,
+        operational_bucket_by_id=operational_bucket_by_id,
         engagement_by_request=engagement_by_request,
         nudge_ui=nudge_ui,
         risk_notseen_tier_hours=risk_notseen_tier_hours,

@@ -23,6 +23,30 @@
   'standard': 'Standard'
 } %}
 {% set priority_label = priority_label_map.get(priority_key, 'Standard') %}
+{% set owner_label = req.owner.username if req.owner else ('#' ~ req.owner_id if req.owner_id else 'Non attribué') %}
+{% set structure_label = req.structure.name if req.structure else (req.structure_id or '—') %}
+{% set service_label = req.service.name if req.service else (req.service_id or '—') %}
+{% set last_activity_ref = (req.updated_at or req.created_at) %}
+{% set volunteer_owner_label = assigned_volunteer.name if assigned_volunteer and assigned_volunteer.name else (assigned_volunteer.email if assigned_volunteer else 'Aucun référent bénévole') %}
+{% if not req.owner_id %}
+  {% set next_action_title = "Attribuer un responsable de coordination" %}
+  {% set next_action_detail = "La situation reste visible dans la file commune tant qu’aucun pilote n’est désigné." %}
+{% elif is_locked %}
+  {% set next_action_title = "Respecter le verrou de coordination" %}
+  {% set next_action_detail = "La responsabilité active est portée par un autre administrateur ; toute reprise doit être motivée." %}
+{% elif operational_blockages and operational_blockages.has_blockage %}
+  {% set next_action_title = "Traiter le premier blocage opérationnel" %}
+  {% set next_action_detail = (operational_blockages['items'][0] if operational_blockages['items'] else "Clarifier le prochain jalon de traitement.") %}
+{% elif not req.assigned_volunteer_id and req_status_norm in ['pending', 'in_progress'] %}
+  {% set next_action_title = "Organiser la mobilisation" %}
+  {% set next_action_detail = "Aucun référent bénévole n’est encore confirmé pour la suite du traitement." %}
+{% elif req_status_norm == 'done' %}
+  {% set next_action_title = "Sécuriser la clôture" %}
+  {% set next_action_detail = "Vérifier la mémoire de coordination et l’archivage avant sortie complète du flux." %}
+{% else %}
+  {% set next_action_title = "Poursuivre le suivi en cours" %}
+  {% set next_action_detail = "Documenter la prochaine étape utile dès qu’une nouvelle information est disponible." %}
+{% endif %}
 <div class="hc-admin-wrap hc-admin-wrap--request-detail">
   <nav class="hc-admin-breadcrumb" aria-label="Fil d'ariane">
     <a href="{{ url_for('ops.ops_workspace') if current_user.role == 'ops' else url_for('admin.admin_requests') }}">Demandes</a>
@@ -124,16 +148,16 @@
         {% endif %}
         {% if linked_case %}
           <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.admin_case_detail', case_id=linked_case.id) }}">
-            Voir le case #{{ linked_case.id }}
+            Ouvrir le dossier de coordination #{{ linked_case.id }}
           </a>
         {% else %}
           <form method="post" action="{{ url_for('admin.admin_open_case_from_request', req_id=req.id) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-outline-primary btn-sm">Open Case</button>
+            <button type="submit" class="btn btn-outline-primary btn-sm">Créer un dossier de coordination</button>
           </form>
         {% endif %}
         <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.admin_request_refer', req_id=req.id) }}">
-          Orienter vers partenaire
+          Engager une orientation partenaire
         </a>
       </div>
       <script>
@@ -183,25 +207,32 @@
       <section class="card border-0 shadow-sm mb-3 hc-card hc-case-section hc-main-block hc-main-block--context">
         <div class="card-body">
           <div class="d-flex align-items-center justify-content-between mb-2">
-            <h3 class="mb-0">Informations opérationnelles</h3>
-            <div class="text-muted small">Contexte de dossier</div>
+            <h3 class="mb-0">État opérationnel actuel</h3>
+            <div class="text-muted small">Lecture en un scan</div>
           </div>
-          <ul class="list-unstyled mb-3 hc-op-list">
-            <li><strong>Responsable:</strong>
-              {% if req.owner %}{{ req.owner.username }}{% elif req.owner_id %}#{{ req.owner_id }}{% else %}—{% endif %}
-            </li>
-            <li><strong>Structure:</strong> {{ req.structure.name if req.structure else (req.structure_id or '—') }}</li>
-            <li><strong>Service:</strong> {{ req.service.name if req.service else (req.service_id or '—') }}</li>
-            <li><strong>Catégorie:</strong> {{ request_category_label(req.category) }}</li>
-            <li><strong>Ville / territoire:</strong> {{ req.city or req.location_text or '—' }}</li>
-            <li><strong>Date de création:</strong> {{ req.created_at|format_datetime_fr }}</li>
-            <li><strong>Dernière activité:</strong> {{ (req.updated_at or req.created_at)|format_datetime_fr }}</li>
-          </ul>
-          <div class="small text-muted mb-1">Recommandation HelpChain</div>
-          <p class="mb-1"><strong>Action recommandée:</strong></p>
-          <p class="mb-2">{{ helpchain_recommendation.action if helpchain_recommendation else 'Maintenir le suivi courant' }}</p>
-          <p class="mb-1"><strong>Raison:</strong></p>
-          <p class="mb-0">{{ (helpchain_recommendation.reason if helpchain_recommendation else 'Aucune alerte spécifique détectée.') }}</p>
+          <div class="hc-request-spine-grid">
+            <article class="hc-request-spine-card">
+              <span class="hc-request-spine-card__label">État courant</span>
+              <strong>{{ sm.label }}</strong>
+              <div class="small text-muted mt-1">Dernier mouvement: {{ last_activity_ref|format_datetime_fr }}</div>
+            </article>
+            <article class="hc-request-spine-card">
+              <span class="hc-request-spine-card__label">Responsabilité</span>
+              <strong>{{ owner_label }}</strong>
+              <div class="small text-muted mt-1">{{ structure_label }} · {{ service_label }}</div>
+            </article>
+            <article class="hc-request-spine-card hc-request-spine-card--action">
+              <span class="hc-request-spine-card__label">Prochaine étape attendue</span>
+              <strong>{{ next_action_title }}</strong>
+              <div class="small text-muted mt-1">{{ next_action_detail }}</div>
+            </article>
+          </div>
+          <div class="hc-request-context-list mt-3">
+            <span><strong>Catégorie:</strong> {{ request_category_label(req.category) }}</span>
+            <span><strong>Territoire:</strong> {{ req.city or req.location_text or '—' }}</span>
+            <span><strong>Créée le:</strong> {{ req.created_at|format_datetime_fr }}</span>
+            <span><strong>Référent bénévole:</strong> {{ volunteer_owner_label }}</span>
+          </div>
         </div>
       </section>
 
@@ -291,8 +322,14 @@
 
       <section class="card border-0 shadow-sm mb-3 hc-card hc-case-section hc-summary-panel hc-main-block hc-main-block--summary">
         <div class="card-body">
-          <h3 class="mb-2">Résumé de la situation</h3>
-          <p class="mb-0">{{ (case_summary or 'Résumé non disponible pour cette situation.') }}</p>
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <h3 class="mb-0">Cadre de traitement</h3>
+            <div class="text-muted small">Synthèse de coordination</div>
+          </div>
+          <p class="mb-2">{{ (case_summary or 'Résumé non disponible pour cette situation.') }}</p>
+          <div class="small text-muted mb-1">Orientation utile</div>
+          <p class="mb-1"><strong>{{ helpchain_recommendation.action if helpchain_recommendation else 'Maintenir le suivi courant' }}</strong></p>
+          <p class="mb-0 text-muted">{{ (helpchain_recommendation.reason if helpchain_recommendation else 'Aucune alerte spécifique détectée.') }}</p>
         </div>
       </section>
 
@@ -387,8 +424,8 @@
       <section class="card border-0 shadow-sm mt-3 hc-card hc-case-section hc-timeline hc-main-block hc-main-block--timeline" id="activity-timeline">
         <div class="card-body">
           <div class="d-flex align-items-center justify-content-between">
-            <h3 class="mb-0">Historique de la situation</h3>
-            <div class="text-muted small">Derniers événements</div>
+            <h3 class="mb-0">Chronologie de coordination</h3>
+            <div class="text-muted small">Transitions, décisions et continuité de suivi</div>
           </div>
 
           <hr class="my-3" />
@@ -449,8 +486,8 @@
       <section class="card border-0 shadow-sm mt-3 hc-card hc-case-section hc-main-block hc-main-block--notes" id="notes-internes">
         <div class="card-body">
           <div class="d-flex align-items-center justify-content-between">
-            <h3 class="mb-0">Notes internes</h3>
-            <div class="text-muted small">Coordination interne</div>
+            <h3 class="mb-0">Mémoire de coordination</h3>
+            <div class="text-muted small">Notes internes consolidées</div>
           </div>
           {% set note_events = activities|selectattr('action', 'equalto', 'note')|list %}
           {% if note_events %}
@@ -470,27 +507,27 @@
 
       <div class="card border-0 shadow-sm mt-3 hc-card hc-main-block hc-main-block--next-actions">
         <div class="card-body">
-          <h3>À traiter maintenant</h3>
-          <div class="hc-muted">Points nécessitant une action opérationnelle</div>
+          <h3>Prochaines actions de coordination</h3>
+          <div class="hc-muted">Ce qui est attendu pour faire avancer la situation</div>
 
           {% if not req.assigned_volunteer_id %}
           <div class="hc-activity-item">
-            <p class="hc-activity-title">• Aucun bénévole assigné</p>
-            <div class="hc-activity-meta">Affecter un bénévole ou clôturer</div>
+            <p class="hc-activity-title">• Aucun référent bénévole confirmé</p>
+            <div class="hc-activity-meta">Organiser la mobilisation ou documenter l’absence de relais</div>
           </div>
           {% endif %}
 
           {% if req_status_norm == "in_progress" %}
           <div class="hc-activity-item">
-            <p class="hc-activity-title">• En cours</p>
-            <div class="hc-activity-meta">Mettre à jour le statut dès qu'une nouvelle information est disponible</div>
+            <p class="hc-activity-title">• Coordination active</p>
+            <div class="hc-activity-meta">Consigner le prochain jalon dès qu’une nouvelle information est disponible</div>
           </div>
           {% endif %}
 
           {% if req_status_norm == "done" %}
           <div class="hc-activity-item">
-            <p class="hc-activity-title">• Terminée</p>
-            <div class="hc-activity-meta">Finaliser l'archivage ou la suppression sécurisée</div>
+            <p class="hc-activity-title">• Situation clôturée</p>
+            <div class="hc-activity-meta">Sécuriser l’archivage et la traçabilité de sortie</div>
           </div>
           {% endif %}
         </div>
@@ -532,7 +569,7 @@
     <aside class="hc-sticky hc-control-panel">
       <div class="card border-0 shadow-sm mb-3 hc-card hc-control-panel__primary">
         <div class="card-body">
-          <h3 class="mb-2">Communication</h3>
+          <h3 class="mb-2">Canaux de contact utiles</h3>
           <div class="d-grid gap-2">
             {% if req.phone %}
               <a class="btn btn-outline-primary btn-sm" href="tel:{{ req.phone }}">Appeler</a>
@@ -548,7 +585,7 @@
       <div class="card border-0 shadow-sm mb-3 hc-card" id="status-management">
         <div class="card-body">
           <div class="d-flex align-items-center justify-content-between">
-            <div class="fw-semibold">Statut</div>
+            <div class="fw-semibold">Cycle de vie</div>
             {% if can_edit %}
             <span class="badge text-bg-success">Modifiable</span>
             {% else %}
@@ -557,7 +594,7 @@
           </div>
 
           <div class="text-muted small mt-1">
-            Sélectionnez un statut puis enregistrez.
+            Ajustez l’étape du cycle de vie en conservant une trace explicite du changement.
           </div>
 
           <hr class="my-3" />
@@ -582,12 +619,12 @@
                   placeholder="Résumé court de clôture..."
                 >{{ resolution_note_value or '' }}</textarea>
               </div>
-              <button type="submit" class="btn btn-sm btn-primary">Enregistrer</button>
+              <button type="submit" class="btn btn-sm btn-primary">Valider l’étape</button>
             </form>
             <form method="post" action="{{ url_for('admin.admin_request_archive', req_id=req.id) }}" class="mt-2">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="btn btn-sm btn-outline-secondary" {% if is_closed_status %}disabled{% endif %}>
-                Archiver (Clôturer)
+                Archiver la sortie de flux
               </button>
             </form>
             <script>
@@ -614,7 +651,7 @@
             </script>
           {% else %}
             <div class="alert alert-info mb-0 py-2">
-              Vous pouvez modifier le statut uniquement si vous êtes responsable ou super administrateur.
+              Le changement de cycle de vie est réservé au responsable actif ou à la supervision.
             </div>
           {% endif %}
         </div>
@@ -623,13 +660,13 @@
       <!-- Ownership -->
       <div class="card border-0 shadow-sm hc-card" id="owner-actions">
         <div class="card-body">
-          <div class="fw-semibold mb-1">Responsable</div>
+          <div class="fw-semibold mb-1">Responsabilité opérationnelle</div>
           <div class="text-muted small mb-3">
-            L'affectation d'un responsable limite les doublons et clarifie le suivi.
+            La désignation d’un pilote limite les doubles prises en charge et garantit la continuité.
           </div>
 
           <div class="p-3 bg-light border rounded-3 mb-3">
-            <div class="small text-muted">Responsable actuel</div>
+            <div class="small text-muted">Pilote actuellement visible</div>
             <div class="fw-semibold">
               {% if req.owner %}
                 {{ req.owner.username }} (id={{ req.owner.id }})
@@ -651,24 +688,24 @@
             {% if not req.owner_id %}
               <form method="post" action="{{ url_for('admin.admin_request_assign', req_id=req.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-success btn-sm" {% if is_locked %}disabled title="Verrouillé par un autre administrateur"{% endif %}>M’affecter</button>
+                <button type="submit" class="btn btn-success btn-sm" {% if is_locked %}disabled title="Verrouillé par un autre administrateur"{% endif %}>Prendre la coordination</button>
               </form>
 
             {% elif can_edit %}
               <form method="post" action="{{ url_for('admin.admin_request_unassign', req_id=req.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-outline-danger btn-sm" {% if is_locked %}disabled title="Verrouillé par un autre administrateur"{% endif %}>Retirer l’affectation</button>
+                <button type="submit" class="btn btn-outline-danger btn-sm" {% if is_locked %}disabled title="Verrouillé par un autre administrateur"{% endif %}>Rendre à la file active</button>
               </form>
 
             {% elif req.owner_id and req.owner_id != current_user.id and is_stale(req) %}
               <form method="post" action="{{ url_for('admin.admin_request_assign', req_id=req.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-warning btn-sm" {% if is_locked %}disabled title="Verrouillé par un autre administrateur"{% endif %}>Reprendre la situation</button>
+                <button type="submit" class="btn btn-warning btn-sm" {% if is_locked %}disabled title="Verrouillé par un autre administrateur"{% endif %}>Reprendre la coordination</button>
               </form>
 
             {% else %}
                 <div class="text-muted small">
-                Seul le responsable ou un super administrateur peut modifier l'affectation.
+                La reprise n’est autorisée qu’au pilote actif ou à la supervision.
               </div>
             {% endif %}
           </div>
@@ -678,11 +715,11 @@
 
       <div class="card border-0 shadow-sm mt-3 hc-card" id="cloturer-situation">
         <div class="card-body">
-          <div class="small text-muted mb-2">Clôture / suppression</div>
+          <div class="small text-muted mb-2">Traçabilité de sortie</div>
           {% set can_delete = ((req_status_norm == 'cancelled') and req.is_archived) %}
-          <div class="fw-semibold mb-1">Suppression (masquage sécurisé)</div>
+          <div class="fw-semibold mb-1">Archivage sécurisé et retrait de visibilité</div>
           <div class="text-muted small mb-3">
-            Les demandes supprimées sont masquées des listes. Vous pouvez les restaurer ultérieurement.
+            Les demandes retirées des listes restent restaurables pour préserver la continuité d’audit.
           </div>
 
           {% if req.deleted_at %}
@@ -738,8 +775,8 @@
     <div id="matching-mobilisation" class="card border-0 shadow-sm mb-3 hc-main-block hc-main-block--mobilization">
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between mb-3">
-          <h5 class="card-title mb-0">Appariement et mobilisation</h5>
-          <div class="text-muted small">Appariement territorial: <strong>{{ req.city or '—' }}</strong></div>
+          <h5 class="card-title mb-0">Attribution et mobilisation</h5>
+          <div class="text-muted small">Territoire de mobilisation: <strong>{{ req.city or '—' }}</strong></div>
         </div>
         <div class="row text-center">
           <div class="col-6 col-md-2 mb-2">
@@ -779,8 +816,8 @@
     <div class="card border-0 shadow-sm mb-3 hc-main-block hc-main-block--matched-volunteers">
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between mb-2">
-          <h5 class="card-title mb-0">Bénévoles appariés</h5>
-          <div class="text-muted small">Basé sur la correspondance territoriale</div>
+          <h5 class="card-title mb-0">Référents mobilisables</h5>
+          <div class="text-muted small">Lecture de capacité territoriale</div>
         </div>
         {% if csrf_token is defined %}
           {% set csrf = csrf_token() %}
@@ -866,7 +903,7 @@
     <div class="card border-0 shadow-sm mb-3 hc-main-block hc-main-block--volunteer-signals">
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between mb-2">
-          <h5 class="card-title mb-0">Signaux bénévoles</h5>
+          <h5 class="card-title mb-0">Signaux de mobilisation</h5>
           <div class="text-muted small">
             {% if can_help_count %} {{ can_help_count }} peuvent aider{% endif %}
             {% if cant_help_count %} <span class="ms-2"> {{ cant_help_count }} indisponibles</span>{% endif %}
@@ -943,7 +980,7 @@
     <div class="card border-0 shadow-sm mb-3 hc-card hc-main-block hc-main-block--volunteer-actions">
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between mb-2">
-          <h5 class="card-title mb-0">Actions bénévoles</h5>
+          <h5 class="card-title mb-0">Historique de mobilisation</h5>
         </div>
         {% if volunteer_engagement %}
           <ul class="hc-mini-list mb-3">
@@ -980,7 +1017,7 @@
     <div class="card border-0 shadow-sm mb-3 hc-card hc-main-block hc-main-block--interests">
       <div class="card-body">
         <div class="d-flex align-items-center justify-content-between">
-          <h5 class="card-title mb-0">Intérêt bénévole</h5>
+          <h5 class="card-title mb-0">Engagements en attente</h5>
           <span class="badge text-bg-light border">{{ interests|length }} éléments</span>
         </div>
         {% if is_locked %}
