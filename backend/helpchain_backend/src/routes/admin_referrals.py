@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 from flask import abort, current_app, flash, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import or_
@@ -63,6 +65,8 @@ SHARED_SCOPE_LABELS = {
     "share_internal_notes": "Notes internes",
     "share_risk_level": "Niveau de vigilance",
 }
+RECENT_ACTIVITY_WINDOW = timedelta(days=3)
+STALE_ACTIVITY_WINDOW = timedelta(days=10)
 
 
 def _admin_structure_id() -> int | None:
@@ -177,6 +181,25 @@ def _operational_last_update(referral: CaseReferral):
         or getattr(referral, "updated_at", None)
         or getattr(referral, "created_at", None)
     )
+
+
+def _age_from_now(timestamp) -> timedelta | None:
+    if timestamp is None:
+        return None
+    try:
+        return utc_now() - timestamp
+    except Exception:
+        return None
+
+
+def _is_recent_timestamp(timestamp) -> bool:
+    age = _age_from_now(timestamp)
+    return bool(age is not None and age <= RECENT_ACTIVITY_WINDOW)
+
+
+def _is_stale_timestamp(timestamp) -> bool:
+    age = _age_from_now(timestamp)
+    return bool(age is not None and age >= STALE_ACTIVITY_WINDOW)
 
 
 def _operational_timeline(referral: CaseReferral) -> list[dict]:
@@ -487,6 +510,95 @@ def _referral_pending_action_hint(referral: CaseReferral) -> str:
     return "Lecture et suivi du flux visibles dans votre perimetre."
 
 
+def _referral_signal(referral: CaseReferral) -> dict:
+    status = _effective_operational_status(referral)
+    last_update = _operational_last_update(referral)
+    is_recent = _is_recent_timestamp(last_update)
+    is_stale = _is_stale_timestamp(last_update)
+    signal = {
+        "key": "active",
+        "label": "Coordination active",
+        "tone": "active",
+        "bucket": "active",
+        "hint": "Flux en cours de coordination dans le perimetre partage.",
+    }
+    if _can_accept_or_refuse(referral) and status in {"sent", "received"}:
+        signal.update(
+            key="action-required",
+            label="Action requise",
+            tone="attention",
+            bucket="action_required",
+            hint="La structure destinataire doit se positionner sur cette orientation.",
+        )
+        return signal
+    if status in {"sent", "received"}:
+        signal.update(
+            key="awaiting-validation",
+            label="Validation partenaire",
+            tone="pending",
+            bucket="validation_partner",
+            hint="Le flux attend encore une prise en compte cote partenaire.",
+        )
+        if is_stale:
+            signal.update(
+                key="stale",
+                label="Sans activite recente",
+                tone="stale",
+                bucket="quiet",
+                hint="Aucune evolution visible recente sur un flux encore ouvert.",
+            )
+        return signal
+    if status == "accepted":
+        signal["hint"] = "Le partenaire a accepte le flux et peut demarrer la prise en charge."
+        if is_stale:
+            signal.update(
+                key="stale",
+                label="Sans activite recente",
+                tone="stale",
+                bucket="quiet",
+                hint="Flux accepte mais silencieux depuis plusieurs jours.",
+            )
+        return signal
+    if status == "in_progress":
+        signal["hint"] = "Le partenaire traite actuellement le flux."
+        if is_stale:
+            signal.update(
+                key="active-quiet",
+                label="Sans activite recente",
+                tone="stale",
+                bucket="quiet",
+                hint="Flux actif mais sans mise a jour visible recente.",
+            )
+        return signal
+    if status == "completed":
+        signal.update(
+            key="completed",
+            label="Cloture recente" if is_recent else "Cloturee",
+            tone="done" if is_recent else "neutral",
+            bucket="recent_updates" if is_recent else "closed",
+            hint="Le flux dispose d'un etat final visible.",
+        )
+        return signal
+    if status in {"refused", "cancelled", "suspended"}:
+        signal.update(
+            key="blocked",
+            label="Flux bloques",
+            tone="blocked",
+            bucket="blocked",
+            hint="Le flux ne progresse plus dans son etat courant.",
+        )
+        return signal
+    if is_recent:
+        signal.update(
+            key="recent",
+            label="Derniere mise a jour",
+            tone="recent",
+            bucket="recent_updates",
+            hint="Le flux a recemment evolue dans le perimetre partage.",
+        )
+    return signal
+
+
 def _referral_current_owner_label(referral: CaseReferral) -> str:
     status = _effective_operational_status(referral)
     if status in {"sent", "received", "accepted", "in_progress", "completed", "refused"}:
@@ -537,6 +649,116 @@ def _referral_activity_actor(activity: ReferralActivity) -> str:
     if getattr(activity, "actor_structure", None) and getattr(activity.actor_structure, "name", None):
         return activity.actor_structure.name
     return "Acteur systeme"
+
+
+def _referral_activity_digest(activities: list[ReferralActivity] | None) -> list[dict]:
+    visible_actions = {
+        "created",
+        "sent",
+        "viewed",
+        "accepted",
+        "refused",
+        "cancelled",
+        "in_progress",
+        "completed",
+        "public_note",
+    }
+    rows: list[dict] = []
+    for activity in sorted(
+        activities or [],
+        key=lambda item: getattr(item, "created_at", None) or utc_now(),
+        reverse=True,
+    ):
+        action = (getattr(activity, "action", None) or "").strip().lower()
+        if action not in visible_actions:
+            continue
+        if rows and action == "public_note" and rows[-1]["action"] == "public_note":
+            rows[-1]["count"] += 1
+            rows[-1]["at"] = rows[-1]["at"] or getattr(activity, "created_at", None)
+            rows[-1]["grouped"] = True
+            rows[-1]["detail"] = "Serie de mises a jour publiques de coordination."
+            continue
+        tone = "minor" if action in {"created", "sent", "viewed", "public_note"} else "major"
+        if action in {"refused", "cancelled"}:
+            tone = "blocked"
+        elif action == "completed":
+            tone = "done"
+        rows.append(
+            {
+                "action": action,
+                "label": _referral_activity_label(action),
+                "detail": _referral_activity_consequence(activity),
+                "actor": _referral_activity_actor(activity),
+                "structure_name": (
+                    activity.actor_structure.name
+                    if getattr(activity, "actor_structure", None)
+                    and getattr(activity.actor_structure, "name", None)
+                    else None
+                ),
+                "at": getattr(activity, "created_at", None),
+                "tone": tone,
+                "count": 1,
+                "grouped": False,
+            }
+        )
+    return rows
+
+
+def _connection_signal(
+    connection: OrganizationConnection,
+    snapshot: dict | None = None,
+) -> dict:
+    snapshot = snapshot or {}
+    status = (getattr(connection, "status", None) or "").strip().lower()
+    last_activity = snapshot.get("last_activity_at") or _connection_last_activity(connection)
+    is_recent = _is_recent_timestamp(last_activity)
+    is_stale = _is_stale_timestamp(last_activity)
+    signal = {
+        "key": "active",
+        "label": "Coordination active",
+        "tone": "active",
+        "hint": "Cadre partenarial actif pour les orientations visibles.",
+    }
+    if status == "pending" and _can_accept_or_refuse_connection(connection):
+        signal.update(
+            key="action-required",
+            label="Action requise",
+            tone="attention",
+            hint="Votre structure peut accepter ou refuser cette demande.",
+        )
+        return signal
+    if status == "pending":
+        signal.update(
+            key="awaiting-validation",
+            label="Validation partenaire",
+            tone="pending",
+            hint="La demande attend encore une validation bilaterale.",
+        )
+        return signal
+    if status == "active" and is_stale:
+        signal.update(
+            key="quiet",
+            label="Sans activite recente",
+            tone="stale",
+            hint="Cadre actif mais peu mobilise recemment.",
+        )
+        return signal
+    if status == "active" and is_recent:
+        signal.update(
+            key="recent",
+            label="Derniere mise a jour",
+            tone="recent",
+            hint="Activite recente visible sur ce partenariat.",
+        )
+        return signal
+    if status in {"suspended", "revoked"}:
+        signal.update(
+            key="blocked",
+            label="Coordination interrompue",
+            tone="blocked",
+            hint="Cadre suspendu ou cloture formellement.",
+        )
+    return signal
 
 
 def _audit_connection_action(
@@ -859,6 +1081,8 @@ def admin_referrals_index():
         active_partner_snapshots=active_partner_snapshots,
         network_last_activity=network_last_activity,
         network_completed_count=network_completed_count,
+        referral_signal=_referral_signal,
+        connection_signal=_connection_signal,
     )
 
 
@@ -891,6 +1115,8 @@ def admin_referrals_received():
         active_partner_snapshots={},
         network_last_activity=None,
         network_completed_count=0,
+        referral_signal=_referral_signal,
+        connection_signal=_connection_signal,
     )
 
 
@@ -923,6 +1149,8 @@ def admin_referrals_sent():
         active_partner_snapshots={},
         network_last_activity=None,
         network_completed_count=0,
+        referral_signal=_referral_signal,
+        connection_signal=_connection_signal,
     )
 
 
@@ -964,6 +1192,7 @@ def admin_referral_partners():
         can_reactivate_connection=_can_reactivate_connection,
         connection_status_note=_connection_status_note,
         connection_snapshots=connection_snapshots,
+        connection_signal=_connection_signal,
     )
 
 
@@ -1223,10 +1452,12 @@ def admin_referral_detail(referral_id: int):
         referral_activity_label=_referral_activity_label,
         referral_activity_consequence=_referral_activity_consequence,
         referral_activity_actor=_referral_activity_actor,
+        activity_digest=_referral_activity_digest(referral.activities),
         partner_connection=partner_connection,
         partner_snapshot=partner_snapshot,
         connection_status_label=_connection_status_label,
         connection_status_note=_connection_status_note,
+        detail_signal=_referral_signal(referral),
     )
 
 

@@ -9,33 +9,61 @@
 {% block admin_content %}
 <div class="hc-admin-wrap hc-admin-wrap--wide hc-referrals">
   {% set status_labels = {
-    "sent": "Transmise",
-    "received": "Consultée",
-    "accepted": "Acceptée",
-    "in_progress": "Prise en charge",
-    "completed": "Clôturée",
-    "refused": "Refusée",
-    "cancelled": "Annulée",
-    "suspended": "Suspendue"
+    "sent": _("Transmise"),
+    "received": _("Consultée"),
+    "accepted": _("Acceptée"),
+    "in_progress": _("Prise en charge"),
+    "completed": _("Clôturée"),
+    "refused": _("Refusée"),
+    "cancelled": _("Annulée"),
+    "suspended": _("Suspendue")
+  } %}
+  {% set titles = {
+    "all": _("Orientations partenaires"),
+    "received": _("Orientations reçues"),
+    "sent": _("Orientations envoyées")
+  } %}
+  {% set subtitles = {
+    "all": _("Lecture opérationnelle des flux, validations partenaires et continuité visible entre structures autorisées."),
+    "received": _("Flux reçus par votre structure, avec signal prioritaire sur les validations et les prises en charge attendues."),
+    "sent": _("Flux transmis à des partenaires, avec lecture compacte de l'état visible et de l'activité récente.")
   } %}
   {% set ns = namespace(
     pending=0,
     active=0,
     closed=0,
-    recently_updated=[],
+    recent=0,
+    quiet=0,
+    blocked=0,
+    action=actionable_partner_requests|length,
+    validation=awaiting_counterpart_partner_requests|length,
+    recent_rows=[],
     partner_names=[]
   ) %}
   {% for referral in referrals %}
     {% set status_key = (referral.operational_status or referral.status or "sent")|lower %}
+    {% set signal = referral_signal(referral) %}
     {% if status_key in ["sent", "received"] %}
       {% set ns.pending = ns.pending + 1 %}
     {% elif status_key in ["accepted", "in_progress"] %}
       {% set ns.active = ns.active + 1 %}
-    {% elif status_key in ["completed", "refused", "cancelled", "suspended"] %}
+    {% else %}
       {% set ns.closed = ns.closed + 1 %}
     {% endif %}
-    {% if ns.recently_updated|length < 4 %}
-      {% set _ = ns.recently_updated.append(referral) %}
+    {% if signal.bucket == "action_required" %}
+      {% set ns.action = ns.action + 1 %}
+    {% elif signal.bucket == "validation_partner" %}
+      {% set ns.validation = ns.validation + 1 %}
+    {% elif signal.bucket == "quiet" %}
+      {% set ns.quiet = ns.quiet + 1 %}
+    {% elif signal.bucket == "blocked" %}
+      {% set ns.blocked = ns.blocked + 1 %}
+    {% endif %}
+    {% if signal.bucket == "recent_updates" %}
+      {% set ns.recent = ns.recent + 1 %}
+    {% endif %}
+    {% if ns.recent_rows|length < 6 %}
+      {% set _ = ns.recent_rows.append(referral) %}
     {% endif %}
     {% if referral.to_structure and referral.to_structure.name not in ns.partner_names %}
       {% set _ = ns.partner_names.append(referral.to_structure.name) %}
@@ -45,14 +73,14 @@
   <nav class="hc-admin-breadcrumb" aria-label="Fil d'Ariane">
     <a href="{{ url_for('admin.admin_home') }}">Accueil</a>
     <span>/</span>
-    <span>Orientations partenaires</span>
+    <span>{{ _("Orientations partenaires") }}</span>
   </nav>
 
   <header class="hc-admin-pagehead">
     <div>
-      <p class="hc-admin-kicker">Coordination inter-structures</p>
-      <h1>Orientations partenaires</h1>
-      <p class="hc-muted">Pilotage des transmissions encadrées, de la validation partenaire et de la continuité opérationnelle entre structures autorisées.</p>
+      <p class="hc-admin-kicker">{{ _("Coordination inter-structures") }}</p>
+      <h1>{{ titles.get(active_tab, "Orientations partenaires") }}</h1>
+      <p class="hc-muted">{{ subtitles.get(active_tab, subtitles["all"]) }}</p>
     </div>
   </header>
 
@@ -60,302 +88,285 @@
     <section class="hc-card hc-referral-workqueue" aria-label="Actions requises">
       <div class="hc-referral-workqueue__header">
         <div>
-          <span class="hc-referral-workqueue__eyebrow">Action requise</span>
-          <h2>Les prochaines validations sont prêtes</h2>
+          <span class="hc-referral-workqueue__eyebrow">{{ _("Action requise") }}</span>
+          <h2>{{ _("Décisions immédiates à traiter") }}</h2>
           <p>
             {% set actionable_count = actionable_partner_requests|length + actionable_referrals|length %}
-            {{ actionable_count }} action{{ "s" if actionable_count > 1 else "" }} nécessite{{ "nt" if actionable_count > 1 else "" }} votre attention pour débloquer ou poursuivre la coordination.
+            {% if actionable_count == 1 %}
+              {{ _("1 action peut débloquer ou faire avancer la coordination.") }}
+            {% else %}
+              {{ _("%(count)s actions peuvent débloquer ou faire avancer la coordination.", count=actionable_count) }}
+            {% endif %}
           </p>
         </div>
-        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.admin_referral_partners') }}">Voir le registre partenarial</a>
+        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.admin_referral_partners') }}">{{ _("Voir le registre partenarial") }}</a>
       </div>
 
       <div class="hc-referral-workqueue__grid">
         {% for connection in actionable_partner_requests %}
-          <article class="hc-referral-queue-card">
+          {% set signal = connection_signal(connection) %}
+          <article class="hc-referral-queue-card hc-referral-queue-card--compact">
             <div class="hc-referral-queue-card__meta">
-              <span class="hc-referral-queue-card__type">Validation partenaire requise</span>
-              <span class="hc-referral-status hc-referral-status--pending-connection">{{ status_label(connection.status) }}</span>
+              <span class="hc-referral-queue-card__type">{{ _("Validation partenaire requise") }}</span>
+              <span class="hc-referral-operational-badge hc-referral-operational-badge--{{ signal.tone }}">{{ signal.label }}</span>
             </div>
             <h3>{{ connection.source_structure.name if connection.source_structure else ("Structure #" ~ connection.source_structure_id) }}</h3>
-            <p>Demande de connexion reçue pour ouvrir un cadre d'orientation encadré vers votre structure.</p>
-            <dl class="hc-referral-queue-card__definition">
+            <p>{{ _("Demande reçue pour ouvrir un cadre d'orientation vers votre structure.") }}</p>
+            <dl class="hc-referral-queue-card__definition hc-referral-queue-card__definition--inline">
               <div>
-                <dt>Créée le</dt>
+                <dt>{{ _("Créée") }}</dt>
                 <dd>{{ connection.created_at|format_datetime_fr }}</dd>
               </div>
               <div>
-                <dt>Capacités</dt>
+                <dt>{{ _("Capacités") }}</dt>
                 <dd>{{ permissions_summary(connection) }}</dd>
               </div>
             </dl>
             <div class="hc-referral-queue-card__actions">
               <form method="post" action="{{ url_for('admin.admin_referral_partner_accept', connection_id=connection.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-primary btn-sm">Accepter</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{ _("Accepter") }}</button>
               </form>
               <form method="post" action="{{ url_for('admin.admin_referral_partner_refuse', connection_id=connection.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-outline-danger btn-sm">Refuser</button>
+                <button type="submit" class="btn btn-outline-danger btn-sm">{{ _("Refuser") }}</button>
               </form>
-              <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_referral_partners') }}">Voir le partenariat</a>
             </div>
           </article>
         {% endfor %}
 
         {% for referral in actionable_referrals %}
           {% set status_key = (referral.operational_status or referral.status or "sent")|lower %}
-          <article class="hc-referral-queue-card hc-referral-queue-card--referral">
+          {% set signal = referral_signal(referral) %}
+          <article class="hc-referral-queue-card hc-referral-queue-card--referral hc-referral-queue-card--compact">
             <div class="hc-referral-queue-card__meta">
-              <span class="hc-referral-queue-card__type">Orientation à traiter</span>
-              <span class="hc-referral-status hc-referral-status--{{ status_key|replace('_', '-') }}">{{ status_labels.get(status_key, referral.status or "Statut") }}</span>
+              <span class="hc-referral-queue-card__type">{{ _("Orientation à traiter") }}</span>
+              <span class="hc-referral-operational-badge hc-referral-operational-badge--{{ signal.tone }}">{{ signal.label }}</span>
             </div>
-            <h3>{{ referral.from_structure.name if referral.from_structure else ("Structure #" ~ referral.from_structure_id) }} → {{ referral.to_structure.name if referral.to_structure else ("Structure #" ~ referral.to_structure_id) }}</h3>
-            <p>{{ referral.reason or "Orientation partenaire en attente de prise en compte." }}</p>
-            <dl class="hc-referral-queue-card__definition">
+            <h3>{{ referral.from_structure.name if referral.from_structure else ("Structure #" ~ referral.from_structure_id) }} {{ _("→") }} {{ referral.to_structure.name if referral.to_structure else ("Structure #" ~ referral.to_structure_id) }}</h3>
+            <p>{{ referral.reason or _("Orientation partenaire en attente de prise en compte.") }}</p>
+            <dl class="hc-referral-queue-card__definition hc-referral-queue-card__definition--inline">
               <div>
-                <dt>Dernière mise à disposition</dt>
+                <dt>{{ _("Dernière mise à jour") }}</dt>
                 <dd>{{ (referral.last_public_update_at or referral.updated_at or referral.created_at)|format_datetime_fr }}</dd>
               </div>
               <div>
-                <dt>Action attendue</dt>
-                <dd>Validation ou ouverture de l'orientation par votre structure.</dd>
+                <dt>{{ _("Action attendue") }}</dt>
+                <dd>{{ signal.hint }}</dd>
               </div>
             </dl>
             <div class="hc-referral-queue-card__actions">
-              <a class="btn btn-primary btn-sm" href="{{ url_for('admin.admin_referral_detail', referral_id=referral.id) }}">Ouvrir l'orientation</a>
+              <a class="btn btn-primary btn-sm" href="{{ url_for('admin.admin_referral_detail', referral_id=referral.id) }}">{{ _("Ouvrir l'orientation") }}</a>
             </div>
-          </article>
-        {% endfor %}
-      </div>
-    </section>
-  {% elif awaiting_counterpart_partner_requests %}
-    <section class="hc-card hc-referral-workqueue hc-referral-workqueue--blocked" aria-label="Validations en attente">
-      <div class="hc-referral-workqueue__header">
-        <div>
-          <span class="hc-referral-workqueue__eyebrow">Validation en attente</span>
-          <h2>La coordination reste bloquée jusqu'à confirmation partenaire</h2>
-          <p>{{ awaiting_counterpart_partner_requests|length }} demande{{ "s" if awaiting_counterpart_partner_requests|length > 1 else "" }} de partenariat attend{{ "ent" if awaiting_counterpart_partner_requests|length > 1 else "" }} encore la validation de la structure cible.</p>
-        </div>
-        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.admin_referral_partners') }}">Suivre les demandes</a>
-      </div>
-      <div class="hc-referral-workqueue__grid">
-        {% for connection in awaiting_counterpart_partner_requests[:3] %}
-          <article class="hc-referral-queue-card hc-referral-queue-card--waiting">
-            <div class="hc-referral-queue-card__meta">
-              <span class="hc-referral-queue-card__type">En attente chez le partenaire</span>
-              <span class="hc-referral-status hc-referral-status--pending-connection">{{ status_label(connection.status) }}</span>
-            </div>
-            <h3>{{ connection.target_structure.name if connection.target_structure else ("Structure #" ~ connection.target_structure_id) }}</h3>
-            <p>{{ connection_status_note(connection) }}</p>
-            <dl class="hc-referral-queue-card__definition">
-              <div>
-                <dt>Créée le</dt>
-                <dd>{{ connection.created_at|format_datetime_fr }}</dd>
-              </div>
-              <div>
-                <dt>Capacités prévues</dt>
-                <dd>{{ permissions_summary(connection) }}</dd>
-              </div>
-            </dl>
           </article>
         {% endfor %}
       </div>
     </section>
   {% endif %}
 
-  <section class="hc-referral-summary" aria-label="Synthèse opérationnelle">
-    <article class="hc-card hc-referral-summary__card">
-      <span class="hc-referral-summary__label">Validations partenaires</span>
-      <strong class="hc-referral-summary__value">{{ pending_partner_count }}</strong>
-      <p class="hc-referral-summary__hint">Relations en attente de validation bilatérale dans votre périmètre partenaire.</p>
+  <section class="hc-referral-summary hc-referral-summary--dense" aria-label="Repères opérationnels">
+    <article class="hc-card hc-referral-summary__card hc-referral-summary__card--compact">
+      <span class="hc-referral-summary__label">{{ _("Action requise") }}</span>
+      <strong class="hc-referral-summary__value">{{ ns.action }}</strong>
+      <p class="hc-referral-summary__hint">{{ _("Décisions immédiates côté validation ou prise en compte.") }}</p>
     </article>
-    <article class="hc-card hc-referral-summary__card">
-      <span class="hc-referral-summary__label">Partenariats actifs</span>
-      <strong class="hc-referral-summary__value">{{ active_partner_count }}</strong>
-      <p class="hc-referral-summary__hint">Cadres de coopération déjà ouverts pour transmettre et suivre des orientations.</p>
+    <article class="hc-card hc-referral-summary__card hc-referral-summary__card--compact">
+      <span class="hc-referral-summary__label">{{ _("Validation partenaire") }}</span>
+      <strong class="hc-referral-summary__value">{{ ns.validation }}</strong>
+      <p class="hc-referral-summary__hint">{{ _("Flux ou cadres en attente chez l'autre structure.") }}</p>
     </article>
-    <article class="hc-card hc-referral-summary__card">
-      <span class="hc-referral-summary__label">Flux clôturés</span>
-      <strong class="hc-referral-summary__value">{{ network_completed_count }}</strong>
-      <p class="hc-referral-summary__hint">Orientations arrivées à un terme visible dans votre réseau actif.</p>
+    <article class="hc-card hc-referral-summary__card hc-referral-summary__card--compact">
+      <span class="hc-referral-summary__label">{{ _("Coordination active") }}</span>
+      <strong class="hc-referral-summary__value">{{ ns.active }}</strong>
+      <p class="hc-referral-summary__hint">{{ _("Flux acceptés ou pris en charge dans le périmètre visible.") }}</p>
     </article>
-    <article class="hc-card hc-referral-summary__card">
-      <span class="hc-referral-summary__label">Dernière activité réseau</span>
-      <strong class="hc-referral-summary__value hc-referral-summary__value--meta">{{ network_last_activity|format_datetime_fr if network_last_activity else "—" }}</strong>
-      <p class="hc-referral-summary__hint">Dernier jalon visible sur un partenariat actif ou un flux associé.</p>
+    <article class="hc-card hc-referral-summary__card hc-referral-summary__card--compact">
+      <span class="hc-referral-summary__label">{{ _("Sans activité récente") }}</span>
+      <strong class="hc-referral-summary__value">{{ ns.quiet }}</strong>
+      <p class="hc-referral-summary__hint">{{ _("Flux ouverts restés silencieux au-delà du rythme normal.") }}</p>
+    </article>
+    <article class="hc-card hc-referral-summary__card hc-referral-summary__card--compact">
+      <span class="hc-referral-summary__label">{{ _("Flux bloqués") }}</span>
+      <strong class="hc-referral-summary__value">{{ ns.blocked }}</strong>
+      <p class="hc-referral-summary__hint">{{ _("Refus, annulations ou suspensions visibles.") }}</p>
+    </article>
+    <article class="hc-card hc-referral-summary__card hc-referral-summary__card--compact">
+      <span class="hc-referral-summary__label">{{ _("Dernières mises à jour") }}</span>
+      <strong class="hc-referral-summary__value">{{ ns.recent }}</strong>
+      <p class="hc-referral-summary__hint">{{ _("Clôtures récentes et évolutions visibles du réseau.") }}</p>
     </article>
   </section>
 
-  <section class="hc-referral-tabs" aria-label="Filtres orientations">
-    <a class="btn btn-sm {{ 'btn-primary' if active_tab == 'all' else 'btn-outline-secondary' }}" href="{{ url_for('admin.admin_referrals_index') }}">Vue globale</a>
-    <a class="btn btn-sm {{ 'btn-primary' if active_tab == 'received' else 'btn-outline-secondary' }}" href="{{ url_for('admin.admin_referrals_received') }}">Reçues <span class="badge text-bg-light">{{ received_count }}</span></a>
-    <a class="btn btn-sm {{ 'btn-primary' if active_tab == 'sent' else 'btn-outline-secondary' }}" href="{{ url_for('admin.admin_referrals_sent') }}">Envoyées <span class="badge text-bg-light">{{ sent_count }}</span></a>
-    <a class="btn btn-sm {{ 'btn-primary' if active_tab == 'partners' else 'btn-outline-secondary' }}" href="{{ url_for('admin.admin_referral_partners') }}">Partenaires</a>
+  <section class="hc-referral-tabs hc-referral-tabs--secondary" aria-label="Vues du module">
+    <a class="btn btn-sm {{ 'btn-primary' if active_tab == 'all' else 'btn-outline-secondary' }}" href="{{ url_for('admin.admin_referrals_index') }}">{{ _("Pilotage global") }}</a>
+    <a class="btn btn-sm {{ 'btn-primary' if active_tab == 'received' else 'btn-outline-secondary' }}" href="{{ url_for('admin.admin_referrals_received') }}">{{ _("Reçues") }} <span class="badge text-bg-light">{{ received_count }}</span></a>
+    <a class="btn btn-sm {{ 'btn-primary' if active_tab == 'sent' else 'btn-outline-secondary' }}" href="{{ url_for('admin.admin_referrals_sent') }}">{{ _("Envoyées") }} <span class="badge text-bg-light">{{ sent_count }}</span></a>
+    <a class="btn btn-sm {{ 'btn-primary' if active_tab == 'partners' else 'btn-outline-secondary' }}" href="{{ url_for('admin.admin_referral_partners') }}">{{ _("Partenaires") }}</a>
+  </section>
+
+  <section class="hc-referral-grid hc-referral-grid--workspace">
+    <article class="hc-card hc-referral-sidecard hc-referral-sidecard--dense">
+      <div class="hc-referral-list__header">
+        <div>
+          <span class="hc-referral-sidecard__eyebrow">{{ _("Dernières mises à jour") }}</span>
+          <h2>{{ _("Rythme opérationnel visible") }}</h2>
+        </div>
+      </div>
+      {% if ns.recent_rows %}
+        <ul class="hc-referral-activity-list hc-referral-activity-list--timeline hc-referral-activity-list--dense">
+          {% for referral in ns.recent_rows %}
+            {% set signal = referral_signal(referral) %}
+            {% set status_key = (referral.operational_status or referral.status or "sent")|lower %}
+            <li>
+              <div class="hc-referral-activity-list__meta">
+                <strong>#{{ referral.id }} {{ _("·") }} {{ referral.from_structure.name if referral.from_structure else ("Structure #" ~ referral.from_structure_id) }} {{ _("→") }} {{ referral.to_structure.name if referral.to_structure else ("Structure #" ~ referral.to_structure_id) }}</strong>
+                <span class="hc-referral-operational-badge hc-referral-operational-badge--{{ signal.tone }}">{{ signal.label }}</span>
+              </div>
+              <span>{{ referral.reason or _("Orientation partenaire en cours de coordination.") }}</span>
+              <small>{{ (referral.last_public_update_at or referral.updated_at or referral.created_at)|format_datetime_fr }}</small>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="hc-muted mb-0">{{ _("Les prochains mouvements visibles du réseau apparaîtront ici dès qu'un flux évoluera.") }}</p>
+      {% endif %}
+    </article>
+
+    <article class="hc-card hc-referral-sidecard hc-referral-sidecard--dense">
+      <div class="hc-referral-list__header">
+        <div>
+          <span class="hc-referral-sidecard__eyebrow">{{ _("Capacité réseau") }}</span>
+          <h2>{{ _("Cadres ouverts et continuité") }}</h2>
+        </div>
+      </div>
+      <dl class="hc-referral-inline-metrics">
+        <div>
+          <dt>{{ _("Validations partenaires") }}</dt>
+          <dd>{{ pending_partner_count }}</dd>
+        </div>
+        <div>
+          <dt>{{ _("Partenariats actifs") }}</dt>
+          <dd>{{ active_partner_count }}</dd>
+        </div>
+        <div>
+          <dt>{{ _("Flux clôturés réseau") }}</dt>
+          <dd>{{ network_completed_count }}</dd>
+        </div>
+        <div>
+          <dt>{{ _("Dernière activité réseau") }}</dt>
+          <dd>{{ network_last_activity|format_datetime_fr if network_last_activity else "—" }}</dd>
+        </div>
+      </dl>
+      {% if ns.partner_names %}
+        <div class="hc-referral-list__partners" aria-label="Structures partenaires visibles">
+          {% for partner_name in ns.partner_names[:5] %}
+            <span class="hc-referral-chip hc-referral-chip--compact">{{ partner_name }}</span>
+          {% endfor %}
+          {% if ns.partner_names|length > 5 %}
+            <span class="hc-referral-chip hc-referral-chip--compact">+{{ ns.partner_names|length - 5 }} autres</span>
+          {% endif %}
+        </div>
+      {% endif %}
+      <p class="hc-muted mb-0">{{ _("Les statuts visibles soutiennent la coordination sans exposer les notes internes des partenaires.") }}</p>
+    </article>
   </section>
 
   {% if active_partner_connections %}
     <section class="hc-card hc-referral-partner-surface">
       <div class="hc-referral-list__header">
         <div>
-          <span class="hc-referral-sidecard__eyebrow">Réseau actif</span>
-          <h2>Cadres de coordination actuellement ouverts</h2>
-          <p class="hc-muted mb-0">Chaque partenariat actif expose un historique de validation, une dernière activité visible et une mémoire minimale des flux déjà engagés.</p>
+          <span class="hc-referral-sidecard__eyebrow">{{ _("Coordination active") }}</span>
+          <h2>{{ _("Réseau actuellement mobilisé") }}</h2>
         </div>
-        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_referral_partners') }}">Voir tous les partenariats</a>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_referral_partners') }}">{{ _("Voir tous les partenariats") }}</a>
       </div>
-      <div class="hc-referral-partner-cards">
+      <div class="hc-referral-partner-cards hc-referral-partner-cards--dense">
         {% for connection in active_partner_connections[:4] %}
           {% set partner = connection.target_structure if current_user.structure_id == connection.source_structure_id else connection.source_structure %}
           {% set snapshot = active_partner_snapshots.get(connection.id, {}) %}
-          <article class="hc-referral-partner-card">
+          {% set signal = connection_signal(connection, snapshot) %}
+          <article class="hc-referral-partner-card hc-referral-partner-card--compact">
             <div class="hc-referral-partner-card__header">
               <h3>{{ partner.name if partner else ("Structure #" ~ (connection.target_structure_id if current_user.structure_id == connection.source_structure_id else connection.source_structure_id)) }}</h3>
-              <span class="hc-referral-status hc-referral-status--active-connection">{{ status_label(connection.status) }}</span>
+              <span class="hc-referral-operational-badge hc-referral-operational-badge--{{ signal.tone }}">{{ signal.label }}</span>
             </div>
-            <p>{{ snapshot.get("status_note") or connection_status_note(connection) }}</p>
-            <div class="hc-referral-partner-card__metrics">
+            <dl class="hc-referral-inline-metrics hc-referral-inline-metrics--tight">
               <div>
-                <span>Actif depuis</span>
-                <strong>{{ snapshot.get("active_since")|format_datetime_fr if snapshot.get("active_since") else "—" }}</strong>
+                <dt>{{ _("Actif depuis") }}</dt>
+                <dd>{{ snapshot.get("active_since")|format_datetime_fr if snapshot.get("active_since") else "—" }}</dd>
               </div>
               <div>
-                <span>Dernière activité</span>
-                <strong>{{ snapshot.get("last_activity_at")|format_datetime_fr if snapshot.get("last_activity_at") else "—" }}</strong>
+                <dt>{{ _("Dernière activité") }}</dt>
+                <dd>{{ snapshot.get("last_activity_at")|format_datetime_fr if snapshot.get("last_activity_at") else "—" }}</dd>
               </div>
               <div>
-                <span>Validations et prises en charge</span>
-                <strong>{{ snapshot.get("accepted_count", 0) }}</strong>
+                <dt>{{ _("Pris en charge") }}</dt>
+                <dd>{{ snapshot.get("accepted_count", 0) }}</dd>
               </div>
               <div>
-                <span>Flux clôturés</span>
-                <strong>{{ snapshot.get("completed_count", 0) }}</strong>
+                <dt>{{ _("Clôturés") }}</dt>
+                <dd>{{ snapshot.get("completed_count", 0) }}</dd>
               </div>
-            </div>
-            <div class="hc-referral-hero__chips" aria-label="Capacités actives">
-              <span class="hc-referral-chip hc-referral-chip--governance">Orientation active</span>
-              <span class="hc-referral-chip hc-referral-chip--governance">Suivi partagé</span>
-              <span class="hc-referral-chip hc-referral-chip--governance">Validation bilatérale</span>
-              <span class="hc-referral-chip hc-referral-chip--governance">Coordination opérationnelle</span>
-            </div>
+            </dl>
             <div class="hc-referral-partner-card__capabilities">
               {% for item in permissions_summary(connection).split(", ") %}
-                <span class="hc-referral-chip">{{ item }}</span>
+                <span class="hc-referral-chip hc-referral-chip--compact">{{ item }}</span>
               {% endfor %}
             </div>
-            {% if snapshot.get("timeline") %}
-              <ol class="hc-referral-mini-lifecycle hc-referral-mini-lifecycle--compact">
-                {% for item in snapshot.get("timeline", [])[:3] %}
-                  <li>
-                    <strong>{{ item.label }}</strong>
-                    <span>{{ item.detail }}</span>
-                    <small>{{ item.at|format_datetime_fr }}</small>
-                  </li>
-                {% endfor %}
-              </ol>
-            {% endif %}
           </article>
         {% endfor %}
       </div>
     </section>
   {% endif %}
 
-  <section class="hc-referral-grid hc-referral-grid--workspace">
-    <article class="hc-card hc-referral-sidecard">
-      <div class="hc-referral-sidecard__header">
-        <span class="hc-referral-sidecard__eyebrow">Activité récente</span>
-        <h2>Derniers flux visibles</h2>
-      </div>
-      {% if ns.recently_updated %}
-        <ul class="hc-referral-activity-list hc-referral-activity-list--timeline">
-          {% for referral in ns.recently_updated %}
-            {% set status_key = (referral.operational_status or referral.status or "sent")|lower %}
-            <li>
-              <strong>{{ referral.from_structure.name if referral.from_structure else ("Structure #" ~ referral.from_structure_id) }} → {{ referral.to_structure.name if referral.to_structure else ("Structure #" ~ referral.to_structure_id) }}</strong>
-              <span>{{ referral.reason or "Orientation partenaire en cours de coordination." }}</span>
-              <div class="hc-referral-activity-list__meta">
-                <span class="hc-referral-status hc-referral-status--{{ status_key|replace('_', '-') }}">{{ status_labels.get(status_key, referral.status or "Statut") }}</span>
-                <small>{{ (referral.last_public_update_at or referral.updated_at or referral.created_at)|format_datetime_fr }}</small>
-              </div>
-            </li>
-          {% endfor %}
-        </ul>
-      {% elif workspace_state == "pending" %}
-        <p class="hc-muted mb-0">Aucune orientation ne circule encore : le flux reste en attente de validation partenariale avant démarrage opérationnel.</p>
-      {% elif workspace_state == "empty" %}
-        <p class="hc-muted mb-0">Les premiers flux visibles apparaîtront ici dès qu'un partenariat sera ouvert puis utilisé pour transmettre une orientation.</p>
-      {% else %}
-        <p class="hc-muted mb-0">Les prochaines orientations ou mises à jour publiques de coordination apparaîtront ici dès qu'un flux sera engagé.</p>
-      {% endif %}
-    </article>
-
-    <article class="hc-card hc-referral-sidecard">
-      <div class="hc-referral-sidecard__header">
-        <span class="hc-referral-sidecard__eyebrow">Repères de gouvernance</span>
-        <h2>Cadre de coopération maîtrisé</h2>
-      </div>
-      <ul class="hc-referral-governance-list">
-        <li>Les partenaires n'accèdent qu'aux éléments explicitement partagés.</li>
-        <li>Chaque transmission reste rattachée à une structure source et une structure destinataire identifiées.</li>
-        <li>Les statuts visibles servent la coordination sans exposer les notes internes du partenaire.</li>
-      </ul>
-      <ol class="hc-referral-mini-lifecycle">
-        <li><strong>Transmission</strong><span>Une structure adresse une orientation utile à un partenaire autorisé.</span></li>
-        <li><strong>Validation ou prise en compte</strong><span>La structure destinataire consulte, accepte ou refuse selon son périmètre d'intervention.</span></li>
-        <li><strong>Suivi partagé</strong><span>Les mises à jour publiques de coordination rendent l'avancement lisible sans exposer l'interne.</span></li>
-        <li><strong>Stabilisation</strong><span>Le flux est clôturé, suspendu ou interrompu avec une trace visible pour les structures concernées.</span></li>
-      </ol>
-    </article>
-  </section>
-
   <section class="hc-card hc-referral-list">
     <div class="hc-referral-list__header">
       <div>
-        <span class="hc-referral-sidecard__eyebrow">Flux opérationnels</span>
-        <h2>Orientations dans le périmètre courant</h2>
-        <p class="hc-muted mb-0">Suivi des transmissions envoyées ou reçues entre structures partenaires, avec lecture commune de l'état opérationnel.</p>
+        <span class="hc-referral-sidecard__eyebrow">{{ _("Flux opérationnels") }}</span>
+        <h2>{{ _("Lecture compacte du périmètre courant") }}</h2>
+        <p class="hc-muted mb-0">{{ _("Priorité au signal, au dernier mouvement visible et à l'action attendue.") }}</p>
       </div>
-      {% if ns.partner_names %}
-        <div class="hc-referral-list__partners" aria-label="Structures partenaires visibles">
-          {% for partner_name in ns.partner_names[:3] %}
-            <span class="hc-referral-chip">{{ partner_name }}</span>
-          {% endfor %}
-          {% if ns.partner_names|length > 3 %}
-            <span class="hc-referral-chip">+{{ ns.partner_names|length - 3 }} autres</span>
-          {% endif %}
-        </div>
-      {% endif %}
     </div>
     <div class="table-responsive">
-      <table class="table align-middle mb-0">
+      <table class="table align-middle mb-0 hc-referral-table hc-referral-table--dense">
         <thead>
           <tr>
-            <th>Orientation</th>
-            <th>Structure destinataire</th>
-            <th>Origine</th>
-            <th>Statut opérationnel</th>
-            <th>Créée le</th>
+            <th>{{ _("Flux") }}</th>
+            <th>{{ _("Signal") }}</th>
+            <th>{{ _("Responsable visible") }}</th>
+            <th>{{ _("Dernière activité") }}</th>
+            <th>{{ _("Action attendue") }}</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {% for referral in referrals %}
             {% set status_key = (referral.operational_status or referral.status or "sent")|lower %}
-            <tr>
+            {% set signal = referral_signal(referral) %}
+            {% set current_owner = referral.to_structure if status_key in ["sent", "received", "accepted", "in_progress", "completed", "refused"] else referral.from_structure %}
+            <tr class="hc-referral-table__row hc-referral-table__row--{{ signal.tone }}">
               <td>
-                <strong>#{{ referral.id }}</strong>
+                <div class="hc-referral-table__primary">
+                  <strong>#{{ referral.id }}</strong>
+                  <span class="hc-referral-status hc-referral-status--{{ status_key|replace('_', '-') }}">
+                    {{ status_labels.get(status_key, referral.status or "Statut") }}
+                  </span>
+                </div>
                 <div class="text-muted small">{{ referral.reason or "Motif non renseigné" }}</div>
+                <div class="hc-referral-table__subline">
+                  <span>{{ referral.from_structure.name if referral.from_structure else ("#" ~ referral.from_structure_id) }}</span>
+                  <span>{{ _("→") }}</span>
+                  <span>{{ referral.to_structure.name if referral.to_structure else ("#" ~ referral.to_structure_id) }}</span>
+                </div>
               </td>
-              <td>{{ referral.to_structure.name if referral.to_structure else ("#" ~ referral.to_structure_id) }}</td>
-              <td>{{ referral.from_structure.name if referral.from_structure else ("#" ~ referral.from_structure_id) }}</td>
               <td>
-                <span class="hc-referral-status hc-referral-status--{{ status_key|replace('_', '-') }}">
-                  {{ status_labels.get(status_key, referral.status or "Statut") }}
-                </span>
+                <span class="hc-referral-operational-badge hc-referral-operational-badge--{{ signal.tone }}">{{ signal.label }}</span>
               </td>
-              <td>{{ referral.created_at|format_datetime_fr }}</td>
+              <td>{{ current_owner.name if current_owner else _("—") }}</td>
+              <td>{{ (referral.last_public_update_at or referral.updated_at or referral.created_at)|format_datetime_fr }}</td>
+              <td class="hc-referral-table__hint">{{ signal.hint }}</td>
               <td class="text-end">
-                <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.admin_referral_detail', referral_id=referral.id) }}">Voir</a>
+                <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.admin_referral_detail', referral_id=referral.id) }}">{{ _("Voir") }}</a>
               </td>
             </tr>
           {% else %}
@@ -364,46 +375,41 @@
                 {% if workspace_state == "empty" %}
                   <div class="hc-referral-empty">
                     <div class="hc-referral-empty__copy">
-                      <span class="hc-referral-empty__eyebrow">Espace prêt à configurer</span>
-                      <h3>Créez un premier partenariat pour ouvrir le workspace</h3>
-                      <p>Aucune relation partenaire ni aucune orientation n'est encore active dans votre périmètre. Le prochain jalon consiste à formaliser un premier cadre de coopération.</p>
-                      <ul class="hc-referral-governance-list">
-                        <li>La validation bilatérale ouvre un cadre sûr pour les transmissions futures.</li>
-                        <li>Les informations partagées restent limitées à la coordination utile.</li>
-                        <li>Le suivi opérationnel deviendra visible ici dès la première orientation.</li>
-                      </ul>
+                      <span class="hc-referral-empty__eyebrow">{{ _("Espace prêt à configurer") }}</span>
+                      <h3>{{ _("Créez un premier partenariat pour ouvrir le workspace") }}</h3>
+                      <p>{{ _("Aucune relation partenaire ni aucune orientation n'est encore active dans votre périmètre.") }}</p>
                     </div>
                     <div class="hc-referral-empty__actions">
                       {% if current_user.structure_id %}
-                        <a class="btn btn-primary" href="{{ url_for('admin.admin_referral_partner_new') }}">Créer un premier partenariat</a>
+                        <a class="btn btn-primary" href="{{ url_for('admin.admin_referral_partner_new') }}">{{ _("Créer un premier partenariat") }}</a>
                       {% else %}
-                        <a class="btn btn-primary" href="{{ url_for('admin.admin_referral_partners') }}">Voir les partenariats</a>
+                        <a class="btn btn-primary" href="{{ url_for('admin.admin_referral_partners') }}">{{ _("Voir les partenariats") }}</a>
                       {% endif %}
-                      <p class="hc-muted mb-0">Cette étape initialise la coordination inter-structures sans modifier le dossier interne de référence.</p>
+                      <p class="hc-muted mb-0">{{ _("La validation bilatérale ouvrira ensuite les premiers flux visibles.") }}</p>
                     </div>
                   </div>
                 {% elif workspace_state == "pending" %}
                   <div class="hc-referral-empty hc-referral-empty--blocked">
                     <div class="hc-referral-empty__copy">
-                      <span class="hc-referral-empty__eyebrow">Coordination bloquée</span>
-                      <h3>Aucune orientation n'est encore possible tant que la validation reste en attente</h3>
-                      <p>Le registre partenaire contient des demandes en attente. Les orientations apparaîtront ici dès qu'un partenariat aura été confirmé de part et d'autre.</p>
+                      <span class="hc-referral-empty__eyebrow">{{ _("Coordination bloquée") }}</span>
+                      <h3>{{ _("Les orientations restent suspendues tant que la validation partenaire n'est pas confirmée") }}</h3>
+                      <p>{{ _("Le registre contient des demandes en attente. Les flux apparaîtront ici dès activation d'un cadre bilatéral.") }}</p>
                     </div>
                     <div class="hc-referral-empty__actions">
-                      <a class="btn btn-primary" href="{{ url_for('admin.admin_referral_partners') }}">Suivre les demandes en attente</a>
-                      <p class="hc-muted mb-0">Le workspace passera automatiquement en mode opérationnel dès qu'une relation sera active.</p>
+                      <a class="btn btn-primary" href="{{ url_for('admin.admin_referral_partners') }}">{{ _("Suivre les demandes en attente") }}</a>
+                      <p class="hc-muted mb-0">{{ _("Le module basculera automatiquement en lecture opérationnelle dès qu'une relation sera active.") }}</p>
                     </div>
                   </div>
                 {% else %}
                   <div class="hc-referral-empty hc-referral-empty--active">
                     <div class="hc-referral-empty__copy">
-                      <span class="hc-referral-empty__eyebrow">Coordination prête</span>
-                      <h3>Les partenariats sont actifs, mais aucune orientation n'a encore été engagée</h3>
-                      <p>Le cadre de coopération est prêt. Les premières orientations envoyées ou reçues apparaîtront ici avec leur statut, leur traçabilité et leur suivi partagé.</p>
+                      <span class="hc-referral-empty__eyebrow">{{ _("Coordination prête") }}</span>
+                      <h3>{{ _("Les partenariats sont actifs, mais aucun flux n'a encore été engagé") }}</h3>
+                      <p>{{ _("Le cadre de coopération est prêt pour les premières orientations envoyées ou reçues.") }}</p>
                     </div>
                     <div class="hc-referral-empty__actions">
-                      <a class="btn btn-primary" href="{{ url_for('admin.admin_requests') }}">Ouvrir les demandes</a>
-                      <p class="hc-muted mb-0">Depuis une demande de votre structure, utilisez l'action d'orientation partenaire pour démarrer un flux actif.</p>
+                      <a class="btn btn-primary" href="{{ url_for('admin.admin_requests') }}">{{ _("Ouvrir les demandes") }}</a>
+                      <p class="hc-muted mb-0">{{ _("Depuis une demande de votre structure, utilisez l'action d'orientation partenaire pour démarrer un flux actif.") }}</p>
                     </div>
                   </div>
                 {% endif %}

@@ -11,50 +11,54 @@
   <nav class="hc-admin-breadcrumb" aria-label="Fil d'Ariane">
     <a href="{{ url_for('admin.admin_home') }}">Accueil</a>
     <span>/</span>
-    <a href="{{ url_for('admin.admin_referrals_index') }}">Orientations partenaires</a>
+    <a href="{{ url_for('admin.admin_referrals_index') }}">{{ _("Orientations partenaires") }}</a>
     <span>/</span>
     <span>#{{ referral.id }}</span>
   </nav>
 
   <header class="hc-admin-pagehead">
     <div>
-      <p class="hc-admin-kicker">Coordination opérationnelle</p>
-      <h1>Orientation partenaire #{{ referral.id }}</h1>
-      <p class="hc-muted">{{ referral.from_structure.name if referral.from_structure else ("Structure #" ~ referral.from_structure_id) }} vers {{ referral.to_structure.name if referral.to_structure else ("Structure #" ~ referral.to_structure_id) }}</p>
+      <p class="hc-admin-kicker">{{ _("Coordination opérationnelle") }}</p>
+      <h1>{{ _("Orientation partenaire") }} #{{ referral.id }}</h1>
+      <p class="hc-muted">{{ referral.from_structure.name if referral.from_structure else ("Structure #" ~ referral.from_structure_id) }} {{ _("vers") }} {{ referral.to_structure.name if referral.to_structure else ("Structure #" ~ referral.to_structure_id) }}</p>
     </div>
-    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_referrals_index') }}">Retour</a>
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_referrals_index') }}">{{ _("Retour") }}</a>
   </header>
 
-  <section class="hc-card hc-referral-operational">
+  <section class="hc-card hc-referral-operational hc-referral-operational--dense">
     <div class="hc-referral-list__header">
       <div>
-        <span class="hc-referral-sidecard__eyebrow">État du flux</span>
-        <h2>Lecture commune de la coordination</h2>
-        <p class="hc-muted mb-0">Ce flux expose uniquement le périmètre partagé et les jalons visibles utiles à la coordination inter-structures.</p>
+        <span class="hc-referral-sidecard__eyebrow">{{ _("État du flux") }}</span>
+        <h2>{{ _("Lecture opérationnelle partagée") }}</h2>
       </div>
-      <span class="hc-referral-status hc-referral-status--{{ operational_status|replace('_', '-') }}">{{ operational_status_label(operational_status) }}</span>
+      <div class="hc-referral-operational__signals">
+        <span class="hc-referral-status hc-referral-status--{{ operational_status|replace('_', '-') }}">{{ operational_status_label(operational_status) }}</span>
+        <span class="hc-referral-operational-badge hc-referral-operational-badge--{{ detail_signal.tone }}">{{ detail_signal.label }}</span>
+      </div>
     </div>
-    <div class="hc-referral-detail-summary">
+
+    <div class="hc-referral-detail-summary hc-referral-detail-summary--dense">
       <article class="hc-referral-detail-summary__item">
-        <span>Structure actuellement responsable</span>
+        <span>{{ _("Responsable visible") }}</span>
         <strong>{{ current_owner_label }}</strong>
       </article>
       <article class="hc-referral-detail-summary__item">
-        <span>Dernière coordination visible</span>
+        <span>{{ _("Dernière coordination") }}</span>
         <strong>{{ operational_last_update|format_datetime_fr if operational_last_update else "—" }}</strong>
       </article>
       <article class="hc-referral-detail-summary__item">
-        <span>Action attendue</span>
+        <span>{{ _("Action attendue") }}</span>
         <strong>{{ pending_action_hint }}</strong>
       </article>
       {% if partner_snapshot %}
         <article class="hc-referral-detail-summary__item">
-          <span>Cadre partenaire</span>
+          <span>{{ _("Cadre partenaire") }}</span>
           <strong>{{ connection_status_label(partner_connection.status) }}</strong>
         </article>
       {% endif %}
     </div>
-    <ol class="hc-referral-lifecycle" aria-label="Cycle de vie opérationnel">
+
+    <ol class="hc-referral-lifecycle hc-referral-lifecycle--dense" aria-label="Cycle de vie opérationnel">
       {% for step in operational_timeline %}
         <li class="{{ 'is-done' if step.done else '' }}">
           <span class="hc-referral-lifecycle__mark" aria-hidden="true">{{ "✓" if step.done else "•" }}</span>
@@ -65,27 +69,27 @@
         </li>
       {% endfor %}
     </ol>
-    <div class="hc-referral-public-note">
-      <span>Dernière mise à jour</span>
-      <strong>{{ operational_last_update|format_datetime_fr if operational_last_update else "—" }}</strong>
-      <p class="mb-0 mt-2"><strong>Conséquence opérationnelle :</strong> {{ operational_status_note }}</p>
+
+    <div class="hc-referral-public-note hc-referral-public-note--dense">
+      <span>{{ _("Conséquence opérationnelle") }}</span>
+      <strong>{{ operational_status_note }}</strong>
     </div>
   </section>
 
   <div class="hc-referral-detail-grid">
     <section class="hc-card">
-      <h2>Résumé partagé</h2>
-      <dl class="hc-referral-definition">
-        <dt>Statut</dt>
+      <h2>{{ _("Résumé partagé") }}</h2>
+      <dl class="hc-referral-definition hc-referral-definition--dense">
+        <dt>{{ _("Statut") }}</dt>
         <dd><span class="hc-referral-status hc-referral-status--{{ operational_status|replace('_', '-') }}">{{ operational_status_label(operational_status) }}</span></dd>
-        <dt>Structure destinataire</dt>
+        <dt>{{ _("Structure destinataire") }}</dt>
         <dd>{{ referral.to_structure.name if referral.to_structure else ("#" ~ referral.to_structure_id) }}</dd>
-        <dt>Motif d’orientation</dt>
-        <dd>{{ referral.reason or "—" }}</dd>
-        <dt>Résumé partagé</dt>
-        <dd>{{ referral.message or "—" }}</dd>
+        <dt>{{ _("Motif d'orientation") }}</dt>
+        <dd>{{ referral.reason or _("—") }}</dd>
+        <dt>{{ _("Résumé partagé") }}</dt>
+        <dd>{{ referral.message or _("—") }}</dd>
         {% if referral.request_id %}
-          <dt>Demande source</dt>
+          <dt>{{ _("Demande source") }}</dt>
           <dd>
             {% if current_user.role == "superadmin" or current_user.structure_id == referral.from_structure_id %}
               <a href="{{ url_for('admin.admin_request_details', req_id=referral.request_id) }}">#{{ referral.request_id }}</a>
@@ -98,8 +102,8 @@
     </section>
 
     <section class="hc-card">
-      <h2>Périmètre de partage</h2>
-      <ul class="hc-referral-scope">
+      <h2>{{ _("Périmètre de partage") }}</h2>
+      <ul class="hc-referral-scope hc-referral-scope--dense">
         {% for row in shared_scope_rows %}
           <li>
             <span>{{ row.label }}</span>
@@ -107,90 +111,100 @@
           </li>
         {% endfor %}
       </ul>
-      <p class="hc-muted mt-3 mb-0">Les éléments non marqués comme partagés restent hors du périmètre visible par la structure partenaire.</p>
+      <p class="hc-muted mt-3 mb-0">{{ _("Les éléments non partagés restent hors du périmètre visible par la structure partenaire.") }}</p>
     </section>
 
     {% if partner_connection and partner_snapshot %}
       <section class="hc-card">
-        <h2>Cadre partenaire</h2>
-        <dl class="hc-referral-definition">
-          <dt>Statut du cadre</dt>
+        <h2>{{ _("Cadre partenaire") }}</h2>
+        <dl class="hc-referral-definition hc-referral-definition--dense">
+          <dt>{{ _("Statut du cadre") }}</dt>
           <dd><span class="hc-referral-status hc-referral-status--{{ partner_connection.status }}">{{ connection_status_label(partner_connection.status) }}</span></dd>
-          <dt>Actif depuis</dt>
-          <dd>{{ partner_snapshot.active_since|format_datetime_fr if partner_snapshot.active_since else "—" }}</dd>
-          <dt>Dernière activité réseau</dt>
-          <dd>{{ partner_snapshot.last_activity_at|format_datetime_fr if partner_snapshot.last_activity_at else "—" }}</dd>
-          <dt>Conséquence</dt>
+          <dt>{{ _("Actif depuis") }}</dt>
+          <dd>{{ partner_snapshot.active_since|format_datetime_fr if partner_snapshot.active_since else _("—") }}</dd>
+          <dt>{{ _("Dernière activité réseau") }}</dt>
+          <dd>{{ partner_snapshot.last_activity_at|format_datetime_fr if partner_snapshot.last_activity_at else _("—") }}</dd>
+          <dt>{{ _("Conséquence") }}</dt>
           <dd>{{ partner_snapshot.status_note }}</dd>
         </dl>
       </section>
     {% endif %}
 
     <section class="hc-card">
-      <h2>Actions</h2>
+      <h2>{{ _("Actions") }}</h2>
       {% if can_accept_or_refuse and operational_status in ["sent", "received"] %}
         <form method="post" action="{{ url_for('admin.admin_referral_accept', referral_id=referral.id) }}" class="hc-referral-action">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="btn btn-primary btn-sm">Accepter</button>
+          <button type="submit" class="btn btn-primary btn-sm">{{ _("Accepter") }}</button>
         </form>
         <form method="post" action="{{ url_for('admin.admin_referral_refuse', referral_id=referral.id) }}" class="hc-referral-action">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <label for="refusal_reason" class="form-label">Motif de refus</label>
+          <label for="refusal_reason" class="form-label">{{ _("Motif de refus") }}</label>
           <textarea id="refusal_reason" name="refusal_reason" class="form-control" rows="3"></textarea>
-          <button type="submit" class="btn btn-outline-danger btn-sm mt-2">Refuser</button>
+          <button type="submit" class="btn btn-outline-danger btn-sm mt-2">{{ _("Refuser") }}</button>
         </form>
       {% endif %}
 
       {% if can_update_operational_status and operational_status in ["accepted", "in_progress"] %}
         <form method="post" action="{{ url_for('admin.admin_referral_mark_in_progress', referral_id=referral.id) }}" class="hc-referral-action">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <label for="progress_note" class="form-label">Mise à jour publique</label>
+          <label for="progress_note" class="form-label">{{ _("Mise à jour publique") }}</label>
           <textarea id="progress_note" name="public_status_note" class="form-control" rows="3"></textarea>
-          <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Marquer pris en charge</button>
+          <button type="submit" class="btn btn-outline-primary btn-sm mt-2">{{ _("Marquer pris en charge") }}</button>
         </form>
         <form method="post" action="{{ url_for('admin.admin_referral_mark_completed', referral_id=referral.id) }}" class="hc-referral-action">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <label for="completed_note" class="form-label">Note de clôture publique</label>
+          <label for="completed_note" class="form-label">{{ _("Note de clôture publique") }}</label>
           <textarea id="completed_note" name="public_status_note" class="form-control" rows="3"></textarea>
-          <button type="submit" class="btn btn-primary btn-sm mt-2">Marquer clôturé</button>
+          <button type="submit" class="btn btn-primary btn-sm mt-2">{{ _("Marquer clôturé") }}</button>
         </form>
       {% endif %}
 
       {% if can_update_operational_status and operational_status not in ["refused", "cancelled", "completed"] %}
         <form method="post" action="{{ url_for('admin.admin_referral_public_note', referral_id=referral.id) }}" class="hc-referral-action">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <label for="public_status_note" class="form-label">Commentaire public de coordination</label>
+          <label for="public_status_note" class="form-label">{{ _("Commentaire public de coordination") }}</label>
           <textarea id="public_status_note" name="public_status_note" class="form-control" rows="3">{{ referral.public_status_note or "" }}</textarea>
-          <button type="submit" class="btn btn-outline-secondary btn-sm mt-2">Publier la mise à jour</button>
+          <button type="submit" class="btn btn-outline-secondary btn-sm mt-2">{{ _("Publier la mise à jour") }}</button>
         </form>
       {% endif %}
 
       {% if can_cancel %}
         <form method="post" action="{{ url_for('admin.admin_referral_cancel', referral_id=referral.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="btn btn-outline-danger btn-sm">Annuler</button>
+          <button type="submit" class="btn btn-outline-danger btn-sm">{{ _("Annuler") }}</button>
         </form>
       {% elif not can_accept_or_refuse and not can_update_operational_status %}
-        <p class="text-muted mb-0">Lecture seule pour votre structure.</p>
+        <p class="text-muted mb-0">{{ _("Lecture seule pour votre structure.") }}</p>
       {% endif %}
     </section>
 
     <section class="hc-card hc-referral-trace">
-      <h2>Chronologie visible</h2>
-      <ol class="hc-referral-trace-list">
-        {% for activity in referral.activities %}
-          {% if activity.action in ["created", "sent", "viewed", "accepted", "refused", "cancelled", "in_progress", "completed", "public_note"] %}
-            <li>
-              <div class="hc-referral-trace-list__row">
-                <strong>{{ referral_activity_label(activity.action) }}</strong>
-                <span>{{ activity.created_at|format_datetime_fr }}</span>
+      <div class="hc-referral-list__header">
+        <div>
+          <span class="hc-referral-sidecard__eyebrow">{{ _("Chronologie visible") }}</span>
+          <h2>{{ _("Historique opérationnel condensé") }}</h2>
+        </div>
+      </div>
+      <ol class="hc-referral-trace-list hc-referral-trace-list--dense">
+        {% for item in activity_digest %}
+          <li class="hc-referral-trace-list__item hc-referral-trace-list__item--{{ item.tone }}">
+            <div class="hc-referral-trace-list__row">
+              <div class="hc-referral-trace-list__headline">
+                <strong>{{ item.label }}</strong>
+                {% if item.grouped %}
+                  <span class="hc-referral-operational-badge hc-referral-operational-badge--recent">{{ _("%(count)s mises à jour", count=item.count) }}</span>
+                {% endif %}
               </div>
-              <p>{{ referral_activity_consequence(activity) }}</p>
-              <small>{{ referral_activity_actor(activity) }}{% if activity.actor_structure and activity.actor_structure.name %} · {{ activity.actor_structure.name }}{% endif %}</small>
-            </li>
-          {% endif %}
+              <span>{{ item.at|format_datetime_fr }}</span>
+            </div>
+            <p>{{ item.detail }}</p>
+            <small>{{ item.actor }}{% if item.structure_name %} {{ _("·") }} {{ item.structure_name }}{% endif %}</small>
+          </li>
         {% else %}
-          <li>Aucune activité enregistrée.</li>
+          <li class="hc-referral-trace-list__item">
+            <p class="mb-0">{{ _("Aucune activité enregistrée.") }}</p>
+          </li>
         {% endfor %}
       </ol>
     </section>
