@@ -1,0 +1,15 @@
+{% if seo_breadcrumb_items and seo_breadcrumb_items|length > 1 and not request.path.startswith('/admin') and not request.path.startswith('/ops') %}
+  <nav class="visually-hidden" aria-label="{{ _('Fil d’Ariane') }}">
+    <ol>
+      {% for crumb in seo_breadcrumb_items %}
+        <li>
+          {% if loop.last %}
+            <span aria-current="page">{{ crumb.name }}</span>
+          {% else %}
+            <a href="{{ crumb.url }}">{{ crumb.name }}</a>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+  </nav>
+{% endif %}

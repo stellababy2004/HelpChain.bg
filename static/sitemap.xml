@@ -2,23 +2,62 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://helpchain.live/</loc>
-    <lastmod>2025-07-17</lastmod>
+    <lastmod>2026-05-28</lastmod>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://helpchain.live/contact</loc>
-    <lastmod>2025-07-17</lastmod>
+    <loc>https://helpchain.live/pour-les-structures</loc>
+    <lastmod>2026-05-28</lastmod>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://helpchain.live/professionnels</loc>
+    <lastmod>2026-05-28</lastmod>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://helpchain.live/comment-ca-marche</loc>
+    <lastmod>2026-05-28</lastmod>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://helpchain.live/offre</loc>
+    <lastmod>2026-05-28</lastmod>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://helpchain.live/deploiement</loc>
+    <lastmod>2026-05-28</lastmod>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://helpchain.live/securite</loc>
+    <lastmod>2026-05-28</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://helpchain.live/about</loc>
-    <lastmod>2025-07-17</lastmod>
-    <priority>0.8</priority>
+    <lastmod>2026-05-28</lastmod>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://helpchain.live/blog</loc>
-    <lastmod>2025-07-17</lastmod>
+    <loc>https://helpchain.live/architecture</loc>
+    <lastmod>2026-05-28</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://helpchain.live/gouvernance</loc>
+    <lastmod>2026-05-28</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://helpchain.live/faq</loc>
+    <lastmod>2026-05-28</lastmod>
     <priority>0.6</priority>
   </url>
-  <!-- Add more URLs as needed -->
+  <url>
+    <loc>https://helpchain.live/contact</loc>
+    <lastmod>2026-05-28</lastmod>
+    <priority>0.6</priority>
+  </url>
 </urlset>

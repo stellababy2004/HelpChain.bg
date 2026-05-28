@@ -8,13 +8,20 @@
     <!-- Step 13 - SEO & Social preview -->
     <meta name="description" content="{% block meta_description %}{{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations.') }}{% endblock %}">
     <meta name="robots" content="index,follow">
+    <meta name="application-name" content="HelpChain">
+    <meta name="author" content="HelpChain">
+    <meta name="apple-mobile-web-app-title" content="HelpChain">
 
     <meta property="og:site_name" content="HelpChain">
     <meta property="og:title" content="{% block og_title %}{{ self.title()|striptags|trim }}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{{ self.meta_description()|striptags|trim }}{% endblock %}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-    <meta property="og:url" content="{% block og_url %}{{ request.base_url }}{% endblock %}">
-    <link rel="canonical" href="{% block canonical_url %}{{ request.base_url }}{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}{{ seo_canonical_url or request.base_url }}{% endblock %}">
+    <meta property="og:locale" content="{{ (seo_locale or 'fr-FR')|replace('-', '_') }}">
+    {% for _og_alt_locale in ['en_US', 'de_DE', 'bg_BG'] %}
+    <meta property="og:locale:alternate" content="{{ _og_alt_locale }}">
+    {% endfor %}
+    <link rel="canonical" href="{% block canonical_url %}{{ seo_canonical_url or request.base_url }}{% endblock %}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/lead-capture.css') }}">
     {% set _seo_ep = (request.endpoint or '') %}
     {% set _hreflang_public_eps = [
@@ -485,36 +492,7 @@
       }
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/public-v3.css') }}?v=20260519-v3-nav-surface">
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "@id": "{{ url_for('main.index', _external=True) }}#organization",
-        "name": "HelpChain",
-        "url": "{{ url_for('main.index', _external=True) }}",
-        "email": "contact@helpchain.live",
-        "description": {{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations.')|tojson }}
-      }
-    </script>
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "@id": "{{ url_for('main.index', _external=True) }}#software",
-        "name": "HelpChain",
-        "applicationCategory": "BusinessApplication",
-        "operatingSystem": "Web",
-        "url": "{{ url_for('main.index', _external=True) }}",
-        "description": {{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations.')|tojson }},
-        "brand": {
-          "@type": "Brand",
-          "name": "HelpChain"
-        },
-        "publisher": {
-          "@id": "{{ url_for('main.index', _external=True) }}#organization"
-        }
-      }
-    </script>
+    {% include "partials/structured_data.html" %}
     {% block head %}{% endblock %}
   <link rel="stylesheet"
 href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
@@ -1139,6 +1117,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
 
     <!-- Main Content -->
 
+    {% include "partials/public_breadcrumbs.html" %}
     <main id="main-content" class="hc-main-content">{% block content %}{% endblock %}</main>
 
     {% if not disable_a11y %}

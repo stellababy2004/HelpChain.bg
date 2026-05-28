@@ -1,0 +1,5 @@
+{% if seo_structured_data %}
+  {% for seo_node in seo_structured_data %}
+    <script type="application/ld+json">{{ seo_node|tojson(indent=2) }}</script>
+  {% endfor %}
+{% endif %}

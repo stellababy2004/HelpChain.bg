@@ -96,6 +96,203 @@ COUNTRIES_SUPPORTED = ["FR", "CH", "CA", "BG"]
 main_bp = Blueprint("main", __name__)
 
 _SCHEMA_TABLE_EXISTS_CACHE: dict[str, bool] = {}
+_PUBLIC_SEO_CANONICAL_ENDPOINTS: dict[str, str] = {
+    "main.index": "main.index",
+    "main.about": "main.about",
+    "main.comment_ca_marche": "main.comment_ca_marche",
+    "main.deploiement": "main.deploiement",
+    "main.offre": "main.offre",
+    "main.securite": "main.securite",
+    "main.professionnels": "main.professionnels",
+    "main.pour_les_structures": "main.pour_les_structures",
+    "main.architecture": "main.architecture",
+    "main.gouvernance": "main.gouvernance",
+    "main.contact": "main.contact",
+    "main.faq": "main.faq",
+    "main.legal": "main.legal",
+    "main.mentions_legales": "main.legal",
+}
+_PUBLIC_SEO_PAGE_NAMES: dict[str, str] = {
+    "main.index": "Accueil",
+    "main.about": "A propos",
+    "main.comment_ca_marche": "Comment ca marche",
+    "main.deploiement": "Deploiement",
+    "main.offre": "Offre",
+    "main.securite": "Securite",
+    "main.professionnels": "Professionnels",
+    "main.pour_les_structures": "Structures",
+    "main.architecture": "Architecture",
+    "main.gouvernance": "Gouvernance",
+    "main.contact": "Contact",
+    "main.faq": "FAQ",
+    "main.legal": "Mentions legales",
+}
+_PUBLIC_SEO_BREADCRUMBS: dict[str, tuple[str, ...]] = {
+    "main.index": ("main.index",),
+    "main.about": ("main.index", "main.about"),
+    "main.comment_ca_marche": ("main.index", "main.comment_ca_marche"),
+    "main.deploiement": ("main.index", "main.deploiement"),
+    "main.offre": ("main.index", "main.offre"),
+    "main.securite": ("main.index", "main.securite"),
+    "main.professionnels": ("main.index", "main.professionnels"),
+    "main.pour_les_structures": ("main.index", "main.pour_les_structures"),
+    "main.architecture": ("main.index", "main.securite", "main.architecture"),
+    "main.gouvernance": ("main.index", "main.securite", "main.gouvernance"),
+    "main.contact": ("main.index", "main.contact"),
+    "main.faq": ("main.index", "main.faq"),
+    "main.legal": ("main.index", "main.legal"),
+}
+
+
+def _seo_locale_code() -> str:
+    locale = ((session.get("lang") or babel_get_locale() or "fr") if request else "fr")
+    short = str(locale).strip().lower()[:2] or "fr"
+    return {
+        "fr": "fr-FR",
+        "en": "en-US",
+        "de": "de-DE",
+        "bg": "bg-BG",
+    }.get(short, "fr-FR")
+
+
+def _canonical_public_endpoint(endpoint: str | None) -> str | None:
+    if not endpoint:
+        return None
+    return _PUBLIC_SEO_CANONICAL_ENDPOINTS.get(endpoint, endpoint)
+
+
+def _canonical_public_url(endpoint: str | None = None) -> str:
+    canonical_endpoint = _canonical_public_endpoint(endpoint or request.endpoint)
+    if canonical_endpoint:
+        try:
+            return url_for(canonical_endpoint, _external=True)
+        except Exception:
+            pass
+    return request.base_url
+
+
+def _public_page_name(endpoint: str | None = None) -> str:
+    canonical_endpoint = _canonical_public_endpoint(endpoint or request.endpoint)
+    return _PUBLIC_SEO_PAGE_NAMES.get(canonical_endpoint or "", "HelpChain")
+
+
+def _public_breadcrumb_items(endpoint: str | None = None) -> list[dict[str, str]]:
+    canonical_endpoint = _canonical_public_endpoint(endpoint or request.endpoint)
+    trail = _PUBLIC_SEO_BREADCRUMBS.get(canonical_endpoint or "")
+    if not trail:
+        return []
+    items: list[dict[str, str]] = []
+    for crumb_endpoint in trail:
+        try:
+            items.append(
+                {
+                    "name": _public_page_name(crumb_endpoint),
+                    "url": url_for(crumb_endpoint, _external=True),
+                }
+            )
+        except Exception:
+            continue
+    return items
+
+
+def _public_structured_data() -> list[dict[str, object]]:
+    canonical_url = _canonical_public_url()
+    homepage_url = _canonical_public_url("main.index")
+    organization_id = f"{homepage_url}#organization"
+    website_id = f"{homepage_url}#website"
+    software_id = f"{homepage_url}#software"
+    locale_code = _seo_locale_code()
+    available_languages = [
+        {"@type": "Language", "name": "Francais", "alternateName": "fr"},
+        {"@type": "Language", "name": "English", "alternateName": "en"},
+        {"@type": "Language", "name": "Deutsch", "alternateName": "de"},
+        {"@type": "Language", "name": "Bulgarian", "alternateName": "bg"},
+    ]
+    operational_keywords = [
+        "coordination operationnelle",
+        "continuite operationnelle",
+        "pilotage inter-structures",
+        "suivi des demandes",
+        "orientation territoriale",
+        "reseau partenaire",
+    ]
+    organization = {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": organization_id,
+        "name": "HelpChain",
+        "url": homepage_url,
+        "logo": url_for("static", filename="img/hc-logo-mark.svg", _external=True),
+        "description": _(
+            "HelpChain est une plateforme de coordination operationnelle concue en France pour structurer la continuite des demandes, l'orientation et le suivi inter-structures."
+        ),
+        "email": "contact@helpchain.live",
+        "areaServed": [
+            {"@type": "Country", "name": "France"},
+            {"@type": "Place", "name": "Union europeenne"},
+        ],
+        "knowsAbout": operational_keywords,
+    }
+    website = {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": website_id,
+        "url": homepage_url,
+        "name": "HelpChain",
+        "inLanguage": locale_code,
+        "publisher": {"@id": organization_id},
+        "about": {"@id": software_id},
+    }
+    software = {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "@id": software_id,
+        "name": "HelpChain",
+        "url": homepage_url,
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "inLanguage": locale_code,
+        "availableLanguage": available_languages,
+        "description": _(
+            "Plateforme SaaS de coordination operationnelle pour la continuite inter-structures, le suivi des demandes et le pilotage des parcours."
+        ),
+        "mainEntityOfPage": canonical_url,
+        "featureList": [
+            _("coordination operationnelle des demandes"),
+            _("orientation et suivi inter-structures"),
+            _("pilotage et supervision operationnelle"),
+            _("tracabilite des actions et des statuts"),
+            _("gouvernance des acces par roles"),
+        ],
+        "provider": {"@id": organization_id},
+        "publisher": {"@id": organization_id},
+        "audience": {
+            "@type": "Audience",
+            "audienceType": _(
+                "structures publiques, associations, collectivites et professionnels habilites"
+            ),
+        },
+        "areaServed": [
+            {"@type": "Country", "name": "France"},
+            {"@type": "Place", "name": "Union europeenne"},
+        ],
+        "keywords": ", ".join(operational_keywords),
+    }
+    breadcrumbs = _public_breadcrumb_items()
+    breadcrumb_list = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": index,
+                "name": crumb["name"],
+                "item": crumb["url"],
+            }
+            for index, crumb in enumerate(breadcrumbs, start=1)
+        ],
+    }
+    return [organization, website, software, breadcrumb_list]
 
 
 def _table_exists(table_name: str) -> bool:
@@ -1314,6 +1511,16 @@ def inject_template_helpers():
             pass
         return url_for("static", filename=fallback_rel, _external=True)
 
+    is_public_seo_page = bool(
+        _PUBLIC_SEO_CANONICAL_ENDPOINTS.get(request.endpoint or "")
+    )
+    seo_canonical_url = (
+        _canonical_public_url() if is_public_seo_page else request.base_url
+    )
+    seo_breadcrumb_items = _public_breadcrumb_items() if is_public_seo_page else []
+    seo_structured_data = _public_structured_data() if is_public_seo_page else []
+    seo_locale = _seo_locale_code()
+
     return {
         "url_lang": url_lang,
         "safe_url_for": safe_url_for,
@@ -1323,6 +1530,10 @@ def inject_template_helpers():
         "request_category_label": request_category_label,
         "REQUEST_CATEGORY_CHOICES": request_category_choices(),
         "public_intake_mode": _public_intake_mode(),
+        "seo_canonical_url": seo_canonical_url,
+        "seo_breadcrumb_items": seo_breadcrumb_items,
+        "seo_structured_data": seo_structured_data,
+        "seo_locale": seo_locale,
     }
 
 
@@ -5869,4 +6080,14 @@ def category_help(category: str):
 def service_worker():
     # Serve /sw.js from src/static/sw.js
     return send_from_directory(current_app.static_folder, "sw.js")
+
+
+@main_bp.get("/robots.txt")
+def robots_txt():
+    return send_from_directory(current_app.static_folder, "robots.txt")
+
+
+@main_bp.get("/sitemap.xml")
+def sitemap_xml():
+    return send_from_directory(current_app.static_folder, "sitemap.xml")
 
