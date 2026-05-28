@@ -361,13 +361,13 @@ def _connection_status_label(status: str | None) -> str:
 def _connection_status_note(connection: OrganizationConnection) -> str:
     status = (getattr(connection, "status", None) or "").strip().lower()
     if status == "pending":
-        return "Cadre propose en attente de validation bilaterale."
+        return "Cadre proposé en attente de validation bilatérale."
     if status == "active":
-        return "Cadre bilateral confirme pour transmettre et suivre des orientations."
+        return "Cadre bilatéral confirmé pour transmettre et suivre des orientations."
     if status == "suspended":
-        return "Cadre suspendu en attente de reevalation operationnelle."
+        return "Cadre suspendu en attente d’une réévaluation opérationnelle."
     if status == "revoked":
-        return "Relation cloturee formellement et retiree du reseau actif."
+        return "Relation clôturée formellement et retirée du réseau actif."
     return "Cadre partenarial visible dans le registre."
 
 
@@ -394,17 +394,17 @@ def _connection_timeline(
 ) -> list[dict]:
     timeline = [
         {
-            "label": "Partenariat propose",
+            "label": "Partenariat proposé",
             "at": getattr(connection, "created_at", None),
-            "detail": "Cadre de cooperation initie par une structure source.",
+            "detail": "Cadre de coopération initié par une structure source.",
         }
     ]
     if getattr(connection, "accepted_at", None):
         timeline.append(
             {
-                "label": "Validation acceptee",
+                "label": "Validation acceptée",
                 "at": getattr(connection, "accepted_at", None),
-                "detail": "Validation bilaterale confirmee pour ouvrir les orientations.",
+                "detail": "Validation bilatérale confirmée pour ouvrir les orientations.",
             }
         )
     referrals = partner_referrals or []
@@ -418,7 +418,7 @@ def _connection_timeline(
         ]
         timeline.append(
             {
-                "label": "Flux engages",
+                "label": "Flux engagés",
                 "at": max(timestamps) if timestamps else None,
                 "detail": f"{sent_count} orientation{'s' if sent_count > 1 else ''} visible{'s' if sent_count > 1 else ''} dans ce cadre.",
             }
@@ -431,9 +431,9 @@ def _connection_timeline(
         ]
         timeline.append(
             {
-                "label": "Flux clotures",
+                "label": "Flux clôturés",
                 "at": max(completed_timestamps) if completed_timestamps else None,
-                "detail": f"{completed_count} flux cloture{'s' if completed_count > 1 else ''} dans ce cadre partenarial.",
+                "detail": f"{completed_count} flux clôturé{'s' if completed_count > 1 else ''} dans ce cadre partenarial.",
             }
         )
     if getattr(connection, "status", None) == "suspended":
@@ -441,15 +441,15 @@ def _connection_timeline(
             {
                 "label": "Coordination suspendue",
                 "at": _connection_last_activity(connection, referrals),
-                "detail": "Cadre suspendu en attente de reprise ou de reevaluation.",
+                "detail": "Cadre suspendu en attente de reprise ou de réévaluation.",
             }
         )
     if getattr(connection, "revoked_at", None):
         timeline.append(
             {
-                "label": "Relation cloturee",
+                "label": "Relation clôturée",
                 "at": getattr(connection, "revoked_at", None),
-                "detail": "Cadre retire du reseau actif avec effet formalise.",
+                "detail": "Cadre retiré du réseau actif avec effet formalisé.",
             }
         )
     return [item for item in timeline if item.get("at")]
@@ -500,14 +500,14 @@ def _referral_pending_action_hint(referral: CaseReferral) -> str:
     if _can_accept_or_refuse(referral) and status in {"sent", "received"}:
         return "Votre structure doit accepter ou refuser cette orientation."
     if _can_update_operational_status(referral) and status == "accepted":
-        return "Votre structure peut demarrer la prise en charge et publier une mise a jour visible."
+        return "Votre structure peut démarrer la prise en charge et publier une mise à jour visible."
     if _can_update_operational_status(referral) and status == "in_progress":
-        return "Votre structure peut enrichir le suivi partage ou cloturer le flux."
+        return "Votre structure peut enrichir le suivi partagé ou clôturer le flux."
     if _can_cancel(referral):
         return "Votre structure peut encore interrompre l'orientation avant acceptation."
     if status in {"completed", "refused", "cancelled"}:
-        return "Aucune action immediate : le flux dispose deja d'un etat final visible."
-    return "Lecture et suivi du flux visibles dans votre perimetre."
+        return "Aucune action immédiate : le flux dispose déjà d’un état final visible."
+    return "Lecture et suivi du flux visibles dans votre périmètre."
 
 
 def _referral_signal(referral: CaseReferral) -> dict:
@@ -520,7 +520,7 @@ def _referral_signal(referral: CaseReferral) -> dict:
         "label": "Coordination active",
         "tone": "active",
         "bucket": "active",
-        "hint": "Flux en cours de coordination dans le perimetre partage.",
+        "hint": "Flux en cours de coordination dans le périmètre partagé.",
     }
     if _can_accept_or_refuse(referral) and status in {"sent", "received"}:
         signal.update(
@@ -537,26 +537,26 @@ def _referral_signal(referral: CaseReferral) -> dict:
             label="Validation partenaire",
             tone="pending",
             bucket="validation_partner",
-            hint="Le flux attend encore une prise en compte cote partenaire.",
+            hint="Le flux attend encore une prise en compte côté partenaire.",
         )
         if is_stale:
             signal.update(
                 key="stale",
-                label="Sans activite recente",
+                label="Sans activité récente",
                 tone="stale",
                 bucket="quiet",
-                hint="Aucune evolution visible recente sur un flux encore ouvert.",
+                hint="Aucune évolution visible récente sur un flux encore ouvert.",
             )
         return signal
     if status == "accepted":
-        signal["hint"] = "Le partenaire a accepte le flux et peut demarrer la prise en charge."
+        signal["hint"] = "Le partenaire a accepté le flux et peut démarrer la prise en charge."
         if is_stale:
             signal.update(
                 key="stale",
-                label="Sans activite recente",
+                label="Sans activité récente",
                 tone="stale",
                 bucket="quiet",
-                hint="Flux accepte mais silencieux depuis plusieurs jours.",
+                hint="Flux accepté mais silencieux depuis plusieurs jours.",
             )
         return signal
     if status == "in_progress":
@@ -564,16 +564,16 @@ def _referral_signal(referral: CaseReferral) -> dict:
         if is_stale:
             signal.update(
                 key="active-quiet",
-                label="Sans activite recente",
+                label="Sans activité récente",
                 tone="stale",
                 bucket="quiet",
-                hint="Flux actif mais sans mise a jour visible recente.",
+                hint="Flux actif mais sans mise à jour visible récente.",
             )
         return signal
     if status == "completed":
         signal.update(
             key="completed",
-            label="Cloture recente" if is_recent else "Cloturee",
+            label="Clôture récente" if is_recent else "Clôturée",
             tone="done" if is_recent else "neutral",
             bucket="recent_updates" if is_recent else "closed",
             hint="Le flux dispose d'un etat final visible.",
@@ -582,7 +582,7 @@ def _referral_signal(referral: CaseReferral) -> dict:
     if status in {"refused", "cancelled", "suspended"}:
         signal.update(
             key="blocked",
-            label="Flux bloques",
+            label="Flux bloqués",
             tone="blocked",
             bucket="blocked",
             hint="Le flux ne progresse plus dans son etat courant.",
@@ -591,10 +591,10 @@ def _referral_signal(referral: CaseReferral) -> dict:
     if is_recent:
         signal.update(
             key="recent",
-            label="Derniere mise a jour",
+            label="Dernière mise à jour",
             tone="recent",
             bucket="recent_updates",
-            hint="Le flux a recemment evolue dans le perimetre partage.",
+            hint="Le flux a récemment évolué dans le périmètre partagé.",
         )
     return signal
 
@@ -608,39 +608,39 @@ def _referral_current_owner_label(referral: CaseReferral) -> str:
 
 def _referral_activity_label(action: str) -> str:
     return {
-        "created": "Orientation preparee",
+        "created": "Orientation préparée",
         "sent": "Orientation transmise",
-        "viewed": "Orientation consultee",
-        "accepted": "Prise en charge acceptee",
-        "refused": "Orientation refusee",
-        "cancelled": "Orientation annulee",
-        "in_progress": "Prise en charge demarree",
-        "completed": "Flux cloture",
-        "public_note": "Mise a jour publique publiee",
+        "viewed": "Orientation consultée",
+        "accepted": "Prise en charge acceptée",
+        "refused": "Orientation refusée",
+        "cancelled": "Orientation annulée",
+        "in_progress": "Prise en charge démarrée",
+        "completed": "Flux clôturé",
+        "public_note": "Mise à jour publique publiée",
     }.get(action, action)
 
 
 def _referral_activity_consequence(activity: ReferralActivity) -> str:
     action = (getattr(activity, "action", None) or "").strip().lower()
     if action == "created":
-        return "Le flux a ete prepare dans le cadre d'une coordination partenaire."
+        return "Le flux a été préparé dans le cadre d’une coordination partenaire."
     if action == "sent":
-        return "La structure cible peut desormais consulter l'orientation."
+        return "La structure cible peut désormais consulter l’orientation."
     if action == "viewed":
-        return "La structure destinataire a ouvert l'orientation dans son perimetre."
+        return "La structure destinataire a ouvert l’orientation dans son périmètre."
     if action == "accepted":
-        return "La structure partenaire devient responsable du suivi operationnel visible."
+        return "La structure partenaire devient responsable du suivi opérationnel visible."
     if action == "refused":
-        return "La coordination s'arrete cote partenaire avec un refus formalise."
+        return "La coordination s’arrête côté partenaire avec un refus formalisé."
     if action == "cancelled":
         return "La structure source a interrompu le flux avant sa prise en charge."
     if action == "in_progress":
-        return "Le dossier est officiellement en cours de traitement cote partenaire."
+        return "Le dossier est officiellement en cours de traitement côté partenaire."
     if action == "completed":
-        return "Le flux dispose desormais d'un etat final de cloture visible."
+        return "Le flux dispose désormais d’un état final de clôture visible."
     if action == "public_note":
-        return "Une note publique de coordination enrichit le suivi partage."
-    return "Evenement de coordination enregistre dans l'historique visible."
+        return "Une note publique de coordination enrichit le suivi partagé."
+    return "Événement de coordination enregistré dans l’historique visible."
 
 
 def _referral_activity_actor(activity: ReferralActivity) -> str:
@@ -648,7 +648,7 @@ def _referral_activity_actor(activity: ReferralActivity) -> str:
         return activity.actor_admin.username
     if getattr(activity, "actor_structure", None) and getattr(activity.actor_structure, "name", None):
         return activity.actor_structure.name
-    return "Acteur systeme"
+    return "Acteur système"
 
 
 def _referral_activity_digest(activities: list[ReferralActivity] | None) -> list[dict]:
@@ -676,7 +676,7 @@ def _referral_activity_digest(activities: list[ReferralActivity] | None) -> list
             rows[-1]["count"] += 1
             rows[-1]["at"] = rows[-1]["at"] or getattr(activity, "created_at", None)
             rows[-1]["grouped"] = True
-            rows[-1]["detail"] = "Serie de mises a jour publiques de coordination."
+            rows[-1]["detail"] = "Série de mises à jour publiques de coordination."
             continue
         tone = "minor" if action in {"created", "sent", "viewed", "public_note"} else "major"
         if action in {"refused", "cancelled"}:
@@ -732,23 +732,23 @@ def _connection_signal(
             key="awaiting-validation",
             label="Validation partenaire",
             tone="pending",
-            hint="La demande attend encore une validation bilaterale.",
+            hint="La demande attend encore une validation bilatérale.",
         )
         return signal
     if status == "active" and is_stale:
         signal.update(
             key="quiet",
-            label="Sans activite recente",
+            label="Sans activité récente",
             tone="stale",
-            hint="Cadre actif mais peu mobilise recemment.",
+            hint="Cadre actif mais peu mobilisé récemment.",
         )
         return signal
     if status == "active" and is_recent:
         signal.update(
             key="recent",
-            label="Derniere mise a jour",
+            label="Dernière mise à jour",
             tone="recent",
-            hint="Activite recente visible sur ce partenariat.",
+            hint="Activité récente visible sur ce partenariat.",
         )
         return signal
     if status in {"suspended", "revoked"}:
@@ -756,7 +756,7 @@ def _connection_signal(
             key="blocked",
             label="Coordination interrompue",
             tone="blocked",
-            hint="Cadre suspendu ou cloture formellement.",
+            hint="Cadre suspendu ou clôturé formellement.",
         )
     return signal
 
