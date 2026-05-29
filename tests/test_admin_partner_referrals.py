@@ -545,4 +545,4 @@ def test_existing_admin_request_page_still_loads(client, app):
     response = client.get(f"/admin/requests/{ctx['request'].id}")
 
     assert response.status_code == 200
-    assert b"Orienter vers partenaire" in response.data
+    assert b"Engager une orientation partenaire" in response.data
