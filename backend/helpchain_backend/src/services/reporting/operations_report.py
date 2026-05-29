@@ -706,6 +706,104 @@ def _build_executive_summary(metrics):
     )
 
 
+def _build_operational_health_score(metrics: dict, territorial_pressure: dict, operational_severity: dict) -> dict:
+    open_count = int(metrics.get("open_requests", 0) or 0)
+    unassigned = int(metrics.get("unassigned_requests", 0) or 0)
+    stale = int(metrics.get("stale_requests", 0) or 0)
+    sla_breaches = int(metrics.get("sla_breaches", 0) or 0)
+    critical_requests = int(metrics.get("critical_requests", 0) or 0)
+    avg_resolution = float(metrics.get("avg_resolution_hours", 0) or 0)
+
+    zones = territorial_pressure.get("zones", []) or []
+    high_pressure_zones = len([zone for zone in zones if zone.get("severity") in {"high", "critical"}])
+    severity_level = str(operational_severity.get("level", "stable") or "stable")
+
+    score = 100
+
+    if open_count > 0:
+        score -= min(20, round((unassigned / max(open_count, 1)) * 25))
+        score -= min(20, round((stale / max(open_count, 1)) * 25))
+        score -= min(20, round((sla_breaches / max(open_count, 1)) * 25))
+
+    score -= min(15, critical_requests * 3)
+    score -= min(10, high_pressure_zones * 5)
+
+    if avg_resolution >= 168:
+        score -= 15
+    elif avg_resolution >= 96:
+        score -= 10
+    elif avg_resolution >= 72:
+        score -= 6
+    elif avg_resolution >= 36:
+        score -= 3
+
+    if severity_level == "critical":
+        score -= 10
+    elif severity_level == "warning":
+        score -= 5
+
+    score = max(0, min(100, int(score)))
+
+    if score < 45:
+        level = "critical"
+        label = "Critique"
+        summary = "Le pilotage nécessite une intervention immédiate."
+    elif score < 70:
+        level = "warning"
+        label = "Sous pression"
+        summary = "La situation reste pilotable mais présente une pression opérationnelle notable."
+    elif score < 85:
+        level = "moderate"
+        label = "À surveiller"
+        summary = "Le dispositif reste globalement stable avec quelques signaux de vigilance."
+    else:
+        level = "stable"
+        label = "Stable"
+        summary = "Le dispositif opérationnel apparaît stable sur la période."
+
+    if sla_breaches > 0 or stale > 0:
+        decision = "Relancer les situations sans activite recente sous 24h."
+    elif unassigned > 0:
+        decision = "Reassigner les situations sans referent aujourd'hui."
+    elif high_pressure_zones > 0:
+        decision = "Renforcer la couverture sur la zone la plus exposee."
+    elif avg_resolution >= 72:
+        decision = "Stabiliser les delais de resolution cette semaine."
+    else:
+        decision = "Maintenir le rythme operationnel actuel."
+
+    factors = [
+        {
+            "label": "Assignation",
+            "value": unassigned,
+            "detail": f"{unassigned} situation(s) sans référent",
+        },
+        {
+            "label": "SLA",
+            "value": sla_breaches,
+            "detail": f"{sla_breaches} dépassement(s) détecté(s)",
+        },
+        {
+            "label": "Inactivité",
+            "value": stale,
+            "detail": f"{stale} situation(s) à relancer",
+        },
+        {
+            "label": "Territoire",
+            "value": high_pressure_zones,
+            "detail": f"{high_pressure_zones} zone(s) sous tension",
+        },
+    ]
+
+    return {
+        "score": score,
+        "level": level,
+        "label": label,
+        "summary": summary,
+        "decision": decision,
+        "factors": factors,
+    }
+
 def _build_priority_actions(metrics: dict, territorial_pressure: dict, executive_snapshot: list[dict]) -> list[dict]:
     actions = []
     zones = territorial_pressure.get("zones", []) or []
@@ -1199,6 +1297,11 @@ def build_operational_report(
         ),
     ]
 
+    operational_health_score = _build_operational_health_score(
+        insight_metrics,
+        territorial_pressure,
+        operational_severity,
+    )
     priority_actions = _build_priority_actions(insight_metrics, territorial_pressure, executive_snapshot)
     automatic_analysis = _build_automatic_analysis(insight_metrics, trends, territorial_pressure)
     operational_conclusion = _build_operational_conclusion(
@@ -1249,6 +1352,7 @@ def build_operational_report(
         },
         "executive_summary": executive_summary,
         "operational_severity": operational_severity,
+        "operational_health_score": operational_health_score,
         "executive_snapshot": executive_snapshot,
         "priority_actions": priority_actions,
         "recommendations": recommendations,
