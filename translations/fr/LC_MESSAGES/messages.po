@@ -10419,3 +10419,43 @@ msgstr "Historique opérationnel condensé"
 
 msgid "Aucune activité enregistrée."
 msgstr "Aucune activité enregistrée."
+
+
+msgid "/100"
+msgstr "/100"
+
+
+msgid "Annexe"
+msgstr "Annexe"
+
+
+msgid "Decision recommandee"
+msgstr "D?cision recommand?e"
+
+
+msgid "Definition des indicateurs"
+msgstr "D?finition des indicateurs"
+
+
+msgid "Fenetre"
+msgstr "Fen?tre"
+
+
+msgid "Generation"
+msgstr "G?n?ration"
+
+
+msgid "Perimetre"
+msgstr "P?rim?tre"
+
+
+msgid "Sante operationnelle"
+msgstr "Sant? op?rationnelle"
+
+
+msgid "Stabilite"
+msgstr "Stabilit?"
+
+
+msgid "jours"
+msgstr "jours"

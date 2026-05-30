@@ -1,4 +1,4 @@
-import re
+﻿import re
 
 import pytest
 
@@ -30,7 +30,7 @@ def test_bulk_actions_dropdown_has_expected_options(admin_login):
     options = [o.strip() for o in _extract_bulk_actions(html) if o.strip()]
 
     expected = [
-        "Action groupée",
+        "Action de coordination",
         "Claim ownership (me)",
         "Open selected",
         "Copier les identifiants",
@@ -46,4 +46,3 @@ def test_bulk_actions_dropdown_has_expected_options(admin_login):
         assert label in options or label.encode("utf-8").decode("latin-1") in options, f"Missing option: {label}"
 
     assert set(options) >= set(expected)
-
