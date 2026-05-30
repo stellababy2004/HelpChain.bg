@@ -46,5 +46,3 @@ def test_bulk_actions_dropdown_has_expected_options(admin_login):
         assert label in options or label.encode("utf-8").decode("latin-1") in options, f"Missing option: {label}"
 
     assert set(options) >= set(expected)
-
-
