@@ -163,6 +163,7 @@ def test_operations_report_payload_shape(app, db_schema):
             "executive_snapshot",
             "priority_actions",
             "operational_severity",
+            "operational_health_score",
             "recommendations",
             "territorial_pressure",
             "automatic_analysis",

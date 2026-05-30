@@ -43,13 +43,13 @@
         <div class="hc-muted small">{{ report.operational_severity.message }}</div>
       </div>
       <div class="hc-report-health hc-report-health--{{ report.operational_health_score.level }}">
-        <div class="hc-report-health__label">Santé opérationnelle</div>
-        <div class="hc-report-health__score">{{ report.operational_health_score.score }}/100</div>
+        <div class="hc-report-health__label">{{ _("Sante operationnelle") }}</div>
+        <div class="hc-report-health__score">{{ report.operational_health_score.score }}{{ _("/100") }}</div>
         <div class="hc-report-health__status">{{ report.operational_health_score.label }}</div>
         <p class="hc-report-health__summary">{{ report.operational_health_score.summary }}</p>
         {% if report.operational_health_score.decision %}
           <div class="hc-report-health__decision">
-            <span>Décision recommandée</span>
+            <span>{{ _("Decision recommandee") }}</span>
             <strong>{{ report.operational_health_score.decision }}</strong>
           </div>
         {% endif %}
@@ -63,19 +63,19 @@
 
   <section class="hc-report-meta-grid" aria-label="Metadonnees du rapport">
     <article class="hc-report-meta-card">
-      <h3>Perimetre</h3>
+      <h3>{{ _("Perimetre") }}</h3>
       <strong>{{ report.scope.structure_name or "Toutes les structures visibles" }}</strong>
     </article>
     <article class="hc-report-meta-card">
-      <h3>Fenetre</h3>
-      <strong>{{ report.period.days }} jours</strong>
+      <h3>{{ _("Fenetre") }}</h3>
+      <strong>{{ report.period.days }} {{ _("jours") }}</strong>
     </article>
     <article class="hc-report-meta-card">
-      <h3>Generation</h3>
+      <h3>{{ _("Generation") }}</h3>
       <strong>{{ report.generated_at[:16]|replace('T', ' ') }}</strong>
     </article>
     <article class="hc-report-meta-card">
-      <h3>Stabilite</h3>
+      <h3>{{ _("Stabilite") }}</h3>
       <strong>{{ report.operational_conclusion.stability }}</strong>
     </article>
   </section>
@@ -349,7 +349,7 @@
     <p class="mb-3">{{ report.operational_conclusion.summary }}</p>
     <div class="hc-report-conclusion-grid">
       <div class="hc-report-conclusion-card">
-        <span class="hc-report-conclusion-card__label">Stabilite</span>
+        <span class="hc-report-conclusion-card__label">{{ _("Stabilite") }}</span>
         <strong>{{ report.operational_conclusion.stability }}</strong>
       </div>
       <div class="hc-report-conclusion-card">
@@ -507,8 +507,8 @@
   <details class="hc-card hc-card-pad mt-3 hc-report-disclosure">
     <summary>
       <div>
-        <div class="hc-admin-kicker mb-1">Annexe</div>
-        <h2 class="hc-section-title mb-1">Definition des indicateurs</h2>
+        <div class="hc-admin-kicker mb-1">{{ _("Annexe") }}</div>
+        <h2 class="hc-section-title mb-1">{{ _("Definition des indicateurs") }}</h2>
       </div>
     </summary>
 
