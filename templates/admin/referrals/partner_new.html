@@ -70,8 +70,21 @@
         </div>
       </div>
 
-      <form method="post" action="{{ url_for('admin.admin_referral_partner_create') }}" class="hc-referral-form">
+<form method="post" action="{{ url_for('admin.admin_referral_partner_create') }}" class="hc-referral-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        {% if show_source_structure_selector %}
+        <div class="hc-referral-form__section">
+          <label for="source_structure_id" class="form-label">Structure source</label>
+          <select id="source_structure_id" name="source_structure_id" class="form-select" required>
+            <option value="">Selectionner une structure source</option>
+            {% for structure in source_structures %}
+              <option value="{{ structure.id }}">{{ structure.name }}</option>
+            {% endfor %}
+          </select>
+          <p class="form-text">Choisissez explicitement la structure source avant d'ouvrir une connexion partenaire.</p>
+        </div>
+        {% endif %}
 
         <div class="hc-referral-form__section">
           <label for="target_structure_id" class="form-label">Structure partenaire pressentie</label>

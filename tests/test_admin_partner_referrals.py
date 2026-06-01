@@ -142,6 +142,18 @@ def _create_partner_connection(client, app, ctx):
     return OrganizationConnection.query.order_by(OrganizationConnection.id.desc()).first()
 
 
+def _create_partner_connection_as_superadmin(client, app, ctx, *, source_structure_id=None, follow_redirects=False):
+    _login(client, app, ctx["superadmin"])
+    payload = {"target_structure_id": str(ctx["b"].id)}
+    if source_structure_id is not None:
+        payload["source_structure_id"] = str(source_structure_id)
+    return client.post(
+        "/admin/referrals/partners/new",
+        data=payload,
+        follow_redirects=follow_redirects,
+    )
+
+
 def test_partners_page_loads(client, app):
     ctx = _seed_referral_context()
     _login(client, app, ctx["admin_a"])
@@ -162,6 +174,70 @@ def test_structure_a_can_create_pending_partner_connection_to_b(client, app):
     assert connection.status == "pending"
     assert connection.permissions_json["can_send_referrals"] is True
     assert connection.permissions_json["can_share_documents"] is False
+
+
+def test_global_superadmin_new_partner_form_shows_source_structure_selector(client, app):
+    ctx = _seed_referral_context(active_connection=False)
+    _login(client, app, ctx["superadmin"])
+
+    response = client.get("/admin/referrals/partners/new")
+
+    assert response.status_code == 200
+    assert b'name="source_structure_id"' in response.data
+
+
+def test_structure_bound_admin_new_partner_form_hides_source_structure_selector(client, app):
+    ctx = _seed_referral_context(active_connection=False)
+    _login(client, app, ctx["admin_a"])
+
+    response = client.get("/admin/referrals/partners/new")
+
+    assert response.status_code == 200
+    assert b'name="source_structure_id"' not in response.data
+
+
+def test_global_superadmin_without_source_structure_id_cannot_create_partner_connection(client, app):
+    ctx = _seed_referral_context(active_connection=False)
+
+    response = _create_partner_connection_as_superadmin(client, app, ctx, follow_redirects=True)
+
+    assert response.status_code == 200
+    assert "Sélectionnez une structure source avant de créer une connexion partenaire.".encode("utf-8") in response.data
+    assert OrganizationConnection.query.count() == 0
+
+
+def test_global_superadmin_with_valid_source_structure_id_can_create_partner_connection(client, app):
+    ctx = _seed_referral_context(active_connection=False)
+
+    response = _create_partner_connection_as_superadmin(
+        client,
+        app,
+        ctx,
+        source_structure_id=ctx["a"].id,
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    connection = OrganizationConnection.query.order_by(OrganizationConnection.id.desc()).first()
+    assert connection is not None
+    assert connection.source_structure_id == ctx["a"].id
+    assert connection.target_structure_id == ctx["b"].id
+
+
+def test_global_superadmin_with_invalid_source_structure_id_cannot_create_partner_connection(client, app):
+    ctx = _seed_referral_context(active_connection=False)
+
+    response = _create_partner_connection_as_superadmin(
+        client,
+        app,
+        ctx,
+        source_structure_id=999999,
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "Structure source invalide.".encode("utf-8") in response.data
+    assert OrganizationConnection.query.count() == 0
 
 
 def test_duplicate_active_or_pending_connection_is_blocked(client, app):

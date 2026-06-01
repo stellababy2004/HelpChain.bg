@@ -98,6 +98,35 @@ def _referral_is_superadmin() -> bool:
     return role in {"superadmin", "super_admin", "super-admin"}
 
 
+def _global_superadmin_without_structure() -> bool:
+    admin = _referral_admin_user()
+    return bool(_referral_is_superadmin() and getattr(admin, "structure_id", None) is None)
+
+
+def _resolve_admin_source_structure_id_from_request() -> tuple[int | None, str | None]:
+    source_structure_id = _admin_structure_id()
+    if source_structure_id:
+        return int(source_structure_id), None
+
+    if not _global_superadmin_without_structure():
+        return None, "missing"
+
+    raw_source_structure_id = (request.form.get("source_structure_id") or "").strip()
+    if not raw_source_structure_id:
+        return None, "missing"
+
+    try:
+        source_structure_id = int(raw_source_structure_id)
+    except ValueError:
+        return None, "invalid"
+
+    source_structure = db.session.get(Structure, source_structure_id)
+    if source_structure is None:
+        return None, "invalid"
+
+    return int(source_structure.id), None
+
+
 def _can_view_referral(referral: CaseReferral) -> bool:
     if _referral_is_superadmin():
         return True
@@ -1207,6 +1236,8 @@ def admin_referral_partner_new():
     return render_template(
         "admin/referrals/partner_new.html",
         structures=_target_structure_options(),
+        source_structures=Structure.query.order_by(Structure.name.asc()).all(),
+        show_source_structure_selector=_global_superadmin_without_structure(),
         default_permissions=DEFAULT_CONNECTION_PERMISSIONS,
     )
 
@@ -1217,10 +1248,13 @@ def admin_referral_partner_new():
 @admin_role_required("ops", "admin", "superadmin")
 def admin_referral_partner_create():
     admin_required_404()
-    source_structure_id = _admin_structure_id()
+    source_structure_id, source_structure_error = _resolve_admin_source_structure_id_from_request()
     if not source_structure_id:
-        flash("Structure source indisponible pour créer une connexion partenaire.", "warning")
-        return redirect(url_for("admin.admin_referral_partners"))
+        if source_structure_error == "invalid":
+            flash("Structure source invalide.", "warning")
+        else:
+            flash("Sélectionnez une structure source avant de créer une connexion partenaire.", "warning")
+        return redirect(url_for("admin.admin_referral_partner_new"))
     try:
         target_structure_id = int(request.form.get("target_structure_id") or "0")
     except ValueError:
