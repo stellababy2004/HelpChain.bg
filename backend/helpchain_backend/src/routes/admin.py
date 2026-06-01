@@ -214,6 +214,7 @@ from ..services.territorial_intelligence import (
     detect_priority_territories,
     normalize_territory_name,
 )
+from ..services.pilotage_territorial_maps import build_territorial_snapshots
 from ..services.notification_jobs import (
     count_notification_job_buckets,
     notification_job_bucket_filter,
@@ -8359,27 +8360,52 @@ def admin_api_professionals():
 
     rows = query.order_by(Intervenant.name.asc(), Intervenant.id.asc()).all()
     professionals = []
+    territorial_professionals = []
     for intervenant, workload in rows:
         lat, lng, has_exact_coordinates = _resolve_intervenant_coordinates(intervenant)
+        availability = _intervenant_availability(intervenant)
+        city = _intervenant_city(intervenant) or "Paris"
+        profession = _intervenant_profession(intervenant)
         professionals.append(
             {
                 "id": int(intervenant.id),
                 "full_name": _intervenant_display_name(intervenant),
                 "email": intervenant.email,
-                "profession": _intervenant_profession(intervenant),
-                "city": _intervenant_city(intervenant) or "Paris",
+                "profession": profession,
+                "city": city,
                 "address": _intervenant_address(intervenant),
                 "latitude": lat,
                 "longitude": lng,
-                "availability": _intervenant_availability(intervenant),
+                "availability": availability,
                 "availability_label": _intervenant_availability_label(
-                    _intervenant_availability(intervenant)
+                    availability
                 ),
                 "workload": int(workload or 0),
                 "has_exact_coordinates": has_exact_coordinates,
                 "is_active": bool(getattr(intervenant, "is_active", False)),
             }
         )
+        territorial_professionals.append(
+            {
+                "id": int(intervenant.id),
+                "city": city,
+                "latitude": lat,
+                "longitude": lng,
+                "availability": availability,
+                "profession": profession,
+                # Heuristic only: partner coverage is derived from observed actor types,
+                # not from a dedicated partner-structure topology yet.
+                "actor_type": str(getattr(intervenant, "actor_type", None) or ""),
+                "workload": int(workload or 0),
+                "has_exact_coordinates": bool(has_exact_coordinates),
+                "is_active": bool(getattr(intervenant, "is_active", False)),
+            }
+        )
+
+    territories = build_territorial_snapshots(
+        risk_items=[],
+        professional_items=territorial_professionals,
+    )
 
     current_app.logger.info(
         "admin_api_professionals returning count=%s structure=%s include_inactive=%s",
@@ -8391,6 +8417,12 @@ def admin_api_professionals():
         {
             "status": "ok",
             "professionals": professionals,
+            "territories": territories,
+            "territorial_contract": {
+                "version": "pilotage-v1",
+                "scope": "city",
+                "semantics": "territorial_operational_intelligence",
+            },
             "meta": {
                 "structure_id": getattr(scope_structure, "id", None),
                 "structure_name": getattr(scope_structure, "name", None),

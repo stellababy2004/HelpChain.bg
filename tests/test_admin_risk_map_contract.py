@@ -369,3 +369,144 @@ def test_admin_risk_map_returns_empty_territories_when_no_visible_data(client, a
 
     assert payload["items"] == []
     assert payload["territories"] == []
+
+
+def test_admin_professionals_api_keeps_existing_fields_and_adds_territories(client, app):
+    with app.app_context():
+        structure = _make_structure(name="Pro Contract Alpha", slug="pro-contract-alpha")
+        ops_admin = _make_ops_admin(
+            username="pro_contract_ops",
+            email="pro_contract_ops@test.local",
+            structure_id=structure.id,
+        )
+        db.session.add(
+            Intervenant(
+                structure_id=structure.id,
+                name="Visible Pro",
+                actor_type="social_worker",
+                email="visible-pro@test.local",
+                location="Paris || 10 Rue A",
+                latitude=48.8567,
+                longitude=2.3524,
+                availability="available",
+                is_active=True,
+            )
+        )
+        db.session.commit()
+        admin_id = ops_admin.id
+
+    _login_admin(client, app, _admin_stub(admin_id))
+    response = client.get("/admin/api/professionals")
+    assert response.status_code == 200
+    payload = response.get_json()
+
+    assert payload["status"] == "ok"
+    assert isinstance(payload["professionals"], list)
+    assert "meta" in payload
+    assert "territories" in payload
+    assert payload["territorial_contract"]["version"] == "pilotage-v1"
+    assert payload["professionals"][0]["full_name"] == "Visible Pro"
+    assert payload["professionals"][0]["city"] == "Paris"
+
+
+def test_admin_professionals_api_territories_respect_tenant_scope(client, app):
+    with app.app_context():
+        structure_a = _make_structure(name="Pro Scope Alpha", slug="pro-scope-alpha")
+        structure_b = _make_structure(name="Pro Scope Beta", slug="pro-scope-beta")
+        ops_admin = _make_ops_admin(
+            username="pro_scope_ops",
+            email="pro_scope_ops@test.local",
+            structure_id=structure_a.id,
+        )
+        db.session.add_all(
+            [
+                Intervenant(
+                    structure_id=structure_a.id,
+                    name="Alpha Pro",
+                    actor_type="social_worker",
+                    email="alpha-pro@test.local",
+                    location="Paris || 10 Rue A",
+                    latitude=48.8567,
+                    longitude=2.3524,
+                    availability="available",
+                    is_active=True,
+                ),
+                Intervenant(
+                    structure_id=structure_b.id,
+                    name="Beta Pro",
+                    actor_type="social_worker",
+                    email="beta-pro@test.local",
+                    location="Lyon || 10 Rue B",
+                    latitude=45.7641,
+                    longitude=4.8358,
+                    availability="available",
+                    is_active=True,
+                ),
+            ]
+        )
+        db.session.commit()
+        admin_id = ops_admin.id
+
+    _login_admin(client, app, _admin_stub(admin_id))
+    response = client.get("/admin/api/professionals")
+    assert response.status_code == 200
+    payload = response.get_json()
+
+    visible_cities = {row["city"] for row in payload["territories"]}
+    assert "Paris" in visible_cities
+    assert "Lyon" not in visible_cities
+
+
+def test_admin_professionals_api_returns_empty_territories_when_no_visible_data(client, app):
+    with app.app_context():
+        structure = _make_structure(name="Pro Empty Alpha", slug="pro-empty-alpha")
+        ops_admin = _make_ops_admin(
+            username="pro_empty_ops",
+            email="pro_empty_ops@test.local",
+            structure_id=structure.id,
+        )
+        db.session.commit()
+        admin_id = ops_admin.id
+
+    _login_admin(client, app, _admin_stub(admin_id))
+    response = client.get("/admin/api/professionals")
+    assert response.status_code == 200
+    payload = response.get_json()
+
+    assert payload["professionals"] == []
+    assert payload["territories"] == []
+
+
+def test_admin_professionals_api_city_normalization_is_consistent(client, app):
+    with app.app_context():
+        structure = _make_structure(name="Pro Variant Alpha", slug="pro-variant-alpha")
+        ops_admin = _make_ops_admin(
+            username="pro_variant_ops",
+            email="pro_variant_ops@test.local",
+            structure_id=structure.id,
+        )
+        db.session.add(
+            Intervenant(
+                structure_id=structure.id,
+                name="Variant Pro",
+                actor_type="social_worker",
+                email="variant-pro@test.local",
+                location="Saint Denis || 10 Rue A",
+                latitude=48.9363,
+                longitude=2.3575,
+                availability="available",
+                is_active=True,
+            )
+        )
+        db.session.commit()
+        admin_id = ops_admin.id
+
+    _login_admin(client, app, _admin_stub(admin_id))
+    response = client.get("/admin/api/professionals")
+    assert response.status_code == 200
+    payload = response.get_json()
+
+    assert len(payload["territories"]) == 1
+    territory = payload["territories"][0]
+    assert territory["city"] == "Saint Denis"
+    assert territory["available_intervenants"] == 1
