@@ -1499,6 +1499,83 @@
     </div>
   </section>
 
+  <section class="hc-home-premium__section hc-home-premium__section--network" aria-labelledby="hc-home-network-title">
+    <div class="hc-home-premium__network-card">
+      <div class="hc-home-premium__section-head hc-home-premium__section-head--compact">
+        <p>{{ _('Coordination territoriale') }}</p>
+        <h2 id="hc-home-network-title">{{ _('Infrastructure de coordination territoriale') }}</h2>
+        <p>{{ _('HelpChain ne fusionne pas les systemes internes. La plateforme organise une continuite operationnelle entre structures, avec circulation maitrisee, relais inter-structures et suivi partage sous controle.') }}</p>
+      </div>
+
+      <div class="hc-home-premium__network-layout">
+        <div class="hc-home-premium__network-copy">
+          <div class="hc-home-premium__network-copyStack">
+            <div class="hc-home-premium__network-copyCard">
+              <span>{{ _('Circulation maitrisee') }}</span>
+              <p>{{ _('Chaque acteur voit le contexte utile a son intervention, sans ouverture globale du suivi interne des autres structures.') }}</p>
+            </div>
+            <div class="hc-home-premium__network-copyCard">
+              <span>{{ _('Relais inter-structures') }}</span>
+              <p>{{ _('Une orientation, une validation ou un retour partenaire restent exploitables dans une meme trame operationnelle.') }}</p>
+            </div>
+            <div class="hc-home-premium__network-copyCard">
+              <span>{{ _('Gouvernance distribuee') }}</span>
+              <p>{{ _('Le territoire gagne un tissu de coordination sobre, lisible et compatible avec les perimetres institutionnels existants.') }}</p>
+            </div>
+          </div>
+          <div class="hc-home-premium__network-copyNote">{{ _('Les structures gardent leur autonomie. HelpChain rend la continuite multi-acteurs plus stable, plus lisible et plus pilotable.') }}</div>
+        </div>
+
+        <div class="hc-home-premium__network-fabric" aria-label="{{ _('Carte de coordination territoriale HelpChain') }}">
+          <article class="hc-home-premium__fabric-node hc-home-premium__fabric-node--territory">
+            <span class="hc-home-premium__fabric-nodeLabel">{{ _('Reseau territorial') }}</span>
+            <strong>{{ _('Orchestration territoriale') }}</strong>
+            <p>{{ _('Cadre de lecture commun pour piloter la continuite entre acteurs habilites.') }}</p>
+          </article>
+
+          <article class="hc-home-premium__fabric-node hc-home-premium__fabric-node--hub">
+            <span class="hc-home-premium__fabric-nodeLabel">{{ _('Coordination HelpChain') }}</span>
+            <strong>{{ _('Relais, regles et circulation maitrisee') }}</strong>
+            <p>{{ _('La plateforme distribue les informations utiles, les validations et les retours selon les droits, les structures et les etapes actives.') }}</p>
+          </article>
+
+          <article class="hc-home-premium__fabric-node hc-home-premium__fabric-node--followup">
+            <span class="hc-home-premium__fabric-nodeLabel">{{ _('Suivi operationnel') }}</span>
+            <strong>{{ _('Continuite visible sous controle') }}</strong>
+            <p>{{ _('Relances, statuts, points de reprise et historique partage restent lisibles sans ouvrir un acces universel.') }}</p>
+          </article>
+
+          <div class="hc-home-premium__fabric-actorsWrap">
+            <p class="hc-home-premium__fabric-actorsLabel">{{ _('Relais multi-acteurs') }}</p>
+            <div class="hc-home-premium__fabric-actors">
+              <article class="hc-home-premium__fabric-node hc-home-premium__fabric-node--actor">
+                <span class="hc-home-premium__fabric-nodeLabel">{{ _('CCAS / collectivite') }}</span>
+                <strong>{{ _('Pilotage local') }}</strong>
+                <p>{{ _('Porte la responsabilite publique et les arbitrages de coordination.') }}</p>
+              </article>
+              <article class="hc-home-premium__fabric-node hc-home-premium__fabric-node--actor">
+                <span class="hc-home-premium__fabric-nodeLabel">{{ _('Association') }}</span>
+                <strong>{{ _('Execution partenaire') }}</strong>
+                <p>{{ _('Recoit le relais utile, traite son action et renvoie un retour trace.') }}</p>
+              </article>
+              <article class="hc-home-premium__fabric-node hc-home-premium__fabric-node--actor">
+                <span class="hc-home-premium__fabric-nodeLabel">{{ _('Structure partenaire') }}</span>
+                <strong>{{ _('Intervention reliee') }}</strong>
+                <p>{{ _('Contribue dans son perimetre sans exposition inutile aux autres circuits internes.') }}</p>
+              </article>
+            </div>
+          </div>
+
+          <ul class="hc-home-premium__fabric-tags" aria-label="{{ _('Principes de gouvernance distribuee') }}">
+            <li>{{ _('Visibilite utile') }}</li>
+            <li>{{ _('Perimetres distincts') }}</li>
+            <li>{{ _('Historique partage sous controle') }}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="hc-home-premium__section hc-home-premium__section--governance" aria-labelledby="hc-home-governance-title">
     <div class="hc-home-premium__outcomes-card hc-home-premium__outcomes-card--governance">
       <div class="hc-home-premium__section-head hc-home-premium__section-head--compact">
@@ -1516,6 +1593,7 @@
       </ul>
 </div>
   </section>
+
   <section class="hc-home-premium__section hc-home-premium__section--buyer-hooks" aria-labelledby="hc-home-buyer-hooks-title">
     <div class="hc-home-premium__section-head hc-home-premium__section-head--compact">
       <p>{{ _('POUR QUI') }}</p>
@@ -1735,7 +1813,4 @@
   </section>
 </main>
 {% endblock %}
-
-
-
 
