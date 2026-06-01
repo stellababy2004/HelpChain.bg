@@ -510,3 +510,266 @@ def test_admin_professionals_api_city_normalization_is_consistent(client, app):
     territory = payload["territories"][0]
     assert territory["city"] == "Saint Denis"
     assert territory["available_intervenants"] == 1
+
+
+def test_admin_command_map_keeps_existing_fields_and_adds_territories(client, app):
+    with app.app_context():
+        structure = _make_structure(name="Command Contract Alpha", slug="command-contract-alpha")
+        ops_admin = _make_ops_admin(
+            username="command_contract_ops",
+            email="command_contract_ops@test.local",
+            structure_id=structure.id,
+        )
+        user = User(
+            username="command_contract_user",
+            email="command_contract_user@test.local",
+            password_hash="x",
+            role="requester",
+            is_active=True,
+            structure_id=structure.id,
+        )
+        db.session.add(user)
+        db.session.flush()
+        req = _make_request(
+            title="command contract request",
+            user_id=user.id,
+            structure_id=structure.id,
+            city="Paris",
+            latitude=48.8566,
+            longitude=2.3522,
+            risk_score=85,
+        )
+        db.session.add_all(
+            [
+                Case(
+                    request_id=req.id,
+                    structure_id=structure.id,
+                    status="new",
+                    priority="high",
+                    risk_score=85,
+                    latitude=48.8566,
+                    longitude=2.3522,
+                    created_at=datetime.now(UTC),
+                    updated_at=datetime.now(UTC),
+                ),
+                Intervenant(
+                    structure_id=structure.id,
+                    name="Command Pro",
+                    actor_type="social_worker",
+                    email="command-pro@test.local",
+                    location="Paris || 10 Rue A",
+                    latitude=48.8567,
+                    longitude=2.3524,
+                    availability="available",
+                    is_active=True,
+                ),
+            ]
+        )
+        db.session.commit()
+        admin_id = ops_admin.id
+
+    _login_admin(client, app, _admin_stub(admin_id))
+    response = client.get("/admin/api/command-map")
+    assert response.status_code == 200
+    payload = response.get_json()
+
+    assert payload["status"] == "ok"
+    assert "generated_at" in payload
+    assert "meta" in payload
+    assert "default_center" in payload
+    assert "filters" in payload
+    assert "counters" in payload
+    assert "layers" in payload
+    assert "territories" in payload
+    assert payload["territorial_contract"]["version"] == "pilotage-v1"
+    assert payload["layers"]["situations"]
+    assert payload["layers"]["intervenants"]
+
+
+def test_admin_command_map_territories_respect_tenant_scope(client, app):
+    with app.app_context():
+        structure_a = _make_structure(name="Command Scope Alpha", slug="command-scope-alpha")
+        structure_b = _make_structure(name="Command Scope Beta", slug="command-scope-beta")
+        ops_admin = _make_ops_admin(
+            username="command_scope_ops",
+            email="command_scope_ops@test.local",
+            structure_id=structure_a.id,
+        )
+        user_a = User(
+            username="command_scope_user_a",
+            email="command_scope_user_a@test.local",
+            password_hash="x",
+            role="requester",
+            is_active=True,
+            structure_id=structure_a.id,
+        )
+        user_b = User(
+            username="command_scope_user_b",
+            email="command_scope_user_b@test.local",
+            password_hash="x",
+            role="requester",
+            is_active=True,
+            structure_id=structure_b.id,
+        )
+        db.session.add_all([user_a, user_b])
+        db.session.flush()
+        req_a = _make_request(
+            title="command scope request a",
+            user_id=user_a.id,
+            structure_id=structure_a.id,
+            city="Paris",
+            latitude=48.8566,
+            longitude=2.3522,
+            risk_score=75,
+        )
+        req_b = _make_request(
+            title="command scope request b",
+            user_id=user_b.id,
+            structure_id=structure_b.id,
+            city="Lyon",
+            latitude=45.7640,
+            longitude=4.8357,
+            risk_score=88,
+        )
+        db.session.add_all(
+            [
+                Case(
+                    request_id=req_a.id,
+                    structure_id=structure_a.id,
+                    status="new",
+                    risk_score=75,
+                    latitude=48.8566,
+                    longitude=2.3522,
+                    created_at=datetime.now(UTC),
+                    updated_at=datetime.now(UTC),
+                ),
+                Case(
+                    request_id=req_b.id,
+                    structure_id=structure_b.id,
+                    status="new",
+                    risk_score=88,
+                    latitude=45.7640,
+                    longitude=4.8357,
+                    created_at=datetime.now(UTC),
+                    updated_at=datetime.now(UTC),
+                ),
+                Intervenant(
+                    structure_id=structure_a.id,
+                    name="Command Alpha Pro",
+                    actor_type="social_worker",
+                    email="command-alpha-pro@test.local",
+                    location="Paris || 10 Rue A",
+                    latitude=48.8567,
+                    longitude=2.3524,
+                    availability="available",
+                    is_active=True,
+                ),
+                Intervenant(
+                    structure_id=structure_b.id,
+                    name="Command Beta Pro",
+                    actor_type="social_worker",
+                    email="command-beta-pro@test.local",
+                    location="Lyon || 10 Rue B",
+                    latitude=45.7641,
+                    longitude=4.8358,
+                    availability="available",
+                    is_active=True,
+                ),
+            ]
+        )
+        db.session.commit()
+        admin_id = ops_admin.id
+
+    _login_admin(client, app, _admin_stub(admin_id))
+    response = client.get("/admin/api/command-map")
+    assert response.status_code == 200
+    payload = response.get_json()
+
+    visible_cities = {row["city"] for row in payload["territories"]}
+    assert "Paris" in visible_cities
+    assert "Lyon" not in visible_cities
+
+
+def test_admin_command_map_returns_empty_territories_when_no_visible_data(client, app):
+    with app.app_context():
+        structure = _make_structure(name="Command Empty Alpha", slug="command-empty-alpha")
+        ops_admin = _make_ops_admin(
+            username="command_empty_ops",
+            email="command_empty_ops@test.local",
+            structure_id=structure.id,
+        )
+        db.session.commit()
+        admin_id = ops_admin.id
+
+    _login_admin(client, app, _admin_stub(admin_id))
+    response = client.get("/admin/api/command-map")
+    assert response.status_code == 200
+    payload = response.get_json()
+
+    assert payload["territories"] == []
+
+
+def test_admin_command_map_city_normalization_is_consistent(client, app):
+    with app.app_context():
+        structure = _make_structure(name="Command Variant Alpha", slug="command-variant-alpha")
+        ops_admin = _make_ops_admin(
+            username="command_variant_ops",
+            email="command_variant_ops@test.local",
+            structure_id=structure.id,
+        )
+        user = User(
+            username="command_variant_user",
+            email="command_variant_user@test.local",
+            password_hash="x",
+            role="requester",
+            is_active=True,
+            structure_id=structure.id,
+        )
+        db.session.add(user)
+        db.session.flush()
+        req = _make_request(
+            title="command variant request",
+            user_id=user.id,
+            structure_id=structure.id,
+            city="Saint-Denis",
+            latitude=48.9362,
+            longitude=2.3574,
+            risk_score=60,
+        )
+        db.session.add_all(
+            [
+                Case(
+                    request_id=req.id,
+                    structure_id=structure.id,
+                    status="in_progress",
+                    risk_score=60,
+                    latitude=48.9362,
+                    longitude=2.3574,
+                    created_at=datetime.now(UTC),
+                    updated_at=datetime.now(UTC),
+                ),
+                Intervenant(
+                    structure_id=structure.id,
+                    name="Command Variant Pro",
+                    actor_type="social_worker",
+                    email="command-variant-pro@test.local",
+                    location="Saint Denis || 10 Rue A",
+                    latitude=48.9363,
+                    longitude=2.3575,
+                    availability="available",
+                    is_active=True,
+                ),
+            ]
+        )
+        db.session.commit()
+        admin_id = ops_admin.id
+
+    _login_admin(client, app, _admin_stub(admin_id))
+    response = client.get("/admin/api/command-map")
+    assert response.status_code == 200
+    payload = response.get_json()
+
+    assert len(payload["territories"]) == 1
+    territory = payload["territories"][0]
+    assert territory["city"] == "Saint-Denis"
+    assert territory["available_intervenants"] == 1

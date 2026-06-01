@@ -16,6 +16,9 @@ from backend.helpchain_backend.src.models import (
     Request,
 )
 from backend.helpchain_backend.src.services.early_warning import detect_ews
+from backend.helpchain_backend.src.services.pilotage_territorial_maps import (
+    build_territorial_snapshots,
+)
 from .admin import (
     _assignment_workload_subquery,
     _audience_department_code,
@@ -895,6 +898,54 @@ def _build_command_map_payload() -> dict[str, object]:
     structures = _load_partner_structures(city_points)
     alerts = _load_operational_alerts(city_points, situations)
     pressure = _build_pressure_layers(situations, intervenants, structures, alerts)
+    territorial_professionals = [
+        {
+            "id": item.get("id"),
+            "city": item.get("city"),
+            "latitude": item.get("lat"),
+            "longitude": item.get("lng"),
+            "availability": item.get("assigned_professional"),
+            "profession": item.get("subtitle"),
+            "actor_type": item.get("actor_type"),
+            "workload": 1 if item.get("has_assignment") else 0,
+            "has_exact_coordinates": True,
+            "is_active": item.get("status_key") == "active",
+        }
+        for item in intervenants
+    ]
+    territorial_professionals.extend(
+        {
+            "id": item.get("id"),
+            "city": item.get("city"),
+            "latitude": item.get("lat"),
+            "longitude": item.get("lng"),
+            "availability": "unavailable",
+            "profession": item.get("subtitle"),
+            # Heuristic only: this counts visible partner-structure markers, not
+            # a fully modelled partner topology.
+            "actor_type": item.get("actor_type"),
+            "workload": 0,
+            "has_exact_coordinates": False,
+            "is_active": False,
+        }
+        for item in structures
+    )
+    territories = build_territorial_snapshots(
+        risk_items=[
+            {
+                "city": item.get("city"),
+                "latitude": item.get("lat"),
+                "longitude": item.get("lng"),
+                "risk_level": item.get("risk_level"),
+                "has_assignment": item.get("has_assignment"),
+                "is_stale": item.get("is_stale"),
+                "last_activity": item.get("last_activity_at"),
+                "updated_at": item.get("last_activity_at"),
+            }
+            for item in situations
+        ],
+        professional_items=territorial_professionals,
+    )
 
     counters = {
         "urgent_situations": sum(1 for item in situations if item.get("risk_level") == "critical"),
@@ -919,6 +970,12 @@ def _build_command_map_payload() -> dict[str, object]:
             "pressure": pressure,
             "structures": structures,
             "alerts": alerts,
+        },
+        "territories": territories,
+        "territorial_contract": {
+            "version": "pilotage-v1",
+            "scope": "city",
+            "semantics": "territorial_operational_intelligence",
         },
         "audience_summary": {
             "kpis": (audience_context or {}).get("kpis", {}),
@@ -1016,6 +1073,12 @@ def admin_command_map_api():
                     "pressure": [],
                     "structures": [],
                     "alerts": [],
+                },
+                "territories": [],
+                "territorial_contract": {
+                    "version": "pilotage-v1",
+                    "scope": "city",
+                    "semantics": "territorial_operational_intelligence",
                 },
                 "meta": {
                     "audience_available": False,
