@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+import re
+import unicodedata
+from datetime import UTC, datetime, timedelta
 
 from flask import Blueprint, current_app, jsonify, render_template, request
 from flask_login import current_user
@@ -10,6 +12,10 @@ from sqlalchemy.orm import joinedload
 from backend.extensions import db
 from backend.helpchain_backend.src.models import Case, Request
 from backend.helpchain_backend.src.services.case_risk import score_request_risk
+from backend.helpchain_backend.src.services.pilotage_territorial_maps import (
+    build_territorial_snapshots,
+    load_professional_map_rows,
+)
 from backend.helpchain_backend.src.services.risk_engine import compute_case_risk
 from .admin import (
     _current_structure_id,
@@ -25,6 +31,7 @@ admin_map_bp = Blueprint("admin_map_api", __name__, url_prefix="/admin")
 
 _ACTIVE_CASE_STATUSES = {"new", "open", "triaged", "assigned", "in_progress", "pending"}
 _ACTIVE_REQUEST_STATUSES = {"new", "open", "pending", "in_progress", "assigned", "contacted", "triaged"}
+_STALE_HOURS = 72
 
 
 def _safe_iso(dt) -> str | None:
@@ -39,6 +46,34 @@ def _risk_level_from_score(score: int) -> str:
     if score >= 50:
         return "medium"
     return "low"
+
+
+def _is_stale(value) -> bool:
+    dt = _safe_dt(value)
+    if dt is None:
+        return False
+    return dt <= datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=_STALE_HOURS)
+
+
+def _safe_dt(value) -> datetime | None:
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            return value
+        try:
+            return value.astimezone(UTC).replace(tzinfo=None)
+        except Exception:
+            return value.replace(tzinfo=None)
+    return None
+
+
+def _recommended_action(*, risk_score: int, has_assignment: bool, is_stale: bool) -> str:
+    if int(risk_score or 0) >= 80:
+        return "Prioriser une reprise immediate."
+    if not has_assignment:
+        return "Affecter un responsable operationnel."
+    if is_stale:
+        return "Relancer la situation."
+    return "Poursuivre le suivi."
 
 
 def _valid_coordinates(lat_value, lng_value) -> tuple[float, float] | None:
@@ -77,6 +112,16 @@ def _city_filter_expr(city: str | None):
     )
 
 
+def _normalize_city_match(value: str | None) -> str:
+    text = str(value or "").strip().lower()
+    if not text:
+        return ""
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(ch for ch in text if not unicodedata.combining(ch))
+    text = re.sub(r"[^a-z0-9]+", " ", text)
+    return " ".join(text.split())
+
+
 def _serialize_risk_map_item(case: Case) -> dict[str, object]:
     request_row = getattr(case, "request", None)
     coords = _valid_coordinates(
@@ -94,6 +139,16 @@ def _serialize_risk_map_item(case: Case) -> dict[str, object]:
         or getattr(request_row, "risk_score", None)
         or 0
     )
+    last_activity = (
+        getattr(case, "last_activity_at", None)
+        or getattr(case, "updated_at", None)
+        or getattr(request_row, "updated_at", None)
+        or getattr(request_row, "created_at", None)
+    )
+    has_assignment = bool(
+        getattr(case, "owner_user_id", None) or getattr(case, "assigned_professional_lead_id", None)
+    )
+    stale = _is_stale(last_activity)
     title = (
         getattr(request_row, "title", None)
         or getattr(request_row, "normalized_address", None)
@@ -109,12 +164,18 @@ def _serialize_risk_map_item(case: Case) -> dict[str, object]:
         "risk_score": risk_score,
         "category": str(getattr(request_row, "category", None) or ""),
         "status": str(getattr(case, "status", None) or ""),
-        "updated_at": _safe_iso(
-            getattr(case, "updated_at", None) or getattr(case, "created_at", None)
-        ),
+        "updated_at": _safe_iso(getattr(case, "updated_at", None) or getattr(case, "created_at", None)),
+        "last_activity": _safe_iso(last_activity),
         "city": str(getattr(request_row, "city", None) or ""),
         "source_type": "case",
         "request_id": int(getattr(case, "request_id", 0) or 0),
+        "has_assignment": has_assignment,
+        "is_stale": stale,
+        "recommended_action": _recommended_action(
+            risk_score=risk_score,
+            has_assignment=has_assignment,
+            is_stale=stale,
+        ),
     }
 
 
@@ -130,6 +191,11 @@ def _serialize_request_risk_map_item(req: Request) -> dict[str, object]:
     risk_score = int(
         getattr(req, "risk_score", None) or triage.get("score") or 0
     )
+    last_activity = getattr(req, "updated_at", None) or getattr(req, "created_at", None)
+    has_assignment = bool(
+        getattr(req, "owner_id", None) or getattr(req, "assigned_volunteer_id", None)
+    )
+    stale = _is_stale(last_activity)
     title = (
         getattr(req, "title", None)
         or getattr(req, "normalized_address", None)
@@ -145,12 +211,18 @@ def _serialize_request_risk_map_item(req: Request) -> dict[str, object]:
         "risk_score": risk_score,
         "category": str(getattr(req, "category", None) or ""),
         "status": str(getattr(req, "status", None) or ""),
-        "updated_at": _safe_iso(
-            getattr(req, "updated_at", None) or getattr(req, "created_at", None)
-        ),
+        "updated_at": _safe_iso(last_activity),
+        "last_activity": _safe_iso(last_activity),
         "city": str(getattr(req, "city", None) or ""),
         "source_type": "request",
         "request_id": int(req.id),
+        "has_assignment": has_assignment,
+        "is_stale": stale,
+        "recommended_action": _recommended_action(
+            risk_score=risk_score,
+            has_assignment=has_assignment,
+            is_stale=stale,
+        ),
     }
 
 
@@ -250,10 +322,38 @@ def admin_risk_map_api():
             ),
             reverse=True,
         )
+        structure_scope_id = None
+        if not _is_global_admin():
+            try:
+                structure_scope_id = int(_current_structure_id() or 0) or None
+            except Exception:
+                structure_scope_id = None
+
+        professional_items = load_professional_map_rows(
+            structure_id=structure_scope_id,
+            include_inactive=False,
+        )
+        if selected_city:
+            city_key = _normalize_city_match(selected_city)
+            professional_items = [
+                item
+                for item in professional_items
+                if _normalize_city_match(item.get("city")) == city_key
+            ]
+        territories = build_territorial_snapshots(
+            risk_items=items,
+            professional_items=professional_items,
+        )
         return jsonify(
             {
                 "status": "ok",
                 "items": items,
+                "territories": territories,
+                "territorial_contract": {
+                    "version": "pilotage-v1",
+                    "scope": "city",
+                    "semantics": "territorial_operational_intelligence",
+                },
                 "default_center": {"lat": 46.603354, "lng": 1.888334, "zoom": 6},
                 "generated_at": datetime.now(UTC).replace(tzinfo=None).isoformat(
                     timespec="seconds"
@@ -267,6 +367,7 @@ def admin_risk_map_api():
                 {
                     "status": "error",
                     "items": [],
+                    "territories": [],
                     "message": "risk_map_data_unavailable",
                     "default_center": {"lat": 46.603354, "lng": 1.888334, "zoom": 6},
                 }
