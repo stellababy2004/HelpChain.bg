@@ -1752,42 +1752,138 @@
       </div>
     </div>
   </section>
-  <section class="hc-home-premium__section hc-home-premium__section--trust-layer" aria-labelledby="hc-home-trust-layer-title">
-    <div class="hc-trust-layer">
-      <p class="hc-trust-layer__eyebrow">CADRE DE CONFIANCE</p>
-      <h2 id="hc-home-trust-layer-title" class="hc-trust-layer__title">Une plateforme conçue pour le pilotage institutionnel des structures</h2>
-      <p class="hc-trust-layer__intro">
-        HelpChain est une plateforme de coordination opérationnelle pensée pour des organisations qui doivent garder la maîtrise des accès, des données, des responsabilités et du suivi opérationnel.
-      </p>
-      <div class="hc-trust-layer__grid">
-        <article class="hc-trust-card">
-          <h3 class="hc-trust-card__title">RGPD</h3>
-          <p class="hc-trust-card__text">Une approche alignée avec les exigences de protection des données personnelles et de limitation des accès.</p>
-        </article>
-        <article class="hc-trust-card">
-          <h3 class="hc-trust-card__title">France & Europe</h3>
-          <p class="hc-trust-card__text">Une plateforme conçue et opérée depuis la France, avec une vocation européenne et un cadre d’usage maîtrisé.</p>
-        </article>
-        <article class="hc-trust-card">
-          <h3 class="hc-trust-card__title">Hébergement</h3>
-          <p class="hc-trust-card__text">Une architecture pensée pour un hébergement professionnel, sécurisé et compatible avec les besoins des structures.</p>
-        </article>
-        <article class="hc-trust-card">
-          <h3 class="hc-trust-card__title">Gouvernance</h3>
-          <p class="hc-trust-card__text">Des rôles, habilitations et périmètres de visibilité configurés selon l’organisation réelle.</p>
-        </article>
-        <article class="hc-trust-card">
-          <h3 class="hc-trust-card__title">Traçabilité</h3>
-          <p class="hc-trust-card__text">Un suivi structuré des situations et des actions pour renforcer la continuité et la responsabilité.</p>
-        </article>
-        <article class="hc-trust-card">
-          <h3 class="hc-trust-card__title">Contrôle organisationnel</h3>
-          <p class="hc-trust-card__text">La structure conserve la maîtrise de son périmètre, de ses équipes et de son rythme de déploiement.</p>
-        </article>
+  <section
+    class="hc-home-premium__section hc-home-premium__security-governance"
+    aria-labelledby="hc-home-security-governance-title"
+  >
+    <div class="hc-home-premium__security-shell">
+      <div class="hc-home-premium__security-hero">
+        <div class="hc-home-premium__security-copy">
+          <p class="hc-home-premium__section-kicker">{{ _('Sécurité & gouvernance') }}</p>
+          <h2 id="hc-home-security-governance-title">{{ _('Une infrastructure de coordination conçue pour des environnements institutionnels exigeants') }}</h2>
+          <p class="hc-home-premium__security-lead">
+            {{ _('HelpChain structure la coordination sécurisée entre associations, collectivités, CCAS et partenaires opérationnels avec un cadre lisible de gouvernance opérationnelle, d’accès par rôles, de traçabilité native et de supervision administrative.') }}
+          </p>
+          <p class="hc-home-premium__security-lead hc-home-premium__security-lead--secondary">
+            {{ _('HelpChain s’inscrit dans une approche France-first et européenne de la coordination numérique, avec une logique d’hébergement européen, de gouvernance des accès et de continuité opérationnelle.') }}
+          </p>
+          <ul class="hc-home-premium__security-chips" aria-label="{{ _('Repères de confiance') }}">
+            <li>{{ _('Hébergement européen') }}</li>
+            <li>{{ _('Segmentation des accès') }}</li>
+            <li>{{ _('Journalisation native') }}</li>
+            <li>{{ _('Supervision administrative') }}</li>
+          </ul>
+        </div>
+
+        <aside class="hc-home-premium__security-panel" aria-labelledby="hc-home-security-panel-title">
+          <div class="hc-home-premium__security-panelCard">
+            <div class="hc-home-premium__security-panelHead">
+              <p>{{ _('Cadre de confiance') }}</p>
+              <h3 id="hc-home-security-panel-title">{{ _('Gouvernance, contrôle et stabilité dans une même couche opérationnelle') }}</h3>
+            </div>
+            <ul class="hc-home-premium__security-panelList">
+              <li>
+                <span class="hc-home-premium__security-panelLabel">{{ _('Accès') }}</span>
+                <strong>{{ _('Accès par rôles et cloisonnement par périmètre') }}</strong>
+                <p>{{ _('Chaque acteur intervient selon son rôle, sa structure et son niveau d’habilitation.') }}</p>
+              </li>
+              <li>
+                <span class="hc-home-premium__security-panelLabel">{{ _('Traçabilité') }}</span>
+                <strong>{{ _('Journalisation des actions structurantes') }}</strong>
+                <p>{{ _('Historique exploitable pour le suivi, la relecture et la responsabilité opérationnelle.') }}</p>
+              </li>
+              <li>
+                <span class="hc-home-premium__security-panelLabel">{{ _('Résilience') }}</span>
+                <strong>{{ _('Continuité opérationnelle et stabilité d’exploitation') }}</strong>
+                <p>{{ _('Infrastructure pensée pour un usage durable, administrable et maîtrisé.') }}</p>
+              </li>
+            </ul>
+          </div>
+        </aside>
       </div>
-      <div class="hc-trust-layer__actions">
-        <a class="hc-btn hc-btn--primary btn btn-primary" href="/demo">Demander un accès pilote</a>
-        <a class="hc-btn hc-btn--ghost btn btn-secondary" href="{{ url_for('main.securite') }}">Comprendre la sécurité</a>
+
+      <div class="hc-home-premium__security-grid row g-3 g-xl-4">
+        <div class="col-12 col-md-6 col-xl-4">
+          <article class="hc-home-premium__security-card h-100">
+            <span class="hc-home-premium__security-cardEyebrow">{{ _('Gouvernance') }}</span>
+            <h3>{{ _('Gouvernance opérationnelle intégrée') }}</h3>
+            <p>{{ _('HelpChain organise les responsabilités, les périmètres d’action et la supervision administrative dans un cadre lisible pour les structures multi-acteurs.') }}</p>
+          </article>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+          <article class="hc-home-premium__security-card h-100">
+            <span class="hc-home-premium__security-cardEyebrow">{{ _('Accès') }}</span>
+            <h3>{{ _('Segmentation des accès') }}</h3>
+            <p>{{ _('Les accès sont structurés selon une logique d’accès par rôles afin de limiter l’exposition des informations aux seuls intervenants habilités.') }}</p>
+          </article>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+          <article class="hc-home-premium__security-card h-100">
+            <span class="hc-home-premium__security-cardEyebrow">{{ _('Traçabilité') }}</span>
+            <h3>{{ _('Traçabilité native et journalisation') }}</h3>
+            <p>{{ _('Les événements clés, changements de statut et actions sensibles s’inscrivent dans une logique de journalisation exploitable dans le temps.') }}</p>
+          </article>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+          <article class="hc-home-premium__security-card h-100">
+            <span class="hc-home-premium__security-cardEyebrow">{{ _('Conformité') }}</span>
+            <h3>{{ _('Logique RGPD by design') }}</h3>
+            <p>{{ _('La plateforme privilégie la maîtrise des accès, la minimisation des expositions inutiles et un cadre cohérent avec les attentes de conformité RGPD.') }}</p>
+          </article>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+          <article class="hc-home-premium__security-card h-100">
+            <span class="hc-home-premium__security-cardEyebrow">{{ _('Souveraineté') }}</span>
+            <h3>{{ _('Positionnement France / Europe') }}</h3>
+            <p>{{ _('HelpChain s’inscrit dans une approche de souveraineté numérique avec une attention portée à l’hébergement européen et à une interopérabilité maîtrisée.') }}</p>
+          </article>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+          <article class="hc-home-premium__security-card h-100">
+            <span class="hc-home-premium__security-cardEyebrow">{{ _('Continuité') }}</span>
+            <h3>{{ _('Stabilité et continuité opérationnelle') }}</h3>
+            <p>{{ _('L’infrastructure vise un fonctionnement stable, administrable et durable pour soutenir la coordination quotidienne des acteurs institutionnels.') }}</p>
+          </article>
+        </div>
+      </div>
+
+      <div class="hc-home-premium__security-reassurance" aria-label="{{ _('Points de réassurance') }}">
+        <div class="hc-home-premium__security-reassuranceItem">
+          <strong>{{ _('Coordination sécurisée') }}</strong>
+          <span>{{ _('Partage d’information cadré entre structures et partenaires habilités.') }}</span>
+        </div>
+        <div class="hc-home-premium__security-reassuranceItem">
+          <strong>{{ _('Supervision administrative') }}</strong>
+          <span>{{ _('Visibilité consolidée pour piloter les opérations sans perdre la maîtrise des périmètres.') }}</span>
+        </div>
+        <div class="hc-home-premium__security-reassuranceItem">
+          <strong>{{ _('Interopérabilité maîtrisée') }}</strong>
+          <span>{{ _('Connexion aux workflows métier sans ouvrir un accès généralisé aux données.') }}</span>
+        </div>
+      </div>
+
+      <div class="hc-home-premium__security-cta">
+        <div class="hc-home-premium__security-ctaCard">
+          <div class="hc-home-premium__security-ctaCopy">
+            <p class="hc-home-premium__security-ctaKicker">{{ _('Validation institutionnelle') }}</p>
+            <h3>{{ _('Évaluez le cadre de sécurité et de gouvernance avant déploiement') }}</h3>
+            <p>{{ _('Nous présentons le cadre d’exploitation, les principes de segmentation des accès, la logique RGPD by design et les conditions d’un pilote inter-structures maîtrisé.') }}</p>
+          </div>
+          <div class="hc-home-premium__security-ctaActions">
+            <a
+              class="hc-btn hc-btn--primary btn btn-primary"
+              href="/demo"
+              data-hc-event="home_security_demo_clicked"
+              data-hc-cta="security_governance_demo"
+            >{{ _('Demander une démonstration') }}</a>
+            <a
+              class="hc-btn hc-btn--ghost btn btn-secondary"
+              href="{{ url_for('main.contact') }}"
+              data-hc-event="home_security_contact_clicked"
+              data-hc-cta="security_governance_contact"
+            >{{ _('Parler à un responsable de projet') }}</a>
+          </div>
+        </div>
       </div>
     </div>
   </section>
