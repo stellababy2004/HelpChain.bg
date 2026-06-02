@@ -1759,20 +1759,35 @@
     <div class="hc-home-premium__security-shell">
       <div class="hc-home-premium__security-hero">
         <div class="hc-home-premium__security-copy">
-          <p class="hc-home-premium__section-kicker">{{ _('Sécurité & gouvernance') }}</p>
-          <h2 id="hc-home-security-governance-title">{{ _('Une infrastructure de coordination conçue pour des environnements institutionnels exigeants') }}</h2>
-          <p class="hc-home-premium__security-lead">
-            {{ _('HelpChain structure la coordination sécurisée entre associations, collectivités, CCAS et partenaires opérationnels avec un cadre lisible de gouvernance opérationnelle, d’accès par rôles, de traçabilité native et de supervision administrative.') }}
-          </p>
-          <p class="hc-home-premium__security-lead hc-home-premium__security-lead--secondary">
-            {{ _('HelpChain s’inscrit dans une approche France-first et européenne de la coordination numérique, avec une logique d’hébergement européen, de gouvernance des accès et de continuité opérationnelle.') }}
-          </p>
-          <ul class="hc-home-premium__security-chips" aria-label="{{ _('Repères de confiance') }}">
-            <li>{{ _('Hébergement européen') }}</li>
-            <li>{{ _('Segmentation des accès') }}</li>
-            <li>{{ _('Journalisation native') }}</li>
-            <li>{{ _('Supervision administrative') }}</li>
-          </ul>
+          <div class="hc-home-premium__security-copyMain">
+            <p class="hc-home-premium__section-kicker">{{ _('Sécurité & gouvernance') }}</p>
+            <h2 id="hc-home-security-governance-title">{{ _('Une infrastructure de coordination conçue pour des environnements institutionnels exigeants') }}</h2>
+            <p class="hc-home-premium__security-lead">
+              {{ _('HelpChain structure la coordination sécurisée entre associations, collectivités, CCAS et partenaires opérationnels avec un cadre lisible de gouvernance opérationnelle, d’accès par rôles, de traçabilité native et de supervision administrative.') }}
+            </p>
+            <p class="hc-home-premium__security-lead hc-home-premium__security-lead--secondary">
+              {{ _('HelpChain s’inscrit dans une approche France-first et européenne de la coordination numérique, avec une logique d’hébergement européen, de gouvernance des accès et de continuité opérationnelle.') }}
+            </p>
+            <ul class="hc-home-premium__security-chips" aria-label="{{ _('Repères de confiance') }}">
+              <li>{{ _('Hébergement européen') }}</li>
+              <li>{{ _('Segmentation des accès') }}</li>
+              <li>{{ _('Journalisation native') }}</li>
+              <li>{{ _('Supervision administrative') }}</li>
+            </ul>
+          </div>
+
+          <div class="hc-home-premium__security-copyRail" aria-label="{{ _('Repères de souveraineté et de continuité') }}">
+            <article class="hc-home-premium__security-card hc-home-premium__security-card--compact">
+              <span class="hc-home-premium__security-cardEyebrow">{{ _('Souveraineté') }}</span>
+              <h3>{{ _('Positionnement France / Europe') }}</h3>
+              <p>{{ _('HelpChain s’inscrit dans une approche de souveraineté numérique avec une attention portée à l’hébergement européen et à une interopérabilité maîtrisée.') }}</p>
+            </article>
+            <article class="hc-home-premium__security-card hc-home-premium__security-card--compact">
+              <span class="hc-home-premium__security-cardEyebrow">{{ _('Continuité') }}</span>
+              <h3>{{ _('Stabilité et continuité opérationnelle') }}</h3>
+              <p>{{ _('L’infrastructure vise un fonctionnement stable, administrable et durable pour soutenir la coordination quotidienne des acteurs institutionnels.') }}</p>
+            </article>
+          </div>
         </div>
 
         <aside class="hc-home-premium__security-panel" aria-labelledby="hc-home-security-panel-title">
@@ -1803,46 +1818,32 @@
       </div>
 
       <div class="hc-home-premium__security-grid row g-3 g-xl-4">
-        <div class="col-12 col-md-6 col-xl-4">
+        <div class="col-12 col-md-6">
           <article class="hc-home-premium__security-card h-100">
             <span class="hc-home-premium__security-cardEyebrow">{{ _('Gouvernance') }}</span>
             <h3>{{ _('Gouvernance opérationnelle intégrée') }}</h3>
             <p>{{ _('HelpChain organise les responsabilités, les périmètres d’action et la supervision administrative dans un cadre lisible pour les structures multi-acteurs.') }}</p>
           </article>
         </div>
-        <div class="col-12 col-md-6 col-xl-4">
+        <div class="col-12 col-md-6">
           <article class="hc-home-premium__security-card h-100">
             <span class="hc-home-premium__security-cardEyebrow">{{ _('Accès') }}</span>
             <h3>{{ _('Segmentation des accès') }}</h3>
             <p>{{ _('Les accès sont structurés selon une logique d’accès par rôles afin de limiter l’exposition des informations aux seuls intervenants habilités.') }}</p>
           </article>
         </div>
-        <div class="col-12 col-md-6 col-xl-4">
+        <div class="col-12 col-md-6">
           <article class="hc-home-premium__security-card h-100">
             <span class="hc-home-premium__security-cardEyebrow">{{ _('Traçabilité') }}</span>
             <h3>{{ _('Traçabilité native et journalisation') }}</h3>
             <p>{{ _('Les événements clés, changements de statut et actions sensibles s’inscrivent dans une logique de journalisation exploitable dans le temps.') }}</p>
           </article>
         </div>
-        <div class="col-12 col-md-6 col-xl-4">
+        <div class="col-12 col-md-6">
           <article class="hc-home-premium__security-card h-100">
             <span class="hc-home-premium__security-cardEyebrow">{{ _('Conformité') }}</span>
             <h3>{{ _('Logique RGPD by design') }}</h3>
             <p>{{ _('La plateforme privilégie la maîtrise des accès, la minimisation des expositions inutiles et un cadre cohérent avec les attentes de conformité RGPD.') }}</p>
-          </article>
-        </div>
-        <div class="col-12 col-md-6 col-xl-4">
-          <article class="hc-home-premium__security-card h-100">
-            <span class="hc-home-premium__security-cardEyebrow">{{ _('Souveraineté') }}</span>
-            <h3>{{ _('Positionnement France / Europe') }}</h3>
-            <p>{{ _('HelpChain s’inscrit dans une approche de souveraineté numérique avec une attention portée à l’hébergement européen et à une interopérabilité maîtrisée.') }}</p>
-          </article>
-        </div>
-        <div class="col-12 col-md-6 col-xl-4">
-          <article class="hc-home-premium__security-card h-100">
-            <span class="hc-home-premium__security-cardEyebrow">{{ _('Continuité') }}</span>
-            <h3>{{ _('Stabilité et continuité opérationnelle') }}</h3>
-            <p>{{ _('L’infrastructure vise un fonctionnement stable, administrable et durable pour soutenir la coordination quotidienne des acteurs institutionnels.') }}</p>
           </article>
         </div>
       </div>
