@@ -129,6 +129,11 @@ def _wanted_families(category_code: str | None) -> tuple[str, ...]:
     return CATEGORY_PROFESSION_FAMILIES.get((category_code or "").strip().lower(), ())
 
 
+def eligible_professional_leads_query():
+    status_key = func.trim(func.lower(func.coalesce(ProfessionalLead.status, "")))
+    return ProfessionalLead.query.filter(~status_key.in_(("invalid", "spam")))
+
+
 def _score_contact_quality(lead: ProfessionalLead, high_risk: bool) -> tuple[int, list[str]]:
     score = 0
     reasons: list[str] = []
@@ -203,7 +208,13 @@ def _score_lead(case_row, request_obj, lead: ProfessionalLead, triage: dict) -> 
     }
 
 
-def suggest_professional_leads_for_case(case_row, request_obj, limit: int = 8) -> list[dict]:
+def suggest_professional_leads_for_case(
+    case_row,
+    request_obj,
+    limit: int = 8,
+    *,
+    include_intervenant_fallback: bool = False,
+) -> list[dict]:
     triage = score_request_risk(request_obj)
 
     excluded_lead_ids: set[int] = set()
@@ -226,12 +237,7 @@ def suggest_professional_leads_for_case(case_row, request_obj, limit: int = 8) -
                 pass
 
     leads = (
-        ProfessionalLead.query.filter(
-            or_(
-                ProfessionalLead.status.is_(None),
-                ~func.lower(ProfessionalLead.status).in_(("invalid", "spam")),
-            )
-        )
+        eligible_professional_leads_query()
         .order_by(ProfessionalLead.created_at.desc(), ProfessionalLead.id.desc())
         .limit(500)
         .all()
@@ -262,7 +268,7 @@ def suggest_professional_leads_for_case(case_row, request_obj, limit: int = 8) -
             item["lead"].id,
         )
     )
-    if not scored:
+    if not scored and include_intervenant_fallback:
         intervenants = (
             Intervenant.query.filter(Intervenant.is_active.is_(True))
             .order_by(Intervenant.created_at.desc(), Intervenant.id.desc())

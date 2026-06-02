@@ -303,37 +303,26 @@
           <span class="small text-muted">{{ participants|length }} participants</span>
         </div>
         <div class="hc-participant-grid">
-          {% for p in participants %}
+          {% for item in participant_cards %}
+            {% set p = item.participant %}
             <article class="hc-participant-card">
               <div>
-                {% if p.admin_user %}
+                {% if item.badge == 'Admin' %}
                   <span class="badge bg-dark">Admin</span>
-                {% elif p.professional_lead %}
+                {% elif item.badge == 'Professional' %}
                   <span class="badge bg-primary">Professional</span>
-                {% elif p.user %}
+                {% elif item.badge == 'User' %}
                   <span class="badge bg-secondary">User</span>
-                {% elif p.external_name %}
+                {% elif item.badge == 'External' %}
                   <span class="badge bg-light text-dark">External</span>
                 {% else %}
                   <span class="badge bg-light text-dark">Unknown</span>
                 {% endif %}
               </div>
               <div class="hc-participant-card__body">
-                <strong>
-                  {% if p.admin_user %}
-                    {{ p.admin_user.username or p.admin_user.email or ('Admin #' ~ p.admin_user_id) }}
-                  {% elif p.professional_lead %}
-                    {{ p.professional_lead.full_name or p.professional_lead.email or ('Intervenant #' ~ p.professional_lead_id) }}
-                  {% elif p.user %}
-                    {{ p.user.username or p.user.email or ('User #' ~ p.user_id) }}
-                  {% elif p.external_name %}
-                    {{ p.external_name }}
-                  {% else %}
-                    -
-                  {% endif %}
-                </strong>
-                <span>{{ p.role }} / {{ p.status }}</span>
-                <small>{{ p.added_at|format_datetime_fr }}</small>
+                <strong>{{ item.name }}</strong>
+                <span>{{ item.role }} / {{ item.status }}</span>
+                <small>{{ item.added_at|format_datetime_fr }}</small>
               </div>
             </article>
           {% else %}
@@ -552,7 +541,7 @@
               <label class="form-label">Type de participant</label>
               <select name="participant_type" class="form-select form-select-sm">
                 {% for t in participant_types %}
-                  <option value="{{ t }}">{{ t }}</option>
+                  <option value="{{ t }}" {% if t == 'professional_lead' %}selected{% endif %}>{{ t }}</option>
                 {% endfor %}
               </select>
             </div>

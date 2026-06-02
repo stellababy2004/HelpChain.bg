@@ -6,7 +6,8 @@ from datetime import datetime, timezone
 
 from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user
-from sqlalchemy import func, or_
+from sqlalchemy import func, inspect, or_
+from sqlalchemy.orm import joinedload
 
 from backend.extensions import db
 from ..models import (
@@ -21,7 +22,10 @@ from ..models import (
     Structure,
     User,
 )
-from ..services.case_matching import suggest_professional_leads_for_case
+from ..services.case_matching import (
+    eligible_professional_leads_query,
+    suggest_professional_leads_for_case,
+)
 from ..services.risk_alerts import evaluate_case_alerts
 from ..services.risk_engine import update_case_risk
 from .admin import (
@@ -36,6 +40,7 @@ from .admin import (
     _current_structure_id,
     _is_global_admin,
     _now_utc,
+    _professional_lead_list_query,
     _render_cases_list,
     _scope_requests,
     admin_bp,
@@ -334,6 +339,131 @@ def _owner_allowed_for_current_scope(owner_id: int) -> bool:
     return db.session.query(query.exists()).scalar()
 
 
+def _normalize_case_participant_payload(
+    participant_type: str,
+    *,
+    user_id: int | None = None,
+    admin_user_id: int | None = None,
+    professional_lead_id: int | None = None,
+    external_name: str | None = None,
+) -> tuple[str, int | None, int | None, int | None, str | None]:
+    normalized_type = (participant_type or "").strip().lower()
+    normalized_external_name = (external_name or "").strip() or None
+
+    if professional_lead_id is not None:
+        return "professional_lead", None, None, int(professional_lead_id), None
+    if admin_user_id is not None:
+        return "admin_user", None, int(admin_user_id), None, None
+    if user_id is not None:
+        return normalized_type, int(user_id), None, None, None
+    return normalized_type, None, None, None, normalized_external_name
+
+
+def _load_case_detail_participants(case_id: int) -> list[CaseParticipant]:
+    return (
+        CaseParticipant.query.options(
+            joinedload(CaseParticipant.professional_lead),
+            joinedload(CaseParticipant.admin_user),
+            joinedload(CaseParticipant.user),
+        )
+        .filter(CaseParticipant.case_id == int(case_id))
+        .order_by(CaseParticipant.added_at.desc(), CaseParticipant.id.desc())
+        .populate_existing()
+        .all()
+    )
+
+
+def resolve_professional_participant_display_name(participant: CaseParticipant) -> str:
+    professional = None
+    try:
+        professional = getattr(participant, "professional_lead", None)
+    except Exception:
+        professional = None
+
+    if professional is not None:
+        full_name = (getattr(professional, "full_name", None) or "").strip()
+        if full_name:
+            return full_name
+        email = (getattr(professional, "email", None) or "").strip()
+        if email:
+            return email
+
+    lead_id = getattr(participant, "professional_lead_id", None)
+    if lead_id is None:
+        return "-"
+
+    canonical = (
+        ProfessionalLead.query.filter(ProfessionalLead.id == int(lead_id))
+        .populate_existing()
+        .first()
+    )
+    if canonical is not None:
+        full_name = (getattr(canonical, "full_name", None) or "").strip()
+        if full_name:
+            return full_name
+        email = (getattr(canonical, "email", None) or "").strip()
+        if email:
+            return email
+
+    return f"Intervenant #{lead_id}"
+
+
+def _build_case_participant_cards(participants: list[CaseParticipant]) -> list[dict[str, object]]:
+    cards = []
+    for participant in participants:
+        admin_user = getattr(participant, "admin_user", None)
+        legacy_user = getattr(participant, "user", None)
+        participant_state = inspect(participant)
+        has_professional_identity = bool(getattr(participant, "professional_lead_id", None)) or (
+            "professional_lead" not in participant_state.unloaded
+            and getattr(participant, "professional_lead", None) is not None
+        )
+
+        badge = "Unknown"
+        name = "-"
+        if admin_user:
+            badge = "Admin"
+            name = (
+                getattr(admin_user, "username", None)
+                or getattr(admin_user, "email", None)
+                or f"Admin #{participant.admin_user_id}"
+            )
+        elif legacy_user:
+            badge = "User"
+            name = (
+                getattr(legacy_user, "username", None)
+                or getattr(legacy_user, "email", None)
+                or f"User #{participant.user_id}"
+            )
+        elif has_professional_identity:
+            badge = "Professional"
+            name = resolve_professional_participant_display_name(participant)
+        elif getattr(participant, "external_name", None):
+            badge = "External"
+            name = participant.external_name
+
+        cards.append(
+            {
+                "participant": participant,
+                "badge": badge,
+                "name": name,
+                "role": getattr(participant, "role", None) or "-",
+                "status": getattr(participant, "status", None) or "-",
+                "added_at": getattr(participant, "added_at", None),
+            }
+        )
+    return cards
+
+
+def _case_detail_professional_leads() -> list[ProfessionalLead]:
+    return (
+        _professional_lead_list_query(eligible_professional_leads_query())
+        .order_by(ProfessionalLead.created_at.desc(), ProfessionalLead.id.desc())
+        .limit(500)
+        .all()
+    )
+
+
 def _upsert_case_participant(
     case_id: int,
     participant_type: str,
@@ -344,24 +474,39 @@ def _upsert_case_participant(
     external_name: str | None = None,
     status: str = "active",
 ) -> CaseParticipant:
-    q = CaseParticipant.query.filter(CaseParticipant.case_id == int(case_id))
-    q = q.filter(CaseParticipant.participant_type == participant_type)
+    participant_type, user_id, admin_user_id, professional_lead_id, external_name = (
+        _normalize_case_participant_payload(
+            participant_type,
+            user_id=user_id,
+            admin_user_id=admin_user_id,
+            professional_lead_id=professional_lead_id,
+            external_name=external_name,
+        )
+    )
 
-    if user_id is not None:
+    q = CaseParticipant.query.filter(CaseParticipant.case_id == int(case_id))
+
+    if professional_lead_id is not None:
+        q = q.filter(CaseParticipant.professional_lead_id == int(professional_lead_id))
+    elif user_id is not None:
+        q = q.filter(CaseParticipant.participant_type == participant_type)
         q = q.filter(CaseParticipant.user_id == int(user_id))
     elif admin_user_id is not None:
+        q = q.filter(CaseParticipant.participant_type == participant_type)
         q = q.filter(CaseParticipant.admin_user_id == int(admin_user_id))
-    elif professional_lead_id is not None:
-        q = q.filter(CaseParticipant.professional_lead_id == int(professional_lead_id))
     else:
+        q = q.filter(CaseParticipant.participant_type == participant_type)
         q = q.filter(CaseParticipant.external_name == (external_name or "").strip())
 
     row = q.first()
     if row:
+        row.participant_type = participant_type
+        row.user_id = user_id
+        row.admin_user_id = admin_user_id
+        row.professional_lead_id = professional_lead_id
         row.role = role
         row.status = status
-        if external_name:
-            row.external_name = external_name.strip()
+        row.external_name = external_name
         return row
 
     row = CaseParticipant(
@@ -399,7 +544,12 @@ def admin_case_detail(case_id: int):
     case_row, req = _get_scoped_case_or_404(case_id)
     risk_ai_suggestion = _build_risk_ai_suggestion(req)
     operational_blockages = _build_operational_blockages(req, case_row)
-    suggested_professionals = suggest_professional_leads_for_case(case_row, req, limit=8)
+    suggested_professionals = suggest_professional_leads_for_case(
+        case_row,
+        req,
+        limit=8,
+        include_intervenant_fallback=False,
+    )
     events = (
         CaseEvent.query.filter(CaseEvent.case_id == case_row.id)
         .order_by(CaseEvent.created_at.desc(), CaseEvent.id.desc())
@@ -422,11 +572,8 @@ def admin_case_detail(case_id: int):
     case_copilot = build_case_copilot(case_row, req, events=events, assignments=None)
     grouped_events = _group_events_by_day(events)
    
-    participants = (
-        CaseParticipant.query.filter(CaseParticipant.case_id == case_row.id)
-        .order_by(CaseParticipant.added_at.desc(), CaseParticipant.id.desc())
-        .all()
-    )
+    participants = _load_case_detail_participants(case_row.id)
+    participant_cards = _build_case_participant_cards(participants)
     collaborators = (
         CaseCollaborator.query.filter(CaseCollaborator.case_id == case_row.id)
         .join(Structure, CaseCollaborator.structure_id == Structure.id)
@@ -445,20 +592,7 @@ def admin_case_detail(case_id: int):
         .limit(300)
         .all()
     )
-    professionals = (
-        ProfessionalLead.query.filter(
-            or_(
-                ProfessionalLead.status.is_(None),
-                ~func.lower(ProfessionalLead.status).in_(("invalid", "spam")),
-            )
-        )
-        .order_by(
-            ProfessionalLead.created_at.desc(),
-            ProfessionalLead.id.desc(),
-        )
-        .limit(300)
-        .all()
-    )
+    professionals = _case_detail_professional_leads()
 
     return render_template(
         "admin/case_detail.html",
@@ -475,6 +609,7 @@ def admin_case_detail(case_id: int):
         users=legacy_users,
         professionals=professionals,
         participants=participants,
+        participant_cards=participant_cards,
         collaborators=collaborators,
         case_copilot=case_copilot,
         risk_ai_suggestion=risk_ai_suggestion,
@@ -660,6 +795,7 @@ def admin_case_assign_professional(case_id: int):
             lead_id = int(lead_raw)
         except Exception:
             lead_id = None
+
     if lead_id is not None and not (db.session.get(ProfessionalLead, lead_id) or db.session.get(Intervenant, lead_id)):
         flash("Selected professional lead does not exist.", "warning")
         return redirect(url_for("admin.admin_case_detail", case_id=case_row.id), code=303)
@@ -732,6 +868,8 @@ def admin_case_add_participant(case_id: int):
             lead_id = int(lead_raw)
         except Exception:
             lead_id = None
+    if lead_id is not None:
+        participant_type = "professional_lead"
 
     selected_user = db.session.get(User, user_id) if user_id is not None else None
     if user_id is not None and not selected_user:
@@ -884,4 +1022,3 @@ def admin_case_set_priority(case_id: int):
         flash("Case priority updated.", "success")
 
     return redirect(url_for("admin.admin_case_detail", case_id=case_row.id), code=303)
-
