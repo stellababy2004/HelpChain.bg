@@ -190,6 +190,13 @@
               </td>
               <td>
                 {{ lead_status_badge(l.status) }}
+                {% if insight.get('import_badges') %}
+                  <div class="mt-1 d-flex flex-wrap gap-1">
+                    {% for badge in insight.get('import_badges', []) %}
+                      <span class="badge text-bg-light border">{{ badge }}</span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
                 {% if is_screened %}
                   <div class="hc-proleads-screening">
                     Verification{% if l.notes %} · {{ l.notes|truncate(80, True) }}{% endif %}
@@ -248,7 +255,16 @@
       <article class="hc-card hc-proleads-card">
         <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
           <div class="small text-muted">#{{ l.id }}</div>
-          {{ lead_status_badge(l.status) }}
+          <div class="text-end">
+            {{ lead_status_badge(l.status) }}
+            {% if insight.get('import_badges') %}
+              <div class="mt-1 d-flex flex-wrap justify-content-end gap-1">
+                {% for badge in insight.get('import_badges', []) %}
+                  <span class="badge text-bg-light border">{{ badge }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
         </div>
         <div class="hc-proleads-contact mb-2">
           {% if l.full_name %}

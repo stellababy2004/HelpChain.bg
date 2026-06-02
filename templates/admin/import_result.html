@@ -15,24 +15,28 @@
     </div>
   </div>
 
-  <div class="hc-admin-grid mb-3" style="grid-template-columns: repeat(3, minmax(0, 1fr));">
+  <div class="hc-admin-grid mb-3" style="grid-template-columns: repeat(4, minmax(0, 1fr));">
     <div class="hc-card p-3">
-      <div class="small text-muted text-uppercase">Importés</div>
-      <div class="fs-3 fw-semibold">{{ outcome.imported_count }}</div>
+      <div class="small text-muted text-uppercase">Créés</div>
+      <div class="fs-3 fw-semibold">{{ outcome.created_count }}</div>
     </div>
     <div class="hc-card p-3">
-      <div class="small text-muted text-uppercase">Ignorés</div>
-      <div class="fs-3 fw-semibold">{{ outcome.skipped_count }}</div>
+      <div class="small text-muted text-uppercase">Mis à jour</div>
+      <div class="fs-3 fw-semibold">{{ outcome.updated_count }}</div>
     </div>
     <div class="hc-card p-3">
-      <div class="small text-muted text-uppercase">Erreurs</div>
-      <div class="fs-3 fw-semibold">{{ outcome.error_count }}</div>
+      <div class="small text-muted text-uppercase">Doublons ignorés</div>
+      <div class="fs-3 fw-semibold">{{ outcome.skipped_duplicate_count }}</div>
+    </div>
+    <div class="hc-card p-3">
+      <div class="small text-muted text-uppercase">Rejetés</div>
+      <div class="fs-3 fw-semibold">{{ outcome.rejected_count }}</div>
     </div>
   </div>
 
   <div class="hc-card p-3">
     {% if outcome.errors %}
-      <div class="mb-2 fw-semibold">Détails des erreurs</div>
+      <div class="mb-2 fw-semibold">Détails des rejets</div>
       <ul class="mb-0">
         {% for item in outcome.errors %}
           <li>Ligne {{ item.row_number }} — {{ item.message }}</li>
@@ -40,7 +44,7 @@
       </ul>
     {% else %}
       <div class="hc-empty-state hc-empty-state--compact">
-        <div class="hc-empty-state__title">Aucune erreur bloquante</div>
+        <div class="hc-empty-state__title">Aucun rejet bloquant</div>
         <div class="hc-empty-state__text">Le lot a été traité sans incident bloquant.</div>
       </div>
     {% endif %}

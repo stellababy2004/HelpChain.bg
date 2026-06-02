@@ -21,7 +21,20 @@ IMPORT_ROW_STATUS_SKIPPED = "skipped"
 IMPORT_ROW_STATUS_VALID = "valid"
 IMPORT_ROW_STATUS_WARNING = "warning"
 IMPORT_ROW_STATUS_REJECTED = "rejected"
+IMPORT_RESULT_CREATED = "created"
+IMPORT_RESULT_UPDATED = "updated"
+IMPORT_RESULT_SKIPPED_DUPLICATE = "skipped_duplicate"
+IMPORT_RESULT_REJECTED = "rejected"
 MIN_SYNTHETIC_MEANINGFUL_FIELDS = 2
+ENRICHABLE_IMPORT_FIELDS = (
+    "full_name",
+    "phone",
+    "city",
+    "profession",
+    "organization",
+    "availability",
+    "message",
+)
 
 IMPORTABLE_FIELDS = (
     "full_name",
@@ -50,11 +63,11 @@ SOURCE_LABELS = {
     IMPORT_SOURCE_CSV: "CSV",
 }
 REJECTION_REASON_LABELS = {
+    "empty_row": "Ligne vide ou inexploitable",
     "missing_contact_identity": "Identite de contact insuffisante",
     "sentence_like_name": "Nom semblable a une phrase ou a un titre",
     "placeholder_organization": "Organisation absente ou generique",
     "insufficient_fields_for_synthetic_email": "Informations insuffisantes pour creer un contact sans email",
-    "duplicate_email": "Email deja present",
     "invalid_email": "Email invalide",
 }
 
@@ -139,12 +152,10 @@ class PreviewPayload:
     mapping: dict[str, str]
     sample_rows: list[PreviewRow]
     rows_detected: int
-    valid_rows: int
-    warning_rows: int
+    created_rows: int
+    updated_rows: int
+    skipped_duplicate_rows: int
     rejected_rows: int
-    skipped_rows: int
-    skipped_empty_rows: int
-    duplicate_rows: int
     preview_errors: list[str]
     rejection_reasons: list[tuple[str, int]]
 
@@ -163,11 +174,31 @@ class ImportRowResult:
 
 
 @dataclass(slots=True)
+class ImportPlan:
+    mode: str
+    updated_fields: list[str]
+    previous_values: dict[str, str | None]
+
+
+@dataclass(slots=True)
 class ImportOutcome:
-    imported_count: int
-    skipped_count: int
-    error_count: int
+    created_count: int
+    updated_count: int
+    skipped_duplicate_count: int
+    rejected_count: int
     errors: list[dict[str, object]]
+
+    @property
+    def imported_count(self) -> int:
+        return int(self.created_count + self.updated_count)
+
+    @property
+    def skipped_count(self) -> int:
+        return int(self.skipped_duplicate_count)
+
+    @property
+    def error_count(self) -> int:
+        return int(self.rejected_count)
 
 
 def available_target_options() -> list[tuple[str, str]]:
@@ -285,18 +316,15 @@ def build_preview(
     parsed_file: ParsedImportFile,
     *,
     mapping: dict[str, str],
-    existing_emails: set[str] | None = None,
+    existing_leads_by_email: dict[str, object] | None = None,
     batch_id: int = 0,
 ) -> PreviewPayload:
-    existing_emails = {item.strip().lower() for item in (existing_emails or set()) if item}
-    seen_emails = set(existing_emails)
+    lead_index = build_existing_lead_index(existing_leads_by_email or {})
     rows_detected = 0
-    valid_rows = 0
-    warning_rows = 0
+    created_rows = 0
+    updated_rows = 0
+    skipped_duplicate_rows = 0
     rejected_rows = 0
-    skipped_rows = 0
-    skipped_empty_rows = 0
-    duplicate_rows = 0
     preview_errors: list[str] = []
     sample_rows: list[PreviewRow] = []
     rejection_counts: dict[str, int] = {}
@@ -307,29 +335,37 @@ def build_preview(
             mapping=mapping,
             batch_id=batch_id,
             row_number=index,
-            known_emails=seen_emails,
         )
-        if result.is_empty:
-            skipped_empty_rows += 1
-            skipped_rows += 1
-            continue
-
         rows_detected += 1
-        if result.status == IMPORT_ROW_STATUS_VALID:
-            valid_rows += 1
-            seen_emails.add(result.normalized_email)
-        elif result.status == IMPORT_ROW_STATUS_WARNING:
-            warning_rows += 1
-            seen_emails.add(result.normalized_email)
-        elif result.status == IMPORT_ROW_STATUS_REJECTED:
+        plan = plan_import_row(result, lead_index.get(result.normalized_email))
+        row_messages = list(result.warnings)
+        if plan.mode == IMPORT_RESULT_CREATED:
+            created_rows += 1
+            lead_index[result.normalized_email] = apply_import_plan_to_snapshot(
+                lead_index.get(result.normalized_email),
+                result.payload,
+                plan,
+            )
+        elif plan.mode == IMPORT_RESULT_UPDATED:
+            updated_rows += 1
+            row_messages.append(
+                "Champs mis a jour: "
+                + ", ".join(IMPORTABLE_FIELD_LABELS.get(field, field) for field in plan.updated_fields)
+            )
+            lead_index[result.normalized_email] = apply_import_plan_to_snapshot(
+                lead_index.get(result.normalized_email),
+                result.payload,
+                plan,
+            )
+        elif plan.mode == IMPORT_RESULT_SKIPPED_DUPLICATE:
+            skipped_duplicate_rows += 1
+            row_messages.append("Doublon detecte sans nouveau champ exploitable")
+        else:
             rejected_rows += 1
-            skipped_rows += 1
-            if result.is_duplicate:
-                duplicate_rows += 1
             for reason_code in result.reason_codes:
                 rejection_counts[reason_code] = rejection_counts.get(reason_code, 0) + 1
 
-        for item in [*result.warnings, *result.errors]:
+        for item in [*row_messages, *result.errors]:
             preview_errors.append(f"Ligne {index}: {item}")
 
         if len(sample_rows) < PREVIEW_SAMPLE_LIMIT:
@@ -337,8 +373,8 @@ def build_preview(
                 PreviewRow(
                     row_number=index,
                     values={header: row.get(header, "") for header in parsed_file.headers},
-                    status=result.status,
-                    warnings=[*result.warnings, *result.errors],
+                    status=plan.mode,
+                    warnings=[*row_messages, *result.errors],
                     reasons=[rejection_reason_label(code) for code in result.reason_codes],
                 )
             )
@@ -348,12 +384,10 @@ def build_preview(
         mapping=sanitize_mapping(parsed_file.headers, mapping),
         sample_rows=sample_rows,
         rows_detected=rows_detected,
-        valid_rows=valid_rows,
-        warning_rows=warning_rows,
+        created_rows=created_rows,
+        updated_rows=updated_rows,
+        skipped_duplicate_rows=skipped_duplicate_rows,
         rejected_rows=rejected_rows,
-        skipped_rows=skipped_rows,
-        skipped_empty_rows=skipped_empty_rows,
-        duplicate_rows=duplicate_rows,
         preview_errors=preview_errors[:MAX_ERROR_ITEMS],
         rejection_reasons=sorted(
             (
@@ -371,9 +405,7 @@ def normalize_import_row(
     mapping: dict[str, str],
     batch_id: int,
     row_number: int,
-    known_emails: set[str] | None = None,
 ) -> ImportRowResult:
-    known_emails = {item.strip().lower() for item in (known_emails or set()) if item}
     payload = {field_name: "" for field_name in IMPORTABLE_FIELDS}
     warnings: list[str] = []
     errors: list[str] = []
@@ -390,13 +422,13 @@ def normalize_import_row(
     is_empty = not any(payload.values())
     if is_empty:
         return ImportRowResult(
-            is_empty=True,
+            is_empty=False,
             is_valid=False,
             is_duplicate=False,
-            status=IMPORT_ROW_STATUS_SKIPPED,
+            status=IMPORT_ROW_STATUS_REJECTED,
             warnings=[],
-            errors=[],
-            reason_codes=[],
+            errors=["Ligne vide ou sans donnees exploitables"],
+            reason_codes=["empty_row"],
             payload=payload,
             normalized_email="",
         )
@@ -466,21 +498,16 @@ def normalize_import_row(
         payload["profession"] = DEFAULT_PROFESSION
 
     normalized_email = email_value.strip().lower()
-    is_duplicate = normalized_email in known_emails
-    if is_duplicate:
-        errors.append("Doublon email, ligne ignoree a l'import")
-        reason_codes.append("duplicate_email")
-
     status = IMPORT_ROW_STATUS_VALID
-    if errors or is_duplicate:
+    if errors:
         status = IMPORT_ROW_STATUS_REJECTED
     elif warnings:
         status = IMPORT_ROW_STATUS_WARNING
 
     return ImportRowResult(
         is_empty=False,
-        is_valid=not errors and not is_duplicate,
-        is_duplicate=is_duplicate,
+        is_valid=not errors,
+        is_duplicate=False,
         status=status,
         warnings=warnings,
         errors=errors,
@@ -537,14 +564,22 @@ def import_professional_leads(
     parsed_file: ParsedImportFile,
     mapping: dict[str, str],
     batch_id: int,
-    existing_emails: set[str],
+    existing_leads_by_email: dict[str, object],
     create_row,
+    update_row,
+    record_activity=None,
+    source_filename: str | None = None,
 ) -> ImportOutcome:
-    imported_count = 0
-    skipped_count = 0
-    error_count = 0
+    created_count = 0
+    updated_count = 0
+    skipped_duplicate_count = 0
+    rejected_count = 0
     errors: list[dict[str, object]] = []
-    seen_emails = {item.strip().lower() for item in existing_emails if item}
+    lead_index = {
+        email: lead
+        for email, lead in (existing_leads_by_email or {}).items()
+        if str(email or "").strip()
+    }
 
     for index, row in enumerate(parsed_file.rows, start=1):
         result = normalize_import_row(
@@ -552,14 +587,10 @@ def import_professional_leads(
             mapping=mapping,
             batch_id=batch_id,
             row_number=index,
-            known_emails=seen_emails,
         )
-        if result.is_empty:
-            skipped_count += 1
-            continue
-        if result.status == IMPORT_ROW_STATUS_REJECTED:
-            skipped_count += 1
-            error_count += 1
+        plan = plan_import_row(result, lead_index.get(result.normalized_email))
+        if plan.mode == IMPORT_RESULT_REJECTED:
+            rejected_count += 1
             if len(errors) < MAX_ERROR_ITEMS:
                 errors.append(
                     {
@@ -571,22 +602,124 @@ def import_professional_leads(
             continue
 
         try:
-            create_row(result.payload)
+            if plan.mode == IMPORT_RESULT_CREATED:
+                lead = create_row(result.payload)
+                created_count += 1
+            elif plan.mode == IMPORT_RESULT_UPDATED:
+                lead = update_row(
+                    lead_index[result.normalized_email],
+                    result.payload,
+                    updated_fields=plan.updated_fields,
+                )
+                updated_count += 1
+            else:
+                lead = lead_index[result.normalized_email]
+                skipped_duplicate_count += 1
         except Exception as exc:
-            error_count += 1
+            rejected_count += 1
             if len(errors) < MAX_ERROR_ITEMS:
                 errors.append({"row_number": index, "message": str(exc)})
             continue
 
-        imported_count += 1
-        seen_emails.add(result.normalized_email)
+        if record_activity and getattr(lead, "id", None):
+            record_activity(
+                lead,
+                action=f"import_{plan.mode}",
+                payload={
+                    "import_batch_id": int(batch_id),
+                    "source_filename": source_filename or "",
+                    "imported_at": "",
+                    "updated_fields": list(plan.updated_fields),
+                    "previous_values": dict(plan.previous_values),
+                    "email": result.normalized_email,
+                },
+            )
+
+        lead_index[result.normalized_email] = lead
 
     return ImportOutcome(
-        imported_count=imported_count,
-        skipped_count=skipped_count,
-        error_count=error_count,
+        created_count=created_count,
+        updated_count=updated_count,
+        skipped_duplicate_count=skipped_duplicate_count,
+        rejected_count=rejected_count,
         errors=errors,
     )
+
+
+def build_existing_lead_index(existing_leads_by_email: dict[str, object]) -> dict[str, dict[str, object]]:
+    output: dict[str, dict[str, object]] = {}
+    for email, lead in (existing_leads_by_email or {}).items():
+        normalized_email = _normalize_email(email)
+        if not normalized_email:
+            continue
+        output[normalized_email] = snapshot_existing_lead(lead)
+    return output
+
+
+def snapshot_existing_lead(lead: object | None) -> dict[str, object]:
+    if lead is None:
+        return {}
+    if isinstance(lead, dict):
+        source = lead
+        get_value = lambda key: source.get(key)
+    else:
+        get_value = lambda key: getattr(lead, key, None)
+    snapshot: dict[str, object] = {
+        "id": get_value("id"),
+        "email": _normalize_email(get_value("email")),
+    }
+    for field_name in ENRICHABLE_IMPORT_FIELDS:
+        snapshot[field_name] = _clean_cell(get_value(field_name)) or None
+    return snapshot
+
+
+def plan_import_row(result: ImportRowResult, existing_lead: object | None) -> ImportPlan:
+    if not result.is_valid:
+        return ImportPlan(
+            mode=IMPORT_RESULT_REJECTED,
+            updated_fields=[],
+            previous_values={},
+        )
+    if existing_lead is None:
+        return ImportPlan(
+            mode=IMPORT_RESULT_CREATED,
+            updated_fields=[],
+            previous_values={},
+        )
+
+    existing_snapshot = snapshot_existing_lead(existing_lead)
+    updated_fields: list[str] = []
+    previous_values: dict[str, str | None] = {}
+    for field_name in ENRICHABLE_IMPORT_FIELDS:
+        incoming = _clean_cell(result.payload.get(field_name)) or None
+        current = _clean_cell(existing_snapshot.get(field_name)) or None
+        if not incoming or incoming == current:
+            continue
+        updated_fields.append(field_name)
+        previous_values[field_name] = existing_snapshot.get(field_name)
+
+    return ImportPlan(
+        mode=IMPORT_RESULT_UPDATED if updated_fields else IMPORT_RESULT_SKIPPED_DUPLICATE,
+        updated_fields=updated_fields,
+        previous_values=previous_values,
+    )
+
+
+def apply_import_plan_to_snapshot(
+    existing_lead: object | None,
+    payload: dict[str, str],
+    plan: ImportPlan,
+) -> dict[str, object]:
+    snapshot = snapshot_existing_lead(existing_lead)
+    snapshot["email"] = _normalize_email(payload.get("email"))
+    if plan.mode == IMPORT_RESULT_CREATED:
+        for field_name in ENRICHABLE_IMPORT_FIELDS:
+            snapshot[field_name] = _clean_cell(payload.get(field_name)) or None
+        return snapshot
+    if plan.mode == IMPORT_RESULT_UPDATED:
+        for field_name in plan.updated_fields:
+            snapshot[field_name] = _clean_cell(payload.get(field_name)) or None
+    return snapshot
 
 
 def _clean_cell(value: object) -> str:

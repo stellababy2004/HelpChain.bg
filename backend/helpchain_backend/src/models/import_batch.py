@@ -24,6 +24,10 @@ class ImportBatch(db.Model):
         default=lambda: datetime.now(UTC),
         index=True,
     )
+    created_count = db.Column(db.Integer, nullable=False, default=0)
+    updated_count = db.Column(db.Integer, nullable=False, default=0)
+    skipped_duplicate_count = db.Column(db.Integer, nullable=False, default=0)
+    rejected_count = db.Column(db.Integer, nullable=False, default=0)
     imported_count = db.Column(db.Integer, nullable=False, default=0)
     skipped_count = db.Column(db.Integer, nullable=False, default=0)
     error_count = db.Column(db.Integer, nullable=False, default=0)

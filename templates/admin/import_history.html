@@ -50,9 +50,10 @@
             <th>Fichier</th>
             <th>Source</th>
             <th>Cible</th>
-            <th>Importés</th>
-            <th>Ignorés</th>
-            <th>Erreurs</th>
+            <th>Créés</th>
+            <th>Mis à jour</th>
+            <th>Doublons ignorés</th>
+            <th>Rejetés</th>
             <th>Statut</th>
             <th>Action</th>
           </tr>
@@ -64,9 +65,10 @@
               <td>{{ batch.filename }}</td>
               <td>{{ source_label(batch.source_type) }}</td>
               <td>{{ target_label(batch.target_type) }}</td>
-              <td>{{ batch.imported_count }}</td>
-              <td>{{ batch.skipped_count }}</td>
-              <td title="{{ batch_errors_to_text(batch.errors_json) }}">{{ batch.error_count }}</td>
+              <td>{{ batch.created_count }}</td>
+              <td>{{ batch.updated_count }}</td>
+              <td>{{ batch.skipped_duplicate_count }}</td>
+              <td title="{{ batch_errors_to_text(batch.errors_json) }}">{{ batch.rejected_count }}</td>
               <td><span class="badge text-bg-light border">{{ batch.status }}</span></td>
               <td>
                 {% if batch.target_type == 'professional_leads' and batch.status == 'imported' %}
@@ -81,7 +83,7 @@
             </tr>
           {% else %}
             <tr>
-              <td colspan="9" class="py-4 text-center">
+              <td colspan="10" class="py-4 text-center">
                 <div class="hc-empty-state">
                   <div class="hc-empty-state__title">Aucun lot importé</div>
                   <div class="hc-empty-state__text">Les premiers imports CSV apparaîtront ici dès qu'un lot sera prévisualisé ou confirmé.</div>

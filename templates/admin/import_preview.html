@@ -171,15 +171,22 @@
       background: #f8fafc;
       color: #475569;
     }
-    .hc-import-status--valid {
+    .hc-import-status--valid,
+    .hc-import-status--created {
       background: #ecfdf5;
       border-color: rgba(5, 150, 105, .18);
       color: #047857;
     }
-    .hc-import-status--warning {
+    .hc-import-status--warning,
+    .hc-import-status--updated {
       background: #fffbeb;
       border-color: rgba(217, 119, 6, .2);
       color: #b45309;
+    }
+    .hc-import-status--skipped_duplicate {
+      background: #f8fafc;
+      border-color: rgba(15, 23, 42, .12);
+      color: #475569;
     }
     .hc-import-status--rejected {
       background: #fef2f2;
@@ -221,16 +228,20 @@
       <div class="hc-import-preview-kpi__value">{{ preview.rows_detected }}</div>
     </div>
     <div class="hc-import-preview-kpi">
-      <div class="hc-import-preview-kpi__label">Valides</div>
-      <div class="hc-import-preview-kpi__value">{{ preview.valid_rows }}</div>
+      <div class="hc-import-preview-kpi__label">Créations</div>
+      <div class="hc-import-preview-kpi__value">{{ preview.created_rows }}</div>
     </div>
     <div class="hc-import-preview-kpi">
-      <div class="hc-import-preview-kpi__label">Avec avertissement</div>
-      <div class="hc-import-preview-kpi__value">{{ preview.warning_rows }}</div>
+      <div class="hc-import-preview-kpi__label">Enrichissements</div>
+      <div class="hc-import-preview-kpi__value">{{ preview.updated_rows }}</div>
     </div>
     <div class="hc-import-preview-kpi">
-      <div class="hc-import-preview-kpi__label">Rejetées / ignorées</div>
-      <div class="hc-import-preview-kpi__value">{{ preview.rejected_rows + preview.skipped_empty_rows }}</div>
+      <div class="hc-import-preview-kpi__label">Doublons ignorés</div>
+      <div class="hc-import-preview-kpi__value">{{ preview.skipped_duplicate_rows }}</div>
+    </div>
+    <div class="hc-import-preview-kpi">
+      <div class="hc-import-preview-kpi__label">Rejetées</div>
+      <div class="hc-import-preview-kpi__value">{{ preview.rejected_rows }}</div>
     </div>
   </div>
 
@@ -287,10 +298,12 @@
                 <td class="text-muted hc-import-row-cell">L{{ row.row_number }}</td>
                 <td class="hc-import-status-cell">
                   <span class="hc-import-status hc-import-status--{{ row.status }}">
-                    {% if row.status == 'valid' %}
-                      Valide
-                    {% elif row.status == 'warning' %}
-                      Avertissement
+                    {% if row.status == 'created' %}
+                      Créé
+                    {% elif row.status == 'updated' %}
+                      Mis à jour
+                    {% elif row.status == 'skipped_duplicate' %}
+                      Doublon ignoré
                     {% elif row.status == 'rejected' %}
                       Rejetee
                     {% else %}

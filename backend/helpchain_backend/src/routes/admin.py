@@ -149,6 +149,7 @@ from ..services.demo_data import (
 )
 from ..services.geocoding import request_address_display_text
 from ..services.import_service import (
+    ENRICHABLE_IMPORT_FIELDS,
     IMPORT_SOURCE_CSV,
     IMPORT_TARGET_PROFESSIONAL_LEADS,
     available_field_options,
@@ -11962,7 +11963,22 @@ def admin_audience_map():
 
 
 def _admin_import_tables_ready() -> bool:
-    return _table_exists("professional_leads") and _table_exists("import_batches")
+    required_batch_columns = (
+        "created_count",
+        "updated_count",
+        "skipped_duplicate_count",
+        "rejected_count",
+        "imported_count",
+        "skipped_count",
+        "error_count",
+    )
+    return (
+        _table_exists("professional_leads")
+        and _table_exists("import_batches")
+        and _table_exists("professional_lead_activities")
+        and all(_table_has_column("import_batches", column_name) for column_name in required_batch_columns)
+        and _professional_lead_activity_enabled()
+    )
 
 
 def _admin_import_preview_state() -> dict[str, object]:
@@ -11987,15 +12003,55 @@ def _clear_admin_import_preview_state(*, remove_file: bool = False) -> None:
         cleanup_preview_upload(str(state.get("preview_path") or ""))
 
 
-def _existing_professional_lead_emails() -> set[str]:
+def _existing_professional_leads_by_email() -> dict[str, ProfessionalLead]:
     if not _table_exists("professional_leads"):
-        return set()
-    rows = db.session.query(ProfessionalLead.email).filter(ProfessionalLead.email.isnot(None)).all()
-    return {
-        (str(email or "").strip().lower())
-        for (email,) in rows
-        if str(email or "").strip()
-    }
+        return {}
+    lead_fields = [
+        ProfessionalLead.id,
+        ProfessionalLead.email,
+        ProfessionalLead.full_name,
+        ProfessionalLead.phone,
+        ProfessionalLead.city,
+        ProfessionalLead.profession,
+        ProfessionalLead.organization,
+        ProfessionalLead.availability,
+        ProfessionalLead.message,
+        ProfessionalLead.status,
+        ProfessionalLead.notes,
+    ]
+    if _table_has_column("professional_leads", "owner_admin_id"):
+        lead_fields.append(ProfessionalLead.owner_admin_id)
+    rows = (
+        ProfessionalLead.query.options(load_only(*lead_fields))
+        .filter(ProfessionalLead.email.isnot(None))
+        .all()
+    )
+    output: dict[str, ProfessionalLead] = {}
+    for row in rows:
+        email = str(getattr(row, "email", "") or "").strip().lower()
+        if email and email not in output:
+            output[email] = row
+    return output
+
+
+def _record_professional_lead_import_activity(
+    *,
+    lead: ProfessionalLead,
+    action: str,
+    payload: dict[str, object],
+) -> None:
+    imported_at = _now_utc()
+    activity_payload = dict(payload or {})
+    activity_payload["imported_at"] = imported_at.isoformat()
+    db.session.add(
+        ProfessionalLeadActivity(
+            professional_lead_id=int(lead.id),
+            admin_user_id=int(current_user.id) if getattr(current_user, "id", None) else None,
+            action=action,
+            payload_json=encode_json_payload(activity_payload),
+            created_at=imported_at,
+        )
+    )
 
 
 def _read_admin_import_mapping_from_form(headers: list[str]) -> dict[str, str]:
@@ -12089,12 +12145,16 @@ def admin_import_preview():
         preview = build_preview(
             parsed_file,
             mapping=mapping,
-            existing_emails=_existing_professional_lead_emails(),
+            existing_leads_by_email=_existing_professional_leads_by_email(),
             batch_id=int(batch.id or 0),
         )
 
-        batch.imported_count = int(preview.valid_rows + preview.warning_rows)
-        batch.skipped_count = int(preview.skipped_rows)
+        batch.created_count = int(preview.created_rows)
+        batch.updated_count = int(preview.updated_rows)
+        batch.skipped_duplicate_count = int(preview.skipped_duplicate_rows)
+        batch.rejected_count = int(preview.rejected_rows)
+        batch.imported_count = int(preview.created_rows + preview.updated_rows)
+        batch.skipped_count = int(preview.skipped_duplicate_rows)
         batch.error_count = int(preview.rejected_rows)
         batch.mapping_json = encode_json_payload(preview.mapping)
         batch.errors_json = encode_json_payload(
@@ -12164,8 +12224,9 @@ def admin_import_confirm():
         return redirect(url_for("admin.admin_import_express"), code=303)
 
     mapping = _read_admin_import_mapping_from_form(parsed_file.headers)
+    existing_leads_by_email = _existing_professional_leads_by_email()
 
-    def _create_imported_lead(payload: dict[str, str]) -> None:
+    def _create_imported_lead(payload: dict[str, str]) -> ProfessionalLead:
         with db.session.begin_nested():
             lead = ProfessionalLead(
                 full_name=payload.get("full_name") or None,
@@ -12181,16 +12242,43 @@ def admin_import_confirm():
             )
             db.session.add(lead)
             db.session.flush()
+            return lead
+
+    def _update_imported_lead(
+        lead: ProfessionalLead,
+        payload: dict[str, str],
+        *,
+        updated_fields: list[str],
+    ) -> ProfessionalLead:
+        with db.session.begin_nested():
+            for field_name in updated_fields:
+                if field_name not in ENRICHABLE_IMPORT_FIELDS:
+                    continue
+                setattr(lead, field_name, payload.get(field_name) or None)
+            db.session.add(lead)
+            db.session.flush()
+            return lead
 
     outcome = import_professional_leads(
         parsed_file=parsed_file,
         mapping=mapping,
         batch_id=int(batch.id),
-        existing_emails=_existing_professional_lead_emails(),
+        existing_leads_by_email=existing_leads_by_email,
         create_row=_create_imported_lead,
+        update_row=_update_imported_lead,
+        record_activity=lambda lead, action, payload: _record_professional_lead_import_activity(
+            lead=lead,
+            action=action,
+            payload={**payload, "batch_filename": batch.filename},
+        ),
+        source_filename=batch.filename,
     )
 
     batch.status = "imported"
+    batch.created_count = int(outcome.created_count)
+    batch.updated_count = int(outcome.updated_count)
+    batch.skipped_duplicate_count = int(outcome.skipped_duplicate_count)
+    batch.rejected_count = int(outcome.rejected_count)
     batch.imported_count = int(outcome.imported_count)
     batch.skipped_count = int(outcome.skipped_count)
     batch.error_count = int(outcome.error_count)
@@ -12200,8 +12288,10 @@ def admin_import_confirm():
 
     _clear_admin_import_preview_state(remove_file=True)
     flash(
-        f"Import terminé: {outcome.imported_count} lead(s) importé(s), "
-        f"{outcome.skipped_count} ignoré(s), {outcome.error_count} erreur(s).",
+        f"Import terminé: {outcome.created_count} créé(s), "
+        f"{outcome.updated_count} enrichi(s), "
+        f"{outcome.skipped_duplicate_count} doublon(s) ignoré(s), "
+        f"{outcome.rejected_count} rejeté(s).",
         "success" if outcome.error_count == 0 else "warning",
     )
 
@@ -12364,6 +12454,32 @@ def admin_professional_leads():
     lead_metrics = dict(empty_metrics)
     lead_metrics["total"] = len(leads)
     lead_insights = {}
+    lead_ids = [int(lead.id) for lead in leads if getattr(lead, "id", None)]
+    import_activity_by_lead: dict[int, dict[str, datetime | None]] = {}
+    if lead_ids and _professional_lead_activity_enabled():
+        activity_rows = (
+            ProfessionalLeadActivity.query.with_entities(
+                ProfessionalLeadActivity.professional_lead_id,
+                ProfessionalLeadActivity.action,
+                ProfessionalLeadActivity.created_at,
+            )
+            .filter(ProfessionalLeadActivity.professional_lead_id.in_(lead_ids))
+            .filter(
+                ProfessionalLeadActivity.action.in_(
+                    ("import_created", "import_updated", "import_skipped_duplicate")
+                )
+            )
+            .order_by(ProfessionalLeadActivity.created_at.desc(), ProfessionalLeadActivity.id.desc())
+            .all()
+        )
+        for row in activity_rows:
+            lead_id = int(getattr(row, "professional_lead_id", 0) or 0)
+            if lead_id <= 0:
+                continue
+            bucket = import_activity_by_lead.setdefault(lead_id, {})
+            action = str(getattr(row, "action", "") or "")
+            if action not in bucket:
+                bucket[action] = _as_aware_utc(getattr(row, "created_at", None))
     for lead in leads:
         status_key = ((getattr(lead, "status", None) or "").strip().lower() or "new")
         created_at = _as_aware_utc(getattr(lead, "created_at", None))
@@ -12416,6 +12532,17 @@ def admin_professional_leads():
             lead_metrics["followup_due"] += 1
 
         last_activity_at = last_touched_at or contacted_at or created_at
+        import_badges: list[str] = []
+        import_events = import_activity_by_lead.get(int(lead.id), {})
+        if "import_created" in import_events:
+            import_badges.append("Imported")
+        if "import_updated" in import_events:
+            import_badges.append("Updated via import")
+            updated_event_at = import_events.get("import_updated")
+            if updated_event_at and updated_event_at >= now_utc - timedelta(days=14):
+                import_badges.append("Recently enriched")
+        if "import_skipped_duplicate" in import_events:
+            import_badges.append("Duplicate skipped")
         lead_insights[int(lead.id)] = {
             "urgency": "prioritaire" if has_urgent_signal or is_followup_due else "standard",
             "urgency_label": "Prioritaire" if has_urgent_signal or is_followup_due else "Standard",
@@ -12431,6 +12558,7 @@ def admin_professional_leads():
                 else "Ouvrir"
             ),
             "last_activity_label": _format_demo_touch_elapsed(last_activity_at),
+            "import_badges": import_badges,
         }
 
     return (
