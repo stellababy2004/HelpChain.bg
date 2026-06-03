@@ -65,3 +65,11 @@ def test_admin_home_renders_with_phase1_enrichment(authenticated_admin_client):
     response = authenticated_admin_client.get("/admin/home", follow_redirects=True)
 
     assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    assert "Lecture institutionnelle des signaux" in body
+    assert (
+        "Aucun signal récent exploitable" in body
+        or "Aucun signal recent exploitable" in body
+        or "Priorité non déterminée" in body
+        or "Priorite non determinee" in body
+    )

@@ -254,7 +254,7 @@ from ..services.event_bus import (
 from ..services.structure_service import create_structure_with_admin
 
 GENERIC_ADMIN_LOGIN_FAIL_MSG = (
-    "Identifiants invalides ou accès temporairement bloqué."
+    "Identifiants invalides ou accÃ¨s temporairement bloquÃ©."
 )
 CATEGORY_CASE_STATUSES = (
     "new",
@@ -399,7 +399,7 @@ AUDIENCE_BUSINESS_MAP_POINTS = (
         "lat": 48.9362,
         "lng": 2.3574,
         "priority": "Haute",
-        "recommendation": "Activer les relais ESS et les collectivités à fort volume de demandes.",
+        "recommendation": "Activer les relais ESS et les collectivitÃ©s Ã  fort volume de demandes.",
         "default_demands": 9,
         "default_structures": 6,
     },
@@ -419,7 +419,7 @@ AUDIENCE_BUSINESS_MAP_POINTS = (
         "lat": 48.7904,
         "lng": 2.4556,
         "priority": "Moyenne",
-        "recommendation": "Positionner HelpChain sur les usages coordination médico-sociale et accompagnement.",
+        "recommendation": "Positionner HelpChain sur les usages coordination mÃ©dico-sociale et accompagnement.",
         "default_demands": 6,
         "default_structures": 4,
     },
@@ -702,11 +702,11 @@ INTERVENANT_ACTOR_TYPE_OPTIONS = (
     ("social_worker", "Travailleur social"),
     ("coordinator", "Coordinateur"),
     ("psychologist", "Psychologue"),
-    ("field_referent", "Référent terrain"),
+    ("field_referent", "RÃ©fÃ©rent terrain"),
     ("partner_association", "Association partenaire"),
-    ("health_professional", "Professionnel santé"),
+    ("health_professional", "Professionnel santÃ©"),
     ("legal_advisor", "Juriste"),
-    ("mediator", "Médiateur"),
+    ("mediator", "MÃ©diateur"),
 )
 INTERVENANT_ACTOR_TYPE_LABELS = dict(INTERVENANT_ACTOR_TYPE_OPTIONS)
 INTERVENANT_ACTOR_TYPE_ALIASES = {
@@ -739,7 +739,7 @@ INTERVENANT_ACTOR_TYPE_ALIASES = {
 }
 INTERVENANT_AVAILABILITY_OPTIONS = (
     ("available", "Disponible"),
-    ("busy", "Occupé"),
+    ("busy", "OccupÃ©"),
     ("in_intervention", "En intervention"),
     ("unavailable", "Indisponible"),
     ("paused", "Pause"),
@@ -748,7 +748,7 @@ INTERVENANT_AVAILABILITY_LABELS = dict(INTERVENANT_AVAILABILITY_OPTIONS)
 INTERVENANT_AVAILABILITY_ALIASES = {
     "disponible": "available",
     "occupe": "busy",
-    "occupé": "busy",
+    "occupÃ©": "busy",
     "en_intervention": "in_intervention",
     "indisponible": "unavailable",
     "pause": "paused",
@@ -791,7 +791,7 @@ INTERVENANT_ACTIVITY_LABELS = {
 
 def _normalize_intervenant_city_key(value: str | None) -> str:
     txt = _normalize_smart_assign_text(value)
-    return txt.replace("–", "-").replace("-", " ").strip()
+    return txt.replace("â€“", "-").replace("-", " ").strip()
 
 
 def _split_intervenant_location(value: str | None) -> tuple[str, str]:
@@ -885,11 +885,11 @@ def _split_operational_tokens(value: str | None) -> list[str]:
 def _normalize_intervenant_competency(value: str | None) -> str:
     raw = _normalize_smart_assign_text(value or "")
     raw = (
-        raw.replace("é", "e")
-        .replace("è", "e")
-        .replace("ê", "e")
-        .replace("à", "a")
-        .replace("ç", "c")
+        raw.replace("Ã©", "e")
+        .replace("Ã¨", "e")
+        .replace("Ãª", "e")
+        .replace("Ã ", "a")
+        .replace("Ã§", "c")
     )
     return raw.replace(" ", "_")
 
@@ -1252,11 +1252,11 @@ def _intervenant_operational_context(intervenant: Intervenant, city: str) -> dic
         {"label": "Charge actuelle", "value": counts["workload"]},
         {"label": "Dossiers actifs", "value": counts["active_cases"]},
         {
-            "label": "Disponibilité",
+            "label": "DisponibilitÃ©",
             "value": _intervenant_availability_label(availability),
             "badge_class": _intervenant_availability_badge(availability),
         },
-        {"label": "Zone principale", "value": city or "—"},
+        {"label": "Zone principale", "value": city or "â€”"},
     ]
     return {
         "summary_cards": summary_cards,
@@ -1350,7 +1350,7 @@ def _update_intervenant_from_form(intervenant: Intervenant) -> list[str]:
     if actor_type not in INTERVENANT_ACTOR_TYPE_LABELS:
         errors.append("Profession requise.")
     if availability not in INTERVENANT_AVAILABILITY_LABELS:
-        errors.append("Disponibilité invalide.")
+        errors.append("DisponibilitÃ© invalide.")
 
     if errors:
         return errors
@@ -1690,7 +1690,7 @@ def _as_aware_utc(dt_val: datetime | None) -> datetime | None:
 def _format_elapsed_compact(dt_val: datetime | None) -> str:
     dt_aware = _as_aware_utc(dt_val)
     if not dt_aware:
-        return "â€”"
+        return "Ã¢â‚¬â€"
     delta = max(timedelta(0), _now_utc() - dt_aware)
     total_minutes = int(delta.total_seconds() // 60)
     if total_minutes < 1:
@@ -1718,7 +1718,7 @@ def _elapsed_tone(dt_val: datetime | None) -> str:
 
 def _format_duration_compact(delta: timedelta | None) -> str:
     if delta is None:
-        return "â€”"
+        return "Ã¢â‚¬â€"
     total_minutes = max(0, int(delta.total_seconds() // 60))
     if total_minutes < 60:
         return f"{total_minutes} min"
@@ -1732,11 +1732,11 @@ def _format_duration_compact(delta: timedelta | None) -> str:
 def _case_sla_snapshot(case_row: Case | None) -> dict:
     if not case_row:
         return {
-            "target_label": "â€”",
+            "target_label": "Ã¢â‚¬â€",
             "deadline": None,
             "state": "on_time",
-            "state_label": "À temps",
-            "detail": "—",
+            "state_label": "Ã€ temps",
+            "detail": "â€”",
         }
 
     priority = ((getattr(case_row, "priority", None) or "normal").strip().lower())
@@ -1753,8 +1753,8 @@ def _case_sla_snapshot(case_row: Case | None) -> dict:
             "target_label": _format_duration_compact(target_delta),
             "deadline": None,
             "state": "on_time",
-            "state_label": "À temps",
-            "detail": "—",
+            "state_label": "Ã€ temps",
+            "detail": "â€”",
         }
 
     deadline = opened_ref + target_delta
@@ -1766,11 +1766,11 @@ def _case_sla_snapshot(case_row: Case | None) -> dict:
         detail = f"En retard de {_format_duration_compact(abs(remaining))}"
     elif remaining <= soon_threshold:
         state = "due_soon"
-        state_label = "Échéance proche"
+        state_label = "Ã‰chÃ©ance proche"
         detail = f"Dans {_format_duration_compact(remaining)}"
     else:
         state = "on_time"
-        state_label = "À temps"
+        state_label = "Ã€ temps"
         detail = f"Dans {_format_duration_compact(remaining)}"
 
     return {
@@ -1827,10 +1827,10 @@ def _build_operational_blockages(
     has_professional = _case_has_professional(case_row)
 
     if not has_owner:
-        blockages.append("Aucun responsable assigné")
+        blockages.append("Aucun responsable assignÃ©")
 
     if case_row and not has_professional:
-        blockages.append("Aucun professionnel assigné")
+        blockages.append("Aucun professionnel assignÃ©")
 
     activity_ref = _as_aware_utc(
         (getattr(case_row, "last_activity_at", None) if case_row else None)
@@ -1841,14 +1841,14 @@ def _build_operational_blockages(
     if activity_ref:
         inactive_for = now - activity_ref
         if inactive_for >= timedelta(hours=72):
-            blockages.append(f"Dernière activité il y a {_format_elapsed_compact(activity_ref)}")
+            blockages.append(f"DerniÃ¨re activitÃ© il y a {_format_elapsed_compact(activity_ref)}")
 
     created_ref = _as_aware_utc(getattr(case_row, "created_at", None) if case_row else getattr(req, "created_at", None))
     if created_ref and status_val in {"new", "open", "pending"} and (now - created_ref) >= timedelta(hours=48):
         blockages.append("Dossier encore en statut initial depuis trop longtemps")
 
     if case_row and high_risk and not has_professional:
-        blockages.append("Risque élevé sans suivi professionnel concret")
+        blockages.append("Risque Ã©levÃ© sans suivi professionnel concret")
 
     return {
         "count": len(blockages),
@@ -2002,7 +2002,7 @@ def require_admin_fresh_auth(minutes: int = ADMIN_FRESH_AUTH_MIN):
             if _admin_fresh_auth_is_valid(now, minutes=minutes):
                 return fn(*args, **kwargs)
             nxt = request.full_path if request.query_string else request.path
-            flash("Veuillez confirmer votre identité pour continuer.", "warning")
+            flash("Veuillez confirmer votre identitÃ© pour continuer.", "warning")
             return redirect(url_for("admin.admin_reauth", next=nxt), code=303)
 
         return _wrapped
@@ -2049,7 +2049,7 @@ def _compute_case_signals(
             {
                 "code": "no_owner",
                 "level": "danger",
-                "title": "Aucun responsable assigné",
+                "title": "Aucun responsable assignÃ©",
                 "why": "Sans responsable, le dossier n'a pas de pilotage clair.",
                 "cta_label": "Assigner un responsable",
                 "cta_href": "#owner-actions",
@@ -2063,8 +2063,8 @@ def _compute_case_signals(
                 "code": "owner_idle",
                 "level": "warning",
                 "title": "Owner inactif",
-                "why": "Responsable assigné, mais pas d'activité récente.",
-                "cta_label": "Vérifier l'activité",
+                "why": "Responsable assignÃ©, mais pas d'activitÃ© rÃ©cente.",
+                "cta_label": "VÃ©rifier l'activitÃ©",
                 "cta_href": "#activity-timeline",
             }
         )
@@ -2202,7 +2202,7 @@ def _build_helpchain_recommendation(
     assigned_actor = (
         getattr(getattr(req, "owner", None), "username", None)
         or (f"#{req.owner_id}" if getattr(req, "owner_id", None) else "")
-        or "non assigné"
+        or "non assignÃ©"
     )
 
     last_activity = None
@@ -2223,18 +2223,18 @@ def _build_helpchain_recommendation(
             "priority": "Critique",
             "action": "Affecter un responsable territorial",
             "reason": (
-                "Niveau de risque critique et aucun acteur assigné. "
-                f"Dernière activité: {last_activity_label}."
+                "Niveau de risque critique et aucun acteur assignÃ©. "
+                f"DerniÃ¨re activitÃ©: {last_activity_label}."
             ),
         }
 
     if "not_seen_72h" in risk_signals:
         return {
-            "priority": "Élevée",
-            "action": "Vérifier la situation avec l’acteur assigné",
+            "priority": "Ã‰levÃ©e",
+            "action": "VÃ©rifier la situation avec lâ€™acteur assignÃ©",
             "reason": (
-                "Le signal not_seen_72h indique une absence d’action récente. "
-                f"Acteur assigné: {assigned_actor}. Dernière activité: {last_activity_label}."
+                "Le signal not_seen_72h indique une absence dâ€™action rÃ©cente. "
+                f"Acteur assignÃ©: {assigned_actor}. DerniÃ¨re activitÃ©: {last_activity_label}."
             ),
         }
 
@@ -2244,7 +2244,7 @@ def _build_helpchain_recommendation(
             "action": "Planifier un suivi",
             "reason": (
                 "Niveau de risque attention. "
-                f"Acteur assigné: {assigned_actor}. Dernière activité: {last_activity_label}."
+                f"Acteur assignÃ©: {assigned_actor}. DerniÃ¨re activitÃ©: {last_activity_label}."
             ),
         }
 
@@ -2252,8 +2252,8 @@ def _build_helpchain_recommendation(
         "priority": "Standard",
         "action": "Maintenir le suivi courant",
         "reason": (
-            f"Pas de déclencheur critique détecté. Acteur assigné: {assigned_actor}. "
-            f"Dernière activité: {last_activity_label}."
+            f"Pas de dÃ©clencheur critique dÃ©tectÃ©. Acteur assignÃ©: {assigned_actor}. "
+            f"DerniÃ¨re activitÃ©: {last_activity_label}."
         ),
     }
 
@@ -3136,32 +3136,32 @@ def _sla_overdue_hours_by_kind(req, *, now: datetime) -> dict[str, float]:
 def _sla_prediction_state(req, *, sla_kind: str, now: datetime) -> dict:
     created_at = _to_utc_naive(getattr(req, "created_at", None))
     if not created_at:
-        return {"state": "unknown", "remaining_hours": None, "label": "—"}
+        return {"state": "unknown", "remaining_hours": None, "label": "â€”"}
 
     if sla_kind == "resolution_overdue":
         if getattr(req, "completed_at", None) is not None:
-            return {"state": "ok", "remaining_hours": None, "label": "—"}
+            return {"state": "ok", "remaining_hours": None, "label": "â€”"}
         sla_hours = float(RESOLVE_SLA_DAYS * 24)
     elif sla_kind == "owner_assignment_overdue":
         if getattr(req, "owner_id", None) is not None:
-            return {"state": "ok", "remaining_hours": None, "label": "—"}
+            return {"state": "ok", "remaining_hours": None, "label": "â€”"}
         sla_hours = float(ASSIGN_SLA_HOURS)
     elif sla_kind == "volunteer_assignment_overdue":
         if getattr(req, "assigned_volunteer_id", None) is not None:
-            return {"state": "ok", "remaining_hours": None, "label": "—"}
+            return {"state": "ok", "remaining_hours": None, "label": "â€”"}
         sla_hours = float(VOLUNTEER_ASSIGN_SLA_HOURS)
     else:
-        return {"state": "unknown", "remaining_hours": None, "label": "—"}
+        return {"state": "unknown", "remaining_hours": None, "label": "â€”"}
 
     age_hours = max(0.0, (now - created_at).total_seconds() / 3600.0)
     remaining_hours = sla_hours - age_hours
     warn_threshold = min(4.0, max(1.0, sla_hours / 5.0))
 
     if remaining_hours < 0:
-        return {"state": "breached", "remaining_hours": remaining_hours, "label": "Dépassement"}
+        return {"state": "breached", "remaining_hours": remaining_hours, "label": "DÃ©passement"}
     if remaining_hours <= warn_threshold:
-        return {"state": "due_soon", "remaining_hours": remaining_hours, "label": "Échéance proche"}
-    return {"state": "ok", "remaining_hours": remaining_hours, "label": "À temps"}
+        return {"state": "due_soon", "remaining_hours": remaining_hours, "label": "Ã‰chÃ©ance proche"}
+    return {"state": "ok", "remaining_hours": remaining_hours, "label": "Ã€ temps"}
 
 
 def _delta_seconds(start: datetime | None, end: datetime | None) -> int | None:
@@ -3428,7 +3428,7 @@ def _admin_idle_timeout_guard():
             logout_user()
         except Exception:
             pass
-        flash("Votre session a expiré. Veuillez vous reconnecter.", "warning")
+        flash("Votre session a expirÃ©. Veuillez vous reconnecter.", "warning")
         return redirect(url_for("admin.admin_login_legacy"), code=303)
 
     _touch_admin_last_seen(now)
@@ -4564,7 +4564,7 @@ def _rules_suggest(key: str, locale: str, default: str, domain: str) -> list[dic
         base = t("dashboard", "Dashboard")
         reason_base = "Term: dashboard"
     elif "assign" in k or "claim" in k or "prendre_en_charge" in k:
-        base = t("assign", "Übernehmen" if locale == "de" else "Assign")
+        base = t("assign", "Ãœbernehmen" if locale == "de" else "Assign")
         reason_base = "Term: assign/claim"
     elif "status" in k:
         base = t("status", "Status")
@@ -4591,7 +4591,7 @@ def _rules_suggest(key: str, locale: str, default: str, domain: str) -> list[dic
 
     if kind == "title":
         v1 = base
-        v2 = f"{base} — {t('dashboard', 'Dashboard')}" if ("dashboard" not in k and len(base) <= 24) else base
+        v2 = f"{base} â€” {t('dashboard', 'Dashboard')}" if ("dashboard" not in k and len(base) <= 24) else base
         v3 = f"{base} ({locale.upper()})" if (is_admin and len(base) <= 24) else base
         return [
             {"text": v1, "reason": f"Title. {reason_base}"},
@@ -5688,7 +5688,7 @@ def admin_onboarding_step():
             flash("Le nom de la structure est requis.", "warning")
             return redirect(url_for("admin.admin_onboarding"), code=303)
         if team_size and team_size not in ONBOARDING_TEAM_SIZE_OPTIONS:
-            flash("La taille d'équipe sélectionnée est invalide.", "warning")
+            flash("La taille d'Ã©quipe sÃ©lectionnÃ©e est invalide.", "warning")
             return redirect(url_for("admin.admin_onboarding"), code=303)
         if main_need and main_need not in ONBOARDING_MAIN_NEED_OPTIONS:
             flash("Le besoin principal selectionne est invalide.", "warning")
@@ -6111,7 +6111,7 @@ def admin_reauth():
                     "ua": (request.headers.get("User-Agent") or "")[:256],
                 },
             )
-            flash("Vérification effectuée.", "success")
+            flash("VÃ©rification effectuÃ©e.", "success")
             return _redirect_to_safe_next(
                 next_url,
                 url_for("admin.admin_requests"),
@@ -6142,7 +6142,7 @@ def admin_reauth():
                     "ua": (request.headers.get("User-Agent") or "")[:256],
                 },
             )
-        flash("Veuillez confirmer votre identité pour continuer.", "danger")
+        flash("Veuillez confirmer votre identitÃ© pour continuer.", "danger")
 
     return render_template("admin/reauth.html", next=next_url)
 
@@ -6225,7 +6225,7 @@ def admin_mfa_setup():
 
         if not verify_totp_code(pending_secret, code):
             flash(
-                "Невалиден код. Провери часовника на телефона и опитай пак.", "danger"
+                "ÐÐµÐ²Ð°Ð»Ð¸Ð´ÐµÐ½ ÐºÐ¾Ð´. ÐŸÑ€Ð¾Ð²ÐµÑ€Ð¸ Ñ‡Ð°ÑÐ¾Ð²Ð½Ð¸ÐºÐ° Ð½Ð° Ñ‚ÐµÐ»ÐµÑ„Ð¾Ð½Ð° Ð¸ Ð¾Ð¿Ð¸Ñ‚Ð°Ð¹ Ð¿Ð°Ðº.", "danger"
             )
             return render_template(
                 "admin/mfa_setup.html",
@@ -6313,7 +6313,7 @@ def admin_mfa_verify():
             },
         )
         flash(
-            f"Твърде много опити. Опитай след {max(1, remaining // 60)} мин.", "danger"
+            f"Ð¢Ð²ÑŠÑ€Ð´Ðµ Ð¼Ð½Ð¾Ð³Ð¾ Ð¾Ð¿Ð¸Ñ‚Ð¸. ÐžÐ¿Ð¸Ñ‚Ð°Ð¹ ÑÐ»ÐµÐ´ {max(1, remaining // 60)} Ð¼Ð¸Ð½.", "danger"
         )
         return redirect(
             url_for("admin.admin_mfa_verify", next=next_url)
@@ -6424,7 +6424,7 @@ def admin_mfa_backup_codes():
             },
         )
         flash(
-            "Backup кодовете са генерирани. Запази ги сега — няма да се покажат втори път.",
+            "Backup ÐºÐ¾Ð´Ð¾Ð²ÐµÑ‚Ðµ ÑÐ° Ð³ÐµÐ½ÐµÑ€Ð¸Ñ€Ð°Ð½Ð¸. Ð—Ð°Ð¿Ð°Ð·Ð¸ Ð³Ð¸ ÑÐµÐ³Ð° â€” Ð½ÑÐ¼Ð° Ð´Ð° ÑÐµ Ð¿Ð¾ÐºÐ°Ð¶Ð°Ñ‚ Ð²Ñ‚Ð¾Ñ€Ð¸ Ð¿ÑŠÑ‚.",
             "success",
         )
         return redirect(url_for("admin.admin_mfa_backup_codes"))
@@ -7119,7 +7119,7 @@ def admin_ops_kpis():
         .all()
     )
     by_category = [
-        {"category": (category or "—"), "count": int(count)}
+        {"category": (category or "â€”"), "count": int(count)}
         for category, count in by_category_rows
     ]
 
@@ -7130,7 +7130,7 @@ def admin_ops_kpis():
         .all()
     )
     by_status = [
-        {"status": (status or "—"), "count": int(count)}
+        {"status": (status or "â€”"), "count": int(count)}
         for status, count in by_status_rows
     ]
 
@@ -7688,6 +7688,47 @@ def admin_home():
                 "available": True,
             }
 
+    audience_dashboard = _build_audience_map_context() if _is_global_admin() else {}
+    if not isinstance(audience_dashboard, dict):
+        audience_dashboard = {}
+
+    institutional_signal_preview = None
+    preview_sources = (
+        list(audience_dashboard.get("founder_queue_lead_rows") or [])
+        + list(audience_dashboard.get("founder_queue_account_rows") or [])
+        + list(audience_dashboard.get("revenue_radar_rows") or [])
+    )
+    for row in preview_sources:
+        if not isinstance(row, dict):
+            continue
+        if int(row.get("institutional_intent_score") or 0) <= 0:
+            continue
+        institutional_signal_preview = row
+        break
+
+    if institutional_signal_preview is None:
+        territory_summaries = list(audience_dashboard.get("territory_summaries") or [])
+        for row in territory_summaries:
+            if not isinstance(row, dict):
+                continue
+            if int(row.get("institutional_intent_score") or 0) <= 0:
+                continue
+            institutional_signal_preview = {
+                "institutional_intent_score": int(row.get("institutional_intent_score") or 0),
+                "intent_level": str(row.get("priority_level") or "").strip().lower(),
+                "recurrence_level": str(row.get("recurrence_level") or "").strip(),
+                "deployment_probability": str(row.get("deployment_probability") or "").strip(),
+                "probable_organization_profiles": list(row.get("probable_organization_profiles") or []),
+                "recommendation_reasons": list(row.get("recommendation_reasons") or []),
+                "recommended_next_action": str(
+                    row.get("recommended_next_action") or row.get("recommended_action") or ""
+                ).strip(),
+                "territorial_opportunity_summary": dict(
+                    row.get("territorial_opportunity_summary") or {}
+                ),
+            }
+            break
+
     return render_template(
         "admin/admin_home.html",
         attention_count=attention_count,
@@ -7698,6 +7739,8 @@ def admin_home():
         dashboard_last_activity_by_id=dashboard_last_activity_by_id,
         queue_summary=queue_summary,
         security_summary=security_summary,
+        audience_dashboard=audience_dashboard,
+        institutional_signal_preview=institutional_signal_preview,
     )
 
 
@@ -7796,7 +7839,7 @@ def admin_create_integration_connector():
     admin_required_404()
 
     if not _table_exists("integration_connectors"):
-        flash("La table des connecteurs n'est pas encore disponible. Exécutez d'abord les migrations.", "warning")
+        flash("La table des connecteurs n'est pas encore disponible. ExÃ©cutez d'abord les migrations.", "warning")
         return redirect(url_for("admin.admin_integrations"), code=303)
 
     try:
@@ -7824,10 +7867,10 @@ def admin_create_integration_connector():
 
         structure = db.session.get(Structure, int(structure_id))
         if structure is None:
-            raise ValueError("La structure sélectionnée est introuvable.")
+            raise ValueError("La structure sÃ©lectionnÃ©e est introuvable.")
 
         if IntegrationConnector.query.filter(IntegrationConnector.source_slug == source_slug).first():
-            raise ValueError("Ce slug source est déjà utilisé.")
+            raise ValueError("Ce slug source est dÃ©jÃ  utilisÃ©.")
 
         allowed_fields = _parse_connector_allowed_fields(request.form.get("allowed_fields"))
         notes = str(request.form.get("notes") or "").strip()
@@ -7855,7 +7898,7 @@ def admin_create_integration_connector():
         "connector_id": int(connector.id),
         "secret": raw_secret,
     }
-    flash("Connecteur créé. Conservez la clé affichée ci-dessous: elle ne sera plus montrée ensuite.", "success")
+    flash("Connecteur crÃ©Ã©. Conservez la clÃ© affichÃ©e ci-dessous: elle ne sera plus montrÃ©e ensuite.", "success")
     return redirect(
         url_for("admin.admin_integration_connector_detail", connector_id=connector.id),
         code=303,
@@ -8007,8 +8050,8 @@ def admin_intervenants():
                 profession=_intervenant_profession(intervenant),
                 email=intervenant.email,
                 phone=intervenant.phone,
-                city=city or "—",
-                address=address or "—",
+                city=city or "â€”",
+                address=address or "â€”",
                 location=intervenant.location or "",
                 availability=availability,
                 availability_label=_intervenant_availability_label(availability),
@@ -8061,7 +8104,7 @@ def admin_intervenant_detail(intervenant_id: int):
 
         _log_intervenant_profile_changes(intervenant, before)
         db.session.commit()
-        flash("Intervenant mis à jour.", "success")
+        flash("Intervenant mis Ã  jour.", "success")
         return redirect(url_for("admin.admin_intervenant_detail", intervenant_id=intervenant.id))
 
     return _intervenant_detail_template(intervenant)
@@ -8101,7 +8144,7 @@ def admin_structure_intervenant_detail(structure_id: int, intervenant_id: int):
 
         _log_intervenant_profile_changes(intervenant, before)
         db.session.commit()
-        flash("Intervenant mis à jour.", "success")
+        flash("Intervenant mis Ã  jour.", "success")
         return redirect(
             url_for(
                 "admin.admin_structure_intervenant_detail",
@@ -8155,7 +8198,7 @@ def admin_intervenants_new():
         if profession not in INTERVENANT_ACTOR_TYPE_LABELS:
             errors.append("Profession requise.")
         if availability not in INTERVENANT_AVAILABILITY_LABELS:
-            errors.append("Disponibilité invalide.")
+            errors.append("DisponibilitÃ© invalide.")
         if not city:
             errors.append("Ville requise.")
 
@@ -8188,14 +8231,14 @@ def admin_intervenants_new():
                 try:
                     intervenant.latitude = float(lat_raw)
                 except Exception:
-                    flash("Latitude ignorée: valeur invalide.", "warning")
+                    flash("Latitude ignorÃ©e: valeur invalide.", "warning")
         if hasattr(intervenant, "longitude") and _table_has_column("intervenants", "longitude"):
             lng_raw = (request.form.get("longitude") or "").strip()
             if lng_raw:
                 try:
                     intervenant.longitude = float(lng_raw)
                 except Exception:
-                    flash("Longitude ignorée: valeur invalide.", "warning")
+                    flash("Longitude ignorÃ©e: valeur invalide.", "warning")
 
         db.session.add(intervenant)
         db.session.commit()
@@ -8204,7 +8247,7 @@ def admin_intervenants_new():
             intervenant.id,
             intervenant.structure_id,
         )
-        flash("Intervenant créé.", "success")
+        flash("Intervenant crÃ©Ã©.", "success")
         return redirect(url_for("admin.admin_intervenants"))
 
     return render_template(
@@ -8563,7 +8606,7 @@ def export_volunteers():
     volunteers = Volunteer.query.all()
     si = StringIO()
     cw = csv.writer(si)
-    cw.writerow(["Име", "Имейл", "Телефон", "Град/регион", "Умения"])
+    cw.writerow(["Ð˜Ð¼Ðµ", "Ð˜Ð¼ÐµÐ¹Ð»", "Ð¢ÐµÐ»ÐµÑ„Ð¾Ð½", "Ð“Ñ€Ð°Ð´/Ñ€ÐµÐ³Ð¸Ð¾Ð½", "Ð£Ð¼ÐµÐ½Ð¸Ñ"])
     for v in volunteers:
         cw.writerow([v.name, v.email, v.phone, v.location, v.skills])
 
@@ -8583,11 +8626,11 @@ from ..models import Request, RequestActivity, db
 ALLOWED_STATUSES = {"pending", "approved", "in_progress", "done", "rejected"}
 
 STATUS_LABELS_BG = {
-    "pending": "Чакащи",
-    "approved": "Одобрени",
-    "in_progress": "В процес",
-    "done": "Приключени",
-    "rejected": "Отхвърлени",
+    "pending": "Ð§Ð°ÐºÐ°Ñ‰Ð¸",
+    "approved": "ÐžÐ´Ð¾Ð±Ñ€ÐµÐ½Ð¸",
+    "in_progress": "Ð’ Ð¿Ñ€Ð¾Ñ†ÐµÑ",
+    "done": "ÐŸÑ€Ð¸ÐºÐ»ÑŽÑ‡ÐµÐ½Ð¸",
+    "rejected": "ÐžÑ‚Ñ…Ð²ÑŠÑ€Ð»ÐµÐ½Ð¸",
 }
 
 # Canonical EN msgids for status labels - passed to templates for localization
@@ -8644,11 +8687,11 @@ def admin_sla_breakdown():
     q = _sla_base_window_query(_scope_requests(Request.query), days=days, now=now)
 
     if breach_type == "resolve":
-        breach_label = "SLA résolution"
+        breach_label = "SLA rÃ©solution"
     elif breach_type == "owner_assign":
         breach_label = "SLA assignation owner"
     elif breach_type == "volunteer_assign":
-        breach_label = "Affectation bénévole"
+        breach_label = "Affectation bÃ©nÃ©vole"
     else:
         breach_label = "Toutes violations"
 
@@ -8911,10 +8954,10 @@ def admin_pilotage():
             indicator_label = "Sans action depuis 72 heures"
             rank_group = 1
         elif rec_action == "assign_immediately":
-            indicator_label = "Affectation immédiate recommandée"
+            indicator_label = "Affectation immÃ©diate recommandÃ©e"
             rank_group = 2
         elif rec_action == "manager_review_today":
-            indicator_label = "Revue managériale requise"
+            indicator_label = "Revue managÃ©riale requise"
             rank_group = 3
         elif risk_level_norm == "critical":
             indicator_label = "Niveau critique"
@@ -8982,8 +9025,8 @@ def admin_pilotage():
         mapping = {
             "housing": "logement",
             "logement": "logement",
-            "health": "santé",
-            "sante": "santé",
+            "health": "santÃ©",
+            "sante": "santÃ©",
             "food": "aide alimentaire",
             "emergency": "urgence",
             "social": "accompagnement social",
@@ -9016,10 +9059,10 @@ def admin_pilotage():
         break
     if top_category and top_category_count >= 2:
         category_trend_text = (
-            f"La catégorie la plus fréquente actuellement concerne {_category_label(top_category)}."
+            f"La catÃ©gorie la plus frÃ©quente actuellement concerne {_category_label(top_category)}."
         )
     else:
-        category_trend_text = "Aucune tendance catégorielle significative à ce stade."
+        category_trend_text = "Aucune tendance catÃ©gorielle significative Ã  ce stade."
 
     assignment_delay_hours: list[float] = []
     if has_created_at and has_owned_at:
@@ -9039,27 +9082,27 @@ def admin_pilotage():
     if len(assignment_delay_hours) >= 3:
         avg_hours = round(sum(assignment_delay_hours) / len(assignment_delay_hours))
         assignment_delay_text = (
-            f"Le délai moyen avant affectation est actuellement de {int(avg_hours)} heures."
+            f"Le dÃ©lai moyen avant affectation est actuellement de {int(avg_hours)} heures."
         )
     else:
         assignment_delay_text = (
-            "Données insuffisantes pour estimer le délai moyen avant affectation."
+            "DonnÃ©es insuffisantes pour estimer le dÃ©lai moyen avant affectation."
         )
 
     if int(critical_no_owner_count or 0) > 0:
         vigilance_text = (
-            "Les situations critiques sans responsable nécessitent une vigilance renforcée."
+            "Les situations critiques sans responsable nÃ©cessitent une vigilance renforcÃ©e."
         )
     elif int(not_seen_72h_count or 0) > 0:
         vigilance_text = (
-            "Les situations sans action récente nécessitent une vigilance renforcée."
+            "Les situations sans action rÃ©cente nÃ©cessitent une vigilance renforcÃ©e."
         )
     elif int(attention_count or 0) > int(critical_count or 0) and int(attention_count or 0) > 0:
         vigilance_text = (
-            "Une part importante des situations est au niveau attention et appelle un suivi rapproché."
+            "Une part importante des situations est au niveau attention et appelle un suivi rapprochÃ©."
         )
     else:
-        vigilance_text = "Aucun signal de vigilance particulier n’est identifié à ce stade."
+        vigilance_text = "Aucun signal de vigilance particulier nâ€™est identifiÃ© Ã  ce stade."
 
     return render_template(
         "admin/pilotage.html",
@@ -9143,36 +9186,36 @@ def _build_case_kpi_filters(
     essential_keywords = (
         "sans nourriture",
         "faim",
-        "pas à manger",
+        "pas Ã  manger",
         "pas a manger",
         "sans manger",
         "sans logement",
         "sans abri",
-        "à la rue",
+        "Ã  la rue",
         "a la rue",
         "dehors ce soir",
         "sans chauffage",
         "pas de chauffage",
-        "sans électricité",
+        "sans Ã©lectricitÃ©",
         "sans electricite",
         "sans eau",
         "pas d'eau",
-        "plus de médicaments",
+        "plus de mÃ©dicaments",
         "plus de medicaments",
-        "sans médicaments",
+        "sans mÃ©dicaments",
         "sans medicaments",
     )
     vulnerability_keywords = (
-        "personne âgée",
+        "personne Ã¢gÃ©e",
         "personne agee",
-        "âgée",
+        "Ã¢gÃ©e",
         "agee",
         "senior",
         "handicap",
-        "handicapé",
+        "handicapÃ©",
         "handicape",
         "enfant",
-        "bébé",
+        "bÃ©bÃ©",
         "bebe",
         "mineur",
         "grossesse",
@@ -9451,9 +9494,9 @@ def _notification_bucket_label(bucket: str) -> str:
     return {
         "pending": "en attente",
         "processing": "en cours",
-        "retry": "à relancer",
-        "failed": "en échec",
-        "sent": "envoyée",
+        "retry": "Ã  relancer",
+        "failed": "en Ã©chec",
+        "sent": "envoyÃ©e",
     }.get((bucket or "").strip().lower(), "en attente")
 
 
@@ -9480,7 +9523,7 @@ def _render_cases_list():
             no_owner_count=case_kpis["no_owner"],
             stale_count=case_kpis["stale"],
             case_signals=demo["cases_signals"],
-            ops_priority_levels={201: "critique", 202: "élevé", 203: "critique"},
+            ops_priority_levels={201: "critique", 202: "Ã©levÃ©", 203: "critique"},
         )
 
     if not _cases_enabled():
@@ -12239,7 +12282,7 @@ def _render_admin_import_upload(*, status_code: int = 200):
 def admin_import_express():
     if not _admin_import_tables_ready():
         flash(
-            "Le module Import Express nécessite les tables professional_leads et import_batches.",
+            "Le module Import Express nÃ©cessite les tables professional_leads et import_batches.",
             "warning",
         )
     return _render_admin_import_upload()
@@ -12250,7 +12293,7 @@ def admin_import_express():
 @admin_required
 def admin_import_preview():
     if not _admin_import_tables_ready():
-        flash("Import Express indisponible tant que la migration n'est pas appliquée.", "warning")
+        flash("Import Express indisponible tant que la migration n'est pas appliquÃ©e.", "warning")
         return redirect(url_for("admin.admin_import_express"), code=303)
 
     target_type = (request.form.get("target_type") or "").strip()
@@ -12260,7 +12303,7 @@ def admin_import_preview():
 
     upload = request.files.get("file")
     if upload is None or not (upload.filename or "").strip():
-        flash("Sélectionnez un fichier CSV à prévisualiser.", "warning")
+        flash("SÃ©lectionnez un fichier CSV Ã  prÃ©visualiser.", "warning")
         return redirect(url_for("admin.admin_import_express"), code=303)
 
     original_filename = secure_filename(upload.filename or "") or "import.csv"
@@ -12270,7 +12313,7 @@ def admin_import_preview():
 
     raw_bytes = upload.read()
     if not raw_bytes:
-        flash("Le fichier importé est vide.", "warning")
+        flash("Le fichier importÃ© est vide.", "warning")
         return redirect(url_for("admin.admin_import_express"), code=303)
 
     _clear_admin_import_preview_state(remove_file=True)
@@ -12278,11 +12321,11 @@ def admin_import_preview():
     try:
         parsed_file = parse_csv_bytes(raw_bytes)
     except Exception:
-        flash("Impossible de lire ce CSV. Vérifiez l'encodage et les en-têtes.", "danger")
+        flash("Impossible de lire ce CSV. VÃ©rifiez l'encodage et les en-tÃªtes.", "danger")
         return redirect(url_for("admin.admin_import_express"), code=303)
 
     if not parsed_file.headers:
-        flash("Aucune colonne détectée dans le fichier importé.", "warning")
+        flash("Aucune colonne dÃ©tectÃ©e dans le fichier importÃ©.", "warning")
         return redirect(url_for("admin.admin_import_express"), code=303)
 
     preview_file = save_preview_upload(
@@ -12324,7 +12367,7 @@ def admin_import_preview():
     except Exception:
         db.session.rollback()
         cleanup_preview_upload(preview_file["path"])
-        flash("Le lot n'a pas pu être préparé pour prévisualisation.", "danger")
+        flash("Le lot n'a pas pu Ãªtre prÃ©parÃ© pour prÃ©visualisation.", "danger")
         return redirect(url_for("admin.admin_import_express"), code=303)
 
     _set_admin_import_preview_state(
@@ -12351,7 +12394,7 @@ def admin_import_preview():
 @admin_required
 def admin_import_confirm():
     if not _admin_import_tables_ready():
-        flash("Import Express indisponible tant que la migration n'est pas appliquée.", "warning")
+        flash("Import Express indisponible tant que la migration n'est pas appliquÃ©e.", "warning")
         return redirect(url_for("admin.admin_import_express"), code=303)
 
     state = _admin_import_preview_state()
@@ -12361,7 +12404,7 @@ def admin_import_confirm():
         batch_id = 0
 
     if not state or int(state.get("batch_id") or 0) != batch_id:
-        flash("La prévisualisation a expiré. Rechargez le fichier avant import.", "warning")
+        flash("La prÃ©visualisation a expirÃ©. Rechargez le fichier avant import.", "warning")
         return redirect(url_for("admin.admin_import_express"), code=303)
 
     batch = ImportBatch.query.filter_by(
@@ -12376,7 +12419,7 @@ def admin_import_confirm():
     except Exception:
         batch.status = "failed"
         batch.errors_json = encode_json_payload(
-            [{"message": "Le fichier temporaire de prévisualisation n'est plus disponible."}]
+            [{"message": "Le fichier temporaire de prÃ©visualisation n'est plus disponible."}]
         )
         db.session.commit()
         _clear_admin_import_preview_state(remove_file=True)
@@ -12448,10 +12491,10 @@ def admin_import_confirm():
 
     _clear_admin_import_preview_state(remove_file=True)
     flash(
-        f"Import terminé: {outcome.created_count} créé(s), "
+        f"Import terminÃ©: {outcome.created_count} crÃ©Ã©(s), "
         f"{outcome.updated_count} enrichi(s), "
-        f"{outcome.skipped_duplicate_count} doublon(s) ignoré(s), "
-        f"{outcome.rejected_count} rejeté(s).",
+        f"{outcome.skipped_duplicate_count} doublon(s) ignorÃ©(s), "
+        f"{outcome.rejected_count} rejetÃ©(s).",
         "success" if outcome.error_count == 0 else "warning",
     )
 
@@ -12497,7 +12540,7 @@ def admin_import_history():
 @admin_required
 def admin_import_rollback(batch_id: int):
     if not _admin_import_tables_ready():
-        flash("Import Express indisponible tant que la migration n'est pas appliquée.", "warning")
+        flash("Import Express indisponible tant que la migration n'est pas appliquÃ©e.", "warning")
         return redirect(url_for("admin.admin_import_history"), code=303)
 
     batch = ImportBatch.query.filter_by(id=batch_id).first_or_404()
@@ -12517,7 +12560,7 @@ def admin_import_rollback(batch_id: int):
     if int(state.get("batch_id") or 0) == int(batch.id):
         _clear_admin_import_preview_state(remove_file=True)
 
-    flash(f"Rollback terminé: {deleted_count} lead(s) supprimé(s).", "success")
+    flash(f"Rollback terminÃ©: {deleted_count} lead(s) supprimÃ©(s).", "success")
     return redirect(url_for("admin.admin_import_history"), code=303)
 
 
@@ -13402,7 +13445,7 @@ def admin_professional_lead_update_status(lead_id: int):
         )
         db.session.commit()
         current_app.logger.info(
-            "Lead %s status changed from %s → %s",
+            "Lead %s status changed from %s â†’ %s",
             lead.id,
             old_status,
             new_status,
@@ -14688,21 +14731,21 @@ OPS_REPORT_STATUS_LABELS = {
     "pending": "En attente",
     "in_progress": "En cours",
     "open": "En cours",
-    "closed": "Clôturée",
-    "completed": "Clôturée",
-    "done": "Clôturée",
-    "resolved": "Clôturée",
-    "cancelled": "Annulée",
-    "canceled": "Annulée",
+    "closed": "ClÃ´turÃ©e",
+    "completed": "ClÃ´turÃ©e",
+    "done": "ClÃ´turÃ©e",
+    "resolved": "ClÃ´turÃ©e",
+    "cancelled": "AnnulÃ©e",
+    "canceled": "AnnulÃ©e",
 }
 
 OPS_REPORT_PRIORITY_LABELS = {
     "normal": "Normale",
     "medium": "Normale",
     "low": "Normale",
-    "high": "Élevée",
-    "elevee": "Élevée",
-    "élevée": "Élevée",
+    "high": "Ã‰levÃ©e",
+    "elevee": "Ã‰levÃ©e",
+    "Ã©levÃ©e": "Ã‰levÃ©e",
     "critical": "Critique",
     "critique": "Critique",
     "urgent": "Critique",
@@ -14710,7 +14753,7 @@ OPS_REPORT_PRIORITY_LABELS = {
 
 OPS_REPORT_CATEGORY_LABELS = {
     "housing": "Logement",
-    "health": "Santé",
+    "health": "SantÃ©",
     "admin": "Administratif",
     "orientation": "Orientation",
     "legal": "Juridique",
@@ -14718,13 +14761,13 @@ OPS_REPORT_CATEGORY_LABELS = {
 }
 
 OPS_REPORT_DEFINITIONS = {
-    "Périmètre": "Demandes visibles dans le périmètre de pilotage sélectionné.",
-    "Ouvert": "Situation encore active ou nécessitant un suivi.",
-    "Clôturé": "Situation traitée ou clôturée sur la période.",
-    "Sans action récente": "Situation ouverte sans activité enregistrée depuis plus de 72 heures.",
-    "Non assignée": "Situation sans responsable opérationnel identifié.",
-    "Délai moyen d'assignation": "Temps moyen entre la création d'une demande et son attribution.",
-    "Délai moyen de résolution": "Temps moyen entre la création et la clôture d'une demande.",
+    "PÃ©rimÃ¨tre": "Demandes visibles dans le pÃ©rimÃ¨tre de pilotage sÃ©lectionnÃ©.",
+    "Ouvert": "Situation encore active ou nÃ©cessitant un suivi.",
+    "ClÃ´turÃ©": "Situation traitÃ©e ou clÃ´turÃ©e sur la pÃ©riode.",
+    "Sans action rÃ©cente": "Situation ouverte sans activitÃ© enregistrÃ©e depuis plus de 72 heures.",
+    "Non assignÃ©e": "Situation sans responsable opÃ©rationnel identifiÃ©.",
+    "DÃ©lai moyen d'assignation": "Temps moyen entre la crÃ©ation d'une demande et son attribution.",
+    "DÃ©lai moyen de rÃ©solution": "Temps moyen entre la crÃ©ation et la clÃ´ture d'une demande.",
 }
 
 
@@ -14768,17 +14811,17 @@ def _ops_report_labelize(value, mapping: dict[str, str]) -> str:
 def _ops_report_clean_text(value: str) -> str:
     return (
         str(value or "")
-        .replace(" a ", " à ")
-        .replace("Elevee", "Élevée")
-        .replace("elevee", "élevée")
-        .replace("Cloturee", "Clôturée")
-        .replace("cloturee", "clôturée")
-        .replace("Annulee", "Annulée")
-        .replace("annulee", "annulée")
-        .replace("Sante", "Santé")
-        .replace("sante", "santé")
-        .replace("Maitrise", "Maîtrisé")
-        .replace("Depasse", "Dépassé")
+        .replace(" a ", " Ã  ")
+        .replace("Elevee", "Ã‰levÃ©e")
+        .replace("elevee", "Ã©levÃ©e")
+        .replace("Cloturee", "ClÃ´turÃ©e")
+        .replace("cloturee", "clÃ´turÃ©e")
+        .replace("Annulee", "AnnulÃ©e")
+        .replace("annulee", "annulÃ©e")
+        .replace("Sante", "SantÃ©")
+        .replace("sante", "santÃ©")
+        .replace("Maitrise", "MaÃ®trisÃ©")
+        .replace("Depasse", "DÃ©passÃ©")
     )
 
 
@@ -14837,10 +14880,10 @@ def _ops_report_sla_level(item: dict) -> str:
     ref_naive = reference.astimezone(UTC).replace(tzinfo=None) if getattr(reference, "tzinfo", None) else reference
     age_hours = (now_naive - ref_naive).total_seconds() / 3600.0
     if age_hours >= 72:
-        return "Dépassé"
+        return "DÃ©passÃ©"
     if age_hours >= 48:
         return "Vigilance"
-    return "Maîtrisé"
+    return "MaÃ®trisÃ©"
 
 
 def _build_operational_report_xlsx_bytes(report: dict):
@@ -14852,11 +14895,11 @@ def _build_operational_report_xlsx_bytes(report: dict):
         return None, None
 
     wb = Workbook()
-    wb.properties.title = "HelpChain - Rapport opérationnel"
-    wb.properties.subject = "Rapport opérationnel institutionnel"
+    wb.properties.title = "HelpChain - Rapport opÃ©rationnel"
+    wb.properties.subject = "Rapport opÃ©rationnel institutionnel"
     wb.properties.creator = "HelpChain"
     wb.properties.company = "HelpChain"
-    wb.properties.description = "Classeur de pilotage opérationnel territorial"
+    wb.properties.description = "Classeur de pilotage opÃ©rationnel territorial"
 
     title_fill = PatternFill("solid", fgColor="0F2742")
     section_fill = PatternFill("solid", fgColor="EAF1F8")
@@ -14877,9 +14920,9 @@ def _build_operational_report_xlsx_bytes(report: dict):
 
     def _severity_fill(level: str):
         normalized = str(level or "").lower()
-        if normalized in {"critical", "critique", "dépassé", "depasse"}:
+        if normalized in {"critical", "critique", "dÃ©passÃ©", "depasse"}:
             return critical_fill
-        if normalized in {"high", "élevée", "elevee", "sous pression"}:
+        if normalized in {"high", "Ã©levÃ©e", "elevee", "sous pression"}:
             return elevated_fill
         if normalized in {"moderate", "vigilance", "watch"}:
             return watch_fill
@@ -14927,17 +14970,17 @@ def _build_operational_report_xlsx_bytes(report: dict):
     generated_label = _ops_report_format_datetime(report["generated_at"])
 
     ws = wb.active
-    ws.title = "Synthèse exécutive"
-    _style_title(ws, "HelpChain - Rapport opérationnel", "Synthèse institutionnelle de pilotage")
-    ws["A4"] = "Période"
+    ws.title = "SynthÃ¨se exÃ©cutive"
+    _style_title(ws, "HelpChain - Rapport opÃ©rationnel", "SynthÃ¨se institutionnelle de pilotage")
+    ws["A4"] = "PÃ©riode"
     ws["B4"] = f"{report['period']['days']} jours"
-    ws["D4"] = "Périmètre"
+    ws["D4"] = "PÃ©rimÃ¨tre"
     ws["E4"] = scope_name
-    ws["A5"] = "Généré le"
+    ws["A5"] = "GÃ©nÃ©rÃ© le"
     ws["B5"] = generated_label
-    ws["D5"] = "Confidentialité"
+    ws["D5"] = "ConfidentialitÃ©"
     ws["E5"] = "Usage interne"
-    ws["A6"] = "Statut opérationnel"
+    ws["A6"] = "Statut opÃ©rationnel"
     ws["B6"] = report["operational_conclusion"]["stability"]
     for ref in ("A4", "A5", "A6", "D4", "D5"):
         ws[ref].font = header_font
@@ -14945,7 +14988,7 @@ def _build_operational_report_xlsx_bytes(report: dict):
         ws[ref].font = body_font
 
     _style_section_row(ws, 8, "Executive snapshot")
-    snapshot_headers = ["Indicateur", "Valeur", "Évolution", "Sévérité", "Lecture"]
+    snapshot_headers = ["Indicateur", "Valeur", "Ã‰volution", "SÃ©vÃ©ritÃ©", "Lecture"]
     _style_header_row(ws, 9, snapshot_headers)
     row_idx = 10
     zones_count = len(report.get("territorial_pressure", {}).get("zones", []) or [])
@@ -14980,7 +15023,7 @@ def _build_operational_report_xlsx_bytes(report: dict):
             cell.fill = _severity_fill("moderate" if zones_count else "stable")
 
     row_idx += 2
-    _style_section_row(ws, row_idx, "Synthèse exécutive")
+    _style_section_row(ws, row_idx, "SynthÃ¨se exÃ©cutive")
     row_idx += 1
     ws.merge_cells(start_row=row_idx, start_column=1, end_row=row_idx + 2, end_column=7)
     ws.cell(row=row_idx, column=1, value=report.get("executive_summary", ""))
@@ -14991,7 +15034,7 @@ def _build_operational_report_xlsx_bytes(report: dict):
     row_idx += 4
     _style_section_row(ws, row_idx, "Top 3 actions prioritaires")
     row_idx += 1
-    _style_header_row(ws, row_idx, ["Priorité", "Action", "Impact", "Horizon"])
+    _style_header_row(ws, row_idx, ["PrioritÃ©", "Action", "Impact", "Horizon"])
     row_idx += 1
     for item in report.get("priority_actions", [])[:3]:
         values = [
@@ -15013,9 +15056,9 @@ def _build_operational_report_xlsx_bytes(report: dict):
     ws.auto_filter.ref = f"A9:E{max(10, row_idx - 1)}"
     _auto_size(ws)
 
-    ws = wb.create_sheet("Indicateurs opérationnels")
-    _style_title(ws, "Indicateurs opérationnels", scope_name)
-    _style_header_row(ws, 4, ["Indicateur", "Valeur", "Évolution", "Lecture opérationnelle"])
+    ws = wb.create_sheet("Indicateurs opÃ©rationnels")
+    _style_title(ws, "Indicateurs opÃ©rationnels", scope_name)
+    _style_header_row(ws, 4, ["Indicateur", "Valeur", "Ã‰volution", "Lecture opÃ©rationnelle"])
     row_idx = 5
     for item in _ops_report_indicator_rows(report):
         for col_idx, value in enumerate(item, start=1):
@@ -15026,9 +15069,9 @@ def _build_operational_report_xlsx_bytes(report: dict):
             cell.alignment = Alignment(vertical="top", wrap_text=True)
         row_idx += 1
     extra_rows = [
-        ["Taux d’assignation", f"{_ops_report_format_number(report.get('sla', {}).get('assignment_rate', 0.0))} %", "", "Part des situations ouvertes déjà attribuées."],
-        ["Résolues <24h", f"{_ops_report_format_number(report.get('sla', {}).get('resolved_under_24h_rate', 0.0))} %", "", "Part des situations clôturées rapidement sur la période."],
-        ["Délai moyen d’assignation", f"{_ops_report_format_number(report.get('sla', {}).get('avg_assignment_hours', 0.0))} h", "", "Temps moyen entre la création et l’attribution."],
+        ["Taux dâ€™assignation", f"{_ops_report_format_number(report.get('sla', {}).get('assignment_rate', 0.0))} %", "", "Part des situations ouvertes dÃ©jÃ  attribuÃ©es."],
+        ["RÃ©solues <24h", f"{_ops_report_format_number(report.get('sla', {}).get('resolved_under_24h_rate', 0.0))} %", "", "Part des situations clÃ´turÃ©es rapidement sur la pÃ©riode."],
+        ["DÃ©lai moyen dâ€™assignation", f"{_ops_report_format_number(report.get('sla', {}).get('avg_assignment_hours', 0.0))} h", "", "Temps moyen entre la crÃ©ation et lâ€™attribution."],
     ]
     for item in extra_rows:
         for col_idx, value in enumerate(item, start=1):
@@ -15043,7 +15086,7 @@ def _build_operational_report_xlsx_bytes(report: dict):
     _auto_size(ws)
 
     ws = wb.create_sheet("Tensions territoriales")
-    _style_title(ws, "Tensions territoriales", "Lecture territoriale consolidée")
+    _style_title(ws, "Tensions territoriales", "Lecture territoriale consolidÃ©e")
     territorial_headers = ["Zone", "Couverture", "Ouvertes", "Intervenants actifs", "Disponibles", "Niveau tension", "Score pression", "Lecture"]
     _style_header_row(ws, 4, territorial_headers)
     row_idx = 5
@@ -15073,13 +15116,13 @@ def _build_operational_report_xlsx_bytes(report: dict):
     _auto_size(ws)
 
     ws = wb.create_sheet("Actions prioritaires")
-    _style_title(ws, "Actions prioritaires", "Pilotage et arbitrages recommandés")
-    _style_header_row(ws, 4, ["Priorité", "Action", "Impact", "Horizon", "Responsable recommandé"])
+    _style_title(ws, "Actions prioritaires", "Pilotage et arbitrages recommandÃ©s")
+    _style_header_row(ws, 4, ["PrioritÃ©", "Action", "Impact", "Horizon", "Responsable recommandÃ©"])
     row_idx = 5
     for item in report.get("priority_actions", []):
         horizon = item.get("horizon", "")
         if str(horizon).lower() == "immediat":
-            owner_hint = "Direction opérationnelle"
+            owner_hint = "Direction opÃ©rationnelle"
         elif str(horizon).lower() == "72h":
             owner_hint = "Coordination territoriale"
         else:
@@ -15104,9 +15147,9 @@ def _build_operational_report_xlsx_bytes(report: dict):
     ws.auto_filter.ref = f"A4:E{max(4, row_idx - 1)}"
     _auto_size(ws)
 
-    ws = wb.create_sheet("Situations opérationnelles")
-    _style_title(ws, "Situations opérationnelles", "Liste de travail institutionnelle")
-    situation_headers = ["ID", "Titre métier", "Ville", "Statut lisible", "Priorité lisible", "Créée le", "Dernière activité", "Référent", "Niveau SLA"]
+    ws = wb.create_sheet("Situations opÃ©rationnelles")
+    _style_title(ws, "Situations opÃ©rationnelles", "Liste de travail institutionnelle")
+    situation_headers = ["ID", "Titre mÃ©tier", "Ville", "Statut lisible", "PrioritÃ© lisible", "CrÃ©Ã©e le", "DerniÃ¨re activitÃ©", "RÃ©fÃ©rent", "Niveau SLA"]
     _style_header_row(ws, 4, situation_headers)
     row_idx = 5
     for item in report.get("items", []):
@@ -15118,7 +15161,7 @@ def _build_operational_report_xlsx_bytes(report: dict):
             _ops_report_labelize(item.get("priority"), OPS_REPORT_PRIORITY_LABELS),
             _ops_report_format_datetime(item.get("created_at")) if item.get("created_at") else "-",
             _ops_report_format_datetime(item.get("updated_at")) if item.get("updated_at") else "-",
-            "Attribué" if item.get("owner_id") else "Non assigné",
+            "AttribuÃ©" if item.get("owner_id") else "Non assignÃ©",
             _ops_report_sla_level(item),
         ]
         for col_idx, value in enumerate(values, start=1):
@@ -15135,7 +15178,7 @@ def _build_operational_report_xlsx_bytes(report: dict):
     _auto_size(ws, max_width=34)
 
     ws = wb.create_sheet("Analyse automatique")
-    _style_title(ws, "Analyse automatique", "Assistant d’aide au pilotage")
+    _style_title(ws, "Analyse automatique", "Assistant dâ€™aide au pilotage")
     _style_header_row(ws, 4, ["Constat", "Niveau", "Risque", "Horizon", "Analyse"])
     row_idx = 5
     for item in report.get("automatic_analysis", []):
@@ -15159,9 +15202,9 @@ def _build_operational_report_xlsx_bytes(report: dict):
     ws.auto_filter.ref = f"A4:E{max(4, row_idx - 1)}"
     _auto_size(ws)
 
-    ws = wb.create_sheet("Définitions")
-    _style_title(ws, "Définitions", "Glossaire institutionnel")
-    _style_header_row(ws, 4, ["Indicateur", "Définition"])
+    ws = wb.create_sheet("DÃ©finitions")
+    _style_title(ws, "DÃ©finitions", "Glossaire institutionnel")
+    _style_header_row(ws, 4, ["Indicateur", "DÃ©finition"])
     row_idx = 5
     for label, definition in OPS_REPORT_DEFINITIONS.items():
         ws.cell(row=row_idx, column=1, value=label)
@@ -15173,9 +15216,9 @@ def _build_operational_report_xlsx_bytes(report: dict):
             cell.alignment = Alignment(vertical="top", wrap_text=True)
         row_idx += 1
     extra_defs = [
-        ("Couverture territoriale", "Niveau de présence opérationnelle visible sur une zone donnée."),
-        ("Charge opérationnelle", "Volume de situations ouvertes rapporté aux moyens mobilisables."),
-        ("SLA dépassé", "Situation dont le jalon de suivi attendu n’est plus respecté."),
+        ("Couverture territoriale", "Niveau de prÃ©sence opÃ©rationnelle visible sur une zone donnÃ©e."),
+        ("Charge opÃ©rationnelle", "Volume de situations ouvertes rapportÃ© aux moyens mobilisables."),
+        ("SLA dÃ©passÃ©", "Situation dont le jalon de suivi attendu nâ€™est plus respectÃ©."),
     ]
     for label, definition in extra_defs:
         ws.cell(row=row_idx, column=1, value=label)
@@ -15222,26 +15265,26 @@ def _build_operational_report_csv_response(report: dict):
     output = StringIO()
     writer = csv.writer(output, delimiter=";")
 
-    writer.writerow(["Rapport opérationnel HelpChain"])
-    writer.writerow(["Périmètre", report["scope"]["structure_name"] or "Toutes les structures visibles"])
-    writer.writerow(["Période", f'{report["period"]["days"]} jours'])
-    writer.writerow(["Généré le", _ops_report_format_datetime(report["generated_at"])])
-    writer.writerow(["Confidentialité", "Usage interne"])
+    writer.writerow(["Rapport opÃ©rationnel HelpChain"])
+    writer.writerow(["PÃ©rimÃ¨tre", report["scope"]["structure_name"] or "Toutes les structures visibles"])
+    writer.writerow(["PÃ©riode", f'{report["period"]["days"]} jours'])
+    writer.writerow(["GÃ©nÃ©rÃ© le", _ops_report_format_datetime(report["generated_at"])])
+    writer.writerow(["ConfidentialitÃ©", "Usage interne"])
     writer.writerow([])
 
-    writer.writerow(["Synthèse exécutive"])
-    writer.writerow(["Niveau opérationnel", report["operational_conclusion"]["stability"]])
-    writer.writerow(["Lecture exécutive courte", report["executive_summary"]])
+    writer.writerow(["SynthÃ¨se exÃ©cutive"])
+    writer.writerow(["Niveau opÃ©rationnel", report["operational_conclusion"]["stability"]])
+    writer.writerow(["Lecture exÃ©cutive courte", report["executive_summary"]])
     writer.writerow([])
 
-    writer.writerow(["Indicateurs clés"])
+    writer.writerow(["Indicateurs clÃ©s"])
     writer.writerow(["Indicateur", "Valeur", "Lecture"])
     for row in _ops_report_indicator_rows(report):
         writer.writerow(row)
     writer.writerow([])
 
-    writer.writerow(["Répartition par catégorie"])
-    writer.writerow(["Catégorie", "Volume"])
+    writer.writerow(["RÃ©partition par catÃ©gorie"])
+    writer.writerow(["CatÃ©gorie", "Volume"])
     for row in report["breakdowns"]["by_category"]:
         writer.writerow([
             _ops_report_labelize(row["category"], OPS_REPORT_CATEGORY_LABELS),
@@ -15249,7 +15292,7 @@ def _build_operational_report_csv_response(report: dict):
         ])
     writer.writerow([])
 
-    writer.writerow(["Répartition par statut"])
+    writer.writerow(["RÃ©partition par statut"])
     writer.writerow(["Statut", "Volume"])
     for row in report["breakdowns"]["by_status"]:
         writer.writerow([
@@ -15258,15 +15301,15 @@ def _build_operational_report_csv_response(report: dict):
         ])
     writer.writerow([])
 
-    writer.writerow(["Définitions des indicateurs"])
-    writer.writerow(["Indicateur", "Définition"])
+    writer.writerow(["DÃ©finitions des indicateurs"])
+    writer.writerow(["Indicateur", "DÃ©finition"])
     for label, definition in OPS_REPORT_DEFINITIONS.items():
         writer.writerow([label, definition])
     writer.writerow([])
 
     if report.get("priority_actions"):
         writer.writerow(["Actions prioritaires"])
-        writer.writerow(["Priorité", "Action", "Impact", "Horizon"])
+        writer.writerow(["PrioritÃ©", "Action", "Impact", "Horizon"])
         for item in report["priority_actions"]:
             writer.writerow([
                 _ops_report_labelize(item.get("severity_label"), OPS_REPORT_PRIORITY_LABELS),
@@ -15278,39 +15321,39 @@ def _build_operational_report_csv_response(report: dict):
     csv_body = output.getvalue()
     csv_body = (
         csv_body
-        .replace(" a ", " à ")
-        .replace("Confidentialite", "Confidentialité")
-        .replace("Synthese", "Synthèse")
-        .replace("executive", "exécutive")
-        .replace("operationnel", "opérationnel")
-        .replace("operationnelle", "opérationnelle")
-        .replace("operationnelles", "opérationnelles")
-        .replace("operationnellement", "opérationnellement")
-        .replace("cloturees", "clôturées")
-        .replace("Cloturee", "Clôturée")
-        .replace("Cloturé", "Clôturé")
-        .replace("Cloture", "Clôturé")
-        .replace("Sante", "Santé")
-        .replace("Repartition", "Répartition")
-        .replace("Categorie", "Catégorie")
-        .replace("Perimetre", "Périmètre")
-        .replace("perimetre", "périmètre")
-        .replace("Delai", "Délai")
-        .replace("periode", "période")
-        .replace("recente", "récente")
-        .replace("activite", "activité")
-        .replace("evolution", "évolution")
+        .replace(" a ", " Ã  ")
+        .replace("Confidentialite", "ConfidentialitÃ©")
+        .replace("Synthese", "SynthÃ¨se")
+        .replace("executive", "exÃ©cutive")
+        .replace("operationnel", "opÃ©rationnel")
+        .replace("operationnelle", "opÃ©rationnelle")
+        .replace("operationnelles", "opÃ©rationnelles")
+        .replace("operationnellement", "opÃ©rationnellement")
+        .replace("cloturees", "clÃ´turÃ©es")
+        .replace("Cloturee", "ClÃ´turÃ©e")
+        .replace("CloturÃ©", "ClÃ´turÃ©")
+        .replace("Cloture", "ClÃ´turÃ©")
+        .replace("Sante", "SantÃ©")
+        .replace("Repartition", "RÃ©partition")
+        .replace("Categorie", "CatÃ©gorie")
+        .replace("Perimetre", "PÃ©rimÃ¨tre")
+        .replace("perimetre", "pÃ©rimÃ¨tre")
+        .replace("Delai", "DÃ©lai")
+        .replace("periode", "pÃ©riode")
+        .replace("recente", "rÃ©cente")
+        .replace("activite", "activitÃ©")
+        .replace("evolution", "Ã©volution")
         .replace("assignation", "assignation")
-        .replace("Elevee", "Élevée")
-        .replace("assignee", "assignée")
-        .replace("creation", "création")
-        .replace("resolution", "résolution")
-        .replace("traitee", "traitée")
-        .replace("cloture", "clôture")
-        .replace("selectionne", "sélectionné")
-        .replace("necessitant", "nécessitant")
-        .replace("enregistree", "enregistrée")
-        .replace("identifie", "identifié")
+        .replace("Elevee", "Ã‰levÃ©e")
+        .replace("assignee", "assignÃ©e")
+        .replace("creation", "crÃ©ation")
+        .replace("resolution", "rÃ©solution")
+        .replace("traitee", "traitÃ©e")
+        .replace("cloture", "clÃ´ture")
+        .replace("selectionne", "sÃ©lectionnÃ©")
+        .replace("necessitant", "nÃ©cessitant")
+        .replace("enregistree", "enregistrÃ©e")
+        .replace("identifie", "identifiÃ©")
     )
     csv_data = "\ufeff" + csv_body
     filename = f"helpchain-rapport-operationnel-{report['period']['days']}j.csv"
