@@ -1783,9 +1783,13 @@
       }
 
       body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-row--intake .hc-home-premium__shot-img--module-demandes {
-        width: 96% !important;
-        max-width: 96% !important;
-        clip-path: inset(0.5% 1% 0.8% 0.2% round 14px);
+        width: 100% !important;
+        max-width: 100% !important;
+        height: clamp(272px, 68vw, 352px) !important;
+        padding: 8px 10px 12px !important;
+        object-fit: cover !important;
+        object-position: center top !important;
+        clip-path: inset(0 round 14px);
       }
 
       body.hc-page-home .hc-home-premium__shot-card--interstructure .hc-home-premium__shot-img {
