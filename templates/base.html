@@ -651,7 +651,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
           <ul class="navbar-nav mx-auto align-items-lg-center hc-public-nav-main">
             <li class="nav-item hc-nav-mega {{ 'is-active' if produit_active else '' }}" data-hc-mega>
               <button class="hc-nav-mega__trigger" type="button" data-hc-mega-trigger aria-expanded="false" aria-controls="hcPublicMegaProduct" {% if produit_active %}aria-current="page"{% endif %}>
-                <span class="hc-navlabel">{{ _('Produit') }}</span>
+                <span class="hc-navlabel">{{ _('Coordination') }}</span>
               </button>
               <div class="hc-nav-mega__panel" id="hcPublicMegaProduct" data-hc-mega-panel hidden>
                 <div class="hc-nav-mega__grid">
@@ -661,11 +661,11 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                     <p>{{ _('Accédez au coeur opérationnel de la plateforme : organisation des suivis, continuité institutionnelle et déploiement progressif.') }}</p>
                   </div>
                   <div class="hc-nav-mega__links">
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Fonctionnement') }}</strong><span>{{ _('De la demande au suivi multi-acteurs traçable.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Coordination') }}</strong><span>{{ _('De la demande au suivi multi-acteurs traçable.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation reste visible, relançable et suivie dans le temps.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive, gouvernance opérationnelle et continuité institutionnelle.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.offre') }}"><strong>{{ _('Cadres de déploiement') }}</strong><span>{{ _('Cadres pilote, professionnel et institutionnel pour structurer l’adoption.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Infrastructure de coordination pour CCAS, collectivités et associations.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Pour les structures') }}</strong><span>{{ _('Infrastructure de coordination pour CCAS, collectivités et structures multi-acteurs.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi habilité pour acteurs responsables de la continuité.') }}</span></a>
                   </div>
                 </div>
@@ -673,7 +673,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
             </li>
             <li class="nav-item">
               <a class="nav-link {{ 'active' if secteurs_active else '' }}" href="{{ url_for('main.pour_les_structures') }}" {% if secteurs_active %}aria-current="page"{% endif %}>
-                <span class="hc-navlabel">{{ _('Secteurs') }}</span>
+                <span class="hc-navlabel">{{ _('Pour les structures') }}</span>
               </a>
             </li>
             <li class="nav-item">
@@ -687,8 +687,8 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {{ 'active' if ressources_active else '' }}" href="{{ url_for('main.cas_usage') }}" {% if ressources_active %}aria-current="page"{% endif %}>
-                <span class="hc-navlabel">{{ _('Ressources') }}</span>
+              <a class="nav-link {{ 'active' if ressources_active else '' }}" href="{{ url_for('main.architecture') }}" {% if ressources_active %}aria-current="page"{% endif %}>
+                <span class="hc-navlabel">{{ _('Architecture') }}</span>
               </a>
             </li>
             <li class="nav-item hc-nav-mega hc-nav-mega--analyses {{ 'is-active' if analyses_active else '' }}" data-hc-mega>
@@ -722,7 +722,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
           <ul class="navbar-nav ms-auto">
             <li class="nav-item hc-nav-mega {{ 'is-active' if produit_active else '' }}" data-hc-mega>
               <button class="hc-nav-mega__trigger" type="button" data-hc-mega-trigger aria-expanded="false" aria-controls="hcPublicMegaProductAuth" {% if produit_active %}aria-current="page"{% endif %}>
-                {{ _('Produit') }}
+                {{ _('Coordination') }}
               </button>
               <div class="hc-nav-mega__panel" id="hcPublicMegaProductAuth" data-hc-mega-panel hidden>
                 <div class="hc-nav-mega__grid">
@@ -732,11 +732,11 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                     <p>{{ _('Accédez au coeur opérationnel de la plateforme : organisation des suivis, continuité institutionnelle et déploiement progressif.') }}</p>
                   </div>
                   <div class="hc-nav-mega__links">
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Fonctionnement') }}</strong><span>{{ _('De la demande au suivi multi-acteurs traçable.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Coordination') }}</strong><span>{{ _('De la demande au suivi multi-acteurs traçable.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation reste visible, relançable et suivie dans le temps.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive, gouvernance opérationnelle et continuité institutionnelle.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.offre') }}"><strong>{{ _('Cadres de déploiement') }}</strong><span>{{ _('Cadres pilote, professionnel et institutionnel pour structurer l’adoption.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Infrastructure de coordination pour CCAS, collectivités et associations.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Pour les structures') }}</strong><span>{{ _('Infrastructure de coordination pour CCAS, collectivités et structures multi-acteurs.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi habilité pour acteurs responsables de la continuité.') }}</span></a>
                   </div>
                 </div>
@@ -744,7 +744,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
             </li>
             <li class="nav-item">
               <a class="nav-link {{ 'active' if secteurs_active else '' }}" href="{{ url_for('main.pour_les_structures') }}" {% if secteurs_active %}aria-current="page"{% endif %}>
-                {{ _('Secteurs') }}
+                {{ _('Pour les structures') }}
               </a>
             </li>
             <li class="nav-item">
@@ -758,8 +758,8 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link {{ 'active' if ressources_active else '' }}" href="{{ url_for('main.cas_usage') }}" {% if ressources_active %}aria-current="page"{% endif %}>
-                {{ _('Ressources') }}
+              <a class="nav-link {{ 'active' if ressources_active else '' }}" href="{{ url_for('main.architecture') }}" {% if ressources_active %}aria-current="page"{% endif %}>
+                {{ _('Architecture') }}
               </a>
             </li>
             <li class="nav-item hc-nav-mega hc-nav-mega--analyses {{ 'is-active' if analyses_active else '' }}" data-hc-mega>
@@ -1027,16 +1027,16 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
       <aside class="hc-mobile-nav__panel" role="dialog" aria-modal="true" aria-label="{{ _('Navigation principale') }}">
         <div class="hc-mobile-nav__head">
           <h2 class="hc-mobile-nav__title">HelpChain</h2>
-          <p class="hc-mobile-nav__subtitle">{{ _('Infrastructure de coordination sociale') }}</p>
+          <p class="hc-mobile-nav__subtitle">{{ _('Infrastructure numérique de coordination') }}</p>
           <p class="hc-mobile-nav__section-label">{{ _('Navigation') }}</p>
           <button type="button" class="hc-mobile-nav__close" data-mobile-nav-close="1" aria-label="{{ _('Fermer le menu') }}">×</button>
         </div>
         <ul class="hc-mobile-nav__list">
           <li class="hc-mobile-nav__item">
-            <a class="{{ 'is-active' if produit_active else '' }}" href="{{ url_for('main.comment_ca_marche') }}" {% if produit_active %}aria-current="page"{% endif %}>{{ _('Produit') }}</a>
+            <a class="{{ 'is-active' if produit_active else '' }}" href="{{ url_for('main.comment_ca_marche') }}" {% if produit_active %}aria-current="page"{% endif %}>{{ _('Coordination') }}</a>
           </li>
           <li class="hc-mobile-nav__item">
-            <a class="{{ 'is-active' if secteurs_active else '' }}" href="{{ url_for('main.pour_les_structures') }}" {% if secteurs_active %}aria-current="page"{% endif %}>{{ _('Secteurs') }}</a>
+            <a class="{{ 'is-active' if secteurs_active else '' }}" href="{{ url_for('main.pour_les_structures') }}" {% if secteurs_active %}aria-current="page"{% endif %}>{{ _('Pour les structures') }}</a>
           </li>
           <li class="hc-mobile-nav__item">
             <a class="{{ 'is-active' if securite_active else '' }}" href="{{ url_for('main.securite') }}" {% if securite_active %}aria-current="page"{% endif %}>{{ _('Sécurité') }}</a>
@@ -1045,7 +1045,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
             <a class="{{ 'is-active' if deploiement_active else '' }}" href="{{ url_for('main.deploiement') }}" {% if deploiement_active %}aria-current="page"{% endif %}>{{ _('Déploiement') }}</a>
           </li>
           <li class="hc-mobile-nav__item">
-            <a class="{{ 'is-active' if ressources_active else '' }}" href="{{ url_for('main.cas_usage') }}" {% if ressources_active %}aria-current="page"{% endif %}>{{ _('Ressources') }}</a>
+            <a class="{{ 'is-active' if ressources_active else '' }}" href="{{ url_for('main.architecture') }}" {% if ressources_active %}aria-current="page"{% endif %}>{{ _('Architecture') }}</a>
           </li>
           <li class="hc-mobile-nav__item">
             <a class="{{ 'is-active' if mobile_ep.startswith('main.analyse_fragmentation') else '' }}" href="{{ url_for('main.analyse_fragmentation') }}" {% if mobile_ep.startswith('main.analyse_fragmentation') %}aria-current="page"{% endif %}>{{ _('Analyses opérationnelles') }}</a>
@@ -1656,7 +1656,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
           <div class="hc-footer__brand">
             <div class="hc-footer__copyright">&copy; {{ current_year|default(2026) }} HelpChain — Plateforme de coordination opérationnelle</div>
             <p class="hc-footer__trust">
-              {{ _('HelpChain est une plateforme de coordination opérationnelle conçue comme une infrastructure de continuité opérationnelle pour les organisations.') }}
+              {{ _('HelpChain est une plateforme de coordination opérationnelle conçue et opérée depuis la France, avec un ancrage opérationnel Paris Region, France.') }}
             </p>
           </div>
 
@@ -1664,19 +1664,19 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
             <nav class="hc-footer__group" aria-label="{{ _('Présentation HelpChain') }}">
               <h3 class="hc-footer__title">{{ _('Présentation') }}</h3>
               <a class="hc-footer__link" href="{{ url_for('main.about') }}">{{ _('À propos') }}</a>
-              <a class="hc-footer__link" href="{{ url_for('main.comment_ca_marche') }}">{{ _('Fonctionnement de la plateforme') }}</a>
+              <a class="hc-footer__link" href="{{ url_for('main.comment_ca_marche') }}">{{ _('Coordination de la plateforme') }}</a>
               <a class="hc-footer__link" href="{{ url_for('main.pourquoi_helpchain') }}">{{ _('Pourquoi HelpChain') }}</a>
               <a class="hc-footer__link" href="{{ url_for('main.vision_europeenne') }}">{{ _('Projet & Vision européenne') }}</a>
             </nav>
 
             <nav class="hc-footer__group" aria-label="{{ _('Collectivités et ressources') }}">
               <h3 class="hc-footer__title">{{ _('Ressources') }}</h3>
-              <a class="hc-footer__link" href="{{ url_for('main.collectivites_associations') }}">{{ _('Pour les collectivités et associations') }}</a>
+              <a class="hc-footer__link" href="{{ url_for('main.pour_les_structures') }}">{{ _('Pour les structures') }}</a>
               <a class="hc-footer__link" href="{{ url_for('main.demander_acces') }}">{{ _('Demander un acces') }}</a>
-              <a class="hc-footer__link" href="{{ url_for('main.cas_usage') }}">{{ _('Cas d’usage') }}</a>
+              <a class="hc-footer__link" href="{{ url_for('main.architecture') }}">{{ _('Architecture de coordination') }}</a>
               <a class="hc-footer__link" href="{{ url_for('main.pilotage_indicateurs') }}">{{ _('Pilotage & indicateurs') }}</a>
               <a class="hc-footer__link" href="{{ url_for('main.simulation_operationnelle') }}">{{ _('Simulation opérationnelle') }}</a>
-              <a class="hc-footer__link" href="{{ url_for('main.partenariats') }}">{{ _('Partenariats & déploiement territorial') }}</a>
+              <a class="hc-footer__link" href="{{ url_for('main.deploiement') }}">{{ _('Déploiement territorial') }}</a>
             </nav>
 
             <nav class="hc-footer__group" aria-label="{{ _('Cadre et conformité') }}">

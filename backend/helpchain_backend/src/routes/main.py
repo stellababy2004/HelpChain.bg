@@ -201,7 +201,7 @@ def _public_structured_data() -> list[dict[str, object]]:
     organization_id = f"{homepage_url}#organization"
     website_id = f"{homepage_url}#website"
     software_id = f"{homepage_url}#software"
-    locale_code = _seo_locale_code()
+    locale_code = "fr-FR"
     available_languages = [
         {"@type": "Language", "name": "Francais", "alternateName": "fr"},
         {"@type": "Language", "name": "English", "alternateName": "en"},
@@ -210,12 +210,16 @@ def _public_structured_data() -> list[dict[str, object]]:
     ]
     operational_keywords = [
         "coordination operationnelle",
+        "plateforme metier de coordination operationnelle",
+        "infrastructure numerique de coordination",
         "continuite operationnelle",
-        "pilotage inter-structures",
-        "suivi des demandes",
-        "orientation territoriale",
-        "reseau partenaire",
+        "pilotage operationnel",
+        "tracabilite",
+        "coordination multi-acteurs",
+        "supervision operationnelle",
+        "inter-structures",
     ]
+    france_area = {"@type": "Country", "name": "France"}
     organization = {
         "@context": "https://schema.org",
         "@type": "Organization",
@@ -224,13 +228,14 @@ def _public_structured_data() -> list[dict[str, object]]:
         "url": homepage_url,
         "logo": url_for("static", filename="img/hc-logo-mark.svg", _external=True),
         "description": _(
-            "HelpChain est une plateforme de coordination operationnelle concue en France pour structurer la continuite des demandes, l'orientation et le suivi inter-structures."
+            "HelpChain est une plateforme de coordination operationnelle concue et operee depuis la France pour structurer le pilotage, la tracabilite et la continuite operationnelle dans des environnements institutionnels et multi-acteurs."
         ),
         "email": "contact@helpchain.live",
-        "areaServed": [
-            {"@type": "Country", "name": "France"},
-            {"@type": "Place", "name": "Union europeenne"},
-        ],
+        "location": {
+            "@type": "Place",
+            "name": "Paris Region, France",
+        },
+        "areaServed": france_area,
         "knowsAbout": operational_keywords,
     }
     website = {
@@ -254,11 +259,12 @@ def _public_structured_data() -> list[dict[str, object]]:
         "inLanguage": locale_code,
         "availableLanguage": available_languages,
         "description": _(
-            "Plateforme SaaS de coordination operationnelle pour la continuite inter-structures, le suivi des demandes et le pilotage des parcours."
+            "Plateforme metier de coordination operationnelle concue et operee depuis la France pour le pilotage des flux, la supervision des workflows, la tracabilite des actions et la continuite inter-structures."
         ),
         "mainEntityOfPage": canonical_url,
         "featureList": [
             _("coordination operationnelle des demandes"),
+            _("infrastructure numerique de coordination"),
             _("orientation et suivi inter-structures"),
             _("pilotage et supervision operationnelle"),
             _("tracabilite des actions et des statuts"),
@@ -269,13 +275,10 @@ def _public_structured_data() -> list[dict[str, object]]:
         "audience": {
             "@type": "Audience",
             "audienceType": _(
-                "structures publiques, associations, collectivites et professionnels habilites"
+                "collectivites, etablissements, operateurs, structures publiques et reseaux professionnels"
             ),
         },
-        "areaServed": [
-            {"@type": "Country", "name": "France"},
-            {"@type": "Place", "name": "Union europeenne"},
-        ],
+        "areaServed": france_area,
         "keywords": ", ".join(operational_keywords),
     }
     breadcrumbs = _public_breadcrumb_items()
