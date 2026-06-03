@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}{{ _('HelpChain | Plateforme SaaS de coordination opérationnelle inter-structures') }}{% endblock %}
-{% block meta_description %}{{ _('HelpChain est une plateforme SaaS de coordination opérationnelle conçue en France pour organiser la continuité des demandes, l’orientation, le suivi et le pilotage inter-structures.') }}{% endblock %}
-{% block og_title %}{{ _('HelpChain | Plateforme SaaS de coordination opérationnelle inter-structures') }}{% endblock %}
+{% block title %}{{ _('HelpChain | Plateforme de coordination opérationnelle pour environnements institutionnels') }}{% endblock %}
+{% block meta_description %}{{ _('HelpChain est une plateforme de coordination opérationnelle conçue en France pour piloter les flux, la traçabilité, la supervision et la continuité opérationnelle dans les environnements institutionnels et multi-acteurs.') }}{% endblock %}
+{% block og_title %}{{ _('HelpChain | Plateforme de coordination opérationnelle pour environnements institutionnels') }}{% endblock %}
+{% block og_description %}{{ _('Infrastructure numérique conçue en France pour le pilotage, la coordination multi-acteurs, la traçabilité et la continuité opérationnelle.') }}{% endblock %}
+{% block twitter_description %}{{ _('Infrastructure numérique conçue en France pour le pilotage, la coordination multi-acteurs, la traçabilité et la continuité opérationnelle.') }}{% endblock %}
 {% block body_class %}hc-page-home{% endblock %}
 
 {% block extra_css %}
@@ -1253,7 +1255,7 @@
 
 {% block content %}
 {% set default_queue = [
-  {'city': 'Boulogne-Billancourt', 'type': 'Aide sociale', 'priority': 'Priorité haute', 'status': 'À orienter'},
+  {'city': 'Boulogne-Billancourt', 'type': 'Coordination territoriale', 'priority': 'Priorité haute', 'status': 'À orienter'},
   {'city': 'Lille', 'type': 'Dossier logement', 'priority': 'SLA 24h', 'status': 'En instruction'},
   {'city': 'Nantes', 'type': 'Coordination terrain', 'priority': 'Priorité normale', 'status': 'Assigné'}
 ] %}
@@ -1265,11 +1267,11 @@
         <span class="hc-home-premium__brand-text">HelpChain</span>
       </a>
       <nav class="hc-home-premium__menu" aria-label="{{ _('Primary navigation') }}">
-        <a href="{{ url_for('main.comment_ca_marche') }}">{{ _('Produit') }}</a>
-        <a href="{{ url_for('main.pour_les_structures') }}">{{ _('Secteurs') }}</a>
+        <a href="{{ url_for('main.comment_ca_marche') }}">{{ _('Coordination') }}</a>
+        <a href="{{ url_for('main.pour_les_structures') }}">{{ _('Pour les structures') }}</a>
         <a href="{{ url_for('main.securite') }}">{{ _('Sécurité') }}</a>
         <a href="{{ url_for('main.deploiement') }}">{{ _('Déploiement') }}</a>
-        <a href="{{ url_for('main.cas_usage') }}">{{ _('Ressources') }}</a>
+        <a href="{{ url_for('main.architecture') }}">{{ _('Architecture') }}</a>
         <a href="{{ url_for('main.analyse_fragmentation') }}">{{ _('Analyses opérationnelles') }}</a>
       </nav>
       <div class="hc-home-premium__nav-actions">
@@ -1283,14 +1285,14 @@
     <div class="hc-home-premium__hero-copy">
       <p class="hc-home-premium__eyebrow">{{ _('PLATEFORME DE COORDINATION OPÉRATIONNELLE') }}</p>
 
-      <h1 id="hc-home-hero-title">{{ _('Coordonner, orienter, suivre et piloter dans une même plateforme.') }}</h1>
+      <h1 id="hc-home-hero-title">{{ _('Plateforme de coordination opérationnelle pour environnements institutionnels et multi-acteurs.') }}</h1>
 
       <p class="hc-home-premium__lead">
-        {{ _('HelpChain centralise les demandes, clarifie les responsabilités et maintient la continuité opérationnelle entre équipes, structures et partenaires.') }}
+        {{ _('HelpChain centralise les flux, clarifie les responsabilités et maintient la continuité opérationnelle entre équipes, structures et partenaires habilités.') }}
       </p>
 
       <p class="hc-home-premium__lead">
-        {{ _('Pensée pour un cadre pilote institutionnel, la plateforme donne une lecture claire de l’activité, des responsabilités visibles et un historique exploitable pour les équipes qui doivent agir sans rupture de suivi.') }}
+        {{ _('Conçue en France comme une plateforme métier de coordination, HelpChain donne une lecture claire de l’activité, des responsabilités visibles et un historique exploitable pour les équipes qui doivent agir sans rupture de suivi.') }}
       </p>
 
       <div class="hc-home-premium__hero-support" aria-label="{{ _('Actions et repères pilote') }}">
@@ -1298,8 +1300,8 @@
           <a class="hc-btn hc-btn--primary btn btn-primary" href="/demo" data-hc-event="home_primary_cta">{{ _('Demander un accès pilote') }}</a>
         </div>
         <div class="hc-home-premium__hero-supportInline">
-          <p class="hc-home-premium__hero-demo-note">{{ _('Pilote type : accueil, responsable opérationnel, premières demandes réelles.') }}</p>
-          <p class="hc-home-premium__hero-supportMeta">{{ _('Conçu pour : CCAS · Collectivités · Associations · Structures multi-sites.') }}</p>
+          <p class="hc-home-premium__hero-demo-note">{{ _('Pilote type : premier flux opérationnel, responsable identifié, supervision et traçabilité dès les premières situations.') }}</p>
+          <p class="hc-home-premium__hero-supportMeta">{{ _('HelpChain, plateforme de coordination opérationnelle conçue pour : CCAS · Collectivités · Opérateurs · Structures multi-sites.') }}</p>
         </div>
       </div>
     </div>
@@ -1422,7 +1424,7 @@
       <div class="hc-home-premium__product-copy">
         <p class="hc-home-premium__section-kicker">{{ _('02 · ORIENTATION ET SUIVI') }}</p>
         <h2 id="hc-home-case-title">{{ _('Pilotez le suivi opérationnel des situations avec des responsabilités explicites') }}</h2>
-        <p>{{ _('Responsables, priorités, actions récentes et lecture partagée pour renforcer le pilotage des situations sociales et éviter les zones grises opérationnelles.') }}</p>
+        <p>{{ _('Responsables, priorités, actions récentes et lecture partagée pour renforcer le pilotage des situations et éviter les zones grises opérationnelles.') }}</p>
         <ul class="hc-home-premium__workflow-points">
           <li>{{ _('Chaque situation garde un responsable lisible et un fil d’activité réutilisable.') }}</li>
           <li>{{ _('Les décisions, relances et changements de statut restent visibles dans le temps.') }}</li>
@@ -1605,7 +1607,7 @@
       <article class="hc-home-premium__buyer-card">
         <span>{{ _('01') }}</span>
         <h3>{{ _('CCAS & collectivités') }}</h3>
-        <p>{{ _('Centraliser les demandes sociales, organiser les relais entre services et disposer d’un pilotage lisible à l’échelle d’un territoire ou d’un périmètre institutionnel.') }}</p>
+        <p>{{ _('Centraliser les demandes, organiser les relais entre services et disposer d’un pilotage lisible à l’échelle d’un territoire ou d’un périmètre institutionnel.') }}</p>
       </article>
 
       <article class="hc-home-premium__buyer-card">
@@ -1621,6 +1623,23 @@
       </article>
     </div>
   </section>
+
+  <section class="hc-home-premium__section hc-home-premium__section--clarification" aria-labelledby="hc-home-clarification-title">
+    <div class="hc-home-premium__outcomes-card hc-home-premium__outcomes-card--governance">
+      <div class="hc-home-premium__section-head hc-home-premium__section-head--compact">
+        <p>{{ _('Clarification de positionnement') }}</p>
+        <h2 id="hc-home-clarification-title">{{ _('Une infrastructure de coordination, pas un portail grand public.') }}</h2>
+        <p>{{ _('HelpChain n’est ni une marketplace de bénévolat ni un portail d’entraide grand public. La plateforme structure la coordination opérationnelle entre acteurs, structures et partenaires dans un cadre pilotable, traçable et gouvernable.') }}</p>
+      </div>
+      <ul class="hc-home-premium__outcomes-list hc-home-premium__outcomes-list--governance">
+        <li>{{ _('Plateforme métier de coordination opérationnelle') }}</li>
+        <li>{{ _('Infrastructure numérique de coordination') }}</li>
+        <li>{{ _('Cadre multi-acteurs pilotable') }}</li>
+        <li>{{ _('Continuité opérationnelle inter-structures') }}</li>
+      </ul>
+    </div>
+  </section>
+
   <section class="hc-home-premium__section hc-home-premium__section--objections" aria-labelledby="hc-home-transition-title">
     <div class="hc-home-premium__section-head hc-home-premium__section-head--compact">
       <p>{{ _('Transition sans rupture') }}</p>
@@ -1654,7 +1673,7 @@
   <section class="hc-home-premium__section hc-home-premium__section--relay" aria-labelledby="hc-home-relay-title">
     <div class="hc-home-premium__relay-card">
       <div class="hc-home-premium__section-head hc-home-premium__section-head--compact">
-        <p>Vous gardez vos outils. La plateforme HelpChain ajoute l’infrastructure de suivi.</p>
+        <p>Vous gardez vos outils. La plateforme HelpChain ajoute une infrastructure numérique de coordination.</p>
         <h2 id="hc-home-relay-title">Connectée à vos outils, sans remplacer votre organisation</h2>
         <p class="hc-home-premium__relay-subtitle">HelpChain agit comme une infrastructure de coordination opérationnelle au-dessus de vos outils existants. Les données sensibles restent dans votre environnement, tandis que le suivi utile devient lisible à l’échelle des équipes, de la gouvernance et de la continuité multi-acteurs.</p>
       </div>
@@ -1663,7 +1682,7 @@
         <div class="hc-home-premium__relay-copy">
           <p>Vos équipes disposent déjà d’outils, de procédures et de logiciels métiers. HelpChain n’a pas vocation à les remplacer.</p>
           <p>La plateforme HelpChain peut fonctionner comme une infrastructure de coordination : elle reçoit uniquement les informations nécessaires au suivi opérationnel — statut, priorité, catégorie, échéance, structure concernée — sans accéder au contenu sensible des dossiers.</p>
-          <p>Les données médicales, sociales ou confidentielles restent dans vos outils existants. HelpChain apporte une visibilité claire sur ce qui doit être suivi, relancé ou coordonné.</p>
+          <p>Les données métiers sensibles restent dans vos outils existants. HelpChain apporte une visibilité claire sur ce qui doit être suivi, relancé ou coordonné.</p>
         </div>
 
         <div class="hc-home-premium__relay-signals">
@@ -1683,7 +1702,7 @@
             <ul class="hc-home-premium__relay-list">
               <li>Diagnostic médical</li>
               <li>Notes psychologiques</li>
-              <li>Compte rendu social détaillé</li>
+              <li>Compte rendu métier détaillé</li>
               <li>Données confidentielles inutiles</li>
               <li>Dossier patient complet</li>
             </ul>
@@ -1763,7 +1782,7 @@
             <p class="hc-home-premium__section-kicker">{{ _('Sécurité & gouvernance') }}</p>
             <h2 id="hc-home-security-governance-title">{{ _('Une infrastructure de coordination conçue pour des environnements institutionnels exigeants') }}</h2>
             <p class="hc-home-premium__security-lead">
-              {{ _('HelpChain structure la coordination sécurisée entre associations, collectivités, CCAS et partenaires opérationnels avec un cadre lisible de gouvernance opérationnelle, d’accès par rôles, de traçabilité native et de supervision administrative.') }}
+              {{ _('HelpChain structure la coordination sécurisée entre structures, collectivités, CCAS et partenaires opérationnels avec un cadre lisible de gouvernance opérationnelle, d’accès par rôles, de traçabilité native et de supervision administrative.') }}
             </p>
             <p class="hc-home-premium__security-lead hc-home-premium__security-lead--secondary">
               {{ _('HelpChain s’inscrit dans une approche France-first et européenne de la coordination numérique, avec une logique d’hébergement européen, de gouvernance des accès et de continuité opérationnelle.') }}
