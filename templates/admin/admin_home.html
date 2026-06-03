@@ -38,16 +38,16 @@
 {% endfor %}
 {% if attention_total >= 8 or queue_blocked >= 5 or security_risky >= 3 %}
   {% set hero_pressure = 'hc-pressure-critical' %}
-  {% set hero_status = 'Tension opÃ©rationnelle Ã©levÃ©e' %}
+  {% set hero_status = 'Tension opérationnelle élevée' %}
 {% elif attention_total >= 4 or unassigned_total >= 3 or queue_blocked >= 3 %}
   {% set hero_pressure = 'hc-pressure-elevated' %}
-  {% set hero_status = 'Charge opÃ©rationnelle soutenue' %}
+  {% set hero_status = 'Charge opérationnelle soutenue' %}
 {% elif attention_total or followup_total or stale_total or queue_blocked %}
   {% set hero_pressure = 'hc-pressure-watch' %}
-  {% set hero_status = 'Surveillance opÃ©rationnelle active' %}
+  {% set hero_status = 'Surveillance opérationnelle active' %}
 {% else %}
   {% set hero_pressure = 'hc-pressure-calm' %}
-  {% set hero_status = 'Couverture opÃ©rationnelle stable' %}
+  {% set hero_status = 'Couverture opérationnelle stable' %}
 {% endif %}
 {% set signal_preview = institutional_signal_preview if institutional_signal_preview is mapping else {} %}
 {% set signal_profiles = signal_preview.probable_organization_profiles if signal_preview.probable_organization_profiles is defined and signal_preview.probable_organization_profiles else [] %}
@@ -58,18 +58,18 @@
   {% set signal_authority = 'Signal fort' %}
   {% set signal_card_tone = 'hc-pressure-elevated' %}
 {% elif signal_preview and signal_score >= 70 %}
-  {% set signal_authority = 'Signal modÃƒÂ©rÃƒÂ©' %}
+  {% set signal_authority = 'Signal modéré' %}
   {% set signal_card_tone = 'hc-pressure-watch' %}
 {% else %}
   {% set signal_authority = 'Observation' %}
   {% set signal_card_tone = 'hc-pressure-calm' %}
 {% endif %}
 {% if territory_preview and territory_preview.priority_level in ['Strategic', 'High'] %}
-  {% set territorial_priority_label = 'PrioritÃƒÂ© territoriale' %}
+  {% set territorial_priority_label = 'Priorité territoriale' %}
 {% elif territory_preview %}
   {% set territorial_priority_label = 'Observation territoriale' %}
 {% else %}
-  {% set territorial_priority_label = 'PrioritÃƒÂ© non dÃƒÂ©terminÃƒÂ©e' %}
+  {% set territorial_priority_label = 'Priorité non déterminée' %}
 {% endif %}
 
 <div class="hc-admin-wrap hc-admin-wrap--wide" data-hc-autosync="true" data-hc-autosync-interval="30000">
@@ -82,18 +82,18 @@
           {{ hero_status }}
         </div>
         <h1 class="hc-admin-title hc-ops-hero__title">Centre de coordination admin</h1>
-        <div class="hc-muted hc-ops-hero__lede">Vue opÃ©rationnelle rapide pour prioriser les prochaines actions, surveiller la pression et garder une lecture territoriale immÃ©diatement exploitable.</div>
+        <div class="hc-muted hc-ops-hero__lede">Vue opérationnelle rapide pour prioriser les prochaines actions, surveiller la pression et garder une lecture territoriale immédiatement exploitable.</div>
       </div>
-      <div class="hc-ops-hero__microgrid" aria-label="SynthÃ¨se opÃ©rationnelle">
+      <div class="hc-ops-hero__microgrid" aria-label="Synthèse opérationnelle">
         <article class="hc-ops-hero__microcard hc-ops-hero__microcard--focus {{ 'hc-pressure-critical' if attention_total else 'hc-pressure-calm' }}">
-          <span class="hc-ops-hero__microkicker">PrioritÃ©s</span>
+          <span class="hc-ops-hero__microkicker">Priorités</span>
           <strong class="hc-ops-hero__microvalue">{{ attention_total }}</strong>
           <span class="hc-ops-hero__microtext">
             {% if attention_total %}
-              {{ attention_total }} situation{{ 's' if attention_total > 1 else '' }} prioritaire{{ 's' if attention_total > 1 else '' }} nÃ©cessitent une action
+              {{ attention_total }} situation{{ 's' if attention_total > 1 else '' }} prioritaire{{ 's' if attention_total > 1 else '' }} nécessitent une action
             {% else %}
-              Aucune situation prioritaire immÃ©diate
-              Aucune situation prioritaire immÃ©diate
+              Aucune situation prioritaire immédiate
+              Aucune situation prioritaire immédiate
             {% endif %}
           </span>
         </article>
@@ -104,7 +104,7 @@
             {% if followup_total %}
               {{ followup_total }} relance{{ 's' if followup_total > 1 else '' }} en attente aujourd'hui
             {% else %}
-              Relances stabilisÃ©es Ã  ce stade
+              Relances stabilisées à ce stade
             {% endif %}
           </span>
         </article>
@@ -113,9 +113,9 @@
           <strong class="hc-ops-hero__microvalue">{{ ops.top_city_count if ops.top_city else 'N/A' }}</strong>
           <span class="hc-ops-hero__microtext">
             {% if ops.top_city %}
-              ActivitÃ© concentrÃ©e sur {{ ops.top_city }}
+              Activité concentrée sur {{ ops.top_city }}
             {% else %}
-              Couverture stable sur la majoritÃ© des territoires
+              Couverture stable sur la majorité des territoires
             {% endif %}
           </span>
         </article>
@@ -126,7 +126,7 @@
             {% if queue_processing %}
               {{ queue_processing }} diffusion{{ 's' if queue_processing > 1 else '' }} en cours
             {% else %}
-              Charge opÃ©rationnelle modÃ©rÃ©e
+              Charge opérationnelle modérée
             {% endif %}
           </span>
         </article>
@@ -141,26 +141,26 @@
   <div class="hc-card mb-3 p-3 hc-ops-snapshot-shell">
     <div class="hc-ops-summary mb-3">
       <div class="hc-ops-summary__item {{ 'hc-pressure-critical' if attention_total else 'hc-pressure-calm' }}">
-        <div class="hc-ops-summary__label">Points Ã  traiter</div>
+        <div class="hc-ops-summary__label">Points à traiter</div>
         <div class="hc-ops-summary__value {{ 'is-alert' if attention_total }}">{{ attention_total }}</div>
-        <div class="hc-muted small">{{ unassigned_total }} non assignÃ©es, {{ followup_total }} Ã  relancer</div>
+        <div class="hc-muted small">{{ unassigned_total }} non assignées, {{ followup_total }} à relancer</div>
       </div>
       <div class="hc-ops-summary__item {{ 'hc-pressure-elevated' if unassigned_total or stale_total else 'hc-pressure-calm' }}">
         <div class="hc-ops-summary__label">Demandes en file</div>
         <div class="hc-ops-summary__value {{ 'is-alert' if unassigned_total }}">{{ unassigned_total }}</div>
-        <div class="hc-muted small">{{ stale_total }} sans action rÃ©cente</div>
+        <div class="hc-muted small">{{ stale_total }} sans action récente</div>
       </div>
       <div class="hc-ops-summary__item {{ 'hc-pressure-watch' if queue_pending or queue_blocked else 'hc-pressure-calm' }}">
         <div class="hc-ops-summary__label">File de diffusion</div>
         <div class="hc-ops-summary__value {{ 'is-alert' if queue_dead_letter or queue_retry }}">{{ queue_pending }}</div>
-        <div class="hc-muted small">{{ queue_processing }} en cours, {{ queue_failed }} en Ã©chec</div>
+        <div class="hc-muted small">{{ queue_processing }} en cours, {{ queue_failed }} en échec</div>
       </div>
       <div class="hc-ops-summary__item {{ 'hc-pressure-watch' if security_summary.available and (security_failed or security_denied or security_risky) else 'hc-pressure-calm' }}">
-        <div class="hc-ops-summary__label">SÃ©curitÃ©</div>
+        <div class="hc-ops-summary__label">Sécurité</div>
         <div class="hc-ops-summary__value {{ 'is-alert' if security_summary.available and (security_failed or security_denied or security_risky) }}">{{ security_failed if security_summary.available else "N/A" }}</div>
         <div class="hc-muted small">
           {% if security_summary.available %}
-            {{ security_denied }} refusÃ©es, {{ security_risky }} actions sensibles
+            {{ security_denied }} refusées, {{ security_risky }} actions sensibles
           {% else %}
             Disponible pour le global admin
           {% endif %}
@@ -171,26 +171,26 @@
     <div class="hc-ops-actions">
       <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.admin_requests') }}">Voir les demandes</a>
       <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_notifications_list') }}">Voir les notifications</a>
-      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_security') }}">Voir la sÃ©curitÃ©</a>
-      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_roles') }}">GÃ©rer les rÃ´les</a>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_security') }}">Voir la sécurité</a>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_roles') }}">Gérer les rôles</a>
     </div>
   </div>
 
   <div class="hc-command-grid mb-3 hc-ops-command-grid" aria-label="Centre de commandement">
     <section class="hc-card hc-command-panel hc-command-panel--attention {{ 'hc-pressure-critical' if attention_total else 'hc-pressure-calm' }}">
-      <div class="hc-command-panel__kicker">Points Ã  traiter</div>
-      <h2 class="hc-command-panel__title">OÃ¹ regarder maintenant</h2>
+      <div class="hc-command-panel__kicker">Points à traiter</div>
+      <h2 class="hc-command-panel__title">Où regarder maintenant</h2>
       <div class="hc-command-panel__body">
         <a class="hc-command-action hc-command-action--focus" href="{{ url_for('admin.admin_requests', no_owner='1') }}">
-          <span class="hc-command-action__label">Non assignÃ©es</span>
+          <span class="hc-command-action__label">Non assignées</span>
           <strong>{{ unassigned_total }}</strong>
         </a>
         <a class="hc-command-action hc-command-action--focus" href="{{ url_for('admin.admin_requests', not_seen_72h='1') }}">
-          <span class="hc-command-action__label">Ã€ relancer</span>
+          <span class="hc-command-action__label">À relancer</span>
           <strong>{{ followup_total }}</strong>
         </a>
         <a class="hc-command-action hc-command-action--focus" href="{{ url_for('admin.admin_requests', not_seen_72h='1') }}">
-          <span class="hc-command-action__label">Sans action rÃ©cente</span>
+          <span class="hc-command-action__label">Sans action récente</span>
           <strong>{{ stale_total }}</strong>
         </a>
       </div>
@@ -209,22 +209,22 @@
           <strong>{{ queue_retry }}</strong>
         </a>
         <a class="hc-command-action hc-command-action--focus" href="{{ url_for('admin.admin_notifications_list', status='failed') }}">
-          <span class="hc-command-action__label">Ã‰chec</span>
+          <span class="hc-command-action__label">Échec</span>
           <strong>{{ queue_failed }}</strong>
         </a>
       </div>
     </section>
 
     <section class="hc-card hc-command-panel {{ 'hc-pressure-watch' if security_summary.available and (security_failed or security_denied or security_risky) else 'hc-pressure-calm' }}">
-      <div class="hc-command-panel__kicker">SÃ©curitÃ©</div>
+      <div class="hc-command-panel__kicker">Sécurité</div>
       <h2 class="hc-command-panel__title">Signaux sensibles</h2>
       <div class="hc-command-panel__body">
         <a class="hc-command-action" href="{{ url_for('admin.admin_security') }}">
-          <span class="hc-command-action__label">Connexions Ã©chouÃ©es</span>
+          <span class="hc-command-action__label">Connexions échouées</span>
           <strong>{{ security_failed if security_summary.available else "N/A" }}</strong>
         </a>
         <a class="hc-command-action" href="{{ url_for('admin.admin_security') }}">
-          <span class="hc-command-action__label">Actions refusÃ©es</span>
+          <span class="hc-command-action__label">Actions refusées</span>
           <strong>{{ security_denied if security_summary.available else "N/A" }}</strong>
         </a>
         <a class="hc-command-action" href="{{ url_for('admin.admin_security') }}">
@@ -236,11 +236,11 @@
 
     <section class="hc-card hc-command-panel {{ 'hc-pressure-watch' if ops.top_city else 'hc-pressure-calm' }}">
       <div class="hc-command-panel__kicker">Prochaines actions</div>
-      <h2 class="hc-command-panel__title">Raccourcis opÃ©rationnels</h2>
+      <h2 class="hc-command-panel__title">Raccourcis opérationnels</h2>
       <div class="hc-command-list">
         <a href="{{ url_for('admin.admin_requests') }}">Qualifier les demandes ouvertes</a>
-        <a href="{{ url_for('admin.admin_notifications_list', status='failed') }}">Diagnostiquer les notifications en Ã©chec</a>
-        <a href="{{ url_for('admin.admin_security') }}">ContrÃ´ler les anomalies sÃ©curitÃ©</a>
+        <a href="{{ url_for('admin.admin_notifications_list', status='failed') }}">Diagnostiquer les notifications en échec</a>
+        <a href="{{ url_for('admin.admin_security') }}">Contrôler les anomalies sécurité</a>
       </div>
     </section>
   </div>
@@ -255,18 +255,18 @@
           <span class="hc-admin-map-access__status-label">Lecture terrain</span>
           <strong class="hc-admin-map-access__status-value">
             {% if ops.top_city %}
-              ActivitÃ© concentrÃ©e sur {{ ops.top_city }}
+              Activité concentrée sur {{ ops.top_city }}
             {% else %}
               Couverture stable
             {% endif %}
           </strong>
           <span class="hc-admin-map-access__status-note">
             {% if stale_total %}
-              {{ stale_total }} situation{{ 's' if stale_total > 1 else '' }} sans action rÃ©cente Ã  surveiller
+              {{ stale_total }} situation{{ 's' if stale_total > 1 else '' }} sans action récente à surveiller
             {% elif ops.top_city %}
               {{ ops.top_city_count }} demande{{ 's' if ops.top_city_count > 1 else '' }} prioritaire{{ 's' if ops.top_city_count > 1 else '' }} dans cette zone
             {% else %}
-              Les signaux opÃ©rationnels restent rÃ©partis sans concentration forte
+              Les signaux opérationnels restent répartis sans concentration forte
             {% endif %}
           </span>
         </div>
@@ -276,7 +276,7 @@
       <article class="hc-admin-map-card {{ 'hc-pressure-watch' if ops.urgent_rows else 'hc-pressure-calm' }}">
         <div class="hc-admin-map-card__eyebrow">Carte des risques</div>
         <h3 class="hc-admin-map-card__title">Carte des risques</h3>
-        <p class="hc-admin-map-card__text">Identifier les situations critiques ou non localisÃ©es.</p>
+        <p class="hc-admin-map-card__text">Identifier les situations critiques ou non localisées.</p>
         <div class="hc-admin-map-card__actions">
           <a class="btn btn-primary btn-sm" href="{{ url_for('admin.admin_risk_map') }}">Ouvrir la carte</a>
         </div>
@@ -299,9 +299,9 @@
   <section class="hc-card mb-3 {{ signal_card_tone }}" style="border-width:1px; box-shadow:0 14px 36px rgba(15, 23, 42, 0.08); background:linear-gradient(180deg, rgba(15,23,42,0.03), rgba(15,23,42,0.01));">
     <div class="hc-card__header">
       <div>
-        <div class="hc-admin-kicker">Signal observÃ©</div>
+        <div class="hc-admin-kicker">Signal observé</div>
         <h2 class="h6 mb-1">Lecture institutionnelle des signaux</h2>
-        <div class="hc-muted">AperÃ§u en lecture seule des signaux institutionnels observÃ©s et de leur lecture opÃ©rationnelle.</div>
+        <div class="hc-muted">Aperçu en lecture seule des signaux institutionnels observés et de leur lecture opérationnelle.</div>
       </div>
       <div class="text-end">
         <div class="hc-admin-kicker">{{ signal_authority }}</div>
@@ -313,20 +313,20 @@
         <div class="hc-ops-summary__item hc-pressure-calm">
           <div class="hc-ops-summary__label">Score institutionnel</div>
           <div class="hc-ops-summary__value">{{ signal_preview.institutional_intent_score }}</div>
-          <div class="hc-muted small">IntensitÃ© issue des signaux observÃ©s</div>
+          <div class="hc-muted small">Intensité issue des signaux observés</div>
         </div>
         <div class="hc-ops-summary__item hc-pressure-calm">
-          <div class="hc-ops-summary__label">Niveau dâ€™intention</div>
+          <div class="hc-ops-summary__label">Niveau d’intention</div>
           <div class="hc-ops-summary__value">{{ signal_preview.intent_level or 'N/A' }}</div>
-          <div class="hc-muted small">Lecture opÃ©rationnelle actuelle</div>
+          <div class="hc-muted small">Lecture opérationnelle actuelle</div>
         </div>
         <div class="hc-ops-summary__item hc-pressure-calm">
-          <div class="hc-ops-summary__label">RÃ©currence</div>
+          <div class="hc-ops-summary__label">Récurrence</div>
           <div class="hc-ops-summary__value">{{ signal_preview.recurrence_level or 'N/A' }}</div>
-          <div class="hc-muted small">ActivitÃ© observÃ©e</div>
+          <div class="hc-muted small">Activité observée</div>
         </div>
         <div class="hc-ops-summary__item hc-pressure-calm">
-          <div class="hc-ops-summary__label">ProbabilitÃ© de dÃ©ploiement</div>
+          <div class="hc-ops-summary__label">Probabilité de déploiement</div>
           <div class="hc-ops-summary__value">{{ signal_preview.deployment_probability or 'N/A' }}</div>
           <div class="hc-muted small">Estimation prudente</div>
         </div>
@@ -340,21 +340,21 @@
             {% if signal_profiles %}
               {% for profile in signal_profiles %}
                 {% if profile is mapping %}
-                  <span>{{ profile.label or 'Profil probable' }}{% if profile.confidence %} Â· confiance {{ profile.confidence }}{% endif %}</span>
+                  <span>{{ profile.label or 'Profil probable' }}{% if profile.confidence %} · confiance {{ profile.confidence }}{% endif %}</span>
                   <span class="small text-muted">{% if profile.confidence == 'high' %}Signal fort{% elif profile.confidence == 'medium' %}Signal modere{% else %}Observation{% endif %}</span>
                 {% else %}
                   <span>{{ profile }}</span>
                 {% endif %}
               {% endfor %}
             {% else %}
-              <span>DonnÃ©es en observation</span>
+              <span>Données en observation</span>
             {% endif %}
           </div>
         </section>
 
         <section class="hc-card hc-command-panel {{ 'hc-pressure-watch' if signal_reasons else 'hc-pressure-calm' }}" style="border-left:3px solid rgba(15, 23, 42, 0.12);">
-          <div class="hc-command-panel__kicker">Lecture opÃ©rationnelle</div>
-          <h3 class="hc-command-panel__title">Raisons observÃ©es</h3>
+          <div class="hc-command-panel__kicker">Lecture opérationnelle</div>
+          <h3 class="hc-command-panel__title">Raisons observées</h3>
           <div class="hc-muted small">
             {% if signal_reasons %}
               <ul class="mb-0 ps-3">
@@ -363,38 +363,38 @@
                 {% endfor %}
               </ul>
             {% else %}
-              Aucun signal rÃ©cent exploitable
+              Aucun signal récent exploitable
             {% endif %}
           </div>
         </section>
 
         <section class="hc-card hc-command-panel {{ 'hc-pressure-watch' if territory_preview else 'hc-pressure-calm' }}" style="border-left:3px solid rgba(15, 23, 42, 0.12);">
-          <div class="hc-command-panel__kicker">PrioritÃ© territoriale</div>
-          <h3 class="hc-command-panel__title">SynthÃ¨se territoriale</h3>
+          <div class="hc-command-panel__kicker">Priorité territoriale</div>
+          <h3 class="hc-command-panel__title">Synthèse territoriale</h3>
           <div class="hc-command-list">
             {% if territory_preview and (territory_preview.territory or territory_preview.territorial_intensity or territory_preview.confidence or territory_preview.recurrence_label or territory_preview.recurrence_level) %}
               <span>Territoire : {{ territory_preview.territory or 'N/A' }}</span>
-              <span>IntensitÃ© territoriale : {{ territory_preview.territorial_intensity_label or territory_preview.territorial_intensity or 'N/A' }}</span>
+              <span>Intensité territoriale : {{ territory_preview.territorial_intensity_label or territory_preview.territorial_intensity or 'N/A' }}</span>
               <span>Confiance : {{ territory_preview.confidence or 'N/A' }}</span>
-              <span>ActivitÃ© observÃ©e : {{ territory_preview.recurrence_label or territory_preview.recurrence_level or 'N/A' }}</span>
+              <span>Activité observée : {{ territory_preview.recurrence_label or territory_preview.recurrence_level or 'N/A' }}</span>
             {% else %}
-              <span>PrioritÃ© non dÃ©terminÃ©e</span>
+              <span>Priorité non déterminée</span>
             {% endif %}
           </div>
         </section>
 
         <section class="hc-card hc-command-panel {{ signal_card_tone }}" style="border-left:3px solid rgba(15, 23, 42, 0.22); background:rgba(15,23,42,0.03);">
           <div class="hc-command-panel__kicker">Recommandation</div>
-          <h3 class="hc-command-panel__title">Action suggÃ©rÃ©e</h3>
+          <h3 class="hc-command-panel__title">Action suggérée</h3>
           <div class="hc-muted small">
-            {{ signal_preview.recommended_next_action or 'PrioritÃ© non dÃ©terminÃ©e' }}
+            {{ signal_preview.recommended_next_action or 'Priorité non déterminée' }}
           </div>
         </section>
       </div>
     {% else %}
       <div class="hc-empty-state">
-        <div class="hc-empty-state__title">Aucun signal rÃ©cent exploitable</div>
-        <div class="hc-empty-state__text">DonnÃ©es en observation pour construire une lecture institutionnelle prudente.</div>
+        <div class="hc-empty-state__title">Aucun signal récent exploitable</div>
+        <div class="hc-empty-state__text">Données en observation pour construire une lecture institutionnelle prudente.</div>
       </div>
     {% endif %}
   </section>
@@ -405,19 +405,19 @@
         <div>
           <div class="hc-admin-kicker">Attention</div>
           <h2 class="h6 mb-1">Ce qui demande une action</h2>
-          <div class="hc-muted">Lecture immÃ©diate des situations sous pression.</div>
+          <div class="hc-muted">Lecture immédiate des situations sous pression.</div>
         </div>
       </div>
       <div class="hc-ops-intelligence__body">
         <article class="hc-ops-intelligence__metric hc-ops-intelligence__metric--focus">
           <span class="hc-ops-intelligence__label">Prioritaires</span>
           <strong class="hc-ops-intelligence__value">{{ attention_total }}</strong>
-          <span class="hc-ops-intelligence__meta">{{ unassigned_total }} non assignÃ©es, {{ ops.urgent_rows }} Ã  intensitÃ© forte</span>
+          <span class="hc-ops-intelligence__meta">{{ unassigned_total }} non assignées, {{ ops.urgent_rows }} à intensité forte</span>
         </article>
         <article class="hc-ops-intelligence__metric hc-ops-intelligence__metric--focus">
           <span class="hc-ops-intelligence__label">Relances</span>
           <strong class="hc-ops-intelligence__value">{{ followup_total }}</strong>
-          <span class="hc-ops-intelligence__meta">FenÃªtres de reprise Ã  enclencher aujourd'hui</span>
+          <span class="hc-ops-intelligence__meta">Fenêtres de reprise à enclencher aujourd'hui</span>
         </article>
       </div>
     </section>
@@ -425,21 +425,21 @@
     <section class="hc-card hc-ops-intelligence {{ 'hc-pressure-elevated' if queue_blocked or stale_total else 'hc-pressure-calm' }}">
       <div class="hc-card__header">
         <div>
-          <div class="hc-admin-kicker">BloquÃ©s</div>
+          <div class="hc-admin-kicker">Bloqués</div>
           <h2 class="h6 mb-1">Ce qui freine le flux</h2>
           <div class="hc-muted">Files de traitement et situations sans mouvement.</div>
         </div>
       </div>
       <div class="hc-ops-intelligence__body">
         <article class="hc-ops-intelligence__metric hc-ops-intelligence__metric--focus">
-          <span class="hc-ops-intelligence__label">Notifications bloquÃ©es</span>
+          <span class="hc-ops-intelligence__label">Notifications bloquées</span>
           <strong class="hc-ops-intelligence__value">{{ queue_blocked }}</strong>
-          <span class="hc-ops-intelligence__meta">{{ queue_retry }} en relance, {{ queue_failed }} en Ã©chec</span>
+          <span class="hc-ops-intelligence__meta">{{ queue_retry }} en relance, {{ queue_failed }} en échec</span>
         </article>
         <article class="hc-ops-intelligence__metric hc-ops-intelligence__metric--focus">
-          <span class="hc-ops-intelligence__label">Situations figÃ©es</span>
+          <span class="hc-ops-intelligence__label">Situations figées</span>
           <strong class="hc-ops-intelligence__value">{{ stale_total }}</strong>
-          <span class="hc-ops-intelligence__meta">Demandes sans action rÃ©cente dans la file</span>
+          <span class="hc-ops-intelligence__meta">Demandes sans action récente dans la file</span>
         </article>
       </div>
     </section>
@@ -456,12 +456,12 @@
         <article class="hc-ops-intelligence__metric">
           <span class="hc-ops-intelligence__label">Diffusions en cours</span>
           <strong class="hc-ops-intelligence__value">{{ queue_processing }}</strong>
-          <span class="hc-ops-intelligence__meta">{% if queue_processing %}Traitements actifs dans la file de diffusion{% else %}DonnÃ©es en observation{% endif %}</span>
+          <span class="hc-ops-intelligence__meta">{% if queue_processing %}Traitements actifs dans la file de diffusion{% else %}Données en observation{% endif %}</span>
         </article>
         <article class="hc-ops-intelligence__metric">
           <span class="hc-ops-intelligence__label">Demandes avec responsable</span>
           <strong class="hc-ops-intelligence__value">{{ ops.assigned_rows }}</strong>
-          <span class="hc-ops-intelligence__meta">{% if ops.assigned_rows %}Parmi les situations remontÃ©es dans la zone d'attention{% else %}Aucun signal rÃ©cent exploitable{% endif %}</span>
+          <span class="hc-ops-intelligence__meta">{% if ops.assigned_rows %}Parmi les situations remontées dans la zone d'attention{% else %}Aucun signal récent exploitable{% endif %}</span>
         </article>
       </div>
     </section>
@@ -470,8 +470,8 @@
       <div class="hc-card__header">
         <div>
           <div class="hc-admin-kicker">Territoire</div>
-          <h2 class="h6 mb-1">OÃ¹ l'activitÃ© se concentre</h2>
-          <div class="hc-muted">Lecture de densitÃ© issue des demandes dÃ©jÃ  affichÃ©es.</div>
+          <h2 class="h6 mb-1">Où l'activité se concentre</h2>
+          <div class="hc-muted">Lecture de densité issue des demandes déjà affichées.</div>
         </div>
       </div>
       <div class="hc-ops-intelligence__body">
@@ -482,14 +482,14 @@
             {% if ops.top_city %}
               {{ ops.top_city_count }} situation{{ 's' if ops.top_city_count > 1 else '' }} visible{{ 's' if ops.top_city_count > 1 else '' }} dans cette zone
             {% else %}
-              Aucune concentration nette parmi les situations affichÃ©es
+              Aucune concentration nette parmi les situations affichées
             {% endif %}
           </span>
         </article>
         <article class="hc-ops-intelligence__metric">
           <span class="hc-ops-intelligence__label">Couverture</span>
           <strong class="hc-ops-intelligence__value">{{ 'Sous surveillance' if stale_total or attention_total else 'Stable' }}</strong>
-          <span class="hc-ops-intelligence__meta">{% if stale_total or attention_total or ops.top_city %}Lecture territoriale connectÃ©e aux cartes de risques et d'intervenants{% else %}PrioritÃ© non dÃ©terminÃ©e{% endif %}</span>
+          <span class="hc-ops-intelligence__meta">{% if stale_total or attention_total or ops.top_city %}Lecture territoriale connectée aux cartes de risques et d'intervenants{% else %}Priorité non déterminée{% endif %}</span>
         </article>
       </div>
     </section>
@@ -497,8 +497,8 @@
 
   <div class="hc-card hc-admin-table-shell hc-admin-home-command-shell hc-ops-table-shell {{ 'hc-pressure-watch' if attention_total or stale_total else 'hc-pressure-calm' }}">
     <div class="hc-card__header">
-      <h2 class="h6 mb-1">Ã€ traiter maintenant</h2>
-      <div class="hc-muted">Demandes urgentes, non assignÃ©es ou sans action rÃ©cente.</div>
+      <h2 class="h6 mb-1">À traiter maintenant</h2>
+      <div class="hc-muted">Demandes urgentes, non assignées ou sans action récente.</div>
     </div>
     <div class="hc-ops-queue-wrap">
       <table class="hc-ops-queue hc-ops-queue-table">
@@ -507,10 +507,10 @@
             <th>ID</th>
             <th class="col-request">Demande</th>
             <th class="col-city">Ville</th>
-            <th>PrioritÃ©</th>
+            <th>Priorité</th>
             <th class="col-status">Statut</th>
             <th>Responsable</th>
-            <th class="col-activity">DerniÃ¨re activitÃ©</th>
+            <th class="col-activity">Dernière activité</th>
             <th class="col-action text-end">Action</th>
           </tr>
         </thead>
@@ -524,13 +524,13 @@
             {% set reason_badges = [] %}
             {% if is_urgent %}{% set _ = reason_badges.append('Urgent') %}{% endif %}
             {% if owner_state == 'unassigned' %}{% set _ = reason_badges.append('Sans responsable') %}{% endif %}
-            {% if activity_tone == 'stale' %}{% set _ = reason_badges.append('Sans action rÃ©cente') %}{% elif activity_tone == 'warn' %}{% set _ = reason_badges.append('SLA Ã  surveiller') %}{% endif %}
-            {% if not reason_badges %}{% set _ = reason_badges.append('SLA Ã  surveiller') %}{% endif %}
+            {% if activity_tone == 'stale' %}{% set _ = reason_badges.append('Sans action récente') %}{% elif activity_tone == 'warn' %}{% set _ = reason_badges.append('SLA à surveiller') %}{% endif %}
+            {% if not reason_badges %}{% set _ = reason_badges.append('SLA à surveiller') %}{% endif %}
             {% if priority_key == 'critical' or (r.risk_score or 0) >= 85 %}
               {% set priority_label = 'Critique' %}
               {% set priority_badge_class = 'text-bg-danger' %}
             {% elif priority_key == 'high' %}
-              {% set priority_label = 'Ã‰levÃ©e' %}
+              {% set priority_label = 'Élevée' %}
               {% set priority_badge_class = 'text-bg-warning text-dark' %}
             {% elif priority_key == 'medium' %}
               {% set priority_label = 'Moyenne' %}
@@ -542,7 +542,7 @@
               {% set priority_label = 'Normale' %}
               {% set priority_badge_class = 'text-bg-secondary' %}
             {% endif %}
-            {% set status_label = (r.status or 'Non dÃ©fini')|replace('_', ' ')|title %}
+            {% set status_label = (r.status or 'Non défini')|replace('_', ' ')|title %}
             {% if is_urgent %}
               {% set row_pressure = 'hc-pressure-critical' %}
             {% elif owner_state == 'unassigned' or activity_tone == 'stale' %}
@@ -595,7 +595,7 @@
               <td colspan="8" class="py-4">
                 <div class="hc-empty-state">
                   <div class="hc-empty-state__title">Aucune action prioritaire pour le moment.</div>
-                  <div class="hc-empty-state__text">Les demandes urgentes ou sans responsable apparaÃ®tront ici.</div>
+                  <div class="hc-empty-state__text">Les demandes urgentes ou sans responsable apparaîtront ici.</div>
                 </div>
               </td>
             </tr>
