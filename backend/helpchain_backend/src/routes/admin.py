@@ -172,6 +172,11 @@ from ..services.institutional_intent import (
     build_intent_summary,
     normalize_intent_path,
 )
+from ..services.institutional_intent_engine import (
+    build_institutional_intent_phase1,
+    build_territorial_opportunity_summary,
+    summarize_profile_labels,
+)
 from ..services.account_intelligence import (
     build_account_intelligence,
 )
@@ -10371,6 +10376,12 @@ def _build_audience_map_context() -> dict:
                 continue
             if not isinstance(intent_summary, dict):
                 intent_summary = build_intent_summary(paths, has_submit=True)
+            phase1_intelligence = _phase1_intelligence_from_context(
+                audience_context,
+                intent_summary=intent_summary,
+                territory_hint=territory,
+                has_submit=True,
+            )
             territory_rows.append(
                 {
                     "territory": territory,
@@ -10382,6 +10393,7 @@ def _build_audience_map_context() -> dict:
                     "primary_interest": intent_summary.get("primary_interest"),
                     "trust_friction_detected": bool(intent_summary.get("trust_friction_detected")),
                     "repeat_visit": bool((audience_context or {}).get("repeat_visit")),
+                    "phase1_intelligence": phase1_intelligence,
                 }
             )
     if _table_exists("professional_leads"):
@@ -10468,6 +10480,12 @@ def _build_audience_map_context() -> dict:
             intent_summary = audience_context.get("institutional_intent")
             if not isinstance(intent_summary, dict):
                 intent_summary = build_intent_summary(pages_viewed, has_submit=True)
+            phase1_intelligence = _phase1_intelligence_from_context(
+                audience_context,
+                intent_summary=intent_summary,
+                territory_hint=lead_territory or territory,
+                has_submit=True,
+            )
             if lead_territory:
                 territory_rows.append(
                     {
@@ -10480,6 +10498,7 @@ def _build_audience_map_context() -> dict:
                         "primary_interest": intent_summary.get("primary_interest"),
                         "trust_friction_detected": bool(intent_summary.get("trust_friction_detected")),
                         "repeat_visit": bool(audience_context.get("repeat_visit")),
+                        "phase1_intelligence": phase1_intelligence,
                     }
                 )
             founder_queue_lead_rows.append(
@@ -10501,6 +10520,22 @@ def _build_audience_map_context() -> dict:
                     "territory_hint": territory_hint,
                     "organization_confidence": organization_confidence,
                     "sales_note": sales_note,
+                    "institutional_intent_score": int(phase1_intelligence.get("institutional_intent_score") or 0),
+                    "intent_level": phase1_intelligence.get("intent_level"),
+                    "recurrence_level": phase1_intelligence.get("recurrence_level"),
+                    "deployment_probability": phase1_intelligence.get("deployment_probability"),
+                    "probable_organization_profiles": [
+                        str(item.get("label") or "").strip()
+                        for item in list(phase1_intelligence.get("probable_organization_profiles") or [])
+                        if str(item.get("label") or "").strip()
+                    ],
+                    "territorial_opportunity_summary": dict(
+                        phase1_intelligence.get("territorial_opportunity_summary") or {}
+                    ),
+                    "recommendation_reasons": list(phase1_intelligence.get("recommendation_reasons") or []),
+                    "recommended_next_action": str(
+                        phase1_intelligence.get("recommended_next_action") or ""
+                    ).strip(),
                     "created_at": getattr(row, "created_at", None),
                 }
             )
@@ -10635,6 +10670,35 @@ def _build_audience_map_context() -> dict:
         context["founder_queue_account_rows"] = founder_queue_account_rows[:12]
         context["founder_queue_lead_rows"] = founder_queue_lead_rows[:12]
     territory_summaries = detect_priority_territories(territory_rows)
+    territory_profile_rows: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in territory_rows:
+        territory_key = _audience_normalize_text(row.get("territory"))
+        phase1_payload = row.get("phase1_intelligence")
+        if not territory_key or not isinstance(phase1_payload, dict):
+            continue
+        for profile in list(phase1_payload.get("probable_organization_profiles") or []):
+            if isinstance(profile, dict):
+                territory_profile_rows[territory_key].append(profile)
+    for summary in territory_summaries:
+        territory_key = _audience_normalize_text(summary.get("territory"))
+        probable_profiles = summarize_profile_labels(territory_profile_rows.get(territory_key) or [])
+        territorial_opportunity = build_territorial_opportunity_summary(
+            summary,
+            probable_profiles=probable_profiles,
+        )
+        summary["institutional_intent_score"] = int(summary.get("score") or 0)
+        summary["recurrence_level"] = territorial_opportunity.get("recurrence_level")
+        summary["deployment_probability"] = territorial_opportunity.get("deployment_probability")
+        summary["probable_organization_profiles"] = list(
+            territorial_opportunity.get("probable_organization_profiles") or []
+        )
+        summary["territorial_opportunity_summary"] = territorial_opportunity
+        summary["recommendation_reasons"] = list(
+            territorial_opportunity.get("recommendation_reasons") or []
+        )
+        summary["recommended_next_action"] = str(
+            territorial_opportunity.get("recommended_next_action") or summary.get("recommended_action") or ""
+        ).strip()
     territory_lookup = _territorial_summary_lookup(territory_summaries)
     context["territory_summaries"] = territory_summaries[:12]
     context["priority_territories"] = [
@@ -10661,6 +10725,13 @@ def _build_audience_map_context() -> dict:
         point["pilot_readiness_estimate"] = summary.get("pilot_readiness_estimate")
         point["repeated_engagement_detected"] = bool(summary.get("repeated_engagement_detected"))
         point["intelligence_source"] = "observed_summary"
+        point["institutional_intent_score"] = summary.get("institutional_intent_score")
+        point["recurrence_level"] = summary.get("recurrence_level")
+        point["deployment_probability"] = summary.get("deployment_probability")
+        point["probable_organization_profiles"] = summary.get("probable_organization_profiles")
+        point["territorial_opportunity_summary"] = summary.get("territorial_opportunity_summary")
+        point["recommendation_reasons"] = summary.get("recommendation_reasons")
+        point["recommended_next_action"] = summary.get("recommended_next_action")
     for row in context["revenue_radar_rows"]:
         summary = territory_lookup.get(_audience_normalize_text(row.get("territory")))
         if not summary:
@@ -10673,6 +10744,13 @@ def _build_audience_map_context() -> dict:
         row["pilot_readiness_estimate"] = summary.get("pilot_readiness_estimate")
         row["recommended_action"] = summary.get("recommended_action")
         row["repeated_engagement_detected"] = bool(summary.get("repeated_engagement_detected"))
+        row["institutional_intent_score"] = summary.get("institutional_intent_score")
+        row["recurrence_level"] = summary.get("recurrence_level")
+        row["deployment_probability"] = summary.get("deployment_probability")
+        row["probable_organization_profiles"] = summary.get("probable_organization_profiles")
+        row["territorial_opportunity_summary"] = summary.get("territorial_opportunity_summary")
+        row["recommendation_reasons"] = summary.get("recommendation_reasons")
+        row["recommended_next_action"] = summary.get("recommended_next_action")
     for row in context["founder_queue_lead_rows"]:
         summary = territory_lookup.get(_audience_normalize_text(row.get("territory") or row.get("territory_hint")))
         if not summary:
@@ -10683,6 +10761,10 @@ def _build_audience_map_context() -> dict:
         row["pilot_readiness_estimate"] = summary.get("pilot_readiness_estimate")
         row["possible_friction"] = summary.get("possible_friction")
         row["recommended_action"] = summary.get("recommended_action")
+        row["territorial_opportunity_summary"] = summary.get("territorial_opportunity_summary")
+        row["recommended_next_action"] = (
+            row.get("recommended_next_action") or summary.get("recommended_next_action")
+        )
     for row in context["founder_queue_account_rows"]:
         summary = territory_lookup.get(_audience_normalize_text(row.get("territory_hint")))
         if not summary:
@@ -10693,6 +10775,13 @@ def _build_audience_map_context() -> dict:
         row["pilot_readiness_estimate"] = summary.get("pilot_readiness_estimate")
         row["possible_friction"] = summary.get("possible_friction")
         row["recommended_action"] = summary.get("recommended_action")
+        row["institutional_intent_score"] = summary.get("institutional_intent_score")
+        row["recurrence_level"] = summary.get("recurrence_level")
+        row["deployment_probability"] = summary.get("deployment_probability")
+        row["probable_organization_profiles"] = summary.get("probable_organization_profiles")
+        row["territorial_opportunity_summary"] = summary.get("territorial_opportunity_summary")
+        row["recommendation_reasons"] = summary.get("recommendation_reasons")
+        row["recommended_next_action"] = summary.get("recommended_next_action")
     context["kpis"] = {
         "visitors_24h": len(visitors_24h),
         "visitors_7d": len(visitors_7d),
@@ -10948,6 +11037,36 @@ def _revenue_audience_score(notes: str | None) -> tuple[int, dict | None]:
     return max(0, min(25, int(raw / 2))), context
 
 
+def _phase1_intelligence_from_context(
+    audience_context: dict | None,
+    *,
+    intent_summary: dict | None = None,
+    territorial_summary: dict | None = None,
+    territory_hint: str | None = None,
+    has_submit: bool = False,
+) -> dict[str, object]:
+    audience_context = audience_context if isinstance(audience_context, dict) else {}
+    intent_summary = intent_summary if isinstance(intent_summary, dict) else {}
+    top_paths = intent_summary.get("top_paths")
+    territory_name = territory_hint
+    if not territory_name and isinstance(territorial_summary, dict):
+        territory_name = str(territorial_summary.get("territory") or "").strip() or None
+    if not isinstance(top_paths, list):
+        raw_paths = audience_context.get("pages_viewed") or []
+        top_paths = [path for path in raw_paths if isinstance(path, str) and path.strip()]
+    return build_institutional_intent_phase1(
+        top_paths,
+        has_submit=has_submit or bool(audience_context.get("has_submit")),
+        repeat_visit=bool(audience_context.get("repeat_visit")),
+        repeat_visit_count=int(audience_context.get("repeat_visit_count") or 0),
+        first_seen_at=audience_context.get("first_seen_at"),
+        last_seen_at=audience_context.get("last_seen_at"),
+        page_count=int(audience_context.get("page_count") or len(top_paths)),
+        territorial_summary=territorial_summary,
+        territory=territory_name,
+    )
+
+
 def _revenue_audience_metadata(audience_context: dict | None) -> dict[str, object]:
     audience_context = audience_context if isinstance(audience_context, dict) else {}
     intent_summary = audience_context.get("institutional_intent")
@@ -10960,6 +11079,12 @@ def _revenue_audience_metadata(audience_context: dict | None) -> dict[str, objec
     if not isinstance(top_paths, list):
         raw_paths = audience_context.get("pages_viewed") or []
         top_paths = [path for path in raw_paths if isinstance(path, str) and path.strip()]
+    phase1 = _phase1_intelligence_from_context(
+        audience_context,
+        intent_summary=intent_summary,
+        territorial_summary=territorial_summary,
+        territory_hint=territorial_summary.get("territory") or audience_context.get("territory_hint"),
+    )
     return {
         "intent_score": int(
             intent_summary.get("score")
@@ -11020,6 +11145,23 @@ def _revenue_audience_metadata(audience_context: dict | None) -> dict[str, objec
         "territory_recommendation": (
             str(territorial_summary.get("recommended_action") or "").strip() or None
         ),
+        "phase1_intelligence": phase1,
+        "institutional_intent_score": int(phase1.get("institutional_intent_score") or 0),
+        "intent_level": str(phase1.get("intent_level") or "").strip(),
+        "recurrence_level": str(phase1.get("recurrence_level") or "").strip(),
+        "deployment_probability": str(phase1.get("deployment_probability") or "").strip(),
+        "probable_organization_profiles": [
+            str(item.get("label") or "").strip()
+            for item in list(phase1.get("probable_organization_profiles") or [])
+            if str(item.get("label") or "").strip()
+        ],
+        "territorial_opportunity_summary": dict(
+            phase1.get("territorial_opportunity_summary") or {}
+        ),
+        "recommendation_reasons": list(phase1.get("recommendation_reasons") or []),
+        "recommended_next_action": str(
+            phase1.get("recommended_next_action") or ""
+        ).strip(),
     }
 
 
@@ -11353,7 +11495,8 @@ def _revenue_row_from_professional_lead(lead: ProfessionalLead) -> SimpleNamespa
         reasons.append("new professional signal")
     founder_meta = _revenue_audience_metadata(audience_context)
     next_best_action = (
-        (intent_summary or {}).get("recommended_action")
+        founder_meta.get("recommended_next_action")
+        or (intent_summary or {}).get("recommended_action")
         or (audience_context or {}).get("recommended_action")
     )
     if not next_best_action:
@@ -11407,6 +11550,14 @@ def _revenue_row_from_professional_lead(lead: ProfessionalLead) -> SimpleNamespa
         pilot_readiness_estimate=founder_meta["pilot_readiness_estimate"],
         possible_friction=founder_meta["possible_friction"],
         territory_recommendation=founder_meta["territory_recommendation"],
+        institutional_intent_score=founder_meta["institutional_intent_score"],
+        intent_level=founder_meta["intent_level"],
+        recurrence_level=founder_meta["recurrence_level"],
+        deployment_probability=founder_meta["deployment_probability"],
+        probable_organization_profiles=founder_meta["probable_organization_profiles"],
+        territorial_opportunity_summary=founder_meta["territorial_opportunity_summary"],
+        recommendation_reasons=founder_meta["recommendation_reasons"],
+        recommended_next_action=founder_meta["recommended_next_action"],
         has_demo=stage in {"demo_booked", "demo_done", "pilot_proposed", "negotiation"},
     )
 
@@ -11445,7 +11596,8 @@ def _revenue_row_from_access_request(row: OrganizationAccessRequest) -> SimpleNa
         reasons.append("approved")
     founder_meta = _revenue_audience_metadata(audience_context)
     next_best_action = (
-        (intent_summary or {}).get("recommended_action")
+        founder_meta.get("recommended_next_action")
+        or (intent_summary or {}).get("recommended_action")
         or (audience_context or {}).get("recommended_action")
     )
     if not next_best_action:
@@ -11499,6 +11651,14 @@ def _revenue_row_from_access_request(row: OrganizationAccessRequest) -> SimpleNa
         pilot_readiness_estimate=founder_meta["pilot_readiness_estimate"],
         possible_friction=founder_meta["possible_friction"],
         territory_recommendation=founder_meta["territory_recommendation"],
+        institutional_intent_score=founder_meta["institutional_intent_score"],
+        intent_level=founder_meta["intent_level"],
+        recurrence_level=founder_meta["recurrence_level"],
+        deployment_probability=founder_meta["deployment_probability"],
+        probable_organization_profiles=founder_meta["probable_organization_profiles"],
+        territorial_opportunity_summary=founder_meta["territorial_opportunity_summary"],
+        recommendation_reasons=founder_meta["recommendation_reasons"],
+        recommended_next_action=founder_meta["recommended_next_action"],
         has_demo=stage in {"qualified", "won"},
     )
 
