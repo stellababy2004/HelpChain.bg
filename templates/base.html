@@ -338,7 +338,7 @@
         margin-left: 4px;
       }
 
-      @media (max-width: 1280px) {
+      @media (max-width: 1199.98px) {
         .hc-public-nav-cta {
           display: none !important;
         }
@@ -346,7 +346,7 @@
 
       /* Public nav switch breakpoint: keep desktop nav on wide screens,
          switch to institutional hamburger on tablet/smaller widths. */
-      @media (max-width: 1079.98px) {
+      @media (max-width: 1199.98px) {
         .hc-public-nav-root #navbarNav.hc-public-nav-desktop {
           display: none !important;
           visibility: hidden !important;
@@ -360,7 +360,7 @@
         }
       }
 
-      @media (min-width: 1080px) {
+      @media (min-width: 1200px) {
         .hc-mobile-nav,
         .hc-mobile-nav-toggle {
           display: none !important;
@@ -479,7 +479,7 @@
         box-shadow: 0 10px 22px rgba(29, 69, 127, 0.18);
       }
 
-      @media (max-width: 1079.98px) {
+      @media (max-width: 1199.98px) {
         body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root.hc-navbar,
         body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root.hc-navbar.is-scrolled,
         body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .container-fluid {
@@ -782,11 +782,6 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                   </div>
                 </div>
               </div>
-            </li>
-            <li class="nav-item hc-public-nav-cta">
-              <a class="nav-link hc-nav-cta hc-cta hc-public-nav-demo-cta" href="/demo">
-                <span class="hc-navlabel">{{ _('Demander un accès pilote') }}</span>
-              </a>
             </li>
             {% if current_user.is_authenticated %}
               {% if admin_logged_in %}

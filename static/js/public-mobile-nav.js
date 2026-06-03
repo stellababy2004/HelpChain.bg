@@ -9,7 +9,7 @@
 
   const closeEls = nav.querySelectorAll("[data-mobile-nav-close='1']");
   const firstLink = nav.querySelector(".hc-mobile-nav__item a");
-  const widthSwitch = 1079;
+  const widthSwitch = 1199;
 
   function closeNav(returnFocus) {
     nav.classList.remove("is-open");

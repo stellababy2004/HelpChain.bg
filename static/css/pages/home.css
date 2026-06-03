@@ -264,12 +264,11 @@ body.hc-page-home {
 }
 
 body.hc-page-home .main-nav {
-  border: 1px solid rgba(193, 208, 224, 0.72) !important;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(244, 249, 253, 0.8)),
-    radial-gradient(circle at top left, rgba(95, 135, 170, 0.08), transparent 30%) !important;
-  box-shadow: var(--hc-shadow-soft) !important;
-  backdrop-filter: blur(16px);
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 body.hc-page-home :is(.hc-home__hero-copy, .hc-home__hero-panel, .hc-home__card, .hc-home__stat, .hc-home__proof-item, .hc-home__final) {

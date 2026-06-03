@@ -56,39 +56,6 @@
         color: var(--hc-b2b-ink);
       }
 
-      body.hc-page-home .main-nav {
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        background: rgba(248, 250, 253, 0.9);
-        border-bottom: 1px solid var(--hc-b2b-line);
-        backdrop-filter: blur(18px);
-      }
-
-      body.hc-page-home .navbar-brand-light {
-        font-weight: 800;
-        letter-spacing: -0.03em;
-      }
-
-      body.hc-page-home .nav-menu {
-        display: flex;
-        align-items: center;
-        gap: 1.4rem;
-        list-style: none;
-        margin: 0;
-        padding: 0;
-      }
-
-      body.hc-page-home .nav-link-light {
-        color: #324760;
-        text-decoration: none;
-        font-weight: 600;
-      }
-
-      body.hc-page-home .nav-link-light:hover {
-        color: var(--hc-b2b-primary);
-      }
-
       body.hc-page-home .hc-home {
         overflow: hidden;
       }
@@ -542,7 +509,7 @@
           grid-template-columns: 1fr;
         }
 
-        body.hc-page-home .nav-menu {
+        body.hc-page-home .main-nav .nav-menu {
           flex-wrap: wrap;
           gap: 0.8rem 1rem;
         }
@@ -552,37 +519,6 @@
     <style>
       body.hc-page-home {
         padding-top: 0 !important;
-      }
-
-      body.hc-page-home .main-nav {
-        top: 0;
-        min-height: 0;
-        margin-top: 0 !important;
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-        background: rgba(247, 250, 253, 0.96) !important;
-        border-bottom: 1px solid rgba(17, 35, 60, 0.1) !important;
-        box-shadow: 0 10px 28px rgba(14, 27, 48, 0.06) !important;
-      }
-
-      body.hc-page-home .main-nav .container {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        max-width: 1320px;
-        min-height: 74px;
-        padding-top: 0.45rem !important;
-        padding-bottom: 0.45rem !important;
-      }
-
-      body.hc-page-home .navbar-brand-light {
-        display: inline-flex;
-        align-items: center;
-        flex: 0 0 auto;
-        color: var(--hc-b2b-ink);
-        text-decoration: none;
-        white-space: nowrap;
       }
 
       body.hc-page-home .main-nav .navbar-toggler {
@@ -598,71 +534,16 @@
         box-shadow: 0 0 0 0.2rem rgba(21, 59, 111, 0.14);
       }
 
-      body.hc-page-home .main-nav .navbar-collapse {
-        display: flex;
-        flex-grow: 1;
-        align-items: center;
-        justify-content: flex-end;
-        min-width: 0;
-      }
-
-      body.hc-page-home .nav-menu {
-        display: flex;
-        width: 100%;
-        align-items: center;
-        justify-content: flex-end;
-        gap: clamp(0.45rem, 1vw, 1rem);
-      }
-
-      body.hc-page-home .nav-link-light {
-        display: inline-flex;
-        align-items: center;
-        min-height: 42px;
-        padding: 0.6rem 0.9rem;
-        border-radius: 14px;
-        color: #35506d;
-        line-height: 1.1;
-        transition: color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
-      }
-
-      body.hc-page-home .nav-link-light:hover {
-        background: rgba(21, 59, 111, 0.06);
-        color: #153b6f;
-      }
-
-      body.hc-page-home .nav-menu li:last-child .nav-link-light {
-        justify-content: center;
-        min-width: clamp(172px, 16vw, 236px);
-        min-height: 48px;
-        padding-inline: 1.25rem;
-        color: #ffffff;
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        box-shadow: 0 16px 30px rgba(37, 99, 235, 0.18);
-      }
-
-      body.hc-page-home .nav-menu li:last-child .nav-link-light:hover {
-        color: #ffffff;
-        background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-        box-shadow: 0 18px 34px rgba(37, 99, 235, 0.22);
-      }
-
-      @media (min-width: 768px) {
-        body.hc-page-home .main-nav .navbar-collapse {
-          display: flex !important;
-        }
-      }
-
-      @media (max-width: 767.98px) {
-        body.hc-page-home .main-nav .container {
-          flex-wrap: wrap;
-          gap: 0.75rem;
-          min-height: 64px;
-          padding-top: 0.35rem !important;
-          padding-bottom: 0.35rem !important;
+      @media (max-width: 1199.98px) {
+        body.hc-page-home .main-nav .navbar-toggler {
+          display: inline-flex !important;
+          margin-left: auto;
+          justify-self: end;
         }
 
         body.hc-page-home .main-nav .navbar-collapse {
           display: block;
+          grid-column: 1 / -1;
           flex-basis: 100%;
           margin-top: 0.2rem;
           padding-top: 0.2rem;
@@ -677,23 +558,20 @@
           flex-direction: column;
           align-items: stretch;
           gap: 0.45rem;
+          margin-left: 0;
           padding: 0.4rem 0 0.7rem;
+          overflow: visible;
         }
 
-        body.hc-page-home .nav-link-light {
-          justify-content: center;
-          width: 100%;
-          min-height: 46px;
-          background: rgba(255, 255, 255, 0.72);
-          border: 1px solid rgba(17, 35, 60, 0.08);
-          box-shadow: 0 8px 18px rgba(14, 27, 48, 0.04);
-        }
-
-        body.hc-page-home .nav-menu li:last-child .nav-link-light {
-          width: 100%;
+        body.hc-page-home .nav-menu li,
+        body.hc-page-home .hc-public-nav-actions {
           min-width: 0;
+          margin-left: 0;
+          padding-left: 0;
         }
+      }
 
+      @media (max-width: 767.98px) {
         body.hc-page-home .hc-home__hero {
           padding-top: 52px;
         }
@@ -707,10 +585,13 @@
 
     <nav class="navbar-light main-nav hc-public-nav-root" role="navigation" aria-label="{{ _('Main navigation') }}" data-hc-public-nav>
       <div class="container">
-        <a class="navbar-brand-light" href="/">{{ _('HelpChain') }}</a>
+        <a class="navbar-brand-light" href="/">
+          <img src="{{ url_for('static', filename='img/hc-logo-mark.svg') }}" class="hc-brand-mark hc-logo" alt="HelpChain">
+          <span class="hc-brand-title">{{ _('HelpChain') }}</span>
+        </a>
 
         <button
-          class="navbar-toggler d-md-none"
+          class="navbar-toggler"
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navbarNav"
@@ -722,11 +603,10 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="nav-menu ms-auto">
-            <li><a class="nav-link-light is-active" href="{{ url_for('main.index') }}">{{ _('Accueil') }}</a></li>
+          <ul class="nav-menu hc-public-nav-main">
             <li class="hc-nav-mega" data-hc-mega>
               <button class="hc-nav-mega__trigger" type="button" data-hc-mega-trigger aria-expanded="false" aria-controls="hcHomeMegaProduct">
-                {{ _('Produit') }}
+                <span class="hc-navlabel">{{ _('Coordination') }}</span>
               </button>
               <div class="hc-nav-mega__panel" id="hcHomeMegaProduct" data-hc-mega-panel hidden>
                 <div class="hc-nav-mega__grid">
@@ -745,12 +625,37 @@
                 </div>
               </div>
             </li>
-            <li><a class="nav-link-light" href="#pilotage">{{ _('Pilotage') }}</a></li>
-            <li><a class="nav-link-light" href="{{ url_for('main.securite') }}">{{ _('Sécurité') }}</a></li>
-            <li><a class="nav-link-light" href="{{ safe_url_for('main.faq') }}">{{ _('FAQ') }}</a></li>
-            <li><a class="nav-link-light" href="{{ url_for('main.contact') }}">{{ _('Contact') }}</a></li>
-            <li><a class="nav-link-light" href="/demo">{{ _('Demander un accès pilote') }}</a></li>
+            <li><a class="nav-link-light" href="{{ url_for('main.pour_les_structures') }}"><span class="hc-navlabel">{{ _('Pour les structures') }}</span></a></li>
+            <li><a class="nav-link-light" href="{{ url_for('main.securite') }}"><span class="hc-navlabel">{{ _('Sécurité') }}</span></a></li>
+            <li><a class="nav-link-light" href="{{ url_for('main.deploiement') }}"><span class="hc-navlabel">{{ _('Déploiement') }}</span></a></li>
+            <li><a class="nav-link-light" href="{{ url_for('main.architecture') }}"><span class="hc-navlabel">{{ _('Architecture') }}</span></a></li>
+            <li class="hc-nav-mega hc-nav-mega--analyses" data-hc-mega>
+              <button class="hc-nav-mega__trigger" type="button" data-hc-mega-trigger aria-expanded="false" aria-controls="hcHomeMegaAnalyses">
+                <span class="hc-navlabel">{{ _('Analyses opérationnelles') }}</span>
+              </button>
+              <div class="hc-nav-mega__panel" id="hcHomeMegaAnalyses" data-hc-mega-panel hidden>
+                <div class="hc-nav-mega__microintro">{{ _('Analyses institutionnelles sur la continuité opérationnelle, les relances, la gouvernance et le suivi multi-acteurs.') }}</div>
+                <div class="hc-nav-mega__grid">
+                  <div class="hc-nav-mega__feature">
+                    <span class="hc-nav-mega__eyebrow">{{ _('Doctrine') }}</span>
+                    <strong>{{ _('Une lecture opérationnelle des continuités, des dérives de suivi et des fragilités de coordination.') }}</strong>
+                    <p>{{ _('Retrouvez les analyses HelpChain sur la fragmentation opérationnelle, la mémoire opérationnelle et la gouvernance des suivis multi-acteurs.') }}</p>
+                  </div>
+                  <div class="hc-nav-mega__links">
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.analyse_fragmentation') }}"><strong>{{ _('Pourquoi les suivis se fragmentent') }}</strong><span>{{ _('Comprendre comment la continuité se dégrade dans les organisations multi-acteurs.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.analyse_relances_perdues') }}"><strong>{{ _('Le coût invisible des relances perdues') }}</strong><span>{{ _('Analyser ce que coûtent les relances dispersées, les transitions fragiles et la perte de lisibilité.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.pourquoi_helpchain') }}"><strong>{{ _('Pourquoi HelpChain') }}</strong><span>{{ _('Le socle doctrinal et le diagnostic de départ de la plateforme.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation reste lisible, relançable et traçable dans le temps.') }}</span></a>
+                  </div>
+                </div>
+              </div>
+            </li>
           </ul>
+          <div class="hc-public-nav-actions d-flex align-items-center gap-2">
+            <a class="nav-link-light hc-nav-cta" href="/demo">
+              <span class="hc-navlabel">{{ _('Demander un accès pilote') }}</span>
+            </a>
+          </div>
         </div>
       </div>
     </nav>
