@@ -1,16 +1,39 @@
-﻿(function () {
+(function () {
   const path = window.location.pathname;
   const intentPages = ["/offre", "/deploiement", "/professionnels", "/collectivites"];
   const isIntentPage = intentPages.some((p) => path.startsWith(p));
+  const SESSION_DISMISS_KEY = "helpchainLeadModalDismissed";
+  const LEGACY_DISMISS_KEY = "hc_lead_capture_closed";
 
   if (!isIntentPage) return;
-  if (localStorage.getItem("hc_lead_capture_closed") === "1") return;
+
+  function isDismissed() {
+    try {
+      if (sessionStorage.getItem(SESSION_DISMISS_KEY) === "1") return true;
+      if (localStorage.getItem(LEGACY_DISMISS_KEY) === "1") return true;
+    } catch (error) {
+      console.warn("HC_LEAD_CAPTURE_STORAGE_READ_FAILED", error);
+    }
+    return false;
+  }
+
+  function persistDismissal() {
+    try {
+      sessionStorage.setItem(SESSION_DISMISS_KEY, "1");
+      localStorage.setItem(LEGACY_DISMISS_KEY, "1");
+    } catch (error) {
+      console.warn("HC_LEAD_CAPTURE_STORAGE_WRITE_FAILED", error);
+    }
+  }
+
+  if (isDismissed()) return;
 
   const isMobileViewport = window.matchMedia("(max-width: 767px)").matches;
   const triggerDelay = isMobileViewport ? 16000 : 8000;
   const scrollThreshold = isMobileViewport ? 0.65 : 0.55;
 
   function showCapture() {
+    if (isDismissed()) return;
     if (document.querySelector(".hc-lead-capture")) return;
 
     const box = document.createElement("div");
@@ -59,7 +82,7 @@
     document.body.appendChild(box);
 
     box.querySelector(".hc-lead-capture__close").addEventListener("click", function () {
-      localStorage.setItem("hc_lead_capture_closed", "1");
+      persistDismissal();
       box.remove();
     });
 
@@ -93,7 +116,7 @@
         if (!response.ok) throw new Error("Lead capture failed: " + response.status);
 
         localStorage.setItem("hc_lead_email", email);
-        localStorage.setItem("hc_lead_capture_closed", "1");
+        persistDismissal();
 
         box.innerHTML = `
           <div class="hc-lead-capture__title">C’est fait.</div>
@@ -126,6 +149,8 @@
 
   let maxScroll = 0;
   window.addEventListener("scroll", function () {
+    if (isDismissed()) return;
+
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
     const docHeight = document.documentElement.scrollHeight - window.innerHeight;
     if (docHeight <= 0) return;
@@ -134,6 +159,6 @@
     if (maxScroll > scrollThreshold) showCapture();
   });
 
-  // make function globally available for debug/testing
+  // Make function globally available for debug/testing.
   window.showCapture = showCapture;
 })();
