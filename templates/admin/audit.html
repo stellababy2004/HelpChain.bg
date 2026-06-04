@@ -10,6 +10,9 @@
         <div class="hc-admin-kicker">Traçabilite administrative</div>
         <h1 class="hc-admin-title">Audit des actions</h1>
         <div class="hc-muted">Historique exploitable des actions administratives, de leurs cibles et des changements associes.</div>
+        {% if scenario_label %}
+          <div class="hc-muted small mt-1">{{ scenario_label }} · {{ scenario_description }}</div>
+        {% endif %}
       </div>
       <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_requests') }}">Retour aux demandes</a>
     </div>
@@ -102,6 +105,16 @@
           {% set action_sentence = 'Tentative de connexion echouee' %}
         {% elif action_key == 'security.denied_action' %}
           {% set action_sentence = 'Action refusee par la couche de securite' %}
+        {% elif action_key == 'security.denied_cross_structure_access' %}
+          {% set action_sentence = 'Acces inter-structure refuse' %}
+        {% elif action_key == 'request.sla_inactivity_reminder_sent' %}
+          {% set action_sentence = 'Relance d inactivite enregistree' %}
+        {% elif action_key == 'referral.sent' %}
+          {% set action_sentence = 'Orientation partenaire transmise' %}
+        {% elif action_key == 'referral.accepted' %}
+          {% set action_sentence = 'Orientation partenaire acceptee' %}
+        {% elif action_key == 'referral.refused' %}
+          {% set action_sentence = 'Orientation partenaire refusee' %}
         {% elif 'assign' in action_key %}
           {% set action_sentence = 'Affectation mise a jour' %}
         {% elif 'create' in action_key %}
@@ -164,6 +177,12 @@
                   {% endif %}
                   {% if attempted_action %}
                     <span class="hc-pill hc-pill--warn" title="Action tentee">{{ attempted_action }}</span>
+                  {% endif %}
+                  {% if payload_map and payload_map.note is defined %}
+                    <span class="hc-pill hc-pill--muted" title="Trace">{{ payload_map.note }}</span>
+                  {% endif %}
+                  {% if payload_map and payload_map.partner is defined %}
+                    <span class="hc-pill hc-pill--muted" title="Partenaire">{{ payload_map.partner }}</span>
                   {% endif %}
                   {% if old_value is none and new_value is none and not route_value and not identifier_value and not user_value and not reason_value and not attempted_action and not important_flag and e.payload %}
                     <span class="hc-pill hc-pill--muted" title="Charge utile">payload disponible</span>

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from types import SimpleNamespace
 
 
@@ -101,6 +103,529 @@ def _notification(
         else None,
         last_error=last_error,
     )
+
+
+INSTITUTIONAL_UNIVERSES = {
+    "ccas_urbain",
+    "reseau_associatif",
+    "coordination_sante",
+}
+_FIXTURES_PATH = (
+    Path(__file__).resolve().parents[4] / "docs" / "institutional-pilot-fixtures.yaml"
+)
+
+
+def _parse_fixture_dt(value: object) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        return datetime.strptime(text, "%Y-%m-%d %H:%M")
+    except Exception:
+        return None
+
+
+def _load_institutional_fixtures_raw() -> dict[str, object] | None:
+    try:
+        if not _FIXTURES_PATH.exists():
+            return None
+        return json.loads(_FIXTURES_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+
+def _normalize_universe_name(universe: str | None) -> str:
+    normalized = (universe or "").strip().lower()
+    if normalized in INSTITUTIONAL_UNIVERSES:
+        return normalized
+    return "ccas_urbain"
+
+
+def _owner_namespace(owner_name: object, owner_role: object) -> SimpleNamespace | None:
+    name = str(owner_name or "").strip()
+    role = str(owner_role or "").strip()
+    if not name and not role:
+        return None
+    username = name.lower().replace(" ", ".") if name else role or "coordination"
+    return SimpleNamespace(username=username, name=name or username, role=role or None)
+
+
+def _notification_bucket_label(bucket: str) -> str:
+    return {
+        "pending": "en attente",
+        "processing": "en cours",
+        "retry": "a relancer",
+        "failed": "en echec",
+        "sent": "envoyee",
+    }.get((bucket or "").strip().lower(), "en attente")
+
+
+def _build_institutional_request(row: dict[str, object]) -> SimpleNamespace:
+    request_id_text = str(row.get("id") or "R0").strip()
+    digits = "".join(ch for ch in request_id_text if ch.isdigit()) or "0"
+    request_id = int(digits)
+    created_at = _parse_fixture_dt(row.get("created_at")) or _now()
+    updated_at = _parse_fixture_dt(row.get("updated_at")) or created_at
+    universe = str(row.get("universe") or "").strip().lower()
+    urgency = str(row.get("urgency_level") or "standard").strip().lower()
+    priority = {
+        "critique": "critical",
+        "urgent": "high",
+        "sensible": "medium",
+    }.get(urgency, "standard")
+    owner = _owner_namespace(row.get("owner_name"), row.get("owner_role"))
+    return SimpleNamespace(
+        id=request_id,
+        fixture_id=request_id_text,
+        title=str(row.get("title") or f"Demande #{request_id}"),
+        name=str(row.get("title") or f"Demande #{request_id}"),
+        city=str(row.get("territorial_context") or ""),
+        location_text=str(row.get("territorial_context") or ""),
+        category=str(row.get("request_type") or "social"),
+        request_type=str(row.get("request_type") or "social"),
+        status=str(row.get("status") or "open"),
+        priority=priority,
+        urgency_level=urgency,
+        operational_stage=str(row.get("operational_stage") or "receptionnee"),
+        blocking_reason=row.get("blocking_reason"),
+        handoff_state=str(row.get("handoff_state") or "aucun"),
+        owner=owner,
+        owner_id=(request_id if owner else None),
+        owner_role=str(row.get("owner_role") or ""),
+        next_action=str(row.get("next_action") or ""),
+        sla_badge=str(row.get("sla_badge") or ""),
+        description=str(row.get("description") or ""),
+        territorial_context=str(row.get("territorial_context") or ""),
+        universe=universe,
+        created_at=created_at,
+        updated_at=updated_at,
+        risk_level="critical" if urgency == "critique" else "attention" if urgency in {"urgent", "sensible"} else "standard",
+        risk_score=92 if urgency == "critique" else 81 if urgency == "urgent" else 61 if urgency == "sensible" else 34,
+        phone=None,
+        email=None,
+        service=None,
+        service_id=None,
+        structure=None,
+        structure_id=None,
+        assigned_volunteer_id=None,
+    )
+
+
+def _build_institutional_notification(row: dict[str, object]) -> SimpleNamespace:
+    status = str(row.get("status") or "pending").strip().lower()
+    return SimpleNamespace(
+        id=int(row.get("id") or 0),
+        channel=str(row.get("channel") or "email"),
+        event_type=str(row.get("event_type") or ""),
+        recipient=str(row.get("recipient") or ""),
+        status=status,
+        attempts=int(row.get("attempts") or 0),
+        max_attempts=int(row.get("max_attempts") or 0),
+        created_at=_parse_fixture_dt(row.get("created_at")) or _now(),
+        next_retry_at=_parse_fixture_dt(row.get("next_retry_at")),
+        sent_at=_parse_fixture_dt(row.get("sent_at")),
+        last_error=row.get("last_error"),
+        title=str(row.get("title") or ""),
+        body=str(row.get("body") or ""),
+        request_id=row.get("request_id"),
+        ui_status_bucket=status if status in {"pending", "processing", "retry", "failed", "sent"} else "pending",
+        ui_status_label=_notification_bucket_label(status),
+    )
+
+
+def _build_institutional_audit_event(row: dict[str, object], request_lookup: dict[str, SimpleNamespace]) -> SimpleNamespace:
+    request_id = str(row.get("request_id") or "").strip()
+    request_row = request_lookup.get(request_id)
+    payload = dict(row.get("payload") or {})
+    if request_row is not None:
+        payload.setdefault("request_fixture_id", request_row.fixture_id)
+        payload.setdefault("request_title", request_row.title)
+    return SimpleNamespace(
+        created_at=_parse_fixture_dt(row.get("timestamp")) or _now(),
+        action=str(row.get("action") or ""),
+        admin_username=str(row.get("admin_username") or "system"),
+        admin_user_id=1,
+        target_type=str(row.get("target_type") or "Request"),
+        target_id=int(row.get("target_id") or 0),
+        ip=str(row.get("ip") or "127.0.0.1"),
+        payload=payload,
+        request_id=request_id or None,
+    )
+
+
+def _tone_to_priority(urgency: str) -> str:
+    return {
+        "critique": "critique",
+        "urgent": "eleve",
+        "sensible": "eleve",
+    }.get((urgency or "").strip().lower(), "normal")
+
+
+def _build_cases_from_requests(requests: list[SimpleNamespace]) -> list[SimpleNamespace]:
+    rows: list[SimpleNamespace] = []
+    for idx, request_row in enumerate(requests[:8], start=1):
+        rows.append(
+            SimpleNamespace(
+                id=200 + idx,
+                request_id=request_row.id,
+                request=request_row,
+                status=request_row.status,
+                priority=_tone_to_priority(getattr(request_row, "urgency_level", "standard")),
+                owner_user=request_row.owner,
+                owner_user_id=request_row.owner_id,
+                last_activity_at=request_row.updated_at,
+                updated_at=request_row.updated_at,
+                created_at=request_row.created_at,
+                risk_score=request_row.risk_score,
+                assigned_professional_lead=None,
+            )
+        )
+    return rows
+
+
+def _build_priority_items(requests: list[SimpleNamespace]) -> list[dict[str, object]]:
+    def _rank(row: SimpleNamespace) -> tuple[int, float]:
+        urgency = getattr(row, "urgency_level", "standard")
+        rank = 0 if urgency == "critique" else 1 if urgency == "urgent" else 2 if getattr(row, "blocking_reason", None) else 3
+        updated_at = getattr(row, "updated_at", None)
+        ts = float(updated_at.timestamp()) if isinstance(updated_at, datetime) else 0.0
+        return (rank, -ts)
+
+    items: list[dict[str, object]] = []
+    for row in sorted(requests, key=_rank)[:6]:
+        items.append(
+            {
+                "id": row.id,
+                "fixture_id": row.fixture_id,
+                "title": row.title,
+                "summary_compact": f"{row.operational_stage} · {row.territorial_context}",
+                "risk_level": row.risk_level,
+                "indicator_label": row.blocking_reason or row.sla_badge or "Suivi en cours",
+                "operational_stage": row.operational_stage,
+                "next_action": row.next_action,
+            }
+        )
+    return items
+
+
+def _build_notification_summary(rows: list[SimpleNamespace]) -> dict[str, int]:
+    summary = {
+        "pending": 0,
+        "processing": 0,
+        "done": 0,
+        "dead_letter": 0,
+        "retry": 0,
+        "failed": 0,
+        "sent": 0,
+    }
+    for row in rows:
+        status = str(getattr(row, "status", "") or "").strip().lower()
+        if status in summary:
+            summary[status] += 1
+    return summary
+
+
+def _build_timeline_lookup(rows: list[dict[str, object]]) -> dict[int, list[str]]:
+    lookup: dict[int, list[str]] = {}
+    for row in rows:
+        request_id = str(row.get("request_id") or "").strip()
+        digits = "".join(ch for ch in request_id if ch.isdigit()) or "0"
+        lookup[int(digits)] = [str(item) for item in row.get("entries") or []]
+    return lookup
+
+
+def validate_institutional_pilot_payload(payload: dict[str, object] | None) -> bool:
+    if not isinstance(payload, dict):
+        return False
+    universe = payload.get("universe")
+    requests = payload.get("requests")
+    kpis = payload.get("kpis")
+    notifications = payload.get("notifications")
+    audit_events = payload.get("audit_events")
+    if not isinstance(universe, dict):
+        return False
+    if not str(universe.get("name") or "").strip():
+        return False
+    return (
+        isinstance(requests, list)
+        and len(requests) == 30
+        and isinstance(kpis, list)
+        and len(kpis) == 12
+        and isinstance(notifications, list)
+        and len(notifications) == 6
+        and isinstance(audit_events, list)
+        and len(audit_events) == 20
+    )
+
+
+def get_institutional_pilot_payload(universe: str | None = None) -> dict[str, object] | None:
+    raw = _load_institutional_fixtures_raw()
+    if not raw:
+        return None
+
+    normalized_universe = _normalize_universe_name(universe)
+    universe_meta = (
+        raw.get("universes", {}) or {}
+    ).get(normalized_universe)
+    if not isinstance(universe_meta, dict):
+        return None
+
+    all_request_dicts = [
+        row for row in (raw.get("requests") or []) if isinstance(row, dict)
+    ]
+    all_timeline_dicts = [
+        row for row in (raw.get("timelines") or []) if isinstance(row, dict)
+    ]
+    all_audit_dicts = [
+        row for row in (raw.get("audit_events") or []) if isinstance(row, dict)
+    ]
+    all_kpi_dicts = [
+        row for row in (raw.get("kpi_cards") or []) if isinstance(row, dict)
+    ]
+    all_notification_dicts = [
+        row for row in (raw.get("notifications") or []) if isinstance(row, dict)
+    ]
+
+    request_rows = [
+        _build_institutional_request(row)
+        for row in all_request_dicts
+        if str(row.get("universe") or "").strip().lower() == normalized_universe
+    ]
+    if not request_rows:
+        return None
+
+    request_lookup_by_fixture_id = {row.fixture_id: row for row in request_rows}
+    notification_rows = [
+        _build_institutional_notification(row)
+        for row in all_notification_dicts
+    ]
+    audit_rows = [
+        _build_institutional_audit_event(row, request_lookup_by_fixture_id)
+        for row in all_audit_dicts
+        if (
+            str(row.get("request_id") or "").strip() in request_lookup_by_fixture_id
+            or str(row.get("action") or "").startswith("security.")
+        )
+    ]
+    timeline_rows = [
+        row
+        for row in all_timeline_dicts
+        if str(row.get("request_id") or "").strip() in request_lookup_by_fixture_id
+    ]
+    timeline_lookup = _build_timeline_lookup(timeline_rows)
+
+    case_rows = _build_cases_from_requests(request_rows)
+    case_signals = {
+        case_row.id: [
+            getattr(case_row.request, "operational_stage", "suivi"),
+            getattr(case_row.request, "blocking_reason", None) or "continuite",
+        ]
+        for case_row in case_rows
+    }
+    case_priority_levels = {
+        case_row.id: _tone_to_priority(getattr(case_row.request, "urgency_level", "standard"))
+        for case_row in case_rows
+    }
+    queue_reasons = {
+        row.id: [
+            row.operational_stage.replace("_", " "),
+            row.blocking_reason.replace("_", " ") if row.blocking_reason else row.sla_badge,
+        ]
+        for row in request_rows
+    }
+    priority_levels = {
+        row.id: _tone_to_priority(getattr(row, "urgency_level", "standard"))
+        for row in request_rows
+    }
+
+    kpi_lookup = {
+        str(card.get("key") or ""): card
+        for card in all_kpi_dicts
+    }
+
+    critical_count = sum(1 for row in request_rows if row.urgency_level == "critique")
+    attention_count = sum(1 for row in request_rows if row.urgency_level in {"urgent", "sensible"})
+    standard_count = max(0, len(request_rows) - critical_count - attention_count)
+    no_owner_count = sum(1 for row in request_rows if not row.owner)
+    not_seen_72h_count = int(kpi_lookup.get("sans_activite_72h", {}).get("value", 0) or 0)
+    critical_without_owner_count = sum(
+        1 for row in request_rows if row.urgency_level == "critique" and not row.owner
+    )
+    assign_immediately_count = sum(
+        1 for row in request_rows if row.urgency_level in {"critique", "urgent"} and not row.owner
+    )
+    manager_review_today_count = sum(
+        1 for row in request_rows if row.blocking_reason in {"capacite_saturee", "saturation_partenaire", "dossier_incomplet"}
+    )
+    rec_counts = {
+        "assign_immediately": assign_immediately_count,
+        "manager_review_today": manager_review_today_count,
+        "route_to_housing_partner": sum(1 for row in request_rows if row.request_type == "hebergement" and row.handoff_state in {"propose", "transmis"}),
+        "route_to_food_support": sum(1 for row in request_rows if row.request_type == "aide_alimentaire"),
+        "route_to_health_support": sum(1 for row in request_rows if row.universe == "coordination_sante"),
+    }
+
+    scenario_label = str(universe_meta.get("label") or normalized_universe.replace("_", " "))
+    scenario_description = str(universe_meta.get("short_description") or "")
+    narrative_request_id = str(universe_meta.get("narrative_request_id") or "")
+    narrative_request = request_lookup_by_fixture_id.get(narrative_request_id)
+    narrative_timeline = timeline_lookup.get(narrative_request.id if narrative_request else 0, [])
+
+    sla_rows = [
+        {
+            "id": row.id,
+            "title": row.title,
+            "category": row.category,
+            "status": row.status,
+            "created_at": row.created_at,
+            "owner_id": row.owner_id,
+            "assigned_volunteer_id": None,
+            "overdue_hours": 18.0 if row.blocking_reason else 6.0,
+            "breach_type": "owner_assign" if not row.owner else "resolve",
+        }
+        for row in request_rows
+        if row.blocking_reason or not row.owner
+    ][:8]
+
+    payload = {
+        "universe": {
+            "key": normalized_universe,
+            "name": scenario_label,
+            "short_description": scenario_description,
+            "kpi_tone": universe_meta.get("kpi_tone") or "",
+            "coordination_flow": universe_meta.get("coordination_flow") or "",
+        },
+        "requests": all_request_dicts,
+        "timelines": all_timeline_dicts,
+        "audit_events": all_audit_dicts,
+        "kpis": all_kpi_dicts,
+        "notifications": all_notification_dicts,
+        "universes": raw.get("universes") or {},
+        "scenario_name": normalized_universe,
+        "scenario_meta": {
+            "label": scenario_label,
+            "short_description": scenario_description,
+        },
+        "workspace_kpis": {
+            "critical": critical_count,
+            "unassigned": no_owner_count,
+            "relance": int(kpi_lookup.get("relances_sans_retour", {}).get("value", 0) or 0),
+            "notifications_failed": _build_notification_summary(notification_rows)["failed"],
+            "updated_today": sum(1 for row in request_rows if row.updated_at.date() == datetime(2026, 6, 4).date()),
+            "retry_notifications": _build_notification_summary(notification_rows)["retry"],
+        },
+        "workspace_rows": request_rows,
+        "workspace_queue_reasons": queue_reasons,
+        "workspace_priority_levels": priority_levels,
+        "cases_kpis": {
+            "critical": critical_count,
+            "attention": attention_count,
+            "no_owner": no_owner_count,
+            "stale": not_seen_72h_count,
+        },
+        "cases_rows": case_rows,
+        "cases_signals": case_signals,
+        "cases_priority_levels": case_priority_levels,
+        "notifications_kpis": _build_notification_summary(notification_rows),
+        "notification_rows": notification_rows,
+        "notification_channels": sorted({row.channel for row in notification_rows if row.channel}),
+        "security_kpis": {
+            "success_24h": 9,
+            "failed_24h": 3,
+            "distinct_failed_ips_24h": 1,
+            "distinct_failed_usernames_24h": 1,
+            "lockout_buckets_24h": 0,
+            "risky_actions_24h": 2,
+            "denied_24h": sum(1 for row in audit_rows if row.action.startswith("security.")),
+        },
+        "security_anomalies": {
+            "spike_failed_logins": False,
+            "repeated_fails_by_ip": False,
+            "repeated_fails_by_username": False,
+            "failed_1h": 0,
+            "avg_hourly": 0.0,
+            "spike_threshold": 10.0,
+            "top_ip": "203.0.113.44",
+            "top_ip_fails": 1,
+            "top_username": "ops.reseau",
+            "top_username_fails": 1,
+            "denied_spike": False,
+            "repeated_denied": False,
+            "denied_1h": 0,
+            "avg_denied_hourly": 0.0,
+            "top_denied_ip": "203.0.113.44",
+            "top_denied_ip_count": 1,
+            "top_denied_username": "ops.reseau",
+            "top_denied_username_count": 1,
+        },
+        "security_recent_attempts": {
+            "recent_logins": [],
+            "recent_risky": [],
+            "recent_denied": [row for row in audit_rows if row.action.startswith("security.")][:3],
+            "recent_sensitive": [row for row in audit_rows if "referral" in row.action][:3],
+            "top_ips": [("203.0.113.44", 1)],
+            "top_usernames": [("ops.reseau", 1)],
+            "top_denied_ips": [("203.0.113.44", 1)],
+            "top_denied_usernames": [("ops.reseau", 1)],
+            "risky_actions": [
+                "request.status_changed",
+                "request.owner_assigned",
+                "security.denied_cross_structure_access",
+            ],
+        },
+        "audit_rows": audit_rows,
+        "audit_filters": {"action": "", "admin": "", "target_type": "", "target_id": "", "days": "7"},
+        "audit_actions": sorted({row.action for row in audit_rows}),
+        "audit_target_types": sorted({row.target_type for row in audit_rows}),
+        "audit_pagination": _pagination(len(audit_rows)),
+        "sla_kpis": {
+            "breach_label": "SLA continuité de suivi",
+            "resolve_count": sum(1 for row in sla_rows if row["breach_type"] == "resolve"),
+            "owner_assign_count": sum(1 for row in sla_rows if row["breach_type"] == "owner_assign"),
+            "volunteer_assign_count": 0,
+            "prediction_counts": {
+                "resolution_overdue": sum(1 for row in request_rows if row.blocking_reason),
+                "owner_assignment_overdue": no_owner_count,
+                "volunteer_assignment_overdue": 0,
+            },
+        },
+        "sla_rows": sla_rows,
+        "pilotage": {
+            "critical_count": critical_count,
+            "attention_count": attention_count,
+            "standard_count": standard_count,
+            "no_owner_count": no_owner_count,
+            "not_seen_72h_count": not_seen_72h_count,
+            "critical_without_owner_count": critical_without_owner_count,
+            "assign_immediately_count": assign_immediately_count,
+            "manager_review_today_count": manager_review_today_count,
+            "priority_items": _build_priority_items(request_rows),
+            "category_trend_text": "Le volume reste principalement oriente vers les flux courants d aide alimentaire, d acces aux droits et de suivi social.",
+            "assignment_delay_text": "Quelques dossiers conservent une latence de reprise, sans rupture generale de coordination.",
+            "vigilance_text": "Les points de vigilance se concentrent sur les relances sans retour, les attentes partenaires et les validations de cloture.",
+            "rec_counts": rec_counts,
+            "received_today": sum(1 for row in request_rows if row.created_at.date() == datetime(2026, 6, 4).date()),
+            "taken_today": sum(1 for row in request_rows if row.status == "in_progress" and row.updated_at.date() == datetime(2026, 6, 4).date()),
+            "closed_today": sum(1 for row in request_rows if row.status == "done" and row.updated_at.date() == datetime(2026, 6, 4).date()),
+        },
+        "institutional_kpis": list(raw.get("kpi_cards") or []),
+        "institutional_timelines": timeline_lookup,
+        "institutional_story": {
+            "request_id": narrative_request.id if narrative_request else None,
+            "request_fixture_id": narrative_request.fixture_id if narrative_request else None,
+            "title": narrative_request.title if narrative_request else "",
+            "timeline": narrative_timeline,
+            "summary": "Premiere demande, qualification, orientation, relance, supervision, prise en charge et consolidation dans le pilotage.",
+        },
+        "institutional_universe": {
+            "key": normalized_universe,
+            "label": scenario_label,
+            "short_description": scenario_description,
+            "kpi_tone": universe_meta.get("kpi_tone") or "",
+            "coordination_flow": universe_meta.get("coordination_flow") or "",
+        },
+    }
+    return payload if validate_institutional_pilot_payload(payload) else None
 
 
 def get_demo_kpis() -> dict[str, int]:
@@ -666,6 +1191,16 @@ def _build_surcharge_hiver_payload() -> dict[str, object]:
 
 def get_demo_payload(scenario: str | None = None) -> dict[str, object]:
     scenario_name = get_demo_scenario_name(scenario)
+    institutional_payload = None
+    raw_scenario = (scenario or "").strip().lower()
+    if raw_scenario in INSTITUTIONAL_UNIVERSES:
+        institutional_payload = get_institutional_pilot_payload(raw_scenario)
+    if institutional_payload is not None:
+        institutional_payload["scenario_name"] = raw_scenario
+        institutional_payload["audit_pagination"] = _pagination(
+            len(institutional_payload.get("audit_rows") or [])
+        )
+        return institutional_payload
     if scenario_name == "crise_sociale":
         payload = _build_crise_sociale_payload()
     elif scenario_name == "surcharge_hiver":

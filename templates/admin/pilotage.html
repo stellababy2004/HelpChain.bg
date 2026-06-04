@@ -8,9 +8,40 @@
 {% block content %}
 <div class="hc-admin-wrap hc-admin-shell">
   <div class="d-flex justify-content-between align-items-center mb-3 hc-admin-toolbar">
-    <h1 class="h4 mb-0">Pilotage des situations sociales</h1>
+    <div>
+      <h1 class="h4 mb-0">Pilotage des situations sociales</h1>
+      {% if scenario_label %}
+        <div class="text-muted small mt-1">{{ scenario_label }} · {{ scenario_description }}</div>
+      {% endif %}
+    </div>
     <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_requests') }}">Retour aux demandes</a>
   </div>
+
+  {% if institutional_universe %}
+    <section class="hc-pilotage-card mb-3">
+      <h3>Cadre du pilote</h3>
+      <div class="small text-muted mb-2">{{ institutional_universe.label }} · {{ institutional_universe.short_description }}</div>
+      <div class="small">
+        <strong>Tonalite KPI:</strong> {{ institutional_universe.kpi_tone or 'equilibre' }} ·
+        <strong>Flux de coordination:</strong> {{ institutional_universe.coordination_flow or 'continuite locale et orientation tracee' }}
+      </div>
+    </section>
+  {% endif %}
+
+  {% if institutional_kpis %}
+    <section class="hc-pilotage-card mb-3">
+      <h3>Repères de pilotage</h3>
+      <div class="hc-pilotage-grid">
+        {% for card in institutional_kpis[:6] %}
+          <article class="hc-pilotage-card">
+            <div class="small text-muted">{{ card.label }}</div>
+            <div class="h4 mb-1">{{ card.value }}</div>
+            <div class="small text-muted">{{ card.trend }}</div>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
 
   <div class="hc-pilotage-grid mb-3">
     <section class="hc-pilotage-card">
@@ -68,7 +99,9 @@
             <th>Identifiant</th>
             <th>Titre</th>
             <th>Niveau de risque</th>
+            <th>Étape</th>
             <th>Indicateur</th>
+            <th>Action attendue</th>
             <th>Détails</th>
           </tr>
         </thead>
@@ -83,14 +116,16 @@
                 {% endif %}
               </td>
               <td>{{ (item.risk_level or 'standard')|capitalize }}</td>
+              <td>{{ item.operational_stage or 'suivi_en_cours' }}</td>
               <td>{{ item.indicator_label }}</td>
+              <td>{{ item.next_action or 'Poursuivre le suivi' }}</td>
               <td class="hc-td-action">
                 <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_request_details', req_id=item.id) }}">Voir les détails</a>
               </td>
             </tr>
           {% else %}
             <tr>
-              <td colspan="5" class="py-4">
+              <td colspan="7" class="py-4">
                 <div class="hc-empty-state">
                   <div class="hc-empty-state__title">Aucune situation prioritaire</div>
                   <div class="hc-empty-state__text">Les indicateurs ne signalent pas de dossier à reprendre immédiatement.</div>
@@ -112,6 +147,19 @@
       <li>{{ vigilance_text }}</li>
     </ul>
   </section>
+
+  {% if institutional_story and institutional_story.timeline %}
+    <section class="hc-pilotage-card mb-3">
+      <h3>Fil conducteur de démonstration</h3>
+      <div class="small text-muted mb-2">{{ institutional_story.summary }}</div>
+      <div class="fw-semibold mb-2">{{ institutional_story.request_fixture_id }} · {{ institutional_story.title }}</div>
+      <ul class="mb-0">
+        {% for entry in institutional_story.timeline[:6] %}
+          <li>{{ entry }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
 
   <div class="hc-pilotage-grid">
     <section class="hc-pilotage-card">

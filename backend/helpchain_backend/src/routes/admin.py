@@ -8803,6 +8803,36 @@ def admin_sla_breakdown():
 def admin_pilotage():
     admin_required_404()
 
+    if current_app.config.get("DEMO_MODE"):
+        payload = get_demo_payload(current_app.config.get("DEMO_SCENARIO"))
+        scenario_meta = payload["scenario_meta"]
+        pilotage = payload.get("pilotage") or {}
+        return render_template(
+            "admin/pilotage.html",
+            critical_count=pilotage.get("critical_count", 0),
+            attention_count=pilotage.get("attention_count", 0),
+            standard_count=pilotage.get("standard_count", 0),
+            no_owner_count=pilotage.get("no_owner_count", 0),
+            not_seen_72h_count=pilotage.get("not_seen_72h_count", 0),
+            critical_no_owner_count=pilotage.get("critical_without_owner_count", 0),
+            critical_without_owner_count=pilotage.get("critical_without_owner_count", 0),
+            assign_immediately_count=pilotage.get("assign_immediately_count", 0),
+            manager_review_today_count=pilotage.get("manager_review_today_count", 0),
+            priority_items=pilotage.get("priority_items", []),
+            category_trend_text=pilotage.get("category_trend_text", ""),
+            assignment_delay_text=pilotage.get("assignment_delay_text", ""),
+            vigilance_text=pilotage.get("vigilance_text", ""),
+            rec_counts=pilotage.get("rec_counts", {}),
+            received_today=pilotage.get("received_today", 0),
+            taken_today=pilotage.get("taken_today", 0),
+            closed_today=pilotage.get("closed_today", 0),
+            scenario_label=scenario_meta["label"],
+            scenario_description=scenario_meta["short_description"],
+            institutional_kpis=payload.get("institutional_kpis", []),
+            institutional_story=payload.get("institutional_story", {}),
+            institutional_universe=payload.get("institutional_universe", {}),
+        )
+
     base_query = _scope_requests(Request.query).filter(Request.deleted_at.is_(None))
     active_query = base_query.filter(
         or_(

@@ -11,6 +11,9 @@
         <div class="hc-admin-kicker">Console opérateur</div>
         <h1 class="hc-admin-title">Notifications</h1>
         <div class="hc-muted">Suivi opérationnel des notifications en file d'attente.</div>
+        {% if scenario_label %}
+          <div class="hc-muted small mt-1">{{ scenario_label }} · {{ scenario_description }}</div>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -91,6 +94,7 @@
           <div role="columnheader">Créée le</div>
           <div role="columnheader">Canal</div>
           <div role="columnheader">Événement</div>
+          <div role="columnheader">Continuité</div>
           <div role="columnheader">Destinataire</div>
           <div role="columnheader">Statut</div>
           <div role="columnheader">Tentatives</div>
@@ -117,6 +121,13 @@
               <div class="hc-notify-grid__cell hc-notify-grid__cell--event" role="cell">
                 <div class="hc-notify-grid__label">Événement</div>
                 <span class="hc-notify-grid__line" title="{{ j.event_type or '-' }}">{{ j.event_type or '-' }}</span>
+              </div>
+              <div class="hc-notify-grid__cell hc-notify-grid__cell--event" role="cell">
+                <div class="hc-notify-grid__label">Continuité</div>
+                <span class="hc-notify-grid__line" title="{{ j.title or '-' }}">{{ j.title or '-' }}</span>
+                {% if j.body %}
+                  <span class="hc-notify-grid__line hc-notify-grid__sub" title="{{ j.body }}">{{ j.body|truncate(90, True) }}</span>
+                {% endif %}
               </div>
               <div class="hc-notify-grid__cell hc-notify-grid__cell--recipient" role="cell">
                 <div class="hc-notify-grid__label">Destinataire</div>

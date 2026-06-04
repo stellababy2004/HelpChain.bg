@@ -8,6 +8,34 @@
   <h2 class="mt-3">{{ _('Request') }} #{{ req.id }} - {{ req.title }}</h2>
   <p><b>{{ _('Status:') }}</b> {{ req.status }} | <b>{{ _('Priority:') }}</b> {{ req.priority }} | <b>{{ _('Category:') }}</b> {{ request_category_label(req.category) }}</p>
 
+  {% if req.operational_stage or req.blocking_reason or req.handoff_state or req.sla_badge or req.next_action %}
+    <div class="card p-3 mb-3">
+      <h5 class="mb-3">Lecture opérationnelle</h5>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <p class="mb-1"><b>Étape opérationnelle:</b></p>
+          <div>{{ req.operational_stage or '-' }}</div>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1"><b>Blocage:</b></p>
+          <div>{{ req.blocking_reason or 'Aucun blocage signalé' }}</div>
+        </div>
+        <div class="col-md-4">
+          <p class="mb-1"><b>Transmission / handoff:</b></p>
+          <div>{{ req.handoff_state or 'aucun' }}</div>
+        </div>
+        <div class="col-md-6">
+          <p class="mb-1"><b>Prochaine action:</b></p>
+          <div>{{ req.next_action or 'Poursuivre le suivi' }}</div>
+        </div>
+        <div class="col-md-6">
+          <p class="mb-1"><b>Repère SLA:</b></p>
+          <div>{{ req.sla_badge or 'Suivi standard' }}</div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
   <div class="card p-3 mb-3">
     <p><b>{{ _('Name:') }}</b> {{ req.name }}</p>
     <p><b>{{ _('Phone:') }}</b> {{ req.phone or '-' }}</p>
@@ -15,6 +43,17 @@
     <p><b>{{ _('Location:') }}</b> {{ req.location_text or '-' }}</p>
     <p class="mb-0"><b>{{ _('Description:') }}</b><br>{{ req.description }}</p>
   </div>
+
+  {% if institutional_timeline %}
+    <div class="card p-3 mb-3">
+      <h5 class="mb-3">Continuité de traitement</h5>
+      <ul class="mb-0">
+        {% for entry in institutional_timeline %}
+          <li>{{ entry }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
 
   <form method="POST" action="{{ url_for('admin.admin_request_set_status', req_id=req.id) }}" class="d-flex gap-2 flex-wrap">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
