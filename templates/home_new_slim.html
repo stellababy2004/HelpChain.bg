@@ -647,6 +647,35 @@
       padding-left: 12px;
     }
 
+    body.hc-page-home .hc-home-premium__buyer-card--primary {
+      grid-column: span 2;
+      border-color: rgba(37, 99, 235, 0.22) !important;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(242, 248, 255, 0.96)) !important;
+      box-shadow: 0 18px 44px rgba(21, 59, 111, 0.08) !important;
+    }
+
+    body.hc-page-home .hc-home-premium__buyer-cardTag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      margin: 0 0 0.85rem;
+      padding: 0.36rem 0.72rem;
+      border-radius: 999px;
+      border: 1px solid rgba(37, 99, 235, 0.16);
+      background: rgba(37, 99, 235, 0.06);
+      color: #1d4f91;
+      font-size: 0.76rem;
+      font-weight: 760;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 900px) {
+      body.hc-page-home .hc-home-premium__buyer-card--primary {
+        grid-column: auto;
+      }
+    }
+
     body.hc-page-home .hc-home-premium__section--product .hc-home-premium__product-row--intake .hc-home-premium__section-kicker {
       position: relative;
       padding-left: 28px;
@@ -2551,28 +2580,41 @@
 
   <section class="hc-home-premium__section hc-home-premium__section--buyer-hooks" aria-labelledby="hc-home-buyer-hooks-title">
     <div class="hc-home-premium__section-head hc-home-premium__section-head--compact">
-      <p>{{ _('POUR QUI') }}</p>
-      <h2 id="hc-home-buyer-hooks-title">{{ _('Conçu pour les organisations qui doivent coordonner sans perdre le contrôle.') }}</h2>
-      <p>{{ _('HelpChain s’adresse aux structures qui reçoivent des demandes, mobilisent plusieurs acteurs et doivent garder une vision claire des responsabilités, des délais, des habilitations et du suivi multi-acteurs.') }}</p>
+      <p>{{ _('SECTEURS') }}</p>
+      <h2 id="hc-home-buyer-hooks-title">{{ _('Un même moteur de coordination pour plusieurs contextes opérationnels, avec l’immobilier comme premier usage commercial.') }}</h2>
+      <p>{{ _('HelpChain applique une même logique de routage, de responsabilité, de relais et de visibilité d’exécution à des opérations distribuées. Le premier usage commercial concerne les réseaux immobiliers multi-agences ; les autres secteurs suivent le même modèle de coordination.') }}</p>
     </div>
 
     <div class="hc-home-premium__buyer-grid">
-      <article class="hc-home-premium__buyer-card">
+      <article class="hc-home-premium__buyer-card hc-home-premium__buyer-card--primary">
         <span>{{ _('01') }}</span>
-        <h3>{{ _('CCAS & collectivités') }}</h3>
-        <p>{{ _('Centraliser les demandes, organiser les relais entre services et disposer d’un pilotage lisible à l’échelle d’un territoire ou d’un périmètre institutionnel.') }}</p>
+        <div class="hc-home-premium__buyer-cardTag">{{ _('Usage prioritaire') }}</div>
+        <h3>{{ _('Réseaux immobiliers') }}</h3>
+        <p>{{ _('Quand les leads circulent entre bureaux, les relances inactives et les relais inter-agences restent trop longtemps invisibles. HelpChain garde lisibles le routage, la responsabilité, la pression territoriale et la continuité d’exécution dans tout le réseau.') }}</p>
       </article>
 
       <article class="hc-home-premium__buyer-card">
         <span>{{ _('02') }}</span>
-        <h3>{{ _('Associations & réseaux terrain') }}</h3>
-        <p>{{ _('Coordonner les intervenants habilités, éviter les pertes d’information et conserver une mémoire opérationnelle exploitable des actions, des relances et des décisions.') }}</p>
+        <h3>{{ _('Associations') }}</h3>
+        <p>{{ _('Quand plusieurs acteurs locaux suivent une même situation, la coordination se fragmente vite. HelpChain maintient une responsabilité lisible et une continuité de relais sous contrôle.') }}</p>
       </article>
 
       <article class="hc-home-premium__buyer-card">
         <span>{{ _('03') }}</span>
-        <h3>{{ _('Structures multi-sites') }}</h3>
-        <p>{{ _('Donner de la visibilité aux équipes, structurer les périmètres de responsabilité et piloter des flux multi-sites sans multiplier les outils parallèles.') }}</p>
+        <h3>{{ _('Opérations terrain') }}</h3>
+        <p>{{ _('Quand les demandes passent d’une zone à l’autre, la continuité de dispatch se dégrade. HelpChain garde sous contrôle le routage, la charge locale et la visibilité sur la prochaine action.') }}</p>
+      </article>
+
+      <article class="hc-home-premium__buyer-card">
+        <span>{{ _('04') }}</span>
+        <h3>{{ _('Coordination santé') }}</h3>
+        <p>{{ _('Quand les relais entre sites et professionnels cassent la continuité, le suivi dérive. HelpChain maintient une visibilité ciblée et un suivi orienté de manière responsable.') }}</p>
+      </article>
+
+      <article class="hc-home-premium__buyer-card">
+        <span>{{ _('05') }}</span>
+        <h3>{{ _('Opérations de sécurité') }}</h3>
+        <p>{{ _('Quand incidents et escalades se dispersent entre opérateurs, la supervision ralentit. HelpChain centralise le routage, les accusés de prise en charge et la visibilité d’exécution.') }}</p>
       </article>
     </div>
   </section>
