@@ -61,7 +61,7 @@
       }
 
       body.hc-page-home .hc-home__section {
-        padding: 88px 0;
+        padding: 72px 0;
       }
 
       body.hc-page-home .hc-home__eyebrow {
@@ -80,7 +80,7 @@
       }
 
       body.hc-page-home .hc-home__hero {
-        padding: 92px 0 56px;
+        padding: 76px 0 44px;
       }
 
       body.hc-page-home .hc-home__hero-grid {
@@ -127,7 +127,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 14px;
-        margin: 2rem 0 1.5rem;
+        margin: 1.5rem 0 1.1rem;
       }
 
       body.hc-page-home .hc-home__btn {
@@ -208,6 +208,26 @@
         line-height: 1.72;
       }
 
+      body.hc-page-home .hc-home__panel-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 1rem;
+      }
+
+      body.hc-page-home .hc-home__panel-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(244, 247, 253, 0.84);
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
       body.hc-page-home .hc-home__panel-list {
         display: grid;
         gap: 12px;
@@ -230,9 +250,19 @@
         font-size: 0.94rem;
       }
 
+      body.hc-page-home .hc-home__panel-item em,
+      body.hc-page-home .hc-home__stat em {
+        display: block;
+        margin-top: 0.55rem;
+        color: rgba(244, 247, 253, 0.58);
+        font-style: normal;
+        font-size: 0.8rem;
+        letter-spacing: 0.02em;
+      }
+
       body.hc-page-home .hc-home__section-head {
         max-width: 760px;
-        margin: 0 auto 2.8rem;
+        margin: 0 auto 2rem;
         text-align: center;
       }
 
@@ -262,14 +292,17 @@
       body.hc-page-home .hc-home__card {
         padding: 28px;
         border-radius: 28px;
+        overflow: visible;
       }
 
       body.hc-page-home .hc-home__card-index {
         display: inline-flex;
-        width: 42px;
+        min-width: 42px;
         height: 42px;
+        padding: 0 0.35rem;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
         border-radius: 14px;
         background: linear-gradient(135deg, rgba(29, 79, 145, 0.14), rgba(20, 116, 111, 0.14));
         color: #1c4f90;
@@ -309,6 +342,10 @@
       body.hc-page-home .hc-home__stat span {
         color: var(--hc-b2b-muted);
         font-size: 0.96rem;
+      }
+
+      body.hc-page-home .hc-home__stat em {
+        color: #51657f;
       }
 
       body.hc-page-home .hc-home__checklist {
@@ -606,46 +643,46 @@
           <ul class="nav-menu hc-public-nav-main">
             <li class="hc-nav-mega" data-hc-mega>
               <button class="hc-nav-mega__trigger" type="button" data-hc-mega-trigger aria-expanded="false" aria-controls="hcHomeMegaProduct">
-                <span class="hc-navlabel">{{ _('Coordination') }}</span>
+                <span class="hc-navlabel">{{ _('Operations') }}</span>
               </button>
               <div class="hc-nav-mega__panel" id="hcHomeMegaProduct" data-hc-mega-panel hidden>
                 <div class="hc-nav-mega__grid">
                   <div class="hc-nav-mega__feature">
-                    <span class="hc-nav-mega__eyebrow">{{ _('Plateforme') }}</span>
-                    <strong>{{ _('Coordination opérationnelle, gouvernance et pilotage dans un même cadre.') }}</strong>
-                    <p>{{ _('Parcourez les surfaces conçues pour les structures, les professionnels et le déploiement territorial.') }}</p>
+                    <span class="hc-nav-mega__eyebrow">{{ _('Platform') }}</span>
+                    <strong>{{ _('Operational coordination, governance, and execution visibility in one working environment.') }}</strong>
+                    <p>{{ _('Explore the surfaces designed for distributed teams, partner structures, and territory-aware operations.') }}</p>
                   </div>
                   <div class="hc-nav-mega__links">
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Fonctionnement') }}</strong><span>{{ _('De la demande au suivi traçable.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Coordination pour CCAS, collectivités et associations.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi pour acteurs habilités.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.offre') }}"><strong>{{ _('Offre') }}</strong><span>{{ _('Cadres pilote, professionnel et institutionnel.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive et gouvernance.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Workflow') }}</strong><span>{{ _('From intake to traceable follow-up.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Networks') }}</strong><span>{{ _('Operational coordination for offices, structures, and partner teams.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Operators') }}</strong><span>{{ _('Execution surfaces for authorized operational actors.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.offre') }}"><strong>{{ _('Use Cases') }}</strong><span>{{ _('Commercial, partner, and institutional operating models.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Deployment') }}</strong><span>{{ _('Progressive rollout, governance, and execution readiness.') }}</span></a>
                   </div>
                 </div>
               </div>
             </li>
-            <li><a class="nav-link-light" href="{{ url_for('main.pour_les_structures') }}"><span class="hc-navlabel">{{ _('Pour les structures') }}</span></a></li>
-            <li><a class="nav-link-light" href="{{ url_for('main.securite') }}"><span class="hc-navlabel">{{ _('Sécurité') }}</span></a></li>
-            <li><a class="nav-link-light" href="{{ url_for('main.deploiement') }}"><span class="hc-navlabel">{{ _('Déploiement') }}</span></a></li>
+            <li><a class="nav-link-light" href="{{ url_for('main.pour_les_structures') }}"><span class="hc-navlabel">{{ _('Solutions') }}</span></a></li>
+            <li><a class="nav-link-light" href="{{ url_for('main.securite') }}"><span class="hc-navlabel">{{ _('Security') }}</span></a></li>
+            <li><a class="nav-link-light" href="{{ url_for('main.deploiement') }}"><span class="hc-navlabel">{{ _('Deployment') }}</span></a></li>
             <li><a class="nav-link-light" href="{{ url_for('main.architecture') }}"><span class="hc-navlabel">{{ _('Architecture') }}</span></a></li>
             <li class="hc-nav-mega hc-nav-mega--analyses" data-hc-mega>
               <button class="hc-nav-mega__trigger" type="button" data-hc-mega-trigger aria-expanded="false" aria-controls="hcHomeMegaAnalyses">
-                <span class="hc-navlabel">{{ _('Analyses opérationnelles') }}</span>
+                <span class="hc-navlabel">{{ _('Operational Briefs') }}</span>
               </button>
               <div class="hc-nav-mega__panel" id="hcHomeMegaAnalyses" data-hc-mega-panel hidden>
-                <div class="hc-nav-mega__microintro">{{ _('Analyses institutionnelles sur la continuité opérationnelle, les relances, la gouvernance et le suivi multi-acteurs.') }}</div>
+                <div class="hc-nav-mega__microintro">{{ _('Operational briefings on continuity, follow-up discipline, governance, and distributed coordination.') }}</div>
                 <div class="hc-nav-mega__grid">
                   <div class="hc-nav-mega__feature">
-                    <span class="hc-nav-mega__eyebrow">{{ _('Doctrine') }}</span>
-                    <strong>{{ _('Une lecture opérationnelle des continuités, des dérives de suivi et des fragilités de coordination.') }}</strong>
-                    <p>{{ _('Retrouvez les analyses HelpChain sur la fragmentation opérationnelle, la mémoire opérationnelle et la gouvernance des suivis multi-acteurs.') }}</p>
+                    <span class="hc-nav-mega__eyebrow">{{ _('Briefing') }}</span>
+                    <strong>{{ _('Operational analysis of fragmented follow-up, coordination drift, and weak execution visibility.') }}</strong>
+                    <p>{{ _('Read HelpChain perspectives on handoff discipline, operational memory, and governance across distributed teams and structures.') }}</p>
                   </div>
                   <div class="hc-nav-mega__links">
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.analyse_fragmentation') }}"><strong>{{ _('Pourquoi les suivis se fragmentent') }}</strong><span>{{ _('Comprendre comment la continuité se dégrade dans les organisations multi-acteurs.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.analyse_relances_perdues') }}"><strong>{{ _('Le coût invisible des relances perdues') }}</strong><span>{{ _('Analyser ce que coûtent les relances dispersées, les transitions fragiles et la perte de lisibilité.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.pourquoi_helpchain') }}"><strong>{{ _('Pourquoi HelpChain') }}</strong><span>{{ _('Le socle doctrinal et le diagnostic de départ de la plateforme.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation reste lisible, relançable et traçable dans le temps.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.analyse_fragmentation') }}"><strong>{{ _('Why follow-up fragments') }}</strong><span>{{ _('Understand how continuity degrades across distributed operating environments.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.analyse_relances_perdues') }}"><strong>{{ _('The hidden cost of lost follow-up') }}</strong><span>{{ _('See what fragmented relaunches, weak handoff, and poor visibility cost operations.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.pourquoi_helpchain') }}"><strong>{{ _('Why HelpChain') }}</strong><span>{{ _('The platform rationale behind routing, ownership, and execution visibility.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Operational simulation') }}</strong><span>{{ _('See how work remains visible, actionable, and traceable over time.') }}</span></a>
                   </div>
                 </div>
               </div>
@@ -653,7 +690,7 @@
           </ul>
           <div class="hc-public-nav-actions d-flex align-items-center gap-2">
             <a class="nav-link-light hc-nav-cta" href="/demo">
-              <span class="hc-navlabel">{{ _('Demander un accès pilote') }}</span>
+              <span class="hc-navlabel">{{ _('Book an Operational Review') }}</span>
             </a>
           </div>
         </div>
@@ -664,54 +701,55 @@
       <div class="container">
         <div class="hc-home__hero-grid">
           <div class="hc-home__hero-copy">
-            <span class="hc-home__eyebrow">{{ _('Coordination sociale et territoriale') }}</span>
+            <span class="hc-home__eyebrow">{{ _('Operational Coordination Infrastructure') }}</span>
             <h1 id="hero-title" class="hc-home__hero-title">
-              {{ _('Infrastructure numérique de coordination pour structures sociales et territoriales') }}
+              {{ _('Operational Coordination Infrastructure for Multi-Office Networks') }}
             </h1>
             <p class="hc-home__hero-subtitle">
-              {{ _('Centralisez les demandes, orientez les situations, suivez les actions et pilotez l’activité dans un environnement sécurisé.') }}
+              {{ _('HelpChain helps distributed teams route work, assign ownership, monitor follow-up, and keep visibility across offices, territories, and partner structures.') }}
             </p>
             <div class="hc-home__actions">
               <a class="hc-home__btn hc-home__btn--primary" href="/demo">
-                <i class="fas fa-calendar-check" aria-hidden="true"></i>{{ _('Demander un accès pilote') }}
+                <i class="fas fa-calendar-check" aria-hidden="true"></i>{{ _('Book an Operational Review') }}
               </a>
               <a class="hc-home__btn hc-home__btn--secondary" href="{{ url_for('main.contact') }}">
-                <i class="fas fa-layer-group" aria-hidden="true"></i>{{ _('Lancer un pilote') }}
+                <i class="fas fa-layer-group" aria-hidden="true"></i>{{ _('See the Real Estate Use Case') }}
               </a>
             </div>
             <div class="hc-home__trust" aria-label="{{ _('Repères de confiance') }}">
-              <span class="hc-home__trust-chip"><i class="fas fa-shield-alt" aria-hidden="true"></i>{{ _('RGPD Ready') }}</span>
-              <span class="hc-home__trust-chip"><i class="fas fa-server" aria-hidden="true"></i>{{ _('Hébergement UE') }}</span>
-              <span class="hc-home__trust-chip"><i class="fas fa-user-shield" aria-hidden="true"></i>{{ _('Accès par rôles') }}</span>
-              <span class="hc-home__trust-chip"><i class="fas fa-clipboard-check" aria-hidden="true"></i>{{ _('Journal d’audit') }}</span>
+              <span class="hc-home__trust-chip"><i class="fas fa-shield-alt" aria-hidden="true"></i>{{ _('Multi-office routing') }}</span>
+              <span class="hc-home__trust-chip"><i class="fas fa-server" aria-hidden="true"></i>{{ _('Assignment visibility') }}</span>
+              <span class="hc-home__trust-chip"><i class="fas fa-user-shield" aria-hidden="true"></i>{{ _('Territory oversight') }}</span>
+              <span class="hc-home__trust-chip"><i class="fas fa-clipboard-check" aria-hidden="true"></i>{{ _('Referral traceability') }}</span>
             </div>
           </div>
 
-          <div class="hc-home__trust" aria-label="{{ _('Repères de crédibilité') }}">
-            <span class="hc-home__trust-chip">{{ _('Pilot en préparation') }}</span>
-            <span class="hc-home__trust-chip">{{ _('Conçu et opéré depuis la France') }}</span>
-            <span class="hc-home__trust-chip">{{ _('Déploiement progressif en Île-de-France') }}</span>
-            <span class="hc-home__trust-chip">{{ _('Approche institutionnelle sobre') }}</span>
-          </div>
-
           <aside class="hc-home__hero-panel" aria-label="{{ _('Vue pilotage') }}">
-            <div class="hc-home__panel-label">{{ _('Vue pilotage') }}</div>
-            <div class="hc-home__panel-value">{{ _('Suivi multi-structures') }}</div>
+            <div class="hc-home__panel-label">{{ _('Operational Cockpit') }}</div>
+            <div class="hc-home__panel-value">{{ _('Live coordination state') }}</div>
             <p class="hc-home__panel-copy">
-              {{ _('Une infrastructure conçue pour fluidifier la coordination entre équipes, structures et territoires avec des règles d’orientation, des journaux d’activité et des indicateurs partagés.') }}
+              {{ _('A live working view of assignment queues, stale follow-up, routing movement, and territory pressure across distributed teams.') }}
             </p>
+            <div class="hc-home__panel-meta" aria-label="{{ _('Operational state markers') }}">
+              <span class="hc-home__panel-tag">{{ _('Updated 4 min ago') }}</span>
+              <span class="hc-home__panel-tag">{{ _('12 items need assignment') }}</span>
+              <span class="hc-home__panel-tag">{{ _('3 stale follow-ups') }}</span>
+            </div>
             <div class="hc-home__panel-list">
               <div class="hc-home__panel-item">
-                <strong>{{ _('Coordination') }}</strong>
-                <span>{{ _('Canal unique pour réception, qualification et suivi des demandes.') }}</span>
+                <strong>{{ _('Queue pressure') }}</strong>
+                <span>{{ _('See new intake, unassigned items, and offices carrying waiting work.') }}</span>
+                <em>{{ _('Routing state: 12 waiting | 4 redirected') }}</em>
               </div>
               <div class="hc-home__panel-item">
-                <strong>{{ _('Traçabilité') }}</strong>
-                <span>{{ _('Historique des décisions, actions et changements de statut.') }}</span>
+                <strong>{{ _('Operational ownership') }}</strong>
+                <span>{{ _('Track accountable follow-up across offices, teams, and partner structures.') }}</span>
+                <em>{{ _('Execution state: 3 inactive | 18 in follow-up') }}</em>
               </div>
               <div class="hc-home__panel-item">
-                <strong>{{ _('Gouvernance') }}</strong>
-                <span>{{ _('Accès structurés, pilotage opérationnel et vision consolidée.') }}</span>
+                <strong>{{ _('Referral movement') }}</strong>
+                <span>{{ _('Maintain traceable handoff without losing continuity between origin and receiving teams.') }}</span>
+                <em>{{ _('Transfer state: 5 active | 1 awaiting acknowledgement') }}</em>
               </div>
             </div>
           </aside>
@@ -724,26 +762,26 @@
         <section class="hc-home__section" id="how-it-works">
           <div class="container">
             <div class="hc-home__section-head">
-              <span class="hc-home__eyebrow">{{ _('Comment ça fonctionne') }}</span>
-              <h2>{{ _('Une chaîne de coordination claire, de la réception au pilotage') }}</h2>
-              <p>{{ _('HelpChain structure le traitement des situations dans un cadre lisible pour les équipes terrain, les encadrants et les structures partenaires.') }}</p>
+              <span class="hc-home__eyebrow">{{ _('Coordination Workflow') }}</span>
+              <h2>{{ _('A coordination model built for distributed execution') }}</h2>
+              <p>{{ _('HelpChain keeps intake, ownership, routing, and follow-up visible from first assignment to closure.') }}</p>
             </div>
 
             <div class="hc-home__grid hc-home__grid--3">
               <article class="hc-home__card">
                 <span class="hc-home__card-index">01</span>
-                <h3>{{ _('Réception des demandes') }}</h3>
-                <p>{{ _('Canal unique pour centraliser les sollicitations.') }}</p>
+                <h3>{{ _('Intake and qualification') }}</h3>
+                <p>{{ _('New items enter a shared queue with enough context for immediate routing.') }}</p>
               </article>
               <article class="hc-home__card">
                 <span class="hc-home__card-index">02</span>
-                <h3>{{ _('Orientation intelligente') }}</h3>
-                <p>{{ _('Affectation claire selon règles, rôles et priorité.') }}</p>
+                <h3>{{ _('Assignment and ownership') }}</h3>
+                <p>{{ _('Each item moves into accountable execution with clear ownership, scope, and office-level responsibility.') }}</p>
               </article>
               <article class="hc-home__card">
                 <span class="hc-home__card-index">03</span>
-                <h3>{{ _('Suivi & pilotage') }}</h3>
-                <p>{{ _('Historique, indicateurs et vision temps réel.') }}</p>
+                <h3>{{ _('Follow-up and referral') }}</h3>
+                <p>{{ _('Managers can see progress, stale action, and where a controlled handoff is required.') }}</p>
               </article>
             </div>
           </div>
@@ -753,21 +791,87 @@
           <div class="container">
             <div class="hc-home__kpis" aria-label="{{ _('Indicateurs clés') }}">
               <div class="hc-home__stat">
-                <strong>{{ _('+1200') }}</strong>
-                <span>{{ _('demandes traitées') }}</span>
+                <strong>{{ _('Items waiting assignment') }}</strong>
+                <span>{{ _('See new intake and unassigned work before queue pressure spreads') }}</span>
+                <em>{{ _('Queue signal') }}</em>
               </div>
               <div class="hc-home__stat">
-                <strong>{{ _('99.9%') }}</strong>
-                <span>{{ _('disponibilité') }}</span>
+                <strong>{{ _('Inactive follow-up') }}</strong>
+                <span>{{ _('Detect items without recent action before continuity breaks') }}</span>
+                <em>{{ _('Execution signal') }}</em>
               </div>
               <div class="hc-home__stat">
-                <strong>{{ _('Déploiement rapide') }}</strong>
-                <span>{{ _('temps de mise en place maîtrisé') }}</span>
+                <strong>{{ _('Cross-office routing') }}</strong>
+                <span>{{ _('Track referral movement and receiving ownership across the network') }}</span>
+                <em>{{ _('Transfer signal') }}</em>
               </div>
               <div class="hc-home__stat">
-                <strong>{{ _('Multi-structures') }}</strong>
-                <span>{{ _('pilotage mutualisé des équipes et territoires') }}</span>
+                <strong>{{ _('Territory saturation') }}</strong>
+                <span>{{ _('See where workload is building faster than local handling capacity') }}</span>
+                <em>{{ _('Coverage signal') }}</em>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="hc-home__section">
+          <div class="container">
+            <div class="hc-home__section-head">
+              <span class="hc-home__eyebrow">{{ _('Primary Commercial Lens') }}</span>
+              <h2>{{ _('For real estate networks, the coordination problem starts after lead capture') }}</h2>
+              <p>{{ _('In multi-site networks, execution risk starts after lead capture. Leads move between offices, follow-up varies, and stalled opportunities stay hidden too long.') }}</p>
+            </div>
+
+            <ul class="hc-home__checklist" role="list">
+              <li><i class="fas fa-check-circle" aria-hidden="true"></i>{{ _('Lead assignment across offices') }}</li>
+              <li><i class="fas fa-check-circle" aria-hidden="true"></i>{{ _('Stale follow-up visibility') }}</li>
+              <li><i class="fas fa-check-circle" aria-hidden="true"></i>{{ _('Traceable inter-office referral') }}</li>
+              <li><i class="fas fa-check-circle" aria-hidden="true"></i>{{ _('Clear ownership after intake') }}</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="hc-home__section">
+          <div class="container">
+            <div class="hc-home__section-head">
+              <span class="hc-home__eyebrow">{{ _('Solutions') }}</span>
+              <h2>{{ _('One coordination engine across multiple operating environments') }}</h2>
+              <p>{{ _('One operating model for distributed teams that need routing, ownership, and controlled handoff.') }}</p>
+            </div>
+
+            <div class="hc-home__proof-grid">
+              <div class="hc-home__proof-item"><i class="fas fa-building-columns" aria-hidden="true"></i>{{ _('Real Estate Networks') }}</div>
+              <div class="hc-home__proof-item"><i class="fas fa-landmark" aria-hidden="true"></i>{{ _('Associations') }}</div>
+              <div class="hc-home__proof-item"><i class="fas fa-briefcase-medical" aria-hidden="true"></i>{{ _('Healthcare Coordination') }}</div>
+              <div class="hc-home__proof-item"><i class="fas fa-network-wired" aria-hidden="true"></i>{{ _('Security Operations') }}</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="hc-home__section">
+          <div class="container">
+            <div class="hc-home__section-head">
+              <span class="hc-home__eyebrow">{{ _('Territorial Intelligence') }}</span>
+              <h2>{{ _('Territory pressure should be visible before performance degrades') }}</h2>
+              <p>{{ _('HelpChain turns geography into an operational signal so distributed structures can see local overload, routing pressure, and weak coverage early.') }}</p>
+            </div>
+
+            <div class="hc-home__grid hc-home__grid--3">
+              <article class="hc-home__card">
+                <span class="hc-home__card-index">01</span>
+                <h3>{{ _('Territory pressure') }}</h3>
+                <p>{{ _('See where demand is building faster than local offices or field teams can respond.') }}</p>
+              </article>
+              <article class="hc-home__card">
+                <span class="hc-home__card-index">02</span>
+                <h3>{{ _('Overload detection') }}</h3>
+                <p>{{ _('Spot backlog, stale follow-up, and referral load before one structure starts slowing the network.') }}</p>
+              </article>
+              <article class="hc-home__card">
+                <span class="hc-home__card-index">03</span>
+                <h3>{{ _('Coverage gaps') }}</h3>
+                <p>{{ _('Surface weak zones where demand, ownership, and execution continuity stop aligning.') }}</p>
+              </article>
             </div>
           </div>
         </section>
@@ -775,50 +879,50 @@
         <section class="hc-home__section" id="coordination-inter-structures">
           <div class="container">
             <div class="hc-home__section-head">
-              <span class="hc-home__eyebrow">{{ _('Coordination inter-structures maîtrisée') }}</span>
-              <h2>{{ _('Plusieurs organisations peuvent coordonner une situation sans ouvrir tout le dossier.') }}</h2>
-              <p>{{ _('HelpChain permet une coopération encadrée entre structures, avec une visibilité limitée à ce qui doit être partagé, au bon moment et pour le bon acteur.') }}</p>
+              <span class="hc-home__eyebrow">{{ _('Referral Coordination') }}</span>
+              <h2>{{ _('Controlled handoff across offices and partner structures') }}</h2>
+              <p>{{ _('Referrals stay traceable, scoped, and operationally readable across offices, territories, and partner structures.') }}</p>
             </div>
 
             <div class="hc-home__coordination-shell">
               <article class="hc-home__coordination-copy">
-                <p>{{ _('La coordination inter-structures ne repose pas sur un accès généralisé. Chaque organisation intervient dans un cadre défini, avec des règles de partage, des rôles distincts et une traçabilité complète des échanges utiles à la situation.') }}</p>
-                <p>{{ _('Le résultat: une coopération opérationnelle entre CCAS, associations, services partenaires ou réseaux territoriaux, sans dérive vers un dossier ouvert à tous.') }}</p>
+                <p>{{ _('When work moves, ownership stays readable. Transfer remains deliberate, scoped, and accountable.') }}</p>
+                <p>{{ _('Execution continuity stays visible without exposing every internal detail to every participant.') }}</p>
 
-                <div class="hc-home__coordination-points" role="list" aria-label="{{ _('Principes de coordination maîtrisée') }}">
+                <div class="hc-home__coordination-points" role="list" aria-label="{{ _('Referral coordination principles') }}">
                   <div class="hc-home__coordination-point" role="listitem">
-                    <strong>{{ _('Visibilité ciblée') }}</strong>
-                    <span>{{ _('Chaque structure voit uniquement les informations, actions ou demandes qui relèvent de son périmètre.') }}</span>
+                    <strong>{{ _('Targeted visibility') }}</strong>
+                    <span>{{ _('Each office sees what it needs for the next action, not the full internal record.') }}</span>
                   </div>
                   <div class="hc-home__coordination-point" role="listitem">
-                    <strong>{{ _('Collaboration contrôlée') }}</strong>
-                    <span>{{ _('Les orientations, retours partenaires et points de coordination circulent sans exposer l’intégralité du suivi interne.') }}</span>
+                    <strong>{{ _('Controlled transfer') }}</strong>
+                    <span>{{ _('Handoff stays structured and accountable across the network.') }}</span>
                   </div>
                   <div class="hc-home__coordination-point" role="listitem">
-                    <strong>{{ _('Gouvernance multi-tenant') }}</strong>
-                    <span>{{ _('Le cloisonnement par structure, les droits par rôle et l’historique d’activité soutiennent un pilotage institutionnel crédible.') }}</span>
+                    <strong>{{ _('Traceable response') }}</strong>
+                    <span>{{ _('Transfer, acknowledgement, escalation, and follow-up remain visible over time.') }}</span>
                   </div>
                 </div>
               </article>
 
-              <aside class="hc-home__coordination-panel" aria-label="{{ _('Exemple de partage encadré entre structures') }}">
+              <aside class="hc-home__coordination-panel" aria-label="{{ _('Referral handoff example') }}">
                 <div class="hc-home__coordination-label">
-                  <i class="fas fa-building-shield" aria-hidden="true"></i>{{ _('Partage encadré') }}
+                  <i class="fas fa-building-shield" aria-hidden="true"></i>{{ _('Referral handoff') }}
                 </div>
                 <div class="hc-home__coordination-map">
                   <div class="hc-home__coordination-node">
-                    <strong>{{ _('Structure coordinatrice') }}</strong>
-                    <span>{{ _('Conserve la vue complète de la situation, les décisions internes et le pilotage global.') }}</span>
+                    <strong>{{ _('Origin office') }}</strong>
+                    <span>{{ _('Keeps overall visibility on the item, routing state, and expected follow-up outcome.') }}</span>
                   </div>
-                  <div class="hc-home__coordination-divider">{{ _('Orientation ciblée') }}</div>
+                  <div class="hc-home__coordination-divider">{{ _('Scoped transfer') }}</div>
                   <div class="hc-home__coordination-node">
-                    <strong>{{ _('Structure partenaire orientée') }}</strong>
-                    <span>{{ _('Reçoit uniquement la demande utile, le contexte nécessaire et les éléments de suivi attendus.') }}</span>
+                    <strong>{{ _('Receiving office') }}</strong>
+                    <span>{{ _('Receives only the context and next-step information required for action.') }}</span>
                   </div>
-                  <div class="hc-home__coordination-divider">{{ _('Retour tracé') }}</div>
+                  <div class="hc-home__coordination-divider">{{ _('Tracked response') }}</div>
                   <div class="hc-home__coordination-node">
-                    <strong>{{ _('Historique partagé sous contrôle') }}</strong>
-                    <span>{{ _('Chaque transmission, statut et retour est journalisé pour préserver la lisibilité inter-organisationnelle.') }}</span>
+                    <strong>{{ _('Shared execution record') }}</strong>
+                    <span>{{ _('Acknowledgement and response signals stay visible without breaking boundaries.') }}</span>
                   </div>
                 </div>
               </aside>
@@ -828,52 +932,16 @@
 
         <section class="hc-home__section">
           <div class="container">
-            <div class="hc-home__section-head">
-              <span class="hc-home__eyebrow">{{ _('Pourquoi HelpChain') }}</span>
-              <h2>{{ _('Pourquoi les acheteurs choisissent HelpChain') }}</h2>
-              <p>{{ _('Une base opérationnelle pour structurer la coordination, sécuriser les flux et installer une gouvernance plus lisible de l’activité.') }}</p>
-            </div>
-
-            <ul class="hc-home__checklist" role="list">
-              <li><i class="fas fa-check-circle" aria-hidden="true"></i>{{ _('Gain de temps opérationnel') }}</li>
-              <li><i class="fas fa-check-circle" aria-hidden="true"></i>{{ _('Réduction des emails dispersés') }}</li>
-              <li><i class="fas fa-check-circle" aria-hidden="true"></i>{{ _('Traçabilité des actions') }}</li>
-              <li><i class="fas fa-check-circle" aria-hidden="true"></i>{{ _('Vision consolidée') }}</li>
-              <li><i class="fas fa-check-circle" aria-hidden="true"></i>{{ _('Montée en charge maîtrisée') }}</li>
-              <li><i class="fas fa-check-circle" aria-hidden="true"></i>{{ _('Cadre partagé entre équipes, structures et partenaires') }}</li>
-            </ul>
-          </div>
-        </section>
-
-        <section class="hc-home__section">
-          <div class="container">
-            <div class="hc-home__section-head">
-              <span class="hc-home__eyebrow">{{ _('Conçu pour le terrain') }}</span>
-              <h2>{{ _('Conçu pour les structures qui coordonnent vraiment l’activité') }}</h2>
-              <p>{{ _('HelpChain s’adresse aux organisations qui ont besoin d’un cadre fiable de suivi, d’orientation et de pilotage sans multiplier les outils parallèles.') }}</p>
-            </div>
-
-            <div class="hc-home__proof-grid">
-              <div class="hc-home__proof-item"><i class="fas fa-building-columns" aria-hidden="true"></i>{{ _('Associations') }}</div>
-              <div class="hc-home__proof-item"><i class="fas fa-landmark" aria-hidden="true"></i>{{ _('Collectivités') }}</div>
-              <div class="hc-home__proof-item"><i class="fas fa-briefcase-medical" aria-hidden="true"></i>{{ _('Structures sociales') }}</div>
-              <div class="hc-home__proof-item"><i class="fas fa-network-wired" aria-hidden="true"></i>{{ _('Réseaux territoriaux') }}</div>
-            </div>
-          </div>
-        </section>
-
-        <section class="hc-home__section">
-          <div class="container">
             <div class="hc-home__final">
-              <span class="hc-home__eyebrow">{{ _('Passer à l’échelle') }}</span>
-              <h2>{{ _('Passez d’une gestion dispersée à une coordination structurée.') }}</h2>
-              <p>{{ _('Donnez à vos équipes un environnement de suivi, de traçabilité et de gouvernance adapté aux exigences des structures sociales, médico-sociales et territoriales.') }}</p>
+              <span class="hc-home__eyebrow">{{ _('Next Step') }}</span>
+              <h2>{{ _('Review your coordination model before adding more software') }}</h2>
+              <p>{{ _('If ownership, follow-up, handoff, or visibility are still weak, the next step is a clearer operating system, not a larger stack.') }}</p>
               <div class="hc-home__actions">
                 <a class="hc-home__btn hc-home__btn--primary" href="/demo">
-                  <i class="fas fa-calendar-check" aria-hidden="true"></i>{{ _('Demander un accès pilote') }}
+                  <i class="fas fa-calendar-check" aria-hidden="true"></i>{{ _('Request a Platform Walkthrough') }}
                 </a>
                 <a class="hc-home__btn hc-home__btn--secondary" href="{{ url_for('main.contact') }}">
-                  <i class="fas fa-comments" aria-hidden="true"></i>{{ _('Demander un accès pilote') }}
+                  <i class="fas fa-comments" aria-hidden="true"></i>{{ _('Talk About a Real Estate Pilot') }}
                 </a>
               </div>
             </div>
@@ -890,15 +958,15 @@
           <div class="row g-4">
             <div class="col-md-4">
               <h5>{{ _('HelpChain') }}</h5>
-              <p>{{ _('Infrastructure numérique de coordination pour le suivi, l’orientation et le pilotage de l’activité sociale et territoriale.') }}</p>
+              <p>{{ _('Operational coordination infrastructure for distributed networks that need routing, ownership, follow-up discipline, and territory-aware execution visibility.') }}</p>
             </div>
             <div class="col-md-4">
               <h5>{{ _('Accès rapides') }}</h5>
               <ul class="list-unstyled">
-                <li><a href="/demo" class="text-light">{{ _('Demander un accès pilote') }}</a></li>
-                <li><a href="{{ url_for('main.contact') }}" class="text-light">{{ _('Demander un accès pilote') }}</a></li>
-                <li><a href="{{ url_for('main.securite') }}" class="text-light">{{ _('Sécurité & conformité') }}</a></li>
-                <li><a href="{{ url_for('main.gouvernance') }}" class="text-light">{{ _('Gouvernance') }}</a></li>
+                <li><a href="/demo" class="text-light">{{ _('Book an Operational Review') }}</a></li>
+                <li><a href="{{ url_for('main.contact') }}" class="text-light">{{ _('Talk About a Real Estate Pilot') }}</a></li>
+                <li><a href="{{ url_for('main.securite') }}" class="text-light">{{ _('Security & governance') }}</a></li>
+                <li><a href="{{ url_for('main.gouvernance') }}" class="text-light">{{ _('Operational governance') }}</a></li>
                 <li><a href="{{ safe_url_for('main.faq') }}" class="text-light">{{ _('FAQ') }}</a></li>
               </ul>
             </div>
@@ -906,7 +974,7 @@
               <h5>{{ _('Contact') }}</h5>
               <p><i class="fas fa-envelope me-2" aria-hidden="true"></i>contact@helpchain.live</p>
               <p><i class="fas fa-map-marker-alt me-2" aria-hidden="true"></i>Paris Region, France</p>
-              <p class="mb-0">{{ _('Pour les CCAS, mairies, centres sociaux, associations et structures médico-sociales.') }}</p>
+              <p class="mb-0">{{ _('For distributed networks that need routing, follow-up discipline, and controlled multi-structure coordination.') }}</p>
             </div>
           </div>
           <hr class="my-4" />
