@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+﻿from datetime import UTC, datetime, timedelta
 
 from backend.models_with_analytics import AnalyticsEvent, UserBehavior
 from backend.helpchain_backend.src.models import (
@@ -198,7 +198,7 @@ def test_admin_revenue_uses_institutional_intent_recommendation(
 
     assert response.status_code == 200
     assert "Pilot-ready audience" in html
-    assert "Propose a structured pilot conversation" in html
+    assert "Pilot discussion opportunity" in html
     assert "Pilot framing" in html or "Structured pilot opportunity" in html
 
 

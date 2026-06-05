@@ -254,7 +254,7 @@ from ..services.event_bus import (
 from ..services.structure_service import create_structure_with_admin
 
 GENERIC_ADMIN_LOGIN_FAIL_MSG = (
-    "Identifiants invalides ou acc?s temporairement bloqu?."
+    "Identifiants invalides ou accès temporairement bloqué."
 )
 CATEGORY_CASE_STATUSES = (
     "new",
@@ -14425,28 +14425,89 @@ get_system_health_snapshot_cached = _admin_diagnostics.get_system_health_snapsho
 
 def _build_operational_report_pdf_response(report: dict):
     from io import BytesIO
+    import os
 
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import mm
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+    def _register_pdf_font(font_name: str, candidates: list[str]) -> str:
+        for candidate in candidates:
+            if candidate and os.path.exists(candidate):
+                try:
+                    pdfmetrics.registerFont(TTFont(font_name, candidate))
+                    return font_name
+                except Exception:
+                    continue
+        return "Helvetica-Bold" if "Bold" in font_name else "Helvetica"
+
+    fonts_dir = os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Fonts")
+    pdf_font_regular = _register_pdf_font(
+        "HelpChainPdfRegular",
+        [
+            os.path.join(fonts_dir, "arial.ttf"),
+            os.path.join(fonts_dir, "segoeui.ttf"),
+            os.path.join(fonts_dir, "calibri.ttf"),
+        ],
+    )
+    pdf_font_bold = _register_pdf_font(
+        "HelpChainPdfBold",
+        [
+            os.path.join(fonts_dir, "arialbd.ttf"),
+            os.path.join(fonts_dir, "segoeuib.ttf"),
+            os.path.join(fonts_dir, "calibrib.ttf"),
+        ],
+    )
 
     def _pdf_esc(value):
         return html.escape(str(value or ""))
 
     def _pdf_text(value):
-        return _pdf_esc(value).replace("\n", "<br/>")
+        return _pdf_esc(_ops_report_clean_text(value)).replace("\n", "<br/>")
+
+    def _scope_label() -> str:
+        return report["scope"]["structure_name"] or "Structures supervisées"
+
+    def _draw_brand_mark(canvas, x, y, size, stroke_color, fill_color=None):
+        outer_radius = size * 0.34
+        dot_radius = size * 0.045
+        center_x = x + size / 2
+        center_y = y + size / 2
+        dot_positions = [
+            (0.50, 0.16),
+            (0.76, 0.32),
+            (0.79, 0.61),
+            (0.53, 0.82),
+            (0.23, 0.61),
+            (0.23, 0.35),
+            (0.46, 0.46),
+            (0.59, 0.53),
+        ]
+        if fill_color:
+            canvas.setFillColor(fill_color)
+            canvas.circle(center_x, center_y, outer_radius, stroke=0, fill=1)
+        canvas.setStrokeColor(stroke_color)
+        canvas.setLineWidth(max(size * 0.045, 1))
+        canvas.circle(center_x, center_y, outer_radius, stroke=1, fill=0)
+        canvas.setFillColor(stroke_color)
+        for x_factor, y_factor in dot_positions:
+            canvas.circle(x + (size * x_factor), y + (size * y_factor), dot_radius, stroke=0, fill=1)
 
     def _pdf_metric_table(metric, body_style):
+        summary = _pdf_esc(_ops_report_clean_text(metric.get("summary") or ""))
         card = Table(
             [[
                 Paragraph(
                     (
-                        f"<font size='7' color='#5b7089'><b>{_pdf_esc(metric.get('severity_label'))}</b></font><br/>"
+                        f"<font size='7' color='#5b7089'><b>{_pdf_esc(_ops_report_clean_text(metric.get('severity_label')))}</b></font><br/>"
                         f"<font size='18' color='#10243d'><b>{_pdf_esc(metric.get('value'))}</b></font><br/>"
-                        f"<font size='9' color='#243a55'><b>{_pdf_esc(metric.get('label'))}</b></font><br/>"
-                        f"<font size='7' color='#60748d'>{_pdf_esc(metric.get('delta_text'))}</font>"
+                        f"<font size='9' color='#243a55'><b>{_pdf_esc(_ops_report_clean_text(metric.get('label')))}</b></font><br/>"
+                        f"<font size='7' color='#60748d'>{_pdf_esc(_ops_report_clean_text(metric.get('delta_text')))}</font>"
+                        + (f"<br/><font size='7' color='#60748d'>{summary}</font>" if summary else "")
                     ),
                     body_style,
                 )
@@ -14454,12 +14515,12 @@ def _build_operational_report_pdf_response(report: dict):
             colWidths=[58 * mm],
         )
         card.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, -1), colors.white),
-            ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#d6e0ec")),
-            ("LEFTPADDING", (0, 0), (-1, -1), 8),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-            ("TOPPADDING", (0, 0), (-1, -1), 8),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#fbfdff")),
+            ("BOX", (0, 0), (-1, -1), 0.7, colors.HexColor("#d6e0ec")),
+            ("LEFTPADDING", (0, 0), (-1, -1), 9),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 9),
+            ("TOPPADDING", (0, 0), (-1, -1), 9),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 9),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ]))
         return card
@@ -14468,17 +14529,17 @@ def _build_operational_report_pdf_response(report: dict):
     doc = SimpleDocTemplate(
         buffer,
         pagesize=A4,
-        rightMargin=14 * mm,
-        leftMargin=14 * mm,
-        topMargin=14 * mm,
-        bottomMargin=14 * mm,
+        rightMargin=15 * mm,
+        leftMargin=15 * mm,
+        topMargin=18 * mm,
+        bottomMargin=16 * mm,
     )
 
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(
         name="OpsSection",
         parent=styles["Heading2"],
-        fontName="Helvetica-Bold",
+        fontName=pdf_font_bold,
         fontSize=13,
         leading=16,
         textColor=colors.HexColor("#10243d"),
@@ -14487,7 +14548,7 @@ def _build_operational_report_pdf_response(report: dict):
     styles.add(ParagraphStyle(
         name="OpsKicker",
         parent=styles["BodyText"],
-        fontName="Helvetica-Bold",
+        fontName=pdf_font_bold,
         fontSize=8,
         leading=10,
         textColor=colors.HexColor("#60748d"),
@@ -14496,7 +14557,7 @@ def _build_operational_report_pdf_response(report: dict):
     styles.add(ParagraphStyle(
         name="OpsBody",
         parent=styles["BodyText"],
-        fontName="Helvetica",
+        fontName=pdf_font_regular,
         fontSize=9,
         leading=13,
         textColor=colors.HexColor("#243a55"),
@@ -14504,59 +14565,86 @@ def _build_operational_report_pdf_response(report: dict):
     styles.add(ParagraphStyle(
         name="OpsMeta",
         parent=styles["BodyText"],
-        fontName="Helvetica",
+        fontName=pdf_font_regular,
         fontSize=8,
         leading=11,
         textColor=colors.HexColor("#60748d"),
     ))
-
     story = []
-    scope_name = report["scope"]["structure_name"] or "Toutes les structures visibles"
+    scope_name = _ops_report_clean_text(_scope_label())
 
     hero_table = Table(
         [[
             Paragraph(
-                "HELPCHAIN<br/><font size='8' color='#60748d'>Rapport operationnel</font>",
+                "HELPCHAIN<br/><font size='7' color='#60748d'>Coordination opérationnelle</font>",
                 ParagraphStyle(
                     "OpsBrand",
                     parent=styles["BodyText"],
-                    fontName="Helvetica-Bold",
-                    fontSize=11,
+                    fontName=pdf_font_bold,
+                    fontSize=10,
                     leading=12,
                     textColor=colors.HexColor("#10243d"),
                 ),
             ),
             Paragraph(
                 (
-                    "<font size='9' color='#60748d'><b>Usage interne</b></font><br/>"
-                    "<font size='17' color='#10243d'><b>Rapport operationnel</b></font><br/>"
+                    "<font size='8' color='#60748d'><b>Usage interne</b></font><br/>"
+                    "<font size='17' color='#10243d'><b>Rapport opérationnel</b></font><br/>"
                     f"<font size='9' color='#243a55'>{_pdf_esc(scope_name)}</font><br/>"
-                    f"<font size='8' color='#60748d'>Periode: {report['period']['days']} jours | "
-                    f"Genere le: {_pdf_esc(report['generated_at'][:16].replace('T', ' '))} | "
-                    "Confidentialite: Interne</font>"
+                    f"<font size='8' color='#60748d'>Période : {report['period']['days']} jours | "
+                    f"Généré le : {_pdf_esc(report['generated_at'][:16].replace('T', ' '))} | "
+                    "Confidentialité : interne</font>"
                 ),
                 styles["OpsBody"],
             ),
         ]],
-        colWidths=[34 * mm, 148 * mm],
+        colWidths=[36 * mm, 144 * mm],
     )
     hero_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f7faff")),
-        ("BOX", (0, 0), (-1, -1), 0.75, colors.HexColor("#d6e0ec")),
-        ("LEFTPADDING", (0, 0), (-1, -1), 10),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-        ("TOPPADDING", (0, 0), (-1, -1), 10),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#fbfdff")),
+        ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#d6e0ec")),
+        ("LINEAFTER", (0, 0), (0, 0), 0.6, colors.HexColor("#d6e0ec")),
+        ("LEFTPADDING", (0, 0), (-1, -1), 11),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 11),
+        ("TOPPADDING", (0, 0), (-1, -1), 11),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 11),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
     ]))
     story.append(hero_table)
-    story.append(Spacer(1, 8 * mm))
+    story.append(Spacer(1, 3 * mm))
 
-    story.append(Paragraph("EXECUTIVE SNAPSHOT", styles["OpsKicker"]))
-    story.append(Paragraph("Synthese executive", styles["OpsSection"]))
+    metadata_table = Table(
+        [[
+            Paragraph(f"<b>Périmètre</b><br/>{_pdf_esc(scope_name)}", styles["OpsMeta"]),
+            Paragraph(f"<b>Stabilité</b><br/>{_pdf_esc(_ops_report_clean_text(report.get('operational_conclusion', {}).get('stability', '-')))}", styles["OpsMeta"]),
+            Paragraph(
+                (
+                    f"<b>Score opérationnel</b><br/>"
+                    f"{_pdf_esc(report.get('operational_health_score', {}).get('score', '-'))}/100"
+                ),
+                styles["OpsMeta"],
+            ),
+        ]],
+        colWidths=[62 * mm, 58 * mm, 58 * mm],
+    )
+    metadata_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.white),
+        ("BOX", (0, 0), (-1, -1), 0.45, colors.HexColor("#dde5ef")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#e3eaf3")),
+        ("LEFTPADDING", (0, 0), (-1, -1), 9),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 9),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+    story.append(metadata_table)
+    story.append(Spacer(1, 7 * mm))
+
+    story.append(Paragraph("SYNTHÈSE EXÉCUTIVE", styles["OpsKicker"]))
+    story.append(Paragraph("Synthèse exécutive", styles["OpsSection"]))
     story.append(Paragraph(_pdf_text(report["executive_summary"]), styles["OpsBody"]))
     story.append(Paragraph(
-        f"Niveau: {_pdf_esc(report['operational_severity']['label'])} - {_pdf_esc(report['operational_severity']['message'])}",
+        f"Niveau: {_pdf_esc(_ops_report_clean_text(report['operational_severity']['label']))} - {_pdf_esc(_ops_report_clean_text(report['operational_severity']['message']))}",
         styles["OpsMeta"],
     ))
     story.append(Spacer(1, 5 * mm))
@@ -14579,11 +14667,11 @@ def _build_operational_report_pdf_response(report: dict):
     story.append(snapshot_grid)
     story.append(Spacer(1, 5 * mm))
 
-    story.append(Paragraph("DECISIONS PRIORITAIRES", styles["OpsKicker"]))
+    story.append(Paragraph("DÉCISIONS PRIORITAIRES", styles["OpsKicker"]))
     story.append(Paragraph("Actions prioritaires", styles["OpsSection"]))
     for item in report.get("priority_actions", []):
         story.append(Paragraph(
-            f"<b>{_pdf_esc(item['title'])}</b> - {_pdf_esc(item['severity_label'])}",
+            f"<b>{_pdf_esc(_ops_report_clean_text(item['title']))}</b> - {_pdf_esc(_ops_report_clean_text(item['severity_label']))}",
             styles["OpsBody"],
         ))
         story.append(Paragraph(
@@ -14597,29 +14685,35 @@ def _build_operational_report_pdf_response(report: dict):
     story.append(Paragraph("Zones sous tension", styles["OpsSection"]))
     story.append(Paragraph(_pdf_text(report["territorial_pressure"]["summary"]), styles["OpsBody"]))
 
-    zones_rows = [["Zone", "Couverture", "Ouvertes", "Actifs", "Disponibles", "Densite"]]
+    zones_rows = [["Zone", "Couverture", "Ouvertes", "Actifs", "Disponibles", "Densité"]]
     for zone in report.get("territorial_pressure", {}).get("zones", [])[:5]:
         zones_rows.append([
             zone["city"],
-            zone["coverage_label"],
+            _ops_report_clean_text(zone["coverage_label"]),
             str(zone["open_requests"]),
             str(zone["active_intervenants"]),
             str(zone["available_intervenants"]),
             str(zone["density"]),
         ])
     if len(zones_rows) > 1:
-        zones_table = Table(zones_rows, colWidths=[42 * mm, 38 * mm, 24 * mm, 24 * mm, 28 * mm, 24 * mm])
+        zones_table = Table(
+            zones_rows,
+            colWidths=[42 * mm, 38 * mm, 24 * mm, 24 * mm, 28 * mm, 24 * mm],
+            repeatRows=1,
+        )
         zones_table.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0f2742")),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
             ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#d8e2ee")),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTNAME", (0, 0), (-1, 0), pdf_font_bold),
+            ("FONTNAME", (0, 1), (-1, -1), pdf_font_regular),
             ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("LEADING", (0, 0), (-1, -1), 10),
             ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f6f8fb")]),
             ("LEFTPADDING", (0, 0), (-1, -1), 6),
             ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-            ("TOPPADDING", (0, 0), (-1, -1), 5),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
         ]))
         story.append(Spacer(1, 2 * mm))
         story.append(zones_table)
@@ -14629,7 +14723,7 @@ def _build_operational_report_pdf_response(report: dict):
     story.append(Paragraph("Analyse automatique", styles["OpsSection"]))
     for item in report.get("automatic_analysis", []):
         story.append(Paragraph(
-            f"<b>{_pdf_esc(item['title'])}</b> - {_pdf_esc(item['risk'])}",
+            f"<b>{_pdf_esc(_ops_report_clean_text(item['title']))}</b> - {_pdf_esc(_ops_report_clean_text(item['risk']))}",
             styles["OpsBody"],
         ))
         story.append(Paragraph(
@@ -14640,10 +14734,10 @@ def _build_operational_report_pdf_response(report: dict):
 
     story.append(Spacer(1, 4 * mm))
     story.append(Paragraph("RECOMMANDATIONS", styles["OpsKicker"]))
-    story.append(Paragraph("Recommandations de direction operationnelle", styles["OpsSection"]))
+    story.append(Paragraph("Recommandations de direction opérationnelle", styles["OpsSection"]))
     for item in report["recommendations"]:
         story.append(Paragraph(
-            f"<b>{_pdf_esc(item['title'])}</b> - {_pdf_esc(item['priority'])}",
+            f"<b>{_pdf_esc(_ops_report_clean_text(item['title']))}</b> - {_pdf_esc(_ops_report_clean_text(item['priority']))}",
             styles["OpsBody"],
         ))
         story.append(Paragraph(
@@ -14656,15 +14750,15 @@ def _build_operational_report_pdf_response(report: dict):
         story.append(Spacer(1, 2 * mm))
 
     story.append(Spacer(1, 4 * mm))
-    story.append(Paragraph("CONCLUSION OPERATIONNELLE", styles["OpsKicker"]))
-    story.append(Paragraph("Conclusion operationnelle", styles["OpsSection"]))
+    story.append(Paragraph("CONCLUSION OPÉRATIONNELLE", styles["OpsKicker"]))
+    story.append(Paragraph("Conclusion opérationnelle", styles["OpsSection"]))
     conclusion = report.get("operational_conclusion", {})
     story.append(Paragraph(_pdf_text(conclusion.get("summary", "")), styles["OpsBody"]))
     story.append(Paragraph(
         _pdf_text(
-            f"Stabilite: {conclusion.get('stability', 'Stable')} | "
+            f"Stabilité : {conclusion.get('stability', 'Stable')} | "
             f"Risques: {', '.join(conclusion.get('main_risks', []))} | "
-            f"Recommendation principale: {conclusion.get('primary_recommendation', '')}"
+            f"Recommandation principale : {conclusion.get('primary_recommendation', '')}"
         ),
         styles["OpsMeta"],
     ))
@@ -14672,55 +14766,75 @@ def _build_operational_report_pdf_response(report: dict):
     story.append(Spacer(1, 5 * mm))
     story.append(Paragraph("Situations incluses dans le rapport", styles["OpsSection"]))
 
-    rows = [["ID", "Titre", "Ville", "Statut", "Priorite", "Creee le"]]
+    rows = [["ID", "Titre", "Ville", "Statut", "Priorité", "Créée le"]]
     for item in report["items"][:80]:
         rows.append([
             f"#{item['id']}",
-            item["title"][:42],
-            item["city"] or "-",
-            item["status"] or "-",
-            item["priority"] or "-",
+            _ops_report_clean_text(item["title"][:42]),
+            _ops_report_clean_text(item["city"] or "-"),
+            _ops_report_clean_text(item["status"] or "-"),
+            _ops_report_clean_text(item["priority"] or "-"),
             item["created_at"][:10] if item["created_at"] else "-",
         ])
 
-    items_table = Table(rows, colWidths=[15 * mm, 62 * mm, 28 * mm, 28 * mm, 25 * mm, 28 * mm])
-    items_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0f2742")),
-        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-        ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#d8e2ee")),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE", (0, 0), (-1, -1), 8),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f6f8fb")]),
-        ("LEFTPADDING", (0, 0), (-1, -1), 6),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-        ("TOPPADDING", (0, 0), (-1, -1), 5),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-    ]))
-    story.append(items_table)
+    if len(rows) > 1:
+        items_table = Table(
+            rows,
+            colWidths=[15 * mm, 62 * mm, 28 * mm, 28 * mm, 25 * mm, 28 * mm],
+            repeatRows=1,
+        )
+        items_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0f2742")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("GRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#d8e2ee")),
+            ("FONTNAME", (0, 0), (-1, 0), pdf_font_bold),
+            ("FONTNAME", (0, 1), (-1, -1), pdf_font_regular),
+            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("LEADING", (0, 0), (-1, -1), 10),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f6f8fb")]),
+            ("LEFTPADDING", (0, 0), (-1, -1), 6),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ]))
+        story.append(items_table)
+    else:
+        empty_table = Table(
+            [[Paragraph(
+                "Aucune situation n'est intégrée à cette édition du rapport pour le périmètre et la période retenus.",
+                styles["OpsBody"],
+            )]],
+            colWidths=[186 * mm],
+        )
+        empty_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#fbfdff")),
+            ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#d8e2ee")),
+            ("LEFTPADDING", (0, 0), (-1, -1), 12),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+            ("TOPPADDING", (0, 0), (-1, -1), 12),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+        ]))
+        story.append(empty_table)
 
     def _add_footer(canvas, doc):
         canvas.saveState()
-        canvas.setFillColor(colors.Color(0.92, 0.95, 0.98, alpha=1))
-        canvas.saveState()
-        canvas.translate(105 * mm, 155 * mm)
-        canvas.rotate(32)
-        canvas.setFont("Helvetica-Bold", 28)
-        canvas.drawCentredString(0, 0, "HELPCHAIN")
-        canvas.restoreState()
+        _draw_brand_mark(canvas, 171 * mm, 270.5 * mm, 8 * mm, colors.HexColor("#9aabbb"))
+        _draw_brand_mark(canvas, 94 * mm, 138 * mm, 22 * mm, colors.HexColor("#f2f5f8"))
 
         canvas.setStrokeColor(colors.HexColor("#d8e2ee"))
-        canvas.line(14 * mm, 286 * mm, 196 * mm, 286 * mm)
-        canvas.line(14 * mm, 12 * mm, 196 * mm, 12 * mm)
+        canvas.line(15 * mm, 286 * mm, 195 * mm, 286 * mm)
+        canvas.line(15 * mm, 12 * mm, 195 * mm, 12 * mm)
 
-        canvas.setFillColor(colors.HexColor("#60748d"))
-        canvas.setFont("Helvetica", 8)
-        canvas.drawString(14 * mm, 290 * mm, scope_name)
-        canvas.drawString(14 * mm, 8.5 * mm, "HelpChain - Rapport operationnel - Usage interne")
+        canvas.setFillColor(colors.HexColor("#70839a"))
+        canvas.setFont(pdf_font_regular, 7)
+        canvas.drawString(15 * mm, 290 * mm, "HelpChain - Rapport opérationnel")
+        canvas.drawRightString(195 * mm, 290 * mm, scope_name)
+        canvas.drawString(15 * mm, 8.2 * mm, "Usage interne")
         canvas.drawRightString(
-            196 * mm,
-            8.5 * mm,
-            f"Page {canvas.getPageNumber()} | Genere le {report['generated_at'][:16].replace('T', ' ')}",
+            195 * mm,
+            8.2 * mm,
+            f"Page {canvas.getPageNumber()} | Généré le {report['generated_at'][:16].replace('T', ' ')}",
         )
         canvas.restoreState()
 
@@ -14842,16 +14956,113 @@ def _ops_report_clean_text(value: str) -> str:
     return (
         str(value or "")
         .replace(" a ", " à ")
+        .replace("Aucune evolution", "Aucune évolution")
+        .replace("Analyse automatique", "Analyse automatique")
         .replace("Elevee", "Élevée")
         .replace("elevee", "élevée")
+        .replace("Eleve", "Élevé")
+        .replace("eleve", "élevé")
         .replace("Cloturee", "Clôturée")
         .replace("cloturee", "clôturée")
+        .replace("Cloture", "Clôture")
+        .replace("cloture", "clôture")
         .replace("Annulee", "Annulée")
         .replace("annulee", "annulée")
         .replace("Sante", "Santé")
         .replace("sante", "santé")
+        .replace("Synthese", "Synthèse")
+        .replace("synthese", "synthèse")
+        .replace("Periode", "Période")
+        .replace("periode", "période")
+        .replace("precedente", "précédente")
+        .replace("Precedente", "Précédente")
+        .replace("presente", "présente")
+        .replace("Presente", "Présente")
+        .replace("Observee", "Observée")
+        .replace("observee", "observée")
+        .replace("Observe", "Observé")
+        .replace("observe", "observé")
+        .replace("supervis?es", "supervisées")
+        .replace("? surveiller", "À surveiller")
         .replace("Maitrise", "Maîtrisé")
+        .replace("maitrise", "maîtrise")
         .replace("Depasse", "Dépassé")
+        .replace("depasse", "dépassé")
+        .replace("Depasses", "Dépassés")
+        .replace("depasses", "dépassés")
+        .replace("depassément", "dépassement")
+        .replace("Dépassément", "Dépassement")
+        .replace("depass?ment", "dépassement")
+        .replace("Depass?ment", "Dépassement")
+        .replace("d?pass?ment", "dépassement")
+        .replace("D?pass?ment", "Dépassement")
+        .replace("depassement", "dépassement")
+        .replace("Depassement", "Dépassement")
+        .replace("dépassément", "dépassement")
+        .replace("Dépassément", "Dépassement")
+        .replace("Genere", "Généré")
+        .replace("Perimetre", "Périmètre")
+        .replace("Capacite", "Capacité")
+        .replace("capacite", "capacité")
+        .replace("operationnel", "opérationnel")
+        .replace("operationnelle", "opérationnelle")
+        .replace("operationnelles", "opérationnelles")
+        .replace("Operationnel", "Opérationnel")
+        .replace("Operationnelle", "Opérationnelle")
+        .replace("assignees", "assignées")
+        .replace("Assignees", "Assignées")
+        .replace("assignee", "assignée")
+        .replace("Assignee", "Assignée")
+        .replace("assignation", "assignation")
+        .replace("Resolution", "Résolution")
+        .replace("resolution", "résolution")
+        .replace("Resolution", "Résolution")
+        .replace("Ameliorer", "Améliorer")
+        .replace("ameliorer", "améliorer")
+        .replace("activite", "activité")
+        .replace("Activite", "Activité")
+        .replace("necessite", "nécessite")
+        .replace("necessitent", "nécessitent")
+        .replace("Necessitent", "Nécessitent")
+        .replace("necessitent", "nécessitent")
+        .replace("necessitant", "nécessitant")
+        .replace("immediate", "immédiate")
+        .replace("Immediate", "Immédiate")
+        .replace("Immediat", "Immédiat")
+        .replace("immediat", "immédiat")
+        .replace("Modere", "Modéré")
+        .replace("modere", "modéré")
+        .replace("Reassigner", "Réassigner")
+        .replace("reassigner", "réassigner")
+        .replace("reduire", "réduire")
+        .replace("Reduire", "Réduire")
+        .replace("referent", "référent")
+        .replace("Referent", "Référent")
+        .replace("chaine", "chaîne")
+        .replace("Chaine", "Chaîne")
+        .replace("delai", "délai")
+        .replace("delais", "délais")
+        .replace("Delais", "Délais")
+        .replace("Delai", "Délai")
+        .replace("recent", "récent")
+        .replace("recente", "récente")
+        .replace("Recente", "Récente")
+        .replace("s'etablit", "s’établit")
+        .replace("S'etablit", "S’établit")
+        .replace("etablit", "établit")
+        .replace("Etablit", "Établit")
+        .replace("tracabilite", "traçabilité")
+        .replace("Tracabilite", "Traçabilité")
+        .replace("securiser", "sécuriser")
+        .replace("Securiser", "Sécuriser")
+        .replace("insuffisant?", "insuffisante")
+        .replace("insuffisanté", "insuffisante")
+        .replace("stabilite", "stabilité")
+        .replace("Stabilite", "Stabilité")
+        .replace("Situations en d?pass?ment de jalons de suivi.", "Situations en dépassement de jalons de suivi.")
+        .replace("23 d?pass?ment(s) SLA", "23 dépassement(s) SLA")
+        .replace("classee couverture faible", "classée « couverture faible »")
+        .replace("Classee couverture faible", "Classée « couverture faible »")
     )
 
 
@@ -14876,11 +15087,11 @@ def _ops_report_indicator_rows(report: dict) -> list[list[str]]:
 
     rows = [
         ["Situations ouvertes", _ops_report_format_number(requests_data.get("open", 0)), _lecture("open_requests", "Volume de suivi en cours.")],
-        ["Non assignees", _ops_report_format_number(requests_data.get("unassigned", 0)), _lecture("unassigned_requests", "Situations sans referent operationnel.")],
-        ["SLA depasses", _ops_report_format_number(sla_data.get("breach_count", 0)), _lecture("sla_breaches", "Jalons de suivi a surveiller.")],
-        ["Temps moyen de resolution", f"{_ops_report_format_number(sla_data.get('avg_resolution_hours', 0.0))} h", _lecture("avg_resolution_hours", "Delai moyen observe sur les clotures.")],
+        ["Non assignées", _ops_report_format_number(requests_data.get("unassigned", 0)), _lecture("unassigned_requests", "Situations sans référent opérationnel.")],
+        ["SLA dépassés", _ops_report_format_number(sla_data.get("breach_count", 0)), _lecture("sla_breaches", "Jalons de suivi à surveiller.")],
+        ["Temps moyen de résolution", f"{_ops_report_format_number(sla_data.get('avg_resolution_hours', 0.0))} h", _lecture("avg_resolution_hours", "Délai moyen observé sur les clôtures.")],
         ["Situations critiques", _ops_report_format_number(requests_data.get("critical", 0)), _lecture("critical_requests", "Cas prioritaires ouverts.")],
-        ["Charge operationnelle", _ops_report_format_number((snapshot_map.get("operational_load") or {}).get("raw_value", 0)), _lecture("operational_load", "Situations ouvertes par intervenant actif.")],
+        ["Charge opérationnelle", _ops_report_format_number((snapshot_map.get("operational_load") or {}).get("raw_value", 0)), _lecture("operational_load", "Situations ouvertes par intervenant actif.")],
     ]
     return [
         [
@@ -14996,7 +15207,7 @@ def _build_operational_report_xlsx_bytes(report: dict):
                 max_len = max(max_len, len(value))
             ws.column_dimensions[get_column_letter(col_idx)].width = min(max(12, max_len + 2), max_width)
 
-    scope_name = report["scope"]["structure_name"] or "Toutes les structures visibles"
+    scope_name = report["scope"]["structure_name"] or "Structures supervisées"
     generated_label = _ops_report_format_datetime(report["generated_at"])
 
     ws = wb.active
@@ -15017,7 +15228,7 @@ def _build_operational_report_xlsx_bytes(report: dict):
     for ref in ("B4", "B5", "B6", "E4", "E5"):
         ws[ref].font = body_font
 
-    _style_section_row(ws, 8, "Executive snapshot")
+    _style_section_row(ws, 8, "Synthèse exécutive")
     snapshot_headers = ["Indicateur", "Valeur", "Évolution", "Sévérité", "Lecture"]
     _style_header_row(ws, 9, snapshot_headers)
     row_idx = 10
@@ -15296,7 +15507,7 @@ def _build_operational_report_csv_response(report: dict):
     writer = csv.writer(output, delimiter=";")
 
     writer.writerow(["Rapport opérationnel HelpChain"])
-    writer.writerow(["Périmètre", report["scope"]["structure_name"] or "Toutes les structures visibles"])
+    writer.writerow(["Périmètre", report["scope"]["structure_name"] or "Structures supervisées"])
     writer.writerow(["Période", f'{report["period"]["days"]} jours'])
     writer.writerow(["Généré le", _ops_report_format_datetime(report["generated_at"])])
     writer.writerow(["Confidentialité", "Usage interne"])

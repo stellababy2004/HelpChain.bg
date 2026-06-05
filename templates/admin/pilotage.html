@@ -1,14 +1,15 @@
-{% extends "base.html" %}
+{% extends "layouts/admin_workspace.html" %}
 {% block title %}Pilotage des situations sociales{% endblock %}
-{% block body_class %}hc-page-admin hc-admin-workspace hc-admin-requests-page{% endblock %}
+{% block admin_body_class %} hc-admin-requests-page hc-admin-pilotage-page{% endblock %}
 {% block extra_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/admin-ui.css') }}">
+  {{ super() }}
 {% endblock %}
 
-{% block content %}
+{% block admin_content %}
 <div class="hc-admin-wrap hc-admin-shell">
   <div class="d-flex justify-content-between align-items-center mb-3 hc-admin-toolbar">
     <div>
+      <div class="hc-pilotage-kicker">Cockpit institutionnel</div>
       <h1 class="h4 mb-0">Pilotage des situations sociales</h1>
       {% if scenario_label %}
         <div class="text-muted small mt-1">{{ scenario_label }} · {{ scenario_description }}</div>
@@ -17,80 +18,146 @@
     <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_requests') }}">Retour aux demandes</a>
   </div>
 
-  {% if institutional_universe %}
-    <section class="hc-pilotage-card mb-3">
-      <h3>Cadre du pilote</h3>
-      <div class="small text-muted mb-2">{{ institutional_universe.label }} · {{ institutional_universe.short_description }}</div>
-      <div class="small">
-        <strong>Tonalite KPI:</strong> {{ institutional_universe.kpi_tone or 'equilibre' }} ·
-        <strong>Flux de coordination:</strong> {{ institutional_universe.coordination_flow or 'continuite locale et orientation tracee' }}
+  <section class="hc-pilotage-hero mb-3">
+    <div class="hc-pilotage-hero__main hc-pilotage-card">
+      <div class="hc-pilotage-hero__eyebrow">Lecture immédiate</div>
+      <h2 class="hc-pilotage-hero__title">Prioriser les dossiers à reprendre, escalader ou réorienter.</h2>
+      <p class="hc-pilotage-hero__text">
+        Le cockpit met d’abord en avant les situations critiques, les retards d’action, les dossiers sans responsable et les signaux d’escalade.
+      </p>
+      <div class="hc-pilotage-hero__chips">
+        <span class="hc-chip hc-chip--neg"><span class="hc-chip__dot"></span>{{ critical_count or 0 }} critiques</span>
+        <span class="hc-chip hc-chip--neg"><span class="hc-chip__dot"></span>{{ no_owner_count or 0 }} sans responsable</span>
+        <span class="hc-chip"><span class="hc-chip__dot"></span>{{ not_seen_72h_count or 0 }} sans action 72 h</span>
+        <span class="hc-chip"><span class="hc-chip__dot"></span>{{ manager_review_today_count or 0 }} revues à cadrer</span>
       </div>
-    </section>
-  {% endif %}
+      {% if institutional_universe %}
+        <div class="hc-pilotage-hero__meta">
+          <div class="hc-pilotage-meta-block">
+            <span class="hc-pilotage-meta-block__label">Cadre du pilote</span>
+            <strong>{{ institutional_universe.label }}</strong>
+            <span>{{ institutional_universe.short_description }}</span>
+          </div>
+          <div class="hc-pilotage-meta-block">
+            <span class="hc-pilotage-meta-block__label">Tonalité</span>
+            <strong>{{ institutional_universe.kpi_tone or 'équilibre' }}</strong>
+            <span>{{ institutional_universe.coordination_flow or 'continuité locale et orientation tracée' }}</span>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="hc-pilotage-hero__side">
+      <div class="hc-pilotage-sectionhead hc-pilotage-sectionhead--tight">
+        <div>
+          <div class="hc-pilotage-sectionhead__kicker">Priorités immédiates</div>
+          <h3>Alertes critiques</h3>
+        </div>
+      </div>
+      <div class="hc-command-grid hc-command-grid--pilotage">
+        <a class="hc-command-panel hc-command-panel--attention" href="{{ url_for('admin.admin_cases_list', risk='critical', owner='none') }}">
+          <div class="hc-command-panel__kicker">Escalade</div>
+          <h3 class="hc-command-panel__title">Situations critiques sans responsable</h3>
+          <div class="hc-command-panel__body">
+            <div class="hc-command-action">
+              <span class="hc-command-action__label">À traiter sans délai</span>
+              <strong>{{ critical_without_owner_count or 0 }}</strong>
+            </div>
+          </div>
+        </a>
+        <a class="hc-command-panel" href="{{ url_for('admin.admin_cases_list', stale='1') }}">
+          <div class="hc-command-panel__kicker">Détérioration</div>
+          <h3 class="hc-command-panel__title">Situations sans action depuis 72 heures</h3>
+          <div class="hc-command-panel__body">
+            <div class="hc-command-action">
+              <span class="hc-command-action__label">Risque de dérive opérationnelle</span>
+              <strong>{{ not_seen_72h_count or 0 }}</strong>
+            </div>
+          </div>
+        </a>
+        <a class="hc-command-panel" href="{{ url_for('admin.admin_cases_list', owner='none') }}">
+          <div class="hc-command-panel__kicker">Affectation</div>
+          <h3 class="hc-command-panel__title">Affectations immédiates recommandées</h3>
+          <div class="hc-command-panel__body">
+            <div class="hc-command-action">
+              <span class="hc-command-action__label">Dossiers en attente de relais</span>
+              <strong>{{ assign_immediately_count or 0 }}</strong>
+            </div>
+          </div>
+        </a>
+        <a class="hc-command-panel" href="{{ url_for('admin.admin_cases_list', risk='high') }}">
+          <div class="hc-command-panel__kicker">Management</div>
+          <h3 class="hc-command-panel__title">Revues managériales à effectuer aujourd’hui</h3>
+          <div class="hc-command-panel__body">
+            <div class="hc-command-action">
+              <span class="hc-command-action__label">Arbitrages à conduire</span>
+              <strong>{{ manager_review_today_count or 0 }}</strong>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
 
   {% if institutional_kpis %}
     <section class="hc-pilotage-card mb-3">
-      <h3>Repères de pilotage</h3>
-      <div class="hc-pilotage-grid">
+      <div class="hc-pilotage-sectionhead">
+        <div>
+          <div class="hc-pilotage-sectionhead__kicker">Repères de pilotage</div>
+          <h3>Vue synthétique</h3>
+        </div>
+        <div class="hc-pilotage-sectionhead__text">Hiérarchie volontaire entre indicateurs principaux et métriques de contexte.</div>
+      </div>
+      <div class="hc-pilotage-kpi-grid">
         {% for card in institutional_kpis[:6] %}
-          <article class="hc-pilotage-card">
-            <div class="small text-muted">{{ card.label }}</div>
-            <div class="h4 mb-1">{{ card.value }}</div>
-            <div class="small text-muted">{{ card.trend }}</div>
+          <article class="hc-pilotage-kpi-card {% if loop.index <= 2 %}hc-pilotage-kpi-card--primary{% else %}hc-pilotage-kpi-card--secondary{% endif %}">
+            <div class="hc-pilotage-kpi-card__label">{{ card.label }}</div>
+            <div class="hc-pilotage-kpi-card__value">{{ card.value }}</div>
+            <div class="hc-pilotage-kpi-card__trend">{{ card.trend }}</div>
           </article>
         {% endfor %}
       </div>
     </section>
   {% endif %}
 
-  <div class="hc-pilotage-grid mb-3">
+  <div class="hc-pilotage-summary-grid mb-3">
     <section class="hc-pilotage-card">
-      <h3>Indicateurs de risque</h3>
-      <ul class="mb-0">
-        <li>Situations critiques: <strong>{{ critical_count or 0 }}</strong></li>
-        <li>Situations à surveiller: <strong>{{ attention_count or 0 }}</strong></li>
-        <li>Situations standard: <strong>{{ standard_count or 0 }}</strong></li>
+      <div class="hc-pilotage-sectionhead">
+        <div>
+          <div class="hc-pilotage-sectionhead__kicker">Risque</div>
+          <h3>Indicateurs de risque</h3>
+        </div>
+      </div>
+      <ul class="hc-pilotage-statlist mb-0">
+        <li><span>Situations critiques</span><strong>{{ critical_count or 0 }}</strong></li>
+        <li><span>Situations à surveiller</span><strong>{{ attention_count or 0 }}</strong></li>
+        <li><span>Situations standard</span><strong>{{ standard_count or 0 }}</strong></li>
       </ul>
     </section>
 
     <section class="hc-pilotage-card">
-      <h3>Alertes opérationnelles</h3>
-      <ul class="mb-0">
-        <li>Situations sans responsable: <strong>{{ no_owner_count or 0 }}</strong></li>
-        <li>Situations sans action depuis 72 heures: <strong>{{ not_seen_72h_count or 0 }}</strong></li>
-        <li>Situations critiques sans responsable: <strong>{{ critical_no_owner_count or 0 }}</strong></li>
+      <div class="hc-pilotage-sectionhead">
+        <div>
+          <div class="hc-pilotage-sectionhead__kicker">Exécution</div>
+          <h3>Alertes opérationnelles</h3>
+        </div>
+      </div>
+      <ul class="hc-pilotage-statlist mb-0">
+        <li><span>Situations sans responsable</span><strong>{{ no_owner_count or 0 }}</strong></li>
+        <li><span>Situations sans action depuis 72 heures</span><strong>{{ not_seen_72h_count or 0 }}</strong></li>
+        <li><span>Situations critiques sans responsable</span><strong>{{ critical_no_owner_count or 0 }}</strong></li>
       </ul>
     </section>
   </div>
 
-  <section class="hc-pilotage-card mb-3">
-    <h3>Alertes critiques</h3>
-    <div class="hc-pilotage-grid">
-      <a class="hc-pilotage-card hc-pilotage-card--link" href="{{ url_for('admin.admin_cases_list', risk='critical', owner='none') }}">
-        <div class="small text-muted">Situations critiques sans responsable</div>
-        <div class="h4 mb-0">{{ critical_without_owner_count or 0 }}</div>
-      </a>
-      <a class="hc-pilotage-card hc-pilotage-card--link" href="{{ url_for('admin.admin_cases_list', stale='1') }}">
-        <div class="small text-muted">Situations sans action depuis 72 heures</div>
-        <div class="h4 mb-0">{{ not_seen_72h_count or 0 }}</div>
-      </a>
-      <a class="hc-pilotage-card hc-pilotage-card--link" href="{{ url_for('admin.admin_cases_list', owner='none') }}">
-        <div class="small text-muted">Affectations immédiates recommandées</div>
-        <div class="h4 mb-0">{{ assign_immediately_count or 0 }}</div>
-      </a>
-      <a class="hc-pilotage-card hc-pilotage-card--link" href="{{ url_for('admin.admin_cases_list', risk='high') }}">
-        <div class="small text-muted">Revues managériales à effectuer aujourd’hui</div>
-        <div class="h4 mb-0">{{ manager_review_today_count or 0 }}</div>
-      </a>
-    </div>
-  </section>
-
   <section class="hc-pilotage-card hc-admin-table-shell mb-3">
     <div class="hc-card__header hc-admin-table-toolbar">
       <div>
+        <div class="hc-pilotage-sectionhead__kicker">File d’action</div>
         <h3>Situations à traiter en priorité</h3>
-        <div class="hc-section-subtitle">Lecture rapide des dossiers à reprendre ou à orienter.</div>
+        <div class="hc-section-subtitle">Lecture rapide des dossiers à reprendre, réorienter ou escalader.</div>
       </div>
+      <div class="hc-pilotage-table__meta">{{ priority_items|length }} dossier{% if priority_items|length != 1 %}s{% endif %} dans la vue prioritaire</div>
     </div>
     <div class="table-responsive hc-admin-tablewrap">
       <table class="table table-sm align-middle hc-admin-table hc-pilotage-table mb-0">
@@ -115,9 +182,13 @@
                   <div class="small text-muted">{{ item.summary_compact }}</div>
                 {% endif %}
               </td>
-              <td>{{ (item.risk_level or 'standard')|capitalize }}</td>
-              <td>{{ item.operational_stage or 'suivi_en_cours' }}</td>
-              <td>{{ item.indicator_label }}</td>
+              <td>
+                <span class="hc-row-bucket {% if (item.risk_level or 'standard') == 'critical' %}hc-row-bucket--critical{% elif (item.risk_level or 'standard') in ['attention', 'high'] %}hc-row-bucket--warning{% else %}hc-row-bucket--active{% endif %}">
+                  {{ (item.risk_level or 'standard')|capitalize }}
+                </span>
+              </td>
+              <td><span class="hc-pilotage-stage">{{ item.operational_stage or 'suivi_en_cours' }}</span></td>
+              <td><div class="hc-pilotage-indicator">{{ item.indicator_label }}</div></td>
               <td>{{ item.next_action or 'Poursuivre le suivi' }}</td>
               <td class="hc-td-action">
                 <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_request_details', req_id=item.id) }}">Voir les détails</a>
@@ -138,47 +209,69 @@
     </div>
   </section>
 
-  <section class="hc-pilotage-card mb-3">
-    <h3>Tendances observées</h3>
-    <p class="text-muted mb-2">Repères simples issus de l’activité récente et des situations suivies.</p>
-    <ul class="mb-0">
-      <li>{{ category_trend_text }}</li>
-      <li>{{ assignment_delay_text }}</li>
-      <li>{{ vigilance_text }}</li>
-    </ul>
-  </section>
-
-  {% if institutional_story and institutional_story.timeline %}
-    <section class="hc-pilotage-card mb-3">
-      <h3>Fil conducteur de démonstration</h3>
-      <div class="small text-muted mb-2">{{ institutional_story.summary }}</div>
-      <div class="fw-semibold mb-2">{{ institutional_story.request_fixture_id }} · {{ institutional_story.title }}</div>
-      <ul class="mb-0">
-        {% for entry in institutional_story.timeline[:6] %}
-          <li>{{ entry }}</li>
-        {% endfor %}
-      </ul>
-    </section>
-  {% endif %}
-
-  <div class="hc-pilotage-grid">
+  <div class="hc-pilotage-summary-grid">
     <section class="hc-pilotage-card">
-      <h3>Recommandations du système</h3>
-      <ul class="mb-0">
-        <li>Affectation immédiate recommandée: <strong>{{ rec_counts.assign_immediately or 0 }}</strong></li>
-        <li>Revue managériale aujourd’hui: <strong>{{ rec_counts.manager_review_today or 0 }}</strong></li>
-        <li>Orientation vers partenaire logement: <strong>{{ rec_counts.route_to_housing_partner or 0 }}</strong></li>
-        <li>Orientation vers aide alimentaire: <strong>{{ rec_counts.route_to_food_support or 0 }}</strong></li>
-        <li>Orientation vers accompagnement santé: <strong>{{ rec_counts.route_to_health_support or 0 }}</strong></li>
+      <div class="hc-pilotage-sectionhead">
+        <div>
+          <div class="hc-pilotage-sectionhead__kicker">Tendances</div>
+          <h3>Tendances observées</h3>
+        </div>
+      </div>
+      <p class="text-muted mb-2">Repères simples issus de l’activité récente et des situations suivies.</p>
+      <ul class="hc-pilotage-list mb-0">
+        <li>{{ category_trend_text }}</li>
+        <li>{{ assignment_delay_text }}</li>
+        <li>{{ vigilance_text }}</li>
       </ul>
     </section>
 
+    {% if institutional_story and institutional_story.timeline %}
+      <section class="hc-pilotage-card">
+        <div class="hc-pilotage-sectionhead">
+          <div>
+            <div class="hc-pilotage-sectionhead__kicker">Démonstration</div>
+            <h3>Fil conducteur</h3>
+          </div>
+        </div>
+        <div class="small text-muted mb-2">{{ institutional_story.summary }}</div>
+        <div class="fw-semibold mb-2">{{ institutional_story.request_fixture_id }} · {{ institutional_story.title }}</div>
+        <ul class="hc-pilotage-list mb-0">
+          {% for entry in institutional_story.timeline[:6] %}
+            <li>{{ entry }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+  </div>
+
+  <div class="hc-pilotage-summary-grid">
     <section class="hc-pilotage-card">
-      <h3>Activité du jour</h3>
-      <ul class="mb-0">
-        <li>Demandes reçues aujourd’hui: <strong>{{ received_today or 0 }}</strong></li>
-        <li>Demandes prises en charge aujourd’hui: <strong>{{ taken_today or 0 }}</strong></li>
-        <li>Demandes clôturées aujourd’hui: <strong>{{ closed_today or 0 }}</strong></li>
+      <div class="hc-pilotage-sectionhead">
+        <div>
+          <div class="hc-pilotage-sectionhead__kicker">Aides à la décision</div>
+          <h3>Recommandations du système</h3>
+        </div>
+      </div>
+      <ul class="hc-pilotage-statlist mb-0">
+        <li><span>Affectation immédiate recommandée</span><strong>{{ rec_counts.assign_immediately or 0 }}</strong></li>
+        <li><span>Revue managériale aujourd’hui</span><strong>{{ rec_counts.manager_review_today or 0 }}</strong></li>
+        <li><span>Orientation vers partenaire logement</span><strong>{{ rec_counts.route_to_housing_partner or 0 }}</strong></li>
+        <li><span>Orientation vers aide alimentaire</span><strong>{{ rec_counts.route_to_food_support or 0 }}</strong></li>
+        <li><span>Orientation vers accompagnement santé</span><strong>{{ rec_counts.route_to_health_support or 0 }}</strong></li>
+      </ul>
+    </section>
+
+    <section class="hc-pilotage-card">
+      <div class="hc-pilotage-sectionhead">
+        <div>
+          <div class="hc-pilotage-sectionhead__kicker">Rythme quotidien</div>
+          <h3>Activité du jour</h3>
+        </div>
+      </div>
+      <ul class="hc-pilotage-statlist mb-0">
+        <li><span>Demandes reçues aujourd’hui</span><strong>{{ received_today or 0 }}</strong></li>
+        <li><span>Demandes prises en charge aujourd’hui</span><strong>{{ taken_today or 0 }}</strong></li>
+        <li><span>Demandes clôturées aujourd’hui</span><strong>{{ closed_today or 0 }}</strong></li>
       </ul>
     </section>
   </div>

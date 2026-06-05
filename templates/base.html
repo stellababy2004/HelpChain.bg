@@ -416,24 +416,26 @@
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .container-fluid {
         min-height: 56px;
         align-items: center;
-        max-width: 1380px;
+        max-width: 1440px;
         margin-inline: auto;
-        padding-inline: 1.4rem !important;
+        padding-inline: 1.2rem !important;
       }
 
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .navbar-brand {
         min-height: 40px;
         display: inline-flex;
         align-items: center;
+        gap: 0.5rem !important;
+        margin-right: 0.45rem;
       }
 
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-brand-mark {
-        width: 23px;
-        height: 23px;
+        width: 21px;
+        height: 21px;
       }
 
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-brand-title {
-        font-size: 0.98rem;
+        font-size: 0.95rem;
         font-weight: 700;
         letter-spacing: -0.02em;
       }
@@ -445,13 +447,16 @@
       }
 
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-public-nav-main {
-        gap: 0.25rem;
+        gap: 0.1rem;
+        flex: 1 1 auto;
+        justify-content: center;
+        min-width: 0;
       }
 
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .nav-link {
         min-height: 36px;
-        padding: 0.55rem 0.9rem;
-        font-size: 0.98rem;
+        padding: 0.5rem 0.72rem;
+        font-size: 0.95rem;
         font-weight: 600;
       }
 
@@ -459,10 +464,36 @@
         border-radius: 999px;
       }
 
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .nav-item {
+        flex: 0 1 auto;
+        min-width: 0;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root :is(.hc-nav-mega__trigger, .nav-link:not(.hc-nav-cta)) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.34rem;
+        white-space: nowrap;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__trigger {
+        min-height: 36px;
+        padding: 0.5rem 0.72rem;
+        border-radius: 999px;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-navlabel {
+        line-height: 1.1;
+      }
+
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-public-nav-actions {
-        gap: 0.85rem !important;
-        margin-left: 1rem;
-        padding-left: 1.1rem;
+        flex: 0 0 auto;
+        gap: 0.5rem !important;
+        margin-left: 0.7rem;
+        padding-left: 0.8rem;
         border-left: 1px solid rgba(197, 208, 220, 0.9);
       }
 
@@ -473,10 +504,213 @@
 
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .nav-link.hc-nav-cta {
         min-height: 38px;
-        padding: 0.7rem 1.35rem;
+        padding: 0.62rem 1rem;
         border-radius: 12px;
         background: linear-gradient(180deg, #2a4f92 0%, #1d457f 100%);
-        box-shadow: 0 10px 22px rgba(29, 69, 127, 0.18);
+        box-shadow: 0 8px 18px rgba(29, 69, 127, 0.16);
+        font-size: 0.93rem;
+        font-weight: 650;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-public-nav-demo-cta .hc-navlabel {
+        letter-spacing: -0.01em;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__panel {
+        margin-top: 0.7rem;
+        min-width: min(900px, calc(100vw - 2.6rem));
+        width: min(900px, calc(100vw - 2.6rem));
+        padding: 1.05rem 1.1rem;
+        border-radius: 18px;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-public-nav-main > .hc-nav-mega {
+        position: static;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root :is(
+        #hcPublicMegaProduct,
+        #hcPublicMegaProductAuth,
+        #hcPublicMegaAnalyses,
+        #hcPublicMegaAnalysesAuth
+      ) {
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) translateY(-4px) !important;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega.is-open :is(
+        #hcPublicMegaProduct,
+        #hcPublicMegaProductAuth,
+        #hcPublicMegaAnalyses,
+        #hcPublicMegaAnalysesAuth
+      ) {
+        transform: translateX(-50%) translateY(0) !important;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root :is(
+        #hcPublicMegaProduct,
+        #hcPublicMegaProductAuth,
+        #hcPublicMegaAnalyses,
+        #hcPublicMegaAnalysesAuth
+      )::before {
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) rotate(45deg) !important;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__microintro {
+        max-width: 52rem;
+        margin-bottom: 0.9rem;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__grid {
+        grid-template-columns: minmax(248px, 0.86fr) minmax(0, 1.14fr);
+        gap: 1rem 1.2rem;
+        align-items: start;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__feature {
+        max-width: 24.5rem;
+        padding: 1rem 1rem 1.02rem;
+        padding-right: 0.1rem;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__eyebrow {
+        margin-bottom: 0.62rem;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__feature strong {
+        display: block;
+        margin-bottom: 0.62rem;
+        line-height: 1.32;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__feature p {
+        margin: 0.04rem 0 0;
+        font-size: 0.93rem;
+        line-height: 1.58;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__links {
+        gap: 0.55rem;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__links--product {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 0.7rem;
+        row-gap: 0.62rem;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__link {
+        padding: 0.78rem 0.88rem;
+        border-radius: 14px;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__link strong {
+        display: block;
+        margin-bottom: 0.14rem;
+        line-height: 1.28;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__link span {
+        display: block;
+        line-height: 1.42;
+      }
+
+      @media (min-width: 1200px) and (max-width: 1536px) {
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .container-fluid {
+          padding-inline: 1rem !important;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .navbar-brand {
+          gap: 0.42rem !important;
+          margin-right: 0.25rem;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-brand-mark {
+          width: 20px;
+          height: 20px;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-brand-title {
+          font-size: 0.93rem;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-public-nav-main {
+          gap: 0.06rem;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root :is(.nav-link:not(.hc-nav-cta), .hc-nav-mega__trigger) {
+          padding-inline: 0.62rem;
+          font-size: 0.93rem;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-public-nav-actions {
+          gap: 0.42rem !important;
+          margin-left: 0.55rem;
+          padding-left: 0.68rem;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .nav-link.hc-nav-cta {
+          min-height: 36px;
+          padding: 0.58rem 0.9rem;
+          font-size: 0.9rem;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__panel {
+          min-width: min(860px, calc(100vw - 2.2rem));
+          width: min(860px, calc(100vw - 2.2rem));
+          padding: 0.98rem 1rem;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__grid {
+          grid-template-columns: minmax(232px, 0.82fr) minmax(0, 1.18fr);
+          gap: 0.9rem 1rem;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__feature {
+          max-width: 22.75rem;
+          padding: 0.94rem 0.96rem 0.98rem;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__links--product {
+          column-gap: 0.62rem;
+          row-gap: 0.56rem;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__link {
+          padding: 0.72rem 0.8rem;
+        }
+      }
+
+      @media (max-width: 1199.98px) {
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__links--product {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (min-width: 1200px) and (max-width: 1366px) {
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .container-fluid {
+          padding-inline: 0.9rem !important;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root :is(.nav-link:not(.hc-nav-cta), .hc-nav-mega__trigger) {
+          padding-inline: 0.54rem;
+          font-size: 0.91rem;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-public-nav-actions {
+          margin-left: 0.45rem;
+          padding-left: 0.58rem;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .nav-link.hc-nav-cta {
+          padding-inline: 0.82rem;
+          font-size: 0.88rem;
+        }
       }
 
       @media (max-width: 1199.98px) {
@@ -660,12 +894,12 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                     <strong>{{ _('HelpChain structure la continuité opérationnelle, la coordination multi-acteurs et la gouvernance des suivis dans un même cadre traçable.') }}</strong>
                     <p>{{ _('Accédez au coeur opérationnel de la plateforme : organisation des suivis, continuité institutionnelle et déploiement progressif.') }}</p>
                   </div>
-                  <div class="hc-nav-mega__links">
+                  <div class="hc-nav-mega__links hc-nav-mega__links--product">
                     <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Coordination') }}</strong><span>{{ _('De la demande au suivi multi-acteurs traçable.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation reste visible, relançable et suivie dans le temps.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive, gouvernance opérationnelle et continuité institutionnelle.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.offre') }}"><strong>{{ _('Cadres de déploiement') }}</strong><span>{{ _('Cadres pilote, professionnel et institutionnel pour structurer l’adoption.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Pour les structures') }}</strong><span>{{ _('Infrastructure de coordination pour CCAS, collectivités et structures multi-acteurs.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Infrastructure de coordination pour CCAS, collectivités et structures multi-acteurs.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi habilité pour acteurs responsables de la continuité.') }}</span></a>
                   </div>
                 </div>
@@ -673,7 +907,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
             </li>
             <li class="nav-item">
               <a class="nav-link {{ 'active' if secteurs_active else '' }}" href="{{ url_for('main.pour_les_structures') }}" {% if secteurs_active %}aria-current="page"{% endif %}>
-                <span class="hc-navlabel">{{ _('Pour les structures') }}</span>
+                <span class="hc-navlabel">{{ _('Structures') }}</span>
               </a>
             </li>
             <li class="nav-item">
@@ -693,17 +927,16 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
             </li>
             <li class="nav-item hc-nav-mega hc-nav-mega--analyses {{ 'is-active' if analyses_active else '' }}" data-hc-mega>
               <button class="hc-nav-mega__trigger" type="button" data-hc-mega-trigger aria-expanded="false" aria-controls="hcPublicMegaAnalyses" {% if analyses_active %}aria-current="page"{% endif %}>
-                <span class="hc-navlabel">{{ _('Analyses opérationnelles') }}</span>
+                <span class="hc-navlabel">{{ _('Pilotage') }}</span>
               </button>
               <div class="hc-nav-mega__panel" id="hcPublicMegaAnalyses" data-hc-mega-panel hidden>
-                <div class="hc-nav-mega__microintro">{{ _('Analyses institutionnelles sur la continuité opérationnelle, les relances, la gouvernance et le suivi multi-acteurs.') }}</div>
                 <div class="hc-nav-mega__grid">
                   <div class="hc-nav-mega__feature">
                     <span class="hc-nav-mega__eyebrow">{{ _('Doctrine') }}</span>
                     <strong>{{ _('Une lecture opérationnelle des continuités, des dérives de suivi et des fragilités de coordination.') }}</strong>
                     <p>{{ _('Retrouvez les analyses HelpChain sur la fragmentation opérationnelle, la mémoire opérationnelle et la gouvernance des suivis multi-acteurs.') }}</p>
                   </div>
-                  <div class="hc-nav-mega__links">
+                  <div class="hc-nav-mega__links hc-nav-mega__links--product">
                     <a class="hc-nav-mega__link" href="{{ url_for('main.analyse_fragmentation') }}"><strong>{{ _('Pourquoi les suivis se fragmentent') }}</strong><span>{{ _('Comprendre comment la continuité se dégrade dans les organisations multi-acteurs.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.analyse_relances_perdues') }}"><strong>{{ _('Le coût invisible des relances perdues') }}</strong><span>{{ _('Analyser ce que coûtent les relances dispersées, les transitions fragiles et la perte de lisibilité.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.pourquoi_helpchain') }}"><strong>{{ _('Pourquoi HelpChain') }}</strong><span>{{ _('Le socle doctrinal et le diagnostic de départ de la plateforme.') }}</span></a>
@@ -715,7 +948,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
           </ul>
           <div class="hc-public-nav-actions d-flex align-items-center gap-2">
             <a class="nav-link hc-nav-cta hc-cta hc-public-nav-demo-cta" href="/demo">
-              <span class="hc-navlabel">{{ _('Demander un accès pilote') }}</span>
+              <span class="hc-navlabel">{{ _('Accès pilote') }}</span>
             </a>
           </div>
           {% else %}
@@ -736,7 +969,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                     <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation reste visible, relançable et suivie dans le temps.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive, gouvernance opérationnelle et continuité institutionnelle.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.offre') }}"><strong>{{ _('Cadres de déploiement') }}</strong><span>{{ _('Cadres pilote, professionnel et institutionnel pour structurer l’adoption.') }}</span></a>
-                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Pour les structures') }}</strong><span>{{ _('Infrastructure de coordination pour CCAS, collectivités et structures multi-acteurs.') }}</span></a>
+                    <a class="hc-nav-mega__link" href="{{ url_for('main.pour_les_structures') }}"><strong>{{ _('Structures') }}</strong><span>{{ _('Infrastructure de coordination pour CCAS, collectivités et structures multi-acteurs.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.professionnels') }}"><strong>{{ _('Professionnels') }}</strong><span>{{ _('Espace de suivi habilité pour acteurs responsables de la continuité.') }}</span></a>
                   </div>
                 </div>
@@ -744,7 +977,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
             </li>
             <li class="nav-item">
               <a class="nav-link {{ 'active' if secteurs_active else '' }}" href="{{ url_for('main.pour_les_structures') }}" {% if secteurs_active %}aria-current="page"{% endif %}>
-                {{ _('Pour les structures') }}
+                {{ _('Structures') }}
               </a>
             </li>
             <li class="nav-item">
@@ -764,10 +997,9 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
             </li>
             <li class="nav-item hc-nav-mega hc-nav-mega--analyses {{ 'is-active' if analyses_active else '' }}" data-hc-mega>
               <button class="hc-nav-mega__trigger" type="button" data-hc-mega-trigger aria-expanded="false" aria-controls="hcPublicMegaAnalysesAuth" {% if analyses_active %}aria-current="page"{% endif %}>
-                {{ _('Analyses opérationnelles') }}
+                {{ _('Pilotage') }}
               </button>
               <div class="hc-nav-mega__panel" id="hcPublicMegaAnalysesAuth" data-hc-mega-panel hidden>
-                <div class="hc-nav-mega__microintro">{{ _('Analyses institutionnelles sur la continuité opérationnelle, les relances, la gouvernance et le suivi multi-acteurs.') }}</div>
                 <div class="hc-nav-mega__grid">
                   <div class="hc-nav-mega__feature">
                     <span class="hc-nav-mega__eyebrow">{{ _('Doctrine') }}</span>
@@ -1031,7 +1263,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
             <a class="{{ 'is-active' if produit_active else '' }}" href="{{ url_for('main.comment_ca_marche') }}" {% if produit_active %}aria-current="page"{% endif %}>{{ _('Coordination') }}</a>
           </li>
           <li class="hc-mobile-nav__item">
-            <a class="{{ 'is-active' if secteurs_active else '' }}" href="{{ url_for('main.pour_les_structures') }}" {% if secteurs_active %}aria-current="page"{% endif %}>{{ _('Pour les structures') }}</a>
+            <a class="{{ 'is-active' if secteurs_active else '' }}" href="{{ url_for('main.pour_les_structures') }}" {% if secteurs_active %}aria-current="page"{% endif %}>{{ _('Structures') }}</a>
           </li>
           <li class="hc-mobile-nav__item">
             <a class="{{ 'is-active' if securite_active else '' }}" href="{{ url_for('main.securite') }}" {% if securite_active %}aria-current="page"{% endif %}>{{ _('Sécurité') }}</a>
@@ -1043,7 +1275,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
             <a class="{{ 'is-active' if ressources_active else '' }}" href="{{ url_for('main.architecture') }}" {% if ressources_active %}aria-current="page"{% endif %}>{{ _('Architecture') }}</a>
           </li>
           <li class="hc-mobile-nav__item">
-            <a class="{{ 'is-active' if mobile_ep.startswith('main.analyse_fragmentation') else '' }}" href="{{ url_for('main.analyse_fragmentation') }}" {% if mobile_ep.startswith('main.analyse_fragmentation') %}aria-current="page"{% endif %}>{{ _('Analyses opérationnelles') }}</a>
+            <a class="{{ 'is-active' if mobile_ep.startswith('main.analyse_fragmentation') else '' }}" href="{{ url_for('main.analyse_fragmentation') }}" {% if mobile_ep.startswith('main.analyse_fragmentation') %}aria-current="page"{% endif %}>{{ _('Pilotage') }}</a>
           </li>
           <li class="hc-mobile-nav__item">
             <a class="{{ 'is-active' if mobile_ep.startswith('main.simulation_operationnelle') else '' }}" href="{{ url_for('main.simulation_operationnelle') }}" {% if mobile_ep.startswith('main.simulation_operationnelle') %}aria-current="page"{% endif %}>{{ _('Simulation opérationnelle') }}</a>
@@ -1052,7 +1284,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
             <a class="{{ 'is-active' if mobile_ep.startswith('main.volunteer_login') else '' }}" href="{{ url_for('main.volunteer_login') }}" {% if mobile_ep.startswith('main.volunteer_login') %}aria-current="page"{% endif %}>{{ _('Connexion') }}</a>
           </li>
           <li class="hc-mobile-nav__item hc-mobile-nav__item--cta">
-            <a class="hc-public-nav-demo-cta" href="/demo">{{ _('Demander un accès pilote') }}</a>
+            <a class="hc-public-nav-demo-cta" href="/demo">{{ _('Accès pilote') }}</a>
           </li>
         </ul>
       </aside>
@@ -1703,6 +1935,16 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
               <a class="hc-footer__link" href="{{ url_for('main.confidentialite') }}">{{ _('Politique de confidentialité') }}</a>
               <span class="hc-footer__meta-dot" aria-hidden="true">·</span>
               <a class="hc-footer__link" href="{{ url_for('main.conditions_utilisation') }}">{{ _('Conditions d’utilisation') }}</a>
+              {% if not disable_a11y %}
+              <span class="hc-footer__meta-dot" aria-hidden="true">·</span>
+              <a
+                class="hc-footer__link"
+                href="#hcA11yBtn"
+                data-action="clickTarget"
+                data-target="#hcA11yBtn"
+                aria-controls="hcA11yDrawer"
+              >{{ _('Accessibilité') }}</a>
+              {% endif %}
             </nav>
           </div>
         </div>

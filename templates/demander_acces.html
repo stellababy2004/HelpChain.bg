@@ -1,6 +1,151 @@
 {% extends "base.html" %}
 {% block title %}Demander un accès | HelpChain{% endblock %}
 
+{% block extra_css %}
+<style>
+  .hc-vol-join .hc-narrow {
+    max-width: 1120px;
+  }
+
+  .hc-vol-join .hc-become-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
+    gap: clamp(22px, 2.4vw, 34px);
+    align-items: start;
+  }
+
+  .hc-vol-join .hc-become-titleblock {
+    min-width: 0;
+  }
+
+  .hc-vol-join .hc-trust-card {
+    align-self: start;
+    width: 100%;
+    max-width: 420px;
+    margin: 0 0 0 auto;
+    padding: 1.2rem 1.3rem;
+    border: 1px solid rgba(16, 36, 59, 0.1);
+    border-radius: 44px;
+    background: linear-gradient(180deg, rgba(252, 253, 255, 0.97), rgba(244, 248, 252, 0.94));
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.045);
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .hc-vol-join .hc-trust-cardTitle {
+    margin: 0;
+    color: #20456f;
+    font-size: 0.76rem;
+    font-weight: 760;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .hc-vol-join .hc-trust-cardIntro {
+    margin: 0;
+    color: #4b6784;
+    font-size: 0.91rem;
+    line-height: 1.42;
+  }
+
+  .hc-vol-join .hc-trust-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  .hc-vol-join .hc-trust-list li {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 0.65rem;
+    align-items: center;
+    padding: 0.72rem 0.82rem;
+    border: 1px solid rgba(53, 80, 122, 0.1);
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.62);
+    color: #27476d;
+  }
+
+  .hc-vol-join .hc-trust-list li::before {
+    content: "";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 10px;
+    height: 10px;
+    margin-top: 5px;
+    border-radius: 999px;
+    background: #2f6292;
+    box-shadow: 0 0 0 4px rgba(31, 78, 133, 0.08);
+  }
+
+  .hc-vol-join .hc-trust-itemTitle {
+    display: inline;
+    color: #20456f;
+    font-size: 0.88rem;
+    font-weight: 690;
+    line-height: 1.25;
+  }
+
+  .hc-vol-join .hc-trust-itemText {
+    display: inline;
+    color: #587089;
+    font-size: 0.84rem;
+    line-height: 1.34;
+  }
+
+  .hc-vol-join .hc-trust-itemText::before {
+    content: " ";
+  }
+
+  @media (min-width: 992px) {
+    .hc-vol-join .hc-trust-list li > span {
+      display: inline;
+    }
+  }
+
+  @media (max-width: 991.98px) {
+    .hc-vol-join .hc-become-head {
+      grid-template-columns: 1fr;
+    }
+
+    .hc-vol-join .hc-trust-card {
+      max-width: none;
+      margin: 0;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .hc-vol-join .hc-trust-card {
+      padding: 1.15rem 1.1rem;
+      border-radius: 38px;
+      gap: 0.85rem;
+    }
+
+    .hc-vol-join .hc-trust-list li {
+      padding: 0.72rem 0.82rem;
+      border-radius: 26px;
+    }
+
+    .hc-vol-join .hc-trust-itemTitle,
+    .hc-vol-join .hc-trust-itemText {
+      display: block;
+    }
+
+    .hc-vol-join .hc-trust-itemText::before {
+      content: none;
+    }
+
+    .hc-vol-join .hc-trust-cardIntro {
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 {% set form_data = form_data or {} %}
 {% set form_errors = form_errors or {} %}
@@ -18,10 +163,29 @@
             </p>
           </div>
           <aside class="hc-trust-card" aria-label="Cadre de la demande">
+            <p class="hc-trust-cardTitle">Qualification institutionnelle</p>
+            <p class="hc-trust-cardIntro">
+              La demande ouvre un échange de qualification. Aucun accès n’est activé avant validation du cadre, des rôles et du périmètre.
+            </p>
             <ul class="hc-trust-list">
-              <li>Réservé aux structures et acteurs habilités</li>
-              <li>Qualification manuelle des demandes</li>
-              <li>Aucun accès automatique créé</li>
+              <li>
+                <span>
+                  <strong class="hc-trust-itemTitle">Structures habilitées</strong>
+                  <span class="hc-trust-itemText">CCAS, collectivités, associations structurées et partenaires institutionnels identifiés.</span>
+                </span>
+              </li>
+              <li>
+                <span>
+                  <strong class="hc-trust-itemTitle">Qualification manuelle</strong>
+                  <span class="hc-trust-itemText">Chaque demande est relue avant tout échange pilote ou cadrage de déploiement.</span>
+                </span>
+              </li>
+              <li>
+                <span>
+                  <strong class="hc-trust-itemTitle">Aucun accès automatique</strong>
+                  <span class="hc-trust-itemText">Les accès sont créés uniquement après validation des responsabilités et des périmètres.</span>
+                </span>
+              </li>
             </ul>
           </aside>
         </div>
