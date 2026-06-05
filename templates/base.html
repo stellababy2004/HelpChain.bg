@@ -1703,6 +1703,16 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
               <a class="hc-footer__link" href="{{ url_for('main.confidentialite') }}">{{ _('Politique de confidentialité') }}</a>
               <span class="hc-footer__meta-dot" aria-hidden="true">·</span>
               <a class="hc-footer__link" href="{{ url_for('main.conditions_utilisation') }}">{{ _('Conditions d’utilisation') }}</a>
+              {% if not disable_a11y %}
+              <span class="hc-footer__meta-dot" aria-hidden="true">·</span>
+              <a
+                class="hc-footer__link"
+                href="#hcA11yBtn"
+                data-action="clickTarget"
+                data-target="#hcA11yBtn"
+                aria-controls="hcA11yDrawer"
+              >{{ _('Accessibilité') }}</a>
+              {% endif %}
             </nav>
           </div>
         </div>
