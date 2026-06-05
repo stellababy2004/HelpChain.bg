@@ -254,7 +254,7 @@ from ..services.event_bus import (
 from ..services.structure_service import create_structure_with_admin
 
 GENERIC_ADMIN_LOGIN_FAIL_MSG = (
-    "Identifiants invalides ou acc?s temporairement bloqu?."
+    "Identifiants invalides ou accès temporairement bloqué."
 )
 CATEGORY_CASE_STATUSES = (
     "new",
