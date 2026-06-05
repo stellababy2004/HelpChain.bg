@@ -670,6 +670,21 @@
       text-transform: uppercase;
     }
 
+    body.hc-page-home .hc-home-premium__buyer-cta {
+      margin-top: 1.35rem;
+    }
+
+    body.hc-page-home .hc-home-premium__buyer-card--primary .hc-home-premium__workflow-points {
+      margin-top: 1rem;
+    }
+
+    body.hc-page-home .hc-home-premium__buyer-card--primary .hc-home-premium__workflow-points li {
+      padding: 12px 14px;
+      border-radius: 18px;
+      font-size: 0.9rem;
+      line-height: 1.34;
+    }
+
     @media (max-width: 900px) {
       body.hc-page-home .hc-home-premium__buyer-card--primary {
         grid-column: auto;
@@ -2585,12 +2600,28 @@
       <p>{{ _('HelpChain applique une même logique de routage, de responsabilité, de relais et de visibilité d’exécution à des opérations distribuées. Le premier usage commercial concerne les réseaux immobiliers multi-agences ; les autres secteurs suivent le même modèle de coordination.') }}</p>
     </div>
 
+    <div class="hc-home-premium__trust-strip" aria-label="{{ _('Scénario immobilier opérationnel') }}">
+      <strong>{{ _('Scénario immobilier :') }}</strong>
+      <span>{{ _('Demande entrante · Formulaire, appel ou canal centralisé') }}</span>
+      <span>{{ _('Attribution · Le bon bureau devient visible immédiatement') }}</span>
+      <span>{{ _('Suivi · Les relances sans activité remontent plus tôt') }}</span>
+      <span>{{ _('Relais · Le transfert entre agences reste traçable') }}</span>
+      <span>{{ _('Pilotage · La direction suit les zones sous pression') }}</span>
+    </div>
+
     <div class="hc-home-premium__buyer-grid">
       <article class="hc-home-premium__buyer-card hc-home-premium__buyer-card--primary">
         <span>{{ _('01') }}</span>
         <div class="hc-home-premium__buyer-cardTag">{{ _('Usage prioritaire') }}</div>
         <h3>{{ _('Réseaux immobiliers') }}</h3>
         <p>{{ _('Quand les leads circulent entre bureaux, les relances inactives et les relais inter-agences restent trop longtemps invisibles. HelpChain garde lisibles le routage, la responsabilité, la pression territoriale et la continuité d’exécution dans tout le réseau.') }}</p>
+        <ul class="hc-home-premium__workflow-points">
+          <li>{{ _('Routage des demandes vers le bon bureau') }}</li>
+          <li>{{ _('Responsabilité visible par agence ou équipe') }}</li>
+          <li>{{ _('Relances sans activité détectées plus tôt') }}</li>
+          <li>{{ _('Relais inter-agences traçables') }}</li>
+          <li>{{ _('Pression territoriale lisible pour la direction') }}</li>
+        </ul>
       </article>
 
       <article class="hc-home-premium__buyer-card">
@@ -2616,6 +2647,11 @@
         <h3>{{ _('Opérations de sécurité') }}</h3>
         <p>{{ _('Quand incidents et escalades se dispersent entre opérateurs, la supervision ralentit. HelpChain centralise le routage, les accusés de prise en charge et la visibilité d’exécution.') }}</p>
       </article>
+    </div>
+
+    <div class="hc-home-premium__cta-buttons hc-home-premium__buyer-cta">
+      <a class="hc-btn hc-btn--primary btn btn-primary" href="{{ url_for('main.contact') }}">{{ _('Discuter d’un pilote immobilier') }}</a>
+      <a class="hc-btn hc-btn-outline btn btn-secondary" href="{{ url_for('main.comment_ca_marche') }}">{{ _('Voir le fonctionnement de la plateforme') }}</a>
     </div>
   </section>
 
