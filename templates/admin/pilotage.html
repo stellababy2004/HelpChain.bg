@@ -1,11 +1,11 @@
-{% extends "base.html" %}
+{% extends "layouts/admin_workspace.html" %}
 {% block title %}Pilotage des situations sociales{% endblock %}
-{% block body_class %}hc-page-admin hc-admin-workspace hc-admin-requests-page{% endblock %}
+{% block admin_body_class %} hc-admin-requests-page{% endblock %}
 {% block extra_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/admin-ui.css') }}">
+  {{ super() }}
 {% endblock %}
 
-{% block content %}
+{% block admin_content %}
 <div class="hc-admin-wrap hc-admin-shell">
   <div class="d-flex justify-content-between align-items-center mb-3 hc-admin-toolbar">
     <div>

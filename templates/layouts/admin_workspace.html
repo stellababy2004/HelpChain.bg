@@ -65,6 +65,7 @@
                   <a class="hc-admin-shellnav__link {{ 'is-active' if is_revenue_active else '' }}" href="{{ url_for('admin.admin_revenue') }}" {% if is_revenue_active %}aria-current="page"{% endif %}>Revenue</a>
                 {% endif %}
                 <a class="hc-admin-shellnav__link {{ 'is-active' if is_conversion_active else '' }}" href="/admin/conversion-dashboard" {% if is_conversion_active %}aria-current="page"{% endif %}>Conversion</a>
+                <a class="hc-admin-shellnav__link {{ 'is-active' if is_pilotage_dashboard_active else '' }}" href="{{ url_for('admin.admin_pilotage') }}" {% if is_pilotage_dashboard_active %}aria-current="page"{% endif %}>Pilotage opérationnel</a>
                 <a class="hc-admin-shellnav__link {{ 'is-active' if is_reports_active else '' }}" href="{{ url_for('admin.admin_operations_report') }}" {% if is_reports_active %}aria-current="page"{% endif %}>Rapports</a>
                 {% if can_access_global_analytics %}
                   <a class="hc-admin-shellnav__link {{ 'is-active' if is_audience_active else '' }}" href="{{ url_for('admin.admin_audience_map') }}" {% if is_audience_active %}aria-current="page"{% endif %}>Audience</a>
