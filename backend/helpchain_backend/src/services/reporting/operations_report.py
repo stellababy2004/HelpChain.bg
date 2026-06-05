@@ -12,8 +12,11 @@ from backend.helpchain_backend.src.statuses import (
     request_status_read_values,
     request_terminal_status_read_values,
 )
-from backend.models import Intervenant, Request, Structure
+from backend.models import AdminUser, Intervenant, Request, Structure
 from backend.helpchain_backend.src.services.sla_alerts import build_sla_alerts
+from backend.helpchain_backend.src.services.request_sla import (
+    build_request_meaningful_activity_subquery,
+)
 
 
 CLOSED_STATUSES = set(request_terminal_status_read_values()) | {"archived"}
@@ -358,6 +361,154 @@ def _count_sla_breaches(rows, as_of: datetime) -> int:
             count += 1
 
     return count
+
+
+def _owner_label(owner_id: int | None, owners_by_id: dict[int, object]) -> str:
+    if owner_id is None:
+        return "Unassigned"
+    owner = owners_by_id.get(int(owner_id))
+    if owner is None:
+        return f"Admin #{int(owner_id)}"
+    username = str(getattr(owner, "username", "") or "").strip()
+    email = str(getattr(owner, "email", "") or "").strip()
+    return username or email or f"Admin #{int(owner_id)}"
+
+
+def _risk_level_from_owner_rollup(*, open_cases: int, sla_late: int, stale_cases: int) -> str:
+    if open_cases >= 12 or sla_late >= 5 or stale_cases >= 3:
+        return "high"
+    if open_cases >= 6 or sla_late >= 2 or stale_cases >= 1:
+        return "moderate"
+    return "stable"
+
+
+def _aging_bucket_key(created_at: datetime | None, as_of: datetime) -> str | None:
+    age_hours = _duration_hours(created_at, as_of)
+    if age_hours is None:
+        return None
+    if age_hours < 24:
+        return "under_24h"
+    if age_hours <= 72:
+        return "between_24h_72h"
+    return "over_72h"
+
+
+def _compute_aging_buckets(rows, as_of: datetime) -> dict[str, int]:
+    buckets = {
+        "under_24h": 0,
+        "between_24h_72h": 0,
+        "over_72h": 0,
+    }
+    for row in rows:
+        bucket = _aging_bucket_key(_normalize_dt(getattr(row, "created_at", None)), as_of)
+        if bucket is not None:
+            buckets[bucket] += 1
+    return buckets
+
+
+def _compute_owner_workload_summary(
+    rows,
+    *,
+    as_of: datetime,
+    last_activity_by_request_id: dict[int, datetime | None],
+) -> list[dict]:
+    owner_ids = sorted(
+        {
+            int(getattr(row, "owner_id"))
+            for row in rows
+            if getattr(row, "owner_id", None) is not None
+        }
+    )
+    owners_by_id = {}
+    if owner_ids:
+        owners = db.session.query(AdminUser).filter(AdminUser.id.in_(owner_ids)).all()
+        owners_by_id = {int(owner.id): owner for owner in owners}
+
+    summaries: dict[int, dict[str, object]] = {}
+    stale_threshold = as_of - timedelta(hours=72)
+    for row in rows:
+        owner_id = getattr(row, "owner_id", None)
+        if owner_id is None:
+            continue
+        owner_id = int(owner_id)
+        bucket = summaries.setdefault(
+            owner_id,
+            {
+                "owner_id": owner_id,
+                "owner": _owner_label(owner_id, owners_by_id),
+                "open_cases": 0,
+                "sla_late": 0,
+                "stale_cases": 0,
+            },
+        )
+        bucket["open_cases"] = int(bucket["open_cases"]) + 1
+
+        if _count_sla_breaches([row], as_of) > 0:
+            bucket["sla_late"] = int(bucket["sla_late"]) + 1
+
+        last_activity = last_activity_by_request_id.get(int(getattr(row, "id")))
+        if last_activity is None:
+            last_activity = _normalize_dt(getattr(row, "updated_at", None)) or _normalize_dt(
+                getattr(row, "created_at", None)
+            )
+        if last_activity is not None and last_activity <= stale_threshold:
+            bucket["stale_cases"] = int(bucket["stale_cases"]) + 1
+
+    result = []
+    for bucket in summaries.values():
+        result.append(
+            {
+                **bucket,
+                "risk_level": _risk_level_from_owner_rollup(
+                    open_cases=int(bucket["open_cases"]),
+                    sla_late=int(bucket["sla_late"]),
+                    stale_cases=int(bucket["stale_cases"]),
+                ),
+            }
+        )
+
+    result.sort(
+        key=lambda item: (
+            _priority_weight(str(item.get("risk_level") or "stable")),
+            int(item.get("sla_late") or 0),
+            int(item.get("stale_cases") or 0),
+            int(item.get("open_cases") or 0),
+            str(item.get("owner") or ""),
+        ),
+        reverse=True,
+    )
+    return result
+
+
+def _window_summary(base_query, *, days: int, as_of: datetime) -> dict[str, int]:
+    period = _period_for_days(days, now=as_of)
+    period_base = base_query.filter(Request.created_at >= period.start, Request.created_at <= period.end)
+    resolved_base = base_query.filter(_resolved_filter())
+    open_base_as_of = base_query.filter(_open_filter_as_of(period.end))
+    stale_threshold = period.end - timedelta(hours=72)
+
+    opened = _count(period_base)
+    resolved = _count(
+        resolved_base.filter(Request.completed_at >= period.start, Request.completed_at <= period.end)
+    )
+    current_open_rows = open_base_as_of.all()
+    stale = sum(
+        1
+        for row in current_open_rows
+        if _normalize_dt(getattr(row, "created_at", None)) is not None
+        and _normalize_dt(getattr(row, "created_at", None)) < stale_threshold
+    )
+    sla_breaches = _count_sla_breaches(
+        base_query.filter(Request.created_at <= period.end).all(),
+        period.end,
+    )
+
+    return {
+        "opened": opened,
+        "resolved": resolved,
+        "sla_breaches": sla_breaches,
+        "stale": stale,
+    }
 
 
 def _build_snapshot_metric(
@@ -1015,6 +1166,7 @@ def build_operational_report(
     """
     period = _period_for_days(days, now=now)
     base = _base_query(structure_id=structure_id)
+    activity_sq = build_request_meaningful_activity_subquery()
 
     period_base = base.filter(Request.created_at >= period.start, Request.created_at <= period.end)
     open_base = base.filter(_open_filter())
@@ -1153,6 +1305,31 @@ def build_operational_report(
     timeline = [{"date": key, "created": values["created"], "closed": values["closed"]} for key, values in timeline_map.items()]
     timeline_created_values = [item["created"] for item in timeline]
     timeline_closed_values = [item["closed"] for item in timeline]
+    aging = _compute_aging_buckets(current_open_rows, period.end)
+
+    activity_rows = (
+        db.session.query(activity_sq.c.request_id, activity_sq.c.last_activity_at)
+        .join(Request, Request.id == activity_sq.c.request_id)
+        .filter(Request.deleted_at.is_(None))
+    )
+    if hasattr(Request, "is_archived"):
+        activity_rows = activity_rows.filter(Request.is_archived.is_(False))
+    if structure_id is not None and hasattr(Request, "structure_id"):
+        activity_rows = activity_rows.filter(Request.structure_id == int(structure_id))
+    last_activity_by_request_id = {
+        int(request_id): _normalize_dt(last_activity_at)
+        for request_id, last_activity_at in activity_rows.all()
+        if request_id is not None
+    }
+    owner_workload = _compute_owner_workload_summary(
+        current_open_rows,
+        as_of=period.end,
+        last_activity_by_request_id=last_activity_by_request_id,
+    )
+    trend_windows = {
+        f"{window_days}d": _window_summary(base, days=window_days, as_of=period.end)
+        for window_days in (7, 30, 90)
+    }
 
     report_items = [
         {
@@ -1333,6 +1510,8 @@ def build_operational_report(
             "critical": critical_open_count,
             "sla_breaches": current_sla_breach_count,
         },
+        "aging": aging,
+        "owner_workload": owner_workload,
         "sla": {
             "avg_assignment_hours": avg_assignment_hours,
             "avg_resolution_hours": avg_resolution_hours,
@@ -1361,10 +1540,14 @@ def build_operational_report(
         "operational_conclusion": operational_conclusion,
         "sla_alerts": sla_alerts,
         "trends": trends,
+        "trend_windows": trend_windows,
         "definition": {
             "scope": "structure-scoped when structure_id is provided; excludes deleted and archived requests",
             "open": "status is not in canonical closed/resolved/cancelled/archived states",
             "resolved": "completed_at is present and status is done/completed/resolved/closed",
             "stale": "open request created more than 72 hours before report generation",
+            "aging": "open requests bucketed by age since created_at: <24h, 24-72h, >72h",
+            "owner_workload": "open requests grouped by owner with SLA-late and stale counts based on current operational rules",
+            "trend_windows": "compact trailing 7d/30d/90d windows for opened, resolved, SLA breaches, and stale open requests",
         },
     }
