@@ -518,9 +518,45 @@
 
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__panel {
         margin-top: 0.7rem;
-        min-width: min(960px, calc(100vw - 3rem));
+        min-width: min(900px, calc(100vw - 2.6rem));
+        width: min(900px, calc(100vw - 2.6rem));
         padding: 1.05rem 1.1rem;
         border-radius: 18px;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-public-nav-main > .hc-nav-mega {
+        position: static;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root :is(
+        #hcPublicMegaProduct,
+        #hcPublicMegaProductAuth,
+        #hcPublicMegaAnalyses,
+        #hcPublicMegaAnalysesAuth
+      ) {
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) translateY(-4px) !important;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega.is-open :is(
+        #hcPublicMegaProduct,
+        #hcPublicMegaProductAuth,
+        #hcPublicMegaAnalyses,
+        #hcPublicMegaAnalysesAuth
+      ) {
+        transform: translateX(-50%) translateY(0) !important;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root :is(
+        #hcPublicMegaProduct,
+        #hcPublicMegaProductAuth,
+        #hcPublicMegaAnalyses,
+        #hcPublicMegaAnalysesAuth
+      )::before {
+        left: 50% !important;
+        right: auto !important;
+        transform: translateX(-50%) rotate(45deg) !important;
       }
 
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__microintro {
@@ -531,30 +567,41 @@
       }
 
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__grid {
-        grid-template-columns: minmax(220px, 0.84fr) minmax(0, 1.16fr);
-        gap: 1rem 1.15rem;
+        grid-template-columns: minmax(248px, 0.86fr) minmax(0, 1.14fr);
+        gap: 1rem 1.2rem;
         align-items: start;
       }
 
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__feature {
-        max-width: 23rem;
-        padding-right: 0.2rem;
+        max-width: 24.5rem;
+        padding: 1rem 1rem 1.02rem;
+        padding-right: 0.1rem;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__eyebrow {
+        margin-bottom: 0.62rem;
       }
 
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__feature strong {
         display: block;
-        margin-bottom: 0.55rem;
-        line-height: 1.35;
+        margin-bottom: 0.62rem;
+        line-height: 1.32;
       }
 
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__feature p {
-        margin-bottom: 0;
-        font-size: 0.9rem;
-        line-height: 1.5;
+        margin: 0.04rem 0 0;
+        font-size: 0.93rem;
+        line-height: 1.58;
       }
 
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__links {
         gap: 0.55rem;
+      }
+
+      body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__links--product {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 0.7rem;
+        row-gap: 0.62rem;
       }
 
       body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__link {
@@ -614,21 +661,34 @@
         }
 
         body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__panel {
-          min-width: min(920px, calc(100vw - 2.4rem));
+          min-width: min(860px, calc(100vw - 2.2rem));
+          width: min(860px, calc(100vw - 2.2rem));
           padding: 0.98rem 1rem;
         }
 
         body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__grid {
-          grid-template-columns: minmax(206px, 0.8fr) minmax(0, 1.2fr);
+          grid-template-columns: minmax(232px, 0.82fr) minmax(0, 1.18fr);
           gap: 0.9rem 1rem;
         }
 
         body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__feature {
-          max-width: 21.5rem;
+          max-width: 22.75rem;
+          padding: 0.94rem 0.96rem 0.98rem;
+        }
+
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__links--product {
+          column-gap: 0.62rem;
+          row-gap: 0.56rem;
         }
 
         body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__link {
           padding: 0.72rem 0.8rem;
+        }
+      }
+
+      @media (max-width: 1199.98px) {
+        body:not([data-hc-page^="/admin"]):not(.hc-admin-page):not(.hc-page-admin) .hc-public-nav-root .hc-nav-mega__links--product {
+          grid-template-columns: 1fr;
         }
       }
 
@@ -834,7 +894,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                     <strong>{{ _('HelpChain structure la continuité opérationnelle, la coordination multi-acteurs et la gouvernance des suivis dans un même cadre traçable.') }}</strong>
                     <p>{{ _('Accédez au coeur opérationnel de la plateforme : organisation des suivis, continuité institutionnelle et déploiement progressif.') }}</p>
                   </div>
-                  <div class="hc-nav-mega__links">
+                  <div class="hc-nav-mega__links hc-nav-mega__links--product">
                     <a class="hc-nav-mega__link" href="{{ url_for('main.comment_ca_marche') }}"><strong>{{ _('Coordination') }}</strong><span>{{ _('De la demande au suivi multi-acteurs traçable.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.simulation_operationnelle') }}"><strong>{{ _('Simulation opérationnelle') }}</strong><span>{{ _('Voir comment une situation reste visible, relançable et suivie dans le temps.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.deploiement') }}"><strong>{{ _('Déploiement') }}</strong><span>{{ _('Mise en place progressive, gouvernance opérationnelle et continuité institutionnelle.') }}</span></a>
@@ -870,14 +930,13 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                 <span class="hc-navlabel">{{ _('Pilotage') }}</span>
               </button>
               <div class="hc-nav-mega__panel" id="hcPublicMegaAnalyses" data-hc-mega-panel hidden>
-                <div class="hc-nav-mega__microintro">{{ _('Analyses institutionnelles sur la continuité opérationnelle, les relances, la gouvernance et le suivi multi-acteurs.') }}</div>
                 <div class="hc-nav-mega__grid">
                   <div class="hc-nav-mega__feature">
                     <span class="hc-nav-mega__eyebrow">{{ _('Doctrine') }}</span>
                     <strong>{{ _('Une lecture opérationnelle des continuités, des dérives de suivi et des fragilités de coordination.') }}</strong>
                     <p>{{ _('Retrouvez les analyses HelpChain sur la fragmentation opérationnelle, la mémoire opérationnelle et la gouvernance des suivis multi-acteurs.') }}</p>
                   </div>
-                  <div class="hc-nav-mega__links">
+                  <div class="hc-nav-mega__links hc-nav-mega__links--product">
                     <a class="hc-nav-mega__link" href="{{ url_for('main.analyse_fragmentation') }}"><strong>{{ _('Pourquoi les suivis se fragmentent') }}</strong><span>{{ _('Comprendre comment la continuité se dégrade dans les organisations multi-acteurs.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.analyse_relances_perdues') }}"><strong>{{ _('Le coût invisible des relances perdues') }}</strong><span>{{ _('Analyser ce que coûtent les relances dispersées, les transitions fragiles et la perte de lisibilité.') }}</span></a>
                     <a class="hc-nav-mega__link" href="{{ url_for('main.pourquoi_helpchain') }}"><strong>{{ _('Pourquoi HelpChain') }}</strong><span>{{ _('Le socle doctrinal et le diagnostic de départ de la plateforme.') }}</span></a>
@@ -941,7 +1000,6 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
                 {{ _('Pilotage') }}
               </button>
               <div class="hc-nav-mega__panel" id="hcPublicMegaAnalysesAuth" data-hc-mega-panel hidden>
-                <div class="hc-nav-mega__microintro">{{ _('Analyses institutionnelles sur la continuité opérationnelle, les relances, la gouvernance et le suivi multi-acteurs.') }}</div>
                 <div class="hc-nav-mega__grid">
                   <div class="hc-nav-mega__feature">
                     <span class="hc-nav-mega__eyebrow">{{ _('Doctrine') }}</span>
