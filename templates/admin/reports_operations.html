@@ -6,6 +6,15 @@
 {% block admin_content %}
   <div class="hc-admin-page-header hc-report-page-header">
     <div>
+      <div class="hc-report-brandline mb-3">
+        <span class="hc-report-brandmark" aria-hidden="true">
+          <img src="{{ url_for('static', filename='img/hc-logo-mark.svg') }}" alt="" loading="eager" decoding="async">
+        </span>
+        <div class="hc-report-brandtext">
+          <span class="hc-report-brandtext__eyebrow">HelpChain</span>
+          <span class="hc-report-brandtext__title">Rapport institutionnel de pilotage</span>
+        </div>
+      </div>
       <div class="hc-admin-kicker">Rapports institutionnels</div>
       <h1 class="hc-admin-title">Rapport opérationnel</h1>
       <p class="hc-muted mb-0">
@@ -31,7 +40,7 @@
       <a class="btn btn-outline-primary btn-sm" href="{{ url_for('admin.admin_operations_report_pdf', days=days) }}">
         Exporter PDF
       </a>
-      <a class="btn btn-link btn-sm" href="{{ url_for('admin.admin_pilotage') }}">
+      <a class="btn btn-link btn-sm hc-report-link-cta" href="{{ url_for('admin.admin_pilotage') }}">
         Voir le tableau de pilotage
       </a>
     </div>
@@ -40,51 +49,70 @@
   <section class="hc-card hc-card-pad hc-report-hero mb-3">
     <div class="hc-report-hero__grid">
       <div>
-        <div class="hc-admin-kicker mb-2">Executive report</div>
-        <h2 class="hc-section-title mb-2">Executive snapshot</h2>
+        <div class="hc-report-document-ribbon mb-3">
+          <span>Usage interne</span>
+          <span>Confidentialité interne</span>
+          <span>{{ report.period.days }} jours</span>
+        </div>
+        <div class="hc-admin-kicker mb-2">Brief de pilotage</div>
+        <h2 class="hc-section-title mb-2">Synthèse exécutive</h2>
         <p class="mb-2">{{ report.executive_summary }}</p>
         <div class="hc-muted small">{{ report.operational_severity.message }}</div>
+        <div class="hc-report-hero__meta mt-3">
+          <div class="hc-report-chip">
+            <span class="hc-report-chip__label">Périmètre</span>
+            <strong>{{ report.scope.structure_name or "Structures supervisées" }}</strong>
+          </div>
+          <div class="hc-report-chip">
+            <span class="hc-report-chip__label">Généré le</span>
+            <strong>{{ report.generated_at[:16]|replace('T', ' ') }}</strong>
+          </div>
+          <div class="hc-report-status hc-report-status--{{ report.operational_health_score.level }}">
+            <span class="hc-report-status__label">Statut opérationnel</span>
+            <strong>{{ report.operational_health_score.label }}</strong>
+          </div>
+        </div>
       </div>
       <div class="hc-report-health hc-report-health--{{ report.operational_health_score.level }}">
-        <div class="hc-report-health__label">{{ _("Sante operationnelle") }}</div>
+        <div class="hc-report-health__label">{{ _("Santé opérationnelle") }}</div>
         <div class="hc-report-health__score">{{ report.operational_health_score.score }}{{ _("/100") }}</div>
         <div class="hc-report-health__status">{{ report.operational_health_score.label }}</div>
         <p class="hc-report-health__summary">{{ report.operational_health_score.summary }}</p>
         {% if report.operational_health_score.decision %}
           <div class="hc-report-health__decision">
-            <span>{{ _("Decision recommandee") }}</span>
+            <span>{{ _("Décision recommandée") }}</span>
             <strong>{{ report.operational_health_score.decision }}</strong>
           </div>
         {% endif %}
         <div class="hc-report-health__factors">
           {% for factor in report.operational_health_score.factors %}
-            <span title="{{ factor.detail }}">{{ factor.label }}: {{ factor.value }}</span>
+            <span title="{{ factor.detail }}">{{ factor.label }} : {{ factor.value }}</span>
           {% endfor %}
         </div>
-      </div>    </div>
+      </div>
+    </div>
   </section>
 
-  <section class="hc-report-meta-grid" aria-label="Metadonnees du rapport">
+  <section class="hc-report-meta-grid" aria-label="Métadonnées du rapport">
     <article class="hc-report-meta-card">
-      <h3>{{ _("Perimetre") }}</h3>
-      <strong>{{ report.scope.structure_name or "Toutes les structures visibles" }}</strong>
+      <h3>{{ _("Périmètre") }}</h3>
+      <strong>{{ report.scope.structure_name or "Structures supervisées" }}</strong>
     </article>
     <article class="hc-report-meta-card">
-      <h3>{{ _("Fenetre") }}</h3>
+      <h3>{{ _("Fenêtre") }}</h3>
       <strong>{{ report.period.days }} {{ _("jours") }}</strong>
     </article>
     <article class="hc-report-meta-card">
-      <h3>{{ _("Generation") }}</h3>
+      <h3>{{ _("Généré le") }}</h3>
       <strong>{{ report.generated_at[:16]|replace('T', ' ') }}</strong>
     </article>
     <article class="hc-report-meta-card">
-      <h3>{{ _("Stabilite") }}</h3>
+      <h3>{{ _("Stabilité") }}</h3>
       <strong>{{ report.operational_conclusion.stability }}</strong>
     </article>
   </section>
 
-
-  <section class="hc-report-exec-grid mb-3" aria-label="Executive snapshot">
+  <section class="hc-report-exec-grid mb-3" aria-label="Synthèse exécutive">
     {% for item in report.executive_snapshot %}
       <article class="hc-card hc-card-pad hc-report-kpi hc-report-kpi--{{ item.tone }}">
         <div class="hc-report-kpi__topline">
@@ -147,8 +175,8 @@
               </div>
               <div class="hc-report-action__reason">{{ action.reason }}</div>
               <div class="hc-report-action__meta">
-                <span>Impact: {{ action.impact }}</span>
-                <span>Horizon: {{ action.horizon }}</span>
+                <span>Impact : {{ action.impact }}</span>
+                <span>Horizon : {{ action.horizon }}</span>
               </div>
             </article>
           {% endfor %}
@@ -174,16 +202,15 @@
               </div>
               <p class="mb-2">{{ item.text }}</p>
               <div class="hc-report-analysis__meta">
-                <span>Horizon: {{ item.horizon }}</span>
-                <span>Niveau: {{ item.severity|title }}</span>
+                <span>Horizon : {{ item.horizon }}</span>
+                <span>Niveau : {{ item.severity|title }}</span>
               </div>
             </article>
           {% endfor %}
         </div>
       </section>
     </div>
-    </div>
-  </details>
+  </section>
 
   <details class="hc-card hc-card-pad mb-3 hc-report-disclosure">
     <summary>
@@ -199,70 +226,70 @@
 
     <div class="hc-report-disclosure__body">
       <div class="hc-report-trend-grid">
-      <article class="hc-card hc-card-pad hc-report-trend">
-        <div class="hc-report-trend__label">Situations ouvertes</div>
-        <div class="hc-report-trend__value">{{ report.trends.open_requests.current }}</div>
-        <div class="hc-report-trend__delta hc-report-trend__delta--{{ report.trends.open_requests.semantic }}">{{ report.trends.open_requests.label }}</div>
-        <div class="hc-muted small">{{ report.trends.open_requests.previous }} sur la période précédente</div>
-      </article>
+        <article class="hc-card hc-card-pad hc-report-trend">
+          <div class="hc-report-trend__label">Situations ouvertes</div>
+          <div class="hc-report-trend__value">{{ report.trends.open_requests.current }}</div>
+          <div class="hc-report-trend__delta hc-report-trend__delta--{{ report.trends.open_requests.semantic }}">{{ report.trends.open_requests.label }}</div>
+          <div class="hc-muted small">{{ report.trends.open_requests.previous }} sur la période précédente</div>
+        </article>
 
-      <article class="hc-card hc-card-pad hc-report-trend">
-        <div class="hc-report-trend__label">Non assignees</div>
-        <div class="hc-report-trend__value">{{ report.trends.unassigned_requests.current }}</div>
-        <div class="hc-report-trend__delta hc-report-trend__delta--{{ report.trends.unassigned_requests.semantic }}">{{ report.trends.unassigned_requests.label }}</div>
-        <div class="hc-muted small">{{ report.trends.unassigned_requests.previous }} sur la période précédente</div>
-      </article>
+        <article class="hc-card hc-card-pad hc-report-trend">
+          <div class="hc-report-trend__label">Situations non assignées</div>
+          <div class="hc-report-trend__value">{{ report.trends.unassigned_requests.current }}</div>
+          <div class="hc-report-trend__delta hc-report-trend__delta--{{ report.trends.unassigned_requests.semantic }}">{{ report.trends.unassigned_requests.label }}</div>
+          <div class="hc-muted small">{{ report.trends.unassigned_requests.previous }} sur la période précédente</div>
+        </article>
 
-      <article class="hc-card hc-card-pad hc-report-trend">
-        <div class="hc-report-trend__label">Temps moyen de resolution</div>
-        <div class="hc-report-trend__value">{{ report.trends.avg_resolution_hours.current }}h</div>
-        <div class="hc-report-trend__delta hc-report-trend__delta--{{ report.trends.avg_resolution_hours.semantic }}">{{ report.trends.avg_resolution_hours.label }}</div>
-        <div class="hc-muted small">{{ report.trends.avg_resolution_hours.previous }}h sur la période précédente</div>
-      </article>
+        <article class="hc-card hc-card-pad hc-report-trend">
+          <div class="hc-report-trend__label">Temps moyen de résolution</div>
+          <div class="hc-report-trend__value">{{ report.trends.avg_resolution_hours.current }}h</div>
+          <div class="hc-report-trend__delta hc-report-trend__delta--{{ report.trends.avg_resolution_hours.semantic }}">{{ report.trends.avg_resolution_hours.label }}</div>
+          <div class="hc-muted small">{{ report.trends.avg_resolution_hours.previous }}h sur la période précédente</div>
+        </article>
 
-      <article class="hc-card hc-card-pad hc-report-trend">
-        <div class="hc-report-trend__label">SLA depasses</div>
-        <div class="hc-report-trend__value">{{ report.trends.sla_breaches.current }}</div>
-        <div class="hc-report-trend__delta hc-report-trend__delta--{{ report.trends.sla_breaches.semantic }}">{{ report.trends.sla_breaches.label }}</div>
-        <div class="hc-muted small">{{ report.trends.sla_breaches.previous }} sur la période précédente</div>
-      </article>
-    </div>
-
-    <div class="row g-3 mt-1">
-      <div class="col-lg-6">
-        <article class="hc-card hc-card-pad h-100">
-          <div class="hc-muted small">Nouvelles demandes</div>
-          <div class="d-flex justify-content-between align-items-end gap-2">
-            <div class="hc-kpi__value">{{ report.trends.new_requests.current }}</div>
-            <span class="hc-report-badge hc-report-badge--{{ 'stable' if report.trends.new_requests.semantic == 'neutral' else 'moderate' if report.trends.new_requests.semantic == 'positive' else 'high' }}">
-              {{ report.trends.new_requests.label }}
-            </span>
-          </div>
-          <div class="hc-muted small mt-1">Periode precedente : {{ report.trends.new_requests.previous }}</div>
-          <svg viewBox="0 0 220 52" role="img" aria-label="Evolution des demandes creees" class="w-100 mt-3 hc-report-sparkline hc-report-sparkline--pressure" height="52">
-            <polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-              points="{{ report.timeline_charts.created }}" />
-          </svg>
+        <article class="hc-card hc-card-pad hc-report-trend">
+          <div class="hc-report-trend__label">SLA dépassés</div>
+          <div class="hc-report-trend__value">{{ report.trends.sla_breaches.current }}</div>
+          <div class="hc-report-trend__delta hc-report-trend__delta--{{ report.trends.sla_breaches.semantic }}">{{ report.trends.sla_breaches.label }}</div>
+          <div class="hc-muted small">{{ report.trends.sla_breaches.previous }} sur la période précédente</div>
         </article>
       </div>
 
-      <div class="col-lg-6">
-        <article class="hc-card hc-card-pad h-100">
-          <div class="hc-muted small">Demandes cloturees</div>
-          <div class="d-flex justify-content-between align-items-end gap-2">
-            <div class="hc-kpi__value">{{ report.trends.resolved_requests.current }}</div>
-            <span class="hc-report-badge hc-report-badge--{{ 'stable' if report.trends.resolved_requests.semantic == 'neutral' else 'stable' if report.trends.resolved_requests.semantic == 'positive' else 'moderate' }}">
-              {{ report.trends.resolved_requests.label }}
-            </span>
-          </div>
-          <div class="hc-muted small mt-1">Periode precedente : {{ report.trends.resolved_requests.previous }}</div>
-          <svg viewBox="0 0 220 52" role="img" aria-label="Evolution des demandes cloturees" class="w-100 mt-3 hc-report-sparkline hc-report-sparkline--positive" height="52">
-            <polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-              points="{{ report.timeline_charts.closed }}" />
-          </svg>
-        </article>
+      <div class="row g-3 mt-1">
+        <div class="col-lg-6">
+          <article class="hc-card hc-card-pad h-100">
+            <div class="hc-muted small">Nouvelles demandes</div>
+            <div class="d-flex justify-content-between align-items-end gap-2">
+              <div class="hc-kpi__value">{{ report.trends.new_requests.current }}</div>
+              <span class="hc-report-badge hc-report-badge--{{ 'stable' if report.trends.new_requests.semantic == 'neutral' else 'moderate' if report.trends.new_requests.semantic == 'positive' else 'high' }}">
+                {{ report.trends.new_requests.label }}
+              </span>
+            </div>
+            <div class="hc-muted small mt-1">Période précédente : {{ report.trends.new_requests.previous }}</div>
+            <svg viewBox="0 0 220 52" role="img" aria-label="Évolution des demandes créées" class="w-100 mt-3 hc-report-sparkline hc-report-sparkline--pressure" height="52">
+              <polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                points="{{ report.timeline_charts.created }}" />
+            </svg>
+          </article>
+        </div>
+
+        <div class="col-lg-6">
+          <article class="hc-card hc-card-pad h-100">
+            <div class="hc-muted small">Demandes clôturées</div>
+            <div class="d-flex justify-content-between align-items-end gap-2">
+              <div class="hc-kpi__value">{{ report.trends.resolved_requests.current }}</div>
+              <span class="hc-report-badge hc-report-badge--{{ 'stable' if report.trends.resolved_requests.semantic == 'neutral' else 'stable' if report.trends.resolved_requests.semantic == 'positive' else 'moderate' }}">
+                {{ report.trends.resolved_requests.label }}
+              </span>
+            </div>
+            <div class="hc-muted small mt-1">Période précédente : {{ report.trends.resolved_requests.previous }}</div>
+            <svg viewBox="0 0 220 52" role="img" aria-label="Évolution des demandes clôturées" class="w-100 mt-3 hc-report-sparkline hc-report-sparkline--positive" height="52">
+              <polyline fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                points="{{ report.timeline_charts.closed }}" />
+            </svg>
+          </article>
+        </div>
       </div>
-    </div>
     </div>
   </details>
 
@@ -279,39 +306,38 @@
     </summary>
 
     <div class="hc-report-disclosure__body">
-
-    {% if report.territorial_pressure.zones %}
-      <div class="hc-report-territory-grid">
-        {% for zone in report.territorial_pressure.zones %}
-          <article class="hc-card hc-card-pad hc-report-territory hc-report-territory--{{ zone.severity }}">
-            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-              <div>
-                <div class="hc-report-territory__city">{{ zone.city }}</div>
-                <div class="hc-report-territory__coverage">{{ zone.coverage_label }}</div>
+      {% if report.territorial_pressure.zones %}
+        <div class="hc-report-territory-grid">
+          {% for zone in report.territorial_pressure.zones %}
+            <article class="hc-card hc-card-pad hc-report-territory hc-report-territory--{{ zone.severity }}">
+              <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <div>
+                  <div class="hc-report-territory__city">{{ zone.city }}</div>
+                  <div class="hc-report-territory__coverage">{{ zone.coverage_label }}</div>
+                </div>
+                <span class="hc-report-badge hc-report-badge--{{ zone.severity }}">{{ zone.severity_label }}</span>
               </div>
-              <span class="hc-report-badge hc-report-badge--{{ zone.severity }}">{{ zone.severity_label }}</span>
-            </div>
-            <div class="hc-report-territory__metrics">
-              <span>{{ zone.open_requests }} ouvertes</span>
-              <span>{{ zone.active_intervenants }} intervenants actifs</span>
-              <span>{{ zone.available_intervenants }} disponibles</span>
-            </div>
-            <div class="hc-report-territory__metrics">
-              <span>Densite: {{ zone.density }}</span>
-              <span>Disponibilite: {{ zone.availability_rate }}%</span>
-            </div>
-            <div class="hc-report-heat" aria-hidden="true">
-              {% for idx in range(1, 6) %}
-                <span class="hc-report-heat__bar {% if idx <= zone.heat %}is-active{% endif %}"></span>
-              {% endfor %}
-            </div>
-            <p class="hc-muted small mb-0">{{ zone.alert }}</p>
-          </article>
-        {% endfor %}
-      </div>
-    {% else %}
-      <p class="hc-muted mb-0">Aucune pression territoriale visible sur le perimetre retenu.</p>
-    {% endif %}
+              <div class="hc-report-territory__metrics">
+                <span>{{ zone.open_requests }} ouvertes</span>
+                <span>{{ zone.active_intervenants }} intervenants actifs</span>
+                <span>{{ zone.available_intervenants }} disponibles</span>
+              </div>
+              <div class="hc-report-territory__metrics">
+                <span>Densité : {{ zone.density }}</span>
+                <span>Disponibilité : {{ zone.availability_rate }}%</span>
+              </div>
+              <div class="hc-report-heat" aria-hidden="true">
+                {% for idx in range(1, 6) %}
+                  <span class="hc-report-heat__bar {% if idx <= zone.heat %}is-active{% endif %}"></span>
+                {% endfor %}
+              </div>
+              <p class="hc-muted small mb-0">{{ zone.alert }}</p>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="hc-muted mb-0">Aucune pression territoriale visible sur le périmètre retenu.</p>
+      {% endif %}
     </div>
   </details>
 
@@ -319,40 +345,40 @@
     <summary>
       <div>
         <div class="hc-admin-kicker mb-1">Recommandations automatiques</div>
-        <h2 class="hc-section-title mb-1">Recommandations de direction operationnelle</h2>
-        <p class="hc-muted mb-0">Traduction des signaux metier en axes de pilotage actionnables.</p>
+        <h2 class="hc-section-title mb-1">Recommandations de direction opérationnelle</h2>
+        <p class="hc-muted mb-0">Traduction des signaux métier en axes de pilotage actionnables.</p>
       </div>
     </summary>
 
     <div class="hc-report-disclosure__body">
       <div class="row g-3">
-      {% for item in report.recommendations %}
-        <div class="col-lg-6">
-          <article class="hc-card hc-card-pad h-100 hc-report-rec hc-report-rec--{{ item.severity }}">
-            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-              <h3 class="h6 mb-0">{{ item.title }}</h3>
-              <span class="hc-report-badge hc-report-badge--{{ item.severity }}">{{ item.priority }}</span>
-            </div>
-            <p class="mb-2">{{ item.description }}</p>
-            <div class="hc-report-rec__meta">
-              <div><strong>Impact potentiel:</strong> {{ item.impact }}</div>
-              <div><strong>Niveau de risque:</strong> {{ item.risk }}</div>
-              <div><strong>Horizon:</strong> {{ item.horizon }}</div>
-            </div>
-          </article>
-        </div>
-      {% endfor %}
+        {% for item in report.recommendations %}
+          <div class="col-lg-6">
+            <article class="hc-card hc-card-pad h-100 hc-report-rec hc-report-rec--{{ item.severity }}">
+              <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                <h3 class="h6 mb-0">{{ item.title }}</h3>
+                <span class="hc-report-badge hc-report-badge--{{ item.severity }}">{{ item.priority }}</span>
+              </div>
+              <p class="mb-2">{{ item.description }}</p>
+              <div class="hc-report-rec__meta">
+                <div><strong>Impact potentiel :</strong> {{ item.impact }}</div>
+                <div><strong>Niveau de risque :</strong> {{ item.risk }}</div>
+                <div><strong>Horizon :</strong> {{ item.horizon }}</div>
+              </div>
+            </article>
+          </div>
+        {% endfor %}
       </div>
     </div>
   </details>
 
   <section class="hc-card hc-card-pad mb-3">
-    <div class="hc-admin-kicker mb-1">Conclusion operationnelle</div>
-    <h2 class="hc-section-title mb-2">Conclusion operationnelle</h2>
+    <div class="hc-admin-kicker mb-1">Conclusion opérationnelle</div>
+    <h2 class="hc-section-title mb-2">Conclusion opérationnelle</h2>
     <p class="mb-3">{{ report.operational_conclusion.summary }}</p>
     <div class="hc-report-conclusion-grid">
       <div class="hc-report-conclusion-card">
-        <span class="hc-report-conclusion-card__label">{{ _("Stabilite") }}</span>
+        <span class="hc-report-conclusion-card__label">{{ _("Stabilité") }}</span>
         <strong>{{ report.operational_conclusion.stability }}</strong>
       </div>
       <div class="hc-report-conclusion-card">
@@ -369,13 +395,13 @@
   <section class="row g-3 mb-3">
     <div class="col-lg-6">
       <article class="hc-card hc-card-pad h-100">
-        <h2 class="hc-section-title mb-3">Repartition par categorie</h2>
+        <h2 class="hc-section-title mb-3">Répartition par catégorie</h2>
         {% if report.breakdowns.by_category %}
           <div class="table-responsive">
-            <table class="table table-sm align-middle mb-0">
+            <table class="table table-sm align-middle mb-0 hc-report-table">
               <thead>
                 <tr>
-                  <th>Categorie</th>
+                  <th>Catégorie</th>
                   <th class="text-end">Volume</th>
                 </tr>
               </thead>
@@ -390,17 +416,17 @@
             </table>
           </div>
         {% else %}
-          <p class="hc-muted mb-0">Aucune demande sur la periode selectionnee.</p>
+          <p class="hc-muted mb-0">Aucune demande sur la période sélectionnée.</p>
         {% endif %}
       </article>
     </div>
 
     <div class="col-lg-6">
       <article class="hc-card hc-card-pad h-100">
-        <h2 class="hc-section-title mb-3">Repartition par statut</h2>
+        <h2 class="hc-section-title mb-3">Répartition par statut</h2>
         {% if report.breakdowns.by_status %}
           <div class="table-responsive">
-            <table class="table table-sm align-middle mb-0">
+            <table class="table table-sm align-middle mb-0 hc-report-table">
               <thead>
                 <tr>
                   <th>Statut</th>
@@ -418,7 +444,7 @@
             </table>
           </div>
         {% else %}
-          <p class="hc-muted mb-0">Aucun statut a afficher.</p>
+          <p class="hc-muted mb-0">Aucun statut à afficher.</p>
         {% endif %}
       </article>
     </div>
@@ -427,38 +453,37 @@
   <details class="hc-card hc-card-pad mb-3 hc-report-disclosure">
     <summary>
       <div>
-        <div class="hc-admin-kicker mb-1">Evolution sur la periode</div>
+        <div class="hc-admin-kicker mb-1">Évolution sur la période</div>
         <h2 class="hc-section-title mb-1">Journal de flux</h2>
-        <p class="hc-muted mb-0">Demandes creees et cloturees jour par jour.</p>
+        <p class="hc-muted mb-0">Demandes créées et clôturées jour par jour.</p>
       </div>
     </summary>
 
     <div class="hc-report-disclosure__body">
-
-    {% if report.timeline %}
-      <div class="table-responsive">
-        <table class="table table-sm align-middle mb-0">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th class="text-end">Creees</th>
-              <th class="text-end">Cloturees</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in report.timeline %}
+      {% if report.timeline %}
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0 hc-report-table">
+            <thead>
               <tr>
-                <td>{{ row.date }}</td>
-                <td class="text-end fw-semibold">{{ row.created }}</td>
-                <td class="text-end fw-semibold">{{ row.closed }}</td>
+                <th>Date</th>
+                <th class="text-end">Créées</th>
+                <th class="text-end">Clôturées</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% else %}
-      <p class="hc-muted mb-0">Aucune evolution a afficher sur la periode selectionnee.</p>
-    {% endif %}
+            </thead>
+            <tbody>
+              {% for row in report.timeline %}
+                <tr>
+                  <td>{{ row.date }}</td>
+                  <td class="text-end fw-semibold">{{ row.created }}</td>
+                  <td class="text-end fw-semibold">{{ row.closed }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="hc-muted mb-0">Aucune évolution à afficher sur la période sélectionnée.</p>
+      {% endif %}
     </div>
   </details>
 
@@ -467,43 +492,47 @@
       <div>
         <div class="hc-admin-kicker mb-1">Situations incluses</div>
         <h2 class="hc-section-title mb-1">Demandes du rapport</h2>
-        <p class="hc-muted mb-0">Liste des demandes incluses dans la periode selectionnee.</p>
+        <p class="hc-muted mb-0">Liste des demandes incluses dans la période sélectionnée.</p>
       </div>
-      <span class="badge rounded-pill text-bg-light border">{{ report['items']|length }} elements</span>
+      <span class="badge rounded-pill text-bg-light border">{{ report['items']|length }} éléments</span>
     </summary>
 
     <div class="hc-report-disclosure__body">
-
-    {% if report['items'] %}
-      <div class="table-responsive">
-        <table class="table table-sm align-middle mb-0">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Titre</th>
-              <th>Ville</th>
-              <th>Statut</th>
-              <th>Priorite</th>
-              <th class="text-end">Creee le</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in report['items'] %}
+      {% if report['items'] %}
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0 hc-report-table">
+            <thead>
               <tr>
-                <td>#{{ item.id }}</td>
-                <td class="fw-semibold">{{ item.title }}</td>
-                <td>{{ item.city or '-' }}</td>
-                <td>{{ item.status or '-' }}</td>
-                <td>{{ item.priority or '-' }}</td>
-                <td class="text-end">{{ item.created_at[:10] if item.created_at else '-' }}</td>
+                <th>ID</th>
+                <th>Titre</th>
+                <th>Ville</th>
+                <th>Statut</th>
+                <th>Priorité</th>
+                <th class="text-end">Créée le</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% else %}
-      <p class="hc-muted mb-0">Aucune demande incluse dans cette periode.</p>
-    {% endif %}
+            </thead>
+            <tbody>
+              {% for item in report['items'] %}
+                <tr>
+                  <td>#{{ item.id }}</td>
+                  <td class="fw-semibold">{{ item.title }}</td>
+                  <td>{{ item.city or '-' }}</td>
+                  <td>{{ item.status or '-' }}</td>
+                  <td>{{ item.priority or '-' }}</td>
+                  <td class="text-end">{{ item.created_at[:10] if item.created_at else '-' }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="hc-empty-state hc-report-empty-state">
+          <div class="hc-empty-state__title">Aucune situation incluse dans cette période</div>
+          <div class="hc-empty-state__text">
+            Le périmètre sélectionné ne contient actuellement aucune demande à intégrer à cette édition du rapport.
+          </div>
+        </div>
+      {% endif %}
     </div>
   </details>
 
@@ -511,15 +540,15 @@
     <summary>
       <div>
         <div class="hc-admin-kicker mb-1">{{ _("Annexe") }}</div>
-        <h2 class="hc-section-title mb-1">{{ _("Definition des indicateurs") }}</h2>
+        <h2 class="hc-section-title mb-1">{{ _("Définition des indicateurs") }}</h2>
       </div>
     </summary>
 
     <div class="hc-report-disclosure__body">
       <ul class="mb-0 hc-muted">
-      <li>{{ report.definition.scope }}</li>
-      <li>{{ report.definition.open }}</li>
-      <li>{{ report.definition.resolved }}</li>
+        <li>{{ report.definition.scope }}</li>
+        <li>{{ report.definition.open }}</li>
+        <li>{{ report.definition.resolved }}</li>
         <li>{{ report.definition.stale }}</li>
       </ul>
     </div>

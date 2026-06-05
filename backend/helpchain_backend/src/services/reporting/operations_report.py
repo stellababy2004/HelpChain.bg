@@ -296,8 +296,8 @@ def _kpi_tone(level: str) -> str:
 def _severity_label(level: str) -> str:
     mapping = {
         "critical": "Critique",
-        "high": "Eleve",
-        "moderate": "Modere",
+        "high": "Élevé",
+        "moderate": "Modéré",
         "stable": "Stable",
     }
     return mapping.get(level, "Stable")
@@ -699,16 +699,16 @@ def _build_operational_recommendations(metrics, territorial_pressure: dict | Non
     if unassigned > 0:
         severity = "critical" if unassigned >= 8 else "high"
         recommendations.append({
-            "priority": "Critique" if severity == "critical" else "Eleve",
+            "priority": "Critique" if severity == "critical" else "Élevé",
             "severity": severity,
-            "title": "Reconstituer la chaine d'assignation",
+            "title": "Reconstituer la chaîne d'assignation",
             "description": (
-                f"Une degradation du pilotage operationnel est observee sur les flux d'assignation. "
-                f"{unassigned} situation(s) restent sans referent identifie."
+                f"Une dégradation du pilotage opérationnel est observée sur les flux d'assignation. "
+                f"{unassigned} situation(s) restent sans référent identifié."
             ),
-            "impact": "Risque de rupture de suivi, d'allongement des delais et de perte de tracabilite.",
+            "impact": "Risque de rupture de suivi, d'allongement des délais et de perte de traçabilité.",
             "risk": "Pilotage",
-            "horizon": "Immediat",
+            "horizon": "Immédiat",
             "sort_metric": unassigned,
         })
 
@@ -717,13 +717,13 @@ def _build_operational_recommendations(metrics, territorial_pressure: dict | Non
         recommendations.append({
             "priority": _severity_label(severity),
             "severity": severity,
-            "title": "Relancer les dossiers sans activite recente",
+            "title": "Relancer les dossiers sans activité récente",
             "description": (
-                f"Les signaux de suivi indiquent {sla_breaches} situation(s) en depassement SLA "
-                f"et {stale} situation(s) ouvertes sans activite recente."
+                f"Les signaux de suivi indiquent {sla_breaches} situation(s) en dépassement SLA "
+                f"et {stale} situation(s) ouvertes sans activité récente."
             ),
             "impact": "Risque de glissement des engagements de suivi et d'exposition sur les situations sensibles.",
-            "risk": "Delais",
+            "risk": "Délais",
             "horizon": "72h",
             "sort_metric": max(sla_breaches, stale),
         })
@@ -733,13 +733,13 @@ def _build_operational_recommendations(metrics, territorial_pressure: dict | Non
         recommendations.append({
             "priority": _severity_label(severity),
             "severity": severity,
-            "title": "Stabiliser les delais sur les situations sensibles",
+            "title": "Stabiliser les délais sur les situations sensibles",
             "description": (
-                f"Le temps moyen de resolution atteint {avg_resolution:.1f}h "
+                f"Le temps moyen de résolution atteint {avg_resolution:.1f}h "
                 f"avec {critical_requests} situation(s) critique(s) ouvertes."
             ),
             "impact": "Risque de saturation progressive des files et de sur-exposition sur les cas prioritaires.",
-            "risk": "Capacite",
+            "risk": "Capacité",
             "horizon": "Semaine",
             "sort_metric": int(avg_resolution),
         })
@@ -751,24 +751,24 @@ def _build_operational_recommendations(metrics, territorial_pressure: dict | Non
             "severity": top_pressure["severity"],
             "title": f"Renforcer la couverture {top_pressure['city']}",
             "description": (
-                f"{top_pressure['city']} presente une pression territoriale de niveau {top_pressure['coverage_label'].lower()} "
+                f"{top_pressure['city']} présente une pression territoriale de niveau {top_pressure['coverage_label'].lower()} "
                 f"avec {top_pressure['open_requests']} situation(s) ouvertes pour "
                 f"{top_pressure['active_intervenants']} intervenant(s) actif(s)."
             ),
             "impact": "Risque de concentration territoriale et de couverture insuffisante sur la zone.",
             "risk": "Territorial",
-            "horizon": "72h" if top_pressure["severity"] == "high" else "Immediat",
+            "horizon": "72h" if top_pressure["severity"] == "high" else "Immédiat",
             "sort_metric": int(top_pressure["sort_metric"] or 0),
         })
 
     if assignment_rate < 70 and open_requests > 0:
         recommendations.append({
-            "priority": "Modere",
+            "priority": "Modéré",
             "severity": "moderate",
-            "title": "Reviser les regles de priorisation et d'orientation",
+            "title": "Réviser les règles de priorisation et d'orientation",
             "description": (
-                f"Le taux d'assignation ressort a {assignment_rate:.1f}%. "
-                "Une revue du triage, des disponibilites et des capacites est recommandee."
+                f"Le taux d'assignation ressort à {assignment_rate:.1f}%. "
+                "Une revue du triage, des disponibilités et des capacités est recommandée."
             ),
             "impact": "Risque d'inefficience du pilotage si la file augmente plus vite que l'affectation.",
             "risk": "Processus",
@@ -782,10 +782,10 @@ def _build_operational_recommendations(metrics, territorial_pressure: dict | Non
             "severity": "stable",
             "title": "Maintenir le rythme de supervision",
             "description": (
-                "Les indicateurs restent maitrises. Il convient de maintenir le niveau de tracabilite, "
+                "Les indicateurs restent maîtrisés. Il convient de maintenir le niveau de traçabilité, "
                 "de revue de file et de coordination territoriale."
             ),
-            "impact": "Faible risque a court terme sous reserve de conservation des routines de pilotage.",
+            "impact": "Faible risque à court terme sous réserve de conservation des routines de pilotage.",
             "risk": "Supervision",
             "horizon": "Semaine",
             "sort_metric": 0,
@@ -805,20 +805,20 @@ def _compute_operational_severity(metrics):
         return {
             "level": "critical",
             "label": "Critique",
-            "message": "Des situations necessitent une intervention immediate de pilotage.",
+            "message": "Des situations nécessitent une intervention immédiate de pilotage.",
         }
 
     if stale >= 5 or unassigned >= 5 or avg_resolution >= 72 or sla_breaches >= 4:
         return {
             "level": "warning",
             "label": "Attention requise",
-            "message": "Une tension operationnelle est detectee sur les flux de suivi.",
+            "message": "Une tension opérationnelle est détectée sur les flux de suivi.",
         }
 
     return {
         "level": "stable",
         "label": "Stable",
-        "message": "Les indicateurs operationnels restent maitrises sur la periode.",
+        "message": "Les indicateurs opérationnels restent maîtrisés sur la période.",
     }
 
 
@@ -830,30 +830,30 @@ def _build_executive_summary(metrics):
     assignment_rate = float(metrics.get("assignment_rate", 0.0) or 0.0)
 
     activity_label = (
-        "activite soutenue"
+        "activité soutenue"
         if open_requests >= 20
-        else "activite moderee"
+        else "activité modérée"
         if open_requests >= 10
-        else "activite limitee"
+        else "activité limitée"
     )
 
     resolution_label = (
-        "des delais de resolution eleves"
+        "des délais de résolution élevés"
         if avg_resolution >= 96
-        else "des delais de resolution maitrises"
+        else "des délais de résolution maîtrisés"
     )
 
     assignment_label = (
         "Le taux d'assignation reste solide."
         if assignment_rate >= 70
-        else "Le taux d'assignation necessite une attention operationnelle."
+        else "Le taux d'assignation nécessite une attention opérationnelle."
     )
 
     return (
         f"Le pilotage montre une {activity_label} avec "
-        f"{open_requests} situations ouvertes, dont {unassigned} non assignees. "
-        f"La periode presente {resolution_label} (moyenne: {avg_resolution:.1f}h). "
-        f"{stale} situations necessitent une relance. {assignment_label}"
+        f"{open_requests} situations ouvertes, dont {unassigned} non assignées. "
+        f"La période présente {resolution_label} (moyenne: {avg_resolution:.1f}h). "
+        f"{stale} situations nécessitent une relance. {assignment_label}"
     )
 
 
