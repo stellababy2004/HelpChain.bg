@@ -14,8 +14,8 @@
       const action = "Review explainable signal";
       const scoreExplain = (s.score_components || [])
         .map(component => `+${component.points} ${component.label}`)
-        .join(" · ") || "Explain: Not enough data available";
-      const valueLabel = s.value_label || "Not enough data available";
+        .join(" · ") || "Score explanation unavailable.";
+      const valueLabel = s.value_label || "No CRM opportunity linked.";
 
       return `
         <div style="

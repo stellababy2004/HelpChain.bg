@@ -10,6 +10,7 @@ from .institutional_intent import (
     INSTITUTIONAL_FIT_PATHS,
     TRUST_GOVERNANCE_PATHS,
 )
+from .display_safety import safe_recommendation, safe_territory
 
 PILOT_PATHS = {"/professionnels/pilote", "/demander-acces", "/demo"}
 STRONG_TERRITORY_SOURCES = {"access_request_city", "professional_lead_city"}
@@ -278,8 +279,12 @@ def recommend_founder_action(summary: dict[str, object]) -> str:
     dominant_interest = str(summary.get("dominant_interest") or "").strip()
     pilot_readiness = str(summary.get("pilot_readiness_estimate") or "").strip()
     confidence = str(summary.get("confidence") or "weak")
-    if priority == "Strategic" and confidence in {"moderate", "strong"}:
+    if confidence == "weak":
+        return "Insufficient evidence"
+    if priority == "Strategic" and confidence == "strong":
         return "Prioritize founder outreach this week"
+    if priority == "Strategic" and confidence == "moderate":
+        return "Schedule follow-up"
     if friction == "trust_governance_review_without_conversion":
         return "Governance reassurance recommended"
     if pilot_readiness in {"elevated", "strong"}:
@@ -288,14 +293,14 @@ def recommend_founder_action(summary: dict[str, object]) -> str:
         return "Strengthen deployment messaging"
     if dominant_interest == "institutional_fit":
         return "Confirm institutional fit and pilot perimeter"
-    return "Observe and monitor"
+    return "Continue monitoring"
 
 
 def build_territory_summary(rows: Iterable[dict]) -> dict[str, object]:
     evidence = [row for row in rows or [] if isinstance(row, dict)]
-    territory = normalize_territory_name(
+    territory = safe_territory(normalize_territory_name(
         next((row.get("territory") for row in evidence if row.get("territory")), "")
-    )
+    ))
     signals = compute_territory_signals(evidence)
     intensity = classify_territorial_intensity(signals["score"])
     summary = {
@@ -319,7 +324,10 @@ def build_territory_summary(rows: Iterable[dict]) -> dict[str, object]:
         "sources": signals["sources"],
         "intent_tiers": signals["intent_tiers"],
     }
-    summary["recommended_action"] = recommend_founder_action(summary)
+    summary["recommended_action"] = safe_recommendation(
+        recommend_founder_action(summary),
+        confidence=str(summary.get("confidence") or "weak"),
+    )
     return summary
 
 

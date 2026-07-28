@@ -111,7 +111,7 @@
   function formatDepartment(point) {
     var number = point.departmentNumber || point.department_code || "";
     var name = point.departmentName || point.department || "";
-    return String((number + " " + name).trim() || "Not enough data available");
+    return String((number + " " + name).trim() || "No territory identified yet.");
   }
 
   function formatEuro(value) {
@@ -134,8 +134,8 @@
     var meta = getPriorityMeta(point.priority);
     var sourceLabel = String(point.intelligence_source || "").indexOf("observed") !== -1
       ? "Signal observe"
-      : "Not enough data available";
-    var structuresLabel = point.structures_label || point.structures || "Not enough data available";
+      : "No qualified audience signals detected yet.";
+    var structuresLabel = point.structures_label || point.structures || "No organization structure data linked.";
     return [
       '<div class="hc-audience-popup">',
       '<div class="hc-audience-popup__eyebrow">' + escapeHtml(meta.popupEyebrow) + "</div>",
@@ -144,7 +144,7 @@
       '<span class="hc-audience-popup__dept">Departement ' + escapeHtml(formatDepartment(point)) + "</span>",
       "</div>",
       '<div class="hc-audience-popup__stats">',
-      "<span><strong>" + escapeHtml(sourceLabel) + "</strong><em>" + escapeHtml(point.needs || "Not enough data available") + "</em></span>",
+      "<span><strong>" + escapeHtml(sourceLabel) + "</strong><em>" + escapeHtml(point.needs || "No qualified audience signals detected yet.") + "</em></span>",
       "<span><strong>Structures</strong><em>" + escapeHtml(structuresLabel) + "</em></span>",
       "<span><strong>Priorite</strong><em>" + escapeHtml(point.priority) + "</em></span>",
       "</div>",
@@ -587,9 +587,9 @@
     }
     return {
       title: "Opportunite cette semaine",
-      modeLabel: "Not enough data available",
+      modeLabel: "Unavailable",
       label: "Niveau d'activité",
-      context: "Not enough data available: no CRM opportunity amount is linked to audience signals.",
+      context: "No CRM opportunity is linked to audience signals.",
       value: estimatedOpportunityThisWeek(),
     };
   }
@@ -846,8 +846,8 @@
   function updateSidebar(point) {
     var detailCard = document.getElementById("audienceMapDetailCard");
     setText("audienceMapDetailCity", point.city);
-    setText("audienceMapDetailDemand", point.needs || "Not enough data available");
-    setText("audienceMapDetailStructures", point.structures_label || point.structures || "Not enough data available");
+    setText("audienceMapDetailDemand", point.needs || "No qualified audience signals detected yet.");
+    setText("audienceMapDetailStructures", point.structures_label || point.structures || "No organization structure data linked.");
     setText("audienceMapDetailDepartment", formatDepartment(point));
     setText("audienceMapDetailPriority", point.priority);
     setText("audienceMapDetailIntensity", getPriorityMeta(point.priority).intensity);
@@ -914,7 +914,7 @@
         '<span class="audience-inline-tag">Signal analytique</span>',
         '<span class="audience-radar-row__badge">' + escapeHtml(row.priority) + "</span>",
         '<strong>Signal: ' + escapeHtml(row.score) + "</strong>",
-        '<em>Montant: Not enough data available</em>',
+        '<em>Montant: No CRM opportunity linked.</em>',
         "</span>",
       ].join("");
       button.addEventListener("click", function () {
@@ -974,7 +974,7 @@
     if (!recommendations.length) {
       recommendationsEl.innerHTML = [
         '<div class="hc-empty-state">',
-        '<div class="hc-empty-state__title">Not enough data available</div>',
+        '<div class="hc-empty-state__title">No priority recommendation available.</div>',
         '<div class="hc-empty-state__text">No recommendation is shown until it can be traced to observed signals.</div>',
         "</div>",
       ].join("");
@@ -1155,7 +1155,7 @@
       return;
     }
     var mode = estimatedOpportunityMode();
-    estimatedOpportunityEl.textContent = "Not enough data available";
+    estimatedOpportunityEl.textContent = "No CRM opportunity linked.";
     if (opportunityTitleEl) {
       opportunityTitleEl.innerHTML =
         escapeHtml(mode.title) +
@@ -1239,11 +1239,11 @@
         button.type = "button";
         button.className = "audience-city-item";
         button.setAttribute("data-city-slug", point.slug);
-        button.setAttribute("title", point.city + " - " + (point.needs || "Not enough data available") + " signaux");
+        button.setAttribute("title", point.city + " - " + (point.needs || "No qualified audience signals detected yet.") + " signaux");
         button.innerHTML =
           '<span class="audience-city-item__rank">' + (index + 1) + '.</span>' +
           '<span class="audience-city-item__label">' + escapeHtml(point.city) + '</span>' +
-          '<span class="audience-city-item__meta">' + escapeHtml(point.needs || "Not enough data available") + ' signaux</span>' +
+          '<span class="audience-city-item__meta">' + escapeHtml(point.needs || "No qualified audience signals detected yet.") + ' signaux</span>' +
           '<span class="audience-city-item__arrow" aria-hidden="true">›</span>';
         button.addEventListener("click", function () {
           focusCity(point.slug);

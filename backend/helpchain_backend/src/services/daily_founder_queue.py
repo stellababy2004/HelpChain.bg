@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 from typing import Any
 
+from .display_safety import safe_organization, safe_recommendation, safe_summary
 
 URGENCY_WEIGHTS = {
     "high": 40,
@@ -92,19 +93,20 @@ def explain_daily_priority(row: dict[str, Any]) -> list[str]:
 
 
 def recommended_daily_action(row: dict[str, Any]) -> str:
+    confidence = str(row.get("territory_confidence") or row.get("confidence") or "weak")
     if row.get("recommended_outreach_action"):
-        return str(row["recommended_outreach_action"])
+        return safe_recommendation(row["recommended_outreach_action"], confidence=confidence)
 
     if row.get("recommended_relationship_action"):
-        return str(row["recommended_relationship_action"])
+        return safe_recommendation(row["recommended_relationship_action"], confidence=confidence)
 
     if row.get("account_recommendation"):
-        return str(row["account_recommendation"])
+        return safe_recommendation(row["account_recommendation"], confidence=confidence)
 
     if row.get("recommended_action"):
-        return str(row["recommended_action"])
+        return safe_recommendation(row["recommended_action"], confidence=confidence)
 
-    return "Continue observing"
+    return safe_recommendation("", confidence=confidence)
 
 
 def build_daily_founder_queue(rows: list[dict[str, Any]], *, limit: int = 5) -> list[dict[str, Any]]:
@@ -114,6 +116,8 @@ def build_daily_founder_queue(rows: list[dict[str, Any]], *, limit: int = 5) -> 
         priority_score = compute_daily_priority_score(row)
         item = {
             **row,
+            "organization": safe_organization(row.get("organization") or row.get("account_name")),
+            "summary": safe_summary(row.get("summary") or row.get("why_hot")),
             "daily_priority_score": priority_score,
             "daily_priority_reasons": explain_daily_priority(row),
             "daily_recommended_action": recommended_daily_action(row),
@@ -138,5 +142,5 @@ def summarize_daily_founder_queue(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "total_candidates": len(rows or []),
         "top_count": len(queue),
         "highest_score": queue[0]["daily_priority_score"] if queue else 0,
-        "top_action": queue[0]["daily_recommended_action"] if queue else "Continue observing",
+        "top_action": queue[0]["daily_recommended_action"] if queue else "No priority recommendation available.",
     }

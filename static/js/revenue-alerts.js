@@ -19,8 +19,8 @@
       <div>
         <strong>${a.level}</strong>
         <span>${a.message}</span>
-        <small>Session ${a.session} · score ${a.score} · ${a.estimated_value_label || "Not enough data available"}</small>
-        <small>${(a.score_components || []).map(c => `+${c.points} ${c.label}`).join(" · ") || "Explain: Not enough data available"}</small>
+        <small>Session ${a.session} · score ${a.score} · ${a.estimated_value_label || "No CRM opportunity linked."}</small>
+        <small>${(a.score_components || []).map(c => `+${c.points} ${c.label}`).join(" · ") || "Score explanation unavailable."}</small>
       </div>
       <div class="hc-hot-alert__pages">
         ${(a.pages || []).map(p => `<span>${p}</span>`).join("")}

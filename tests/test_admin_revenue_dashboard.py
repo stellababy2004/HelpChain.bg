@@ -146,7 +146,7 @@ def test_admin_revenue_no_crash_if_telemetry_absent(
 
     assert response.status_code == 200
     assert "Telemetry Safe" in html
-    assert "No hot anonymous sessions available" in html
+    assert "No hot unidentified sessions available" in html
 
 
 def test_admin_revenue_uses_institutional_intent_recommendation(

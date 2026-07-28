@@ -12,6 +12,7 @@ from .founder_memory_engine import (
     build_founder_memory_timeline,
     summarize_founder_memory,
 )
+from .display_safety import safe_organization, safe_recommendation
 from .territorial_intelligence import normalize_territory_name
 
 RELATIONSHIP_STATE_ORDER = {
@@ -66,6 +67,10 @@ def _int(value: Any) -> int:
         return int(value or 0)
     except (TypeError, ValueError):
         return 0
+
+
+def _safe_action(value: Any) -> str:
+    return safe_recommendation(value, confidence="low")
 
 
 def _read(row: Any, key: str, default=None):
@@ -182,11 +187,10 @@ def detect_state_transition(
 
     return {
         "uid": str(current.get("uid") or previous.get("uid") or ""),
-        "organization": str(
+        "organization": safe_organization(
             current.get("organization")
             or previous.get("organization")
             or current.get("organization_state", {}).get("organization")
-            or "Institutional account"
         ),
         "transition_labels": transition_labels,
         "from_relationship_state": previous.get("relationship_state"),
@@ -220,7 +224,7 @@ def merge_founder_memory_with_actions(
 
     return {
         "uid": str(payload.get("uid") or ""),
-        "organization": str(payload.get("organization") or "Institutional account"),
+        "organization": safe_organization(payload.get("organization")),
         "timeline_events": list(summary.get("timeline_events") or []),
         "founder_touch_history": [
             event
@@ -229,11 +233,10 @@ def merge_founder_memory_with_actions(
         ],
         "last_founder_touch": _as_utc_naive(summary.get("last_founder_touch")),
         "institutional_temperature": str(summary.get("relationship_temperature") or "cold"),
-        "next_recommended_action": str(
+        "next_recommended_action": _safe_action(
             action.get("action_label")
             or action.get("recommended_founder_action")
             or payload.get("recommended_founder_action")
-            or "Wait before next outreach"
         ),
         "followup_urgency": dict(action.get("urgency") or payload.get("followup_urgency") or {}),
     }
@@ -269,12 +272,12 @@ def build_founder_operational_state(
 
     state = {
         "uid": str(payload.get("uid") or ""),
-        "organization": str(payload.get("organization") or "Institutional account"),
+        "organization": safe_organization(payload.get("organization")),
         "organization_state": {
             "uid": str(payload.get("uid") or ""),
             "id": payload.get("id"),
             "kind": str(payload.get("kind") or ""),
-            "organization": str(payload.get("organization") or "Institutional account"),
+            "organization": safe_organization(payload.get("organization")),
             "stage": str(payload.get("stage") or ""),
             "city": str(payload.get("city") or ""),
             "territory": normalize_territory_name(payload.get("territory") or payload.get("city")) or None,
@@ -284,7 +287,7 @@ def build_founder_operational_state(
         "institutional_temperature": str(merged.get("institutional_temperature") or "cold"),
         "pilot_progression": pilot_progression,
         "last_founder_touch": last_founder_touch.isoformat() if last_founder_touch else None,
-        "next_recommended_action": str(merged.get("next_recommended_action") or "Wait before next outreach"),
+        "next_recommended_action": _safe_action(merged.get("next_recommended_action")),
         "stalled_since": stalled_since,
         "territory_context": {
             "territory": normalize_territory_name(payload.get("territory") or payload.get("city")) or None,
@@ -299,7 +302,7 @@ def build_founder_operational_state(
             "relationship_state": relationship_state,
             "pilot_progression": pilot_progression,
             "institutional_temperature": str(merged.get("institutional_temperature") or "cold"),
-            "next_recommended_action": str(merged.get("next_recommended_action") or "Wait before next outreach"),
+            "next_recommended_action": _safe_action(merged.get("next_recommended_action")),
             "last_founder_touch": last_founder_touch.isoformat() if last_founder_touch else None,
         },
     }
@@ -331,10 +334,10 @@ def summarize_founder_operational_state(
     next_founder_actions = [
         {
             "uid": str(item.get("uid") or ""),
-            "organization": str(item.get("organization") or "Institutional account"),
+            "organization": safe_organization(item.get("organization")),
             "relationship_state": str(item.get("relationship_state") or "unknown"),
             "pilot_progression": str(item.get("pilot_progression") or "none"),
-            "next_recommended_action": str(item.get("next_recommended_action") or "Wait before next outreach"),
+            "next_recommended_action": _safe_action(item.get("next_recommended_action")),
         }
         for item in states
     ]

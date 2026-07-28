@@ -15,18 +15,20 @@
 {% block admin_content %}
 {% macro audience_metric_meta(meta) -%}
   <div class="hc-kpi__context">
-    Metric: {{ meta.metric_key or 'Not enough data available' }}
-    · Owner: {{ meta.owner or 'Not enough data available' }}
-    · Refresh: {{ meta.refresh_interval_seconds or 'Not enough data available' }}s
-  </div>
-  <div class="hc-kpi__context">
-    Source: {{ (meta.source_tables or [])|join(', ') or 'Not enough data available' }}
-    · Updated: {{ meta.last_updated.strftime('%Y-%m-%d %H:%M:%S UTC') if meta.last_updated else 'Not enough data available' }}
+    Updated: {{ meta.last_updated.strftime('%Y-%m-%d %H:%M:%S UTC') if meta.last_updated else 'Waiting for analytics data' }}
     · Confidence: {{ meta.confidence or 'low' }}
   </div>
-  <div class="hc-kpi__context">Formula: {{ meta.formula_version or 'Not enough data available' }}</div>
-  <div class="hc-kpi__context">Explain: {{ meta.explain or 'Not enough data available' }}</div>
-  <div class="hc-kpi__context">Query: {{ meta.query_origin or 'Not enough data available' }}</div>
+  <div class="hc-kpi__context">{{ meta.explain or 'Waiting for sufficient analytics data.' }}</div>
+  {% if analytics_developer_mode %}
+    <div class="hc-kpi__context">
+      Metric: {{ meta.metric_key or 'Unavailable' }}
+      · Owner: {{ meta.owner or 'Unavailable' }}
+      · Refresh: {{ meta.refresh_interval_seconds or 'Unavailable' }}s
+    </div>
+    <div class="hc-kpi__context">Source: {{ (meta.source_tables or [])|join(', ') or 'Unavailable' }}</div>
+    <div class="hc-kpi__context">Formula: {{ meta.formula_version or 'Unavailable' }}</div>
+    <div class="hc-kpi__context">Query: {{ meta.query_origin or 'Unavailable' }}</div>
+  {% endif %}
 {%- endmacro %}
 <div
   class="hc-admin-wrap hc-admin-shell hc-admin-shell--wide hc-map-page hc-map-page--audience"
@@ -151,25 +153,25 @@
                 {% set page_label = row.label|lower %}
                 {% if '/offre' in page_label %}
                   {% set page_meaning = 'intention forte' %}
-                  {% set page_weight = 'Not enough data available' %}
+                  {% set page_weight = 'Unavailable' %}
                 {% elif '/demo' in page_label %}
                   {% set page_meaning = 'intention confirmée' %}
-                  {% set page_weight = 'Not enough data available' %}
+                  {% set page_weight = 'Unavailable' %}
                 {% elif '/deploiement' in page_label %}
                   {% set page_meaning = 'intérêt opérationnel' %}
-                  {% set page_weight = 'Not enough data available' %}
+                  {% set page_weight = 'Unavailable' %}
                 {% elif '/securite' in page_label %}
                   {% set page_meaning = 'point de confiance' %}
-                  {% set page_weight = 'Not enough data available' %}
+                  {% set page_weight = 'Unavailable' %}
                 {% elif '/contact' in page_label %}
                   {% set page_meaning = 'prise de contact possible' %}
-                  {% set page_weight = 'Not enough data available' %}
+                  {% set page_weight = 'Unavailable' %}
                 {% elif '/professionnels' in page_label %}
                   {% set page_meaning = 'qualification écosystème' %}
-                  {% set page_weight = 'Not enough data available' %}
+                  {% set page_weight = 'Unavailable' %}
                 {% else %}
                   {% set page_meaning = 'découverte / orientation' %}
-                  {% set page_weight = 'Not enough data available' %}
+                  {% set page_weight = 'Unavailable' %}
                 {% endif %}
                 <tr>
                   <td><strong>{{ row.label_display or row.label }}</strong></td>
@@ -257,36 +259,36 @@
         <div class="p-3">
           <div class="hc-audience-detailCard mb-3" id="audienceMapDetailCard">
             <div class="hc-audience-detailCard__eyebrow">Ville active</div>
-            <h2 class="hc-audience-detailCard__title" id="audienceMapDetailCity">Not enough data available</h2>
+            <h2 class="hc-audience-detailCard__title" id="audienceMapDetailCity">No territory identified yet.</h2>
             <div class="hc-audience-detailGrid audience-sidebar-kpis">
               <div class="hc-audience-detailMetric audience-kpi-card">
                 <span class="hc-audience-detailMetric__label">Signaux observés <span class="audience-data-tag audience-data-tag--estimated">Analyse territoriale</span></span>
-                <strong id="audienceMapDetailDemand">Not enough data available</strong>
+                <strong id="audienceMapDetailDemand">No qualified audience signals detected yet.</strong>
               </div>
               <div class="hc-audience-detailMetric audience-kpi-card">
                 <span class="hc-audience-detailMetric__label">Structures</span>
-                <strong id="audienceMapDetailStructures">Not enough data available</strong>
+                <strong id="audienceMapDetailStructures">No organization structure data linked.</strong>
               </div>
               <div class="hc-audience-detailMetric audience-kpi-card">
                 <span class="hc-audience-detailMetric__label">Département</span>
-                <strong id="audienceMapDetailDepartment">Not enough data available</strong>
+                <strong id="audienceMapDetailDepartment">No territory identified yet.</strong>
               </div>
               <div class="hc-audience-detailMetric audience-kpi-card">
                 <span class="hc-audience-detailMetric__label">Priorite <span class="audience-data-tag audience-data-tag--estimated">Analyse territoriale</span></span>
-                <strong id="audienceMapDetailPriority">Not enough data available</strong>
+                <strong id="audienceMapDetailPriority">No priority recommendation available.</strong>
               </div>
               <div class="hc-audience-detailMetric audience-kpi-card">
                 <span class="hc-audience-detailMetric__label">Intensité territoriale <span class="audience-data-tag audience-data-tag--estimated">Analyse territoriale</span></span>
-                <strong id="audienceMapDetailIntensity">Not enough data available</strong>
+                <strong id="audienceMapDetailIntensity">Waiting for sufficient analytics data.</strong>
               </div>
             </div>
             <div class="hc-audience-detailLine">
               <span class="hc-audience-detailLine__label">Recommandation opérationnelle</span>
-              <p id="audienceMapDetailRecommendation" class="hc-audience-detailRecommendation mb-0">Not enough data available</p>
+              <p id="audienceMapDetailRecommendation" class="hc-audience-detailRecommendation mb-0">No priority recommendation available.</p>
             </div>
             <div class="hc-audience-detailLine">
               <span class="hc-audience-detailLine__label">Action suggérée</span>
-              <p id="audienceMapDetailAction" class="hc-audience-detailRecommendation mb-0">Not enough data available</p>
+              <p id="audienceMapDetailAction" class="hc-audience-detailRecommendation mb-0">Continue monitoring.</p>
             </div>
           </div>
 
@@ -324,7 +326,7 @@
           </div>
 
           <div class="audience-sidebar-footer mt-3">
-            <span class="hc-muted small">Dernière mise à jour : {{ audience.last_updated.strftime('%Y-%m-%d %H:%M:%S UTC') if audience.last_updated else 'Not enough data available' }}</span>
+            <span class="hc-muted small">Dernière mise à jour : {{ audience.last_updated.strftime('%Y-%m-%d %H:%M:%S UTC') if audience.last_updated else 'Waiting for analytics data' }}</span>
           </div>
         </div>
       </div>

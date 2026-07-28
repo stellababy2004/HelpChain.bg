@@ -4,6 +4,7 @@ from collections import Counter
 from datetime import UTC, datetime
 from typing import Any, Iterable
 
+from .display_safety import safe_organization, safe_territory
 from .institutional_intent import TRUST_GOVERNANCE_PATHS, normalize_intent_path
 from .territorial_intelligence import normalize_territory_name
 
@@ -434,8 +435,8 @@ def detect_stalled_opportunities(
         stalled.append(
             {
                 "uid": str(payload.get("uid") or ""),
-                "organization": str(payload.get("organization") or "Institutional account"),
-                "territory": normalize_territory_name(payload.get("city") or payload.get("territory")) or None,
+                "organization": safe_organization(payload.get("organization")),
+                "territory": safe_territory(normalize_territory_name(payload.get("city") or payload.get("territory"))),
                 "relationship_temperature": "stalled",
                 "stalled_days": stalled_days,
                 "reason": f"No response for {stalled_days} days after founder touch",

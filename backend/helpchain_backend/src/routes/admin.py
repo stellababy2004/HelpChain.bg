@@ -207,6 +207,14 @@ from ..services.founder_cockpit import (
     group_founder_signals_by_territory,
     summarize_founder_actions,
 )
+from ..services.display_safety import (
+    safe_organization,
+    safe_recommendation,
+    safe_summary,
+    safe_territory,
+    safe_unavailable,
+    safe_visitor,
+)
 
 from ..services.daily_founder_queue import (
     build_daily_founder_queue,
@@ -10224,7 +10232,7 @@ def _build_audience_map_context() -> dict:
             structures = None
             intelligence_source = "observed"
             priority_label = "Observation"
-            recommendation_label = "Not enough data available"
+            recommendation_label = "No priority recommendation available."
         department_name = AUDIENCE_CITY_MARKERS.get(normalized_label, {}).get("department", "Ile-de-France")
         department_code = _audience_department_code(point["label"]) or "--"
         business_points.append(
@@ -10242,7 +10250,7 @@ def _build_audience_map_context() -> dict:
                 "estimated_demands": estimated_demands,
                 "needs": estimated_demands,
                 "structures": structures,
-                "structures_label": structures if structures is not None else "Not enough data available",
+                "structures_label": structures if structures is not None else "No organization structure data linked.",
                 "priority": priority_label,
                 "recommendation": recommendation_label,
                 "observed_signals": observed,
@@ -11028,7 +11036,7 @@ def _metric_unavailable(reason: str) -> dict[str, object]:
     return {
         "available": False,
         "value": None,
-        "display": "Not enough data available",
+        "display": reason,
         "reason": reason,
     }
 
@@ -11107,6 +11115,12 @@ def _metric_payload(
         refresh_interval_seconds=refresh_interval_seconds,
     )
     return payload
+
+
+def _analytics_developer_mode() -> bool:
+    if current_app.config.get("ANALYTICS_DEVELOPER_MODE"):
+        return True
+    return (request.args.get("analytics_mode") or "").strip().lower() == "developer"
 
 
 def _persist_metric_registry_entry(
@@ -11218,7 +11232,7 @@ def _revenue_amount(row, _item_type: str) -> int | None:
 
 
 def _unavailable_revenue_amount() -> dict[str, object]:
-    return _metric_unavailable("No CRM opportunity amount is stored for this item.")
+    return _metric_unavailable("No CRM opportunity linked.")
 
 
 def _revenue_city_relevance(city: str | None) -> int:
@@ -11592,7 +11606,7 @@ def _build_founder_operational_context(rows: list[dict[str, object]]) -> dict[st
     memory_timeline = [
         {
             "uid": str(item.get("uid") or ""),
-            "organization": str(item.get("organization") or "Institutional account"),
+            "organization": safe_organization(item.get("organization")),
             "relationship_temperature": str(item.get("relationship_temperature") or "cold"),
             "timeline_events": list(item.get("timeline_events") or [])[:4],
             "last_timeline_event": item.get("last_timeline_event"),
@@ -11856,7 +11870,7 @@ def _revenue_row_from_professional_lead(lead: ProfessionalLead) -> SimpleNamespa
         next_action_state=next_action_state,
         next_action_label=_revenue_next_action_label(next_action_at, next_action_note),
         estimated_value=value,
-        estimated_value_display=value if value is not None else "Not enough data available",
+        estimated_value_display=value if value is not None else "No CRM opportunity linked.",
         estimated_value_available=value is not None,
         estimated_value_reason=value_payload.get("reason", ""),
         weighted_value=int(value * REVENUE_STAGE_WEIGHTS.get(stage, 0.05)) if value is not None else None,
@@ -11967,7 +11981,7 @@ def _revenue_row_from_access_request(row: OrganizationAccessRequest) -> SimpleNa
         next_action_state=next_action_state,
         next_action_label=_revenue_next_action_label(next_action_at, next_action_note),
         estimated_value=value,
-        estimated_value_display=value if value is not None else "Not enough data available",
+        estimated_value_display=value if value is not None else "No CRM opportunity linked.",
         estimated_value_available=value is not None,
         estimated_value_reason=value_payload.get("reason", ""),
         weighted_value=int(value * REVENUE_STAGE_WEIGHTS.get(stage, 0.05)) if value is not None else None,
@@ -12335,6 +12349,7 @@ def admin_revenue():
             active_filters=any(filters.values()),
             radar=_build_audience_map_context(),
             founder_cockpit=founder_cockpit,
+            analytics_developer_mode=_analytics_developer_mode(),
         ),
         200,
     )
@@ -12456,7 +12471,7 @@ def admin_high_intent_sessions():
     grouped = defaultdict(list)
 
     for row in rows:
-        key = row.user_session or row.user_ip or "anonymous"
+        key = row.user_session or row.user_ip or "unknown_visitor"
         grouped[key].append(row)
 
     sessions = []
@@ -12524,8 +12539,8 @@ def admin_high_intent_sessions():
             })
 
         sessions.append({
-            "uid": str(session_id),
-            "session_id": session_id[:16],
+            "uid": safe_visitor(session_id),
+            "session_id": safe_visitor(str(session_id)[:16]),
             "score": score,
             "intent": intent,
             "tier": intent_summary["tier"],
@@ -12534,11 +12549,11 @@ def admin_high_intent_sessions():
             "trust_friction_detected": bool(intent_summary["trust_friction_detected"]),
             "friction_reason": intent_summary["friction_reason"],
             "session_type": intent_summary["label"],
-            "recommendation": intent_summary["recommended_action"],
+            "recommendation": safe_recommendation(intent_summary["recommended_action"], confidence="low"),
             "path": deduped[:10],
             "events": public_event_count,
             "last_seen": str(events[-1].created_at),
-            "territory": territory or None,
+            "territory": safe_territory(territory) if territory else "Unknown territory",
         })
 
     territory_lookup = _territorial_summary_lookup(detect_priority_territories(territory_rows))
@@ -12558,12 +12573,15 @@ def admin_high_intent_sessions():
         for item in build_founder_priority_queue(sessions)
     }
     for row in sessions:
-        item = founder_lookup.get(str(row.get("session_id") or ""))
+        item = founder_lookup.get(str(row.get("uid") or ""))
         if not item:
             continue
         row["opportunity_level"] = item.get("opportunity_level")
         row["operational_maturity"] = item.get("operational_maturity")
-        row["recommended_action"] = item.get("recommended_action")
+        row["recommended_action"] = safe_recommendation(
+            item.get("recommended_action"),
+            confidence=str(item.get("confidence") or "weak"),
+        )
         row["possible_friction"] = item.get("possible_friction")
         row["evidence_summary"] = item.get("evidence_summary")
 
@@ -12586,6 +12604,7 @@ def admin_audience_map():
         "admin/audience_map.html",
         audience=_build_audience_map_context(),
         intent_paths=AUDIENCE_INTENT_PATHS,
+        analytics_developer_mode=_analytics_developer_mode(),
     )
 
 

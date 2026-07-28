@@ -11,17 +11,20 @@
 {% macro metric_meta(metric) -%}
   {% set meta = metric.meta if metric and metric.meta else {} %}
   <small class="hc-muted d-block mt-1">
-    Metric: {{ meta.metric_key or 'Not enough data available' }}
-    · Owner: {{ meta.owner or 'Not enough data available' }}
-    · Refresh: {{ meta.refresh_interval_seconds or 'Not enough data available' }}s
-  </small>
-  <small class="hc-muted d-block">
-    Source: {{ (meta.source_tables or [])|join(', ') or 'Not enough data available' }}
-    · Updated: {{ meta.last_updated.strftime('%Y-%m-%d %H:%M:%S UTC') if meta.last_updated else 'Not enough data available' }}
+    Updated: {{ meta.last_updated.strftime('%Y-%m-%d %H:%M:%S UTC') if meta.last_updated else 'Waiting for analytics data' }}
     · Confidence: {{ meta.confidence or 'low' }}
   </small>
-  <small class="hc-muted d-block">Explain: {{ meta.explain or metric.reason or 'Not enough data available' }}</small>
-  <small class="hc-muted d-block">Query: {{ meta.query_origin or 'Not enough data available' }}</small>
+  <small class="hc-muted d-block">{{ meta.explain or metric.reason or 'Waiting for sufficient analytics data.' }}</small>
+  {% if analytics_developer_mode %}
+    <small class="hc-muted d-block">
+      Metric: {{ meta.metric_key or 'Unavailable' }}
+      · Owner: {{ meta.owner or 'Unavailable' }}
+      · Refresh: {{ meta.refresh_interval_seconds or 'Unavailable' }}s
+    </small>
+    <small class="hc-muted d-block">Source: {{ (meta.source_tables or [])|join(', ') or 'Unavailable' }}</small>
+    <small class="hc-muted d-block">Query: {{ meta.query_origin or 'Unavailable' }}</small>
+    <small class="hc-muted d-block">Formula: {{ meta.formula_version or 'Unavailable' }}</small>
+  {% endif %}
 {%- endmacro %}
 <div class="hc-revenue-page hc-admin-module-page hc-admin-module-page--pipeline">
 <div class="hc-admin-wrap hc-admin-wrap--wide hc-admin-shell hc-admin-list-shell">
@@ -89,13 +92,14 @@
             <article class="hc-founder-cockpit__item">
               <div class="d-flex justify-content-between gap-2">
                 <strong class="text-truncate">
-                  {{ item.organization or item.account_name or "Institutional account" }}
+                  {{ item.organization or item.account_name or "Unknown organization" }}
                 </strong>
 
                 <span class="badge text-bg-primary">
-                  {{ item.daily_priority_score }}
+                  {{ item.daily_priority_score if item.daily_priority_score is not none else 'Unavailable' }}
                 </span>
               </div>
+              <div class="small mt-2">{{ item.summary or 'No summary available.' }}</div>
 
               <div class="hc-muted small mt-1">
                 {{ item.relationship_stage|replace('_', ' ') }}
@@ -115,7 +119,7 @@
 
               <div class="small mt-2">
                 <strong>{{ _('Action:') }}</strong>
-                {{ item.daily_recommended_action }}
+                {{ item.daily_recommended_action or 'No priority recommendation available.' }}
               </div>
             </article>
           {% else %}
@@ -138,11 +142,12 @@
           {% for item in founder_cockpit.queue %}
             <article class="hc-founder-cockpit__item">
               <div class="d-flex justify-content-between gap-2">
-                <strong class="text-truncate">{{ item.organization }}</strong>
+                <strong class="text-truncate">{{ item.organization or 'Unknown organization' }}</strong>
                 <span class="badge text-bg-light border">{{ item.opportunity_level }}</span>
               </div>
-              <div class="hc-muted small mt-1">{{ item.territory }} · {{ item.operational_maturity }} · confidence {{ item.confidence }}</div>
-              <div class="small mt-2"><strong>Recommended:</strong> {{ item.recommended_action }}</div>
+              <div class="hc-muted small mt-1">{{ item.territory or 'Unknown territory' }} · {{ item.operational_maturity }} · confidence {{ item.confidence }}</div>
+              <div class="small mt-2">{{ item.summary or 'No summary available.' }}</div>
+              <div class="small mt-2"><strong>Recommended:</strong> {{ item.recommended_action or 'No priority recommendation available.' }}</div>
               {% if item.evidence_summary %}
                 <div class="hc-founder-cockpit__chips mt-2">
                   {% for evidence in item.evidence_summary %}
@@ -165,7 +170,7 @@
         <div class="hc-founder-cockpit__list">
           {% for alert in founder_cockpit.alerts %}
             <article class="hc-founder-cockpit__alert hc-founder-cockpit__alert--{{ alert.level }}">
-              <strong>{{ alert.territory }}</strong>
+              <strong>{{ alert.territory or 'Unknown territory' }}</strong>
               <div class="small mt-1">{{ alert.message }}</div>
             </article>
           {% else %}
@@ -183,11 +188,11 @@
           {% for territory in founder_cockpit.territories %}
             <article class="hc-founder-cockpit__item">
               <div class="d-flex justify-content-between gap-2">
-                <strong>{{ territory.territory }}</strong>
+                <strong>{{ territory.territory or 'Unknown territory' }}</strong>
                 <span class="badge text-bg-light border">{{ territory.top_opportunity_level }}</span>
               </div>
               <div class="hc-muted small mt-1">{{ territory.opportunity_count }} opportunity signal(s) · {{ territory.dominant_interest|replace('_', ' ') }}</div>
-              <div class="small mt-2"><strong>Suggested:</strong> {{ territory.recommended_action }}</div>
+              <div class="small mt-2"><strong>Suggested:</strong> {{ territory.recommended_action or 'No priority recommendation available.' }}</div>
             </article>
           {% else %}
             <div class="hc-empty-state">
@@ -204,8 +209,8 @@
           {% for item in founder_cockpit.hot_this_week %}
             <article class="hc-founder-cockpit__item">
               <div class="d-flex justify-content-between gap-2">
-                <strong class="text-truncate">{{ item.territory or _('Anonymous territory') }}</strong>
-                <span class="badge text-bg-warning text-dark">{{ item.intent_score }}</span>
+                <strong class="text-truncate">{{ item.territory or _('Unknown territory') }}</strong>
+                <span class="badge text-bg-warning text-dark">{{ item.intent_score if item.intent_score is not none else _('Unavailable') }}</span>
               </div>
               <div class="hc-muted small mt-1">
                 {{ item.intent_label or item.intent_tier or _('Institutional signal') }}
@@ -232,8 +237,8 @@
           {% for item in founder_cockpit.silent_high_intent %}
             <article class="hc-founder-cockpit__item">
               <div class="d-flex justify-content-between gap-2">
-                <strong class="text-truncate">{{ item.territory or _('Anonymous territory') }}</strong>
-                <span class="badge text-bg-light border">{{ item.intent_score }}</span>
+                <strong class="text-truncate">{{ item.territory or _('Unknown territory') }}</strong>
+                <span class="badge text-bg-light border">{{ item.intent_score if item.intent_score is not none else _('Unavailable') }}</span>
               </div>
               <div class="hc-muted small mt-1">
                 {{ item.primary_interest|replace('_', ' ') }}
@@ -248,7 +253,7 @@
           {% else %}
             <div class="hc-empty-state">
               <div class="hc-empty-state__title">{{ _('No silent high-intent signal') }}</div>
-              <div class="hc-empty-state__text">{{ _('Anonymous institutional evaluation without outreach will surface here when detected.') }}</div>
+              <div class="hc-empty-state__text">{{ _('Unidentified institutional evaluation without outreach will surface here when detected.') }}</div>
             </div>
           {% endfor %}
         </div>
@@ -260,7 +265,7 @@
           {% for item in founder_cockpit.territory_acceleration %}
             <article class="hc-founder-cockpit__item">
               <div class="d-flex justify-content-between gap-2">
-                <strong>{{ item.territory }}</strong>
+                <strong>{{ item.territory or 'Unknown territory' }}</strong>
                 <span class="badge text-bg-light border">{{ item.total_intent_score }}</span>
               </div>
               <div class="hc-muted small mt-1">
@@ -270,7 +275,7 @@
               </div>
               <div class="small mt-2">
                 <strong>{{ _('Recommended:') }}</strong>
-                {{ item.recommended_action }}
+                {{ item.recommended_action or _('No priority recommendation available.') }}
               </div>
             </article>
           {% else %}
@@ -288,12 +293,12 @@
           {% for item in founder_cockpit.stalled_opportunities %}
             <article class="hc-founder-cockpit__item">
               <div class="d-flex justify-content-between gap-2">
-                <strong class="text-truncate">{{ item.organization }}</strong>
+                <strong class="text-truncate">{{ item.organization or 'Unknown organization' }}</strong>
                 <span class="badge text-bg-light border">{{ item.stalled_days }} {{ _('day(s)') }}</span>
               </div>
               <div class="hc-muted small mt-1">
-                {{ item.territory or _('Anonymous territory') }}
-                · {{ _('Intent') }} {{ item.intent_score }}
+                {{ item.territory or _('Unknown territory') }}
+                · {{ _('Intent') }} {{ item.intent_score if item.intent_score is not none else _('Unavailable') }}
                 · {{ _('Relationship stalled') }}
               </div>
               <div class="small mt-2">
@@ -316,7 +321,7 @@
           {% for item in founder_cockpit.recommended_founder_actions %}
             <article class="hc-founder-cockpit__item">
               <div class="d-flex justify-content-between gap-2">
-                <strong class="text-truncate">{{ item.organization or _('Institutional account') }}</strong>
+                <strong class="text-truncate">{{ item.organization or _('Unknown organization') }}</strong>
                 <span class="badge text-bg-primary">{{ item.urgency_score }}</span>
               </div>
               <div class="hc-muted small mt-1">
@@ -326,7 +331,7 @@
               </div>
               <div class="small mt-2">
                 <strong>{{ _('Recommended:') }}</strong>
-                {{ item.recommended_founder_action }}
+                {{ item.recommended_founder_action or _('No priority recommendation available.') }}
               </div>
             </article>
           {% else %}
@@ -344,11 +349,11 @@
           {% for item in founder_cockpit.relationship_temperature_rows %}
             <article class="hc-founder-cockpit__item">
               <div class="d-flex justify-content-between gap-2">
-                <strong class="text-truncate">{{ item.organization or _('Institutional account') }}</strong>
+                <strong class="text-truncate">{{ item.organization or _('Unknown organization') }}</strong>
                 <span class="badge text-bg-light border">{{ item.relationship_temperature|replace('_', ' ') }}</span>
               </div>
               <div class="hc-muted small mt-1">
-                {{ _('Intent') }} {{ item.intent_score or item.score or 0 }}
+                {{ _('Intent') }} {{ item.intent_score if item.intent_score is not none else (item.score if item.score is not none else _('Unavailable')) }}
                 · {{ _('Urgency') }} {{ item.urgency_level }}
               </div>
               <div class="small mt-2">
@@ -371,7 +376,7 @@
           {% for item in founder_cockpit.institutional_memory_timeline %}
             <article class="hc-founder-cockpit__item">
               <div class="d-flex justify-content-between gap-2">
-                <strong class="text-truncate">{{ item.organization or _('Institutional account') }}</strong>
+                <strong class="text-truncate">{{ item.organization or _('Unknown organization') }}</strong>
                 <span class="badge text-bg-light border">{{ item.relationship_temperature|replace('_', ' ') }}</span>
               </div>
               {% if item.timeline_events %}
@@ -441,7 +446,7 @@
           {% for item in founder_cockpit.next_founder_actions %}
             <article class="hc-founder-cockpit__item">
               <div class="d-flex justify-content-between gap-2">
-                <strong class="text-truncate">{{ item.organization or _('Institutional account') }}</strong>
+                <strong class="text-truncate">{{ item.organization or _('Unknown organization') }}</strong>
                 <span class="badge text-bg-light border">{{ item.relationship_state|replace('_', ' ') }}</span>
               </div>
               <div class="hc-muted small mt-1">
@@ -449,7 +454,7 @@
               </div>
               <div class="small mt-2">
                 <strong>{{ _('Next:') }}</strong>
-                {{ item.next_recommended_action }}
+                {{ item.next_recommended_action or _('No priority recommendation available.') }}
               </div>
             </article>
           {% else %}
@@ -581,7 +586,7 @@
                       {% for component in row.score_components %}
                         <div class="hc-muted">+{{ component.points }} {{ component.label }}</div>
                       {% else %}
-                        <div class="hc-muted">Not enough data available</div>
+                        <div class="hc-muted">Score explanation unavailable.</div>
                       {% endfor %}
                     </details>
                   </div>
@@ -650,12 +655,12 @@
           {% for item in focus.top %}
             <div class="hc-revenue-focus__item">
               <div class="d-flex justify-content-between gap-2">
-                <strong class="text-truncate">{{ item.organization }}</strong>
-                <span class="badge {{ item.score_class }}">{{ item.score }}</span>
+                <strong class="text-truncate">{{ item.organization or 'Unknown organization' }}</strong>
+                <span class="badge {{ item.score_class }}">{{ item.score if item.score is not none else 'Unavailable' }}</span>
               </div>
               <div class="hc-muted small mt-1">{{ item.why_hot }}</div>
               <div class="small mt-2"><strong>Next:</strong> {{ item.next_best_action }}</div>
-              <div class="small text-muted">Estimated value: {{ item.estimated_value_display }}</div>
+              <div class="small text-muted">CRM value: {{ item.estimated_value_display }}</div>
             </div>
           {% else %}
             <div class="hc-empty-state">
@@ -673,7 +678,7 @@
         <div class="p-3">
           {% for item in focus.at_risk %}
             <div class="border-bottom pb-2 mb-2">
-              <div class="fw-semibold">{{ item.organization }}</div>
+              <div class="fw-semibold">{{ item.organization or 'Unknown organization' }}</div>
               <div class="hc-muted small">{{ item.next_action_label }} · {{ item.stage_label }}</div>
             </div>
           {% else %}
@@ -727,7 +732,7 @@
               {% endfor %}
             </div>
           {% else %}
-            <p class="hc-muted small mb-0">No hot anonymous sessions available.</p>
+            <p class="hc-muted small mb-0">No hot unidentified sessions available.</p>
           {% endif %}
         </div>
       </div>

@@ -8,6 +8,12 @@ from .institutional_intent import (
     INSTITUTIONAL_FIT_PATHS,
     TRUST_GOVERNANCE_PATHS,
 )
+from .display_safety import (
+    safe_organization,
+    safe_recommendation,
+    safe_summary,
+    safe_territory,
+)
 
 PILOT_PATHS = {"/professionnels/pilote", "/demander-acces", "/demo", "/contact"}
 OPPORTUNITY_THRESHOLDS = (
@@ -69,7 +75,7 @@ def _territory_name(row) -> str:
         str(_read(row, "territory") or "").strip()
         or str(_read(row, "territory_hint") or "").strip()
         or str(_read(row, "city") or "").strip()
-        or "Unknown"
+        or ""
     )
 
 
@@ -209,14 +215,21 @@ def infer_operational_maturity(row) -> str:
 
 
 def _recommend_action(row, *, opportunity_level: str, operational_maturity: str) -> str:
+    confidence = str(_read(row, "territory_confidence") or _read(row, "confidence") or "weak").strip() or "weak"
+    if confidence == "weak":
+        return "Insufficient evidence"
+    if confidence not in {"moderate", "strong"}:
+        return "Continue monitoring"
     paths = _normalized_paths(row)
     trust_friction = _bool(_read(row, "trust_friction_detected")) or str(
         _read(row, "possible_friction") or _read(row, "friction_reason") or ""
     ).strip() == "trust_governance_review_without_conversion"
     primary_interest = _primary_interest(row)
 
-    if opportunity_level == "High-priority founder follow-up":
+    if opportunity_level == "High-priority founder follow-up" and confidence == "strong":
         return "Prioritize direct founder outreach"
+    if opportunity_level == "High-priority founder follow-up":
+        return "Schedule follow-up"
     if trust_friction and _bool(_read(row, "repeated_engagement_detected")):
         return "Re-engage after trust/governance review"
     if trust_friction or primary_interest == "trust_governance" or _trust_signal(row, paths):
@@ -230,7 +243,7 @@ def _recommend_action(row, *, opportunity_level: str, operational_maturity: str)
         return "Improve deployment clarity"
     if primary_interest == "institutional_fit" or _institutional_fit_signal(row, paths):
         return "Clarify institutional fit"
-    return "Continue observing"
+    return "Continue monitoring"
 
 
 def _pilot_readiness_label(row, opportunity_level: str, operational_maturity: str) -> str:
@@ -292,9 +305,13 @@ def rank_founder_opportunities(rows: Iterable) -> list[dict[str, object]]:
             {
                 "uid": str(_read(row, "uid") or ""),
                 "kind": str(_read(row, "kind") or _read(row, "source_kind") or ""),
-                "organization": str(_read(row, "organization") or _read(row, "account_name") or _read(row, "organization_name") or "Observed signal").strip(),
+                "organization": safe_organization(
+                    _read(row, "organization")
+                    or _read(row, "account_name")
+                    or _read(row, "organization_name")
+                ),
                 "contact": str(_read(row, "contact") or "").strip(),
-                "territory": _territory_name(row),
+                "territory": safe_territory(_territory_name(row)),
                 "opportunity_level": str(priority["opportunity_level"]),
                 "opportunity_score": int(priority["opportunity_score"]),
                 "operational_maturity": maturity,
@@ -304,7 +321,12 @@ def rank_founder_opportunities(rows: Iterable) -> list[dict[str, object]]:
                 "possible_friction": (
                     str(_read(row, "possible_friction") or _read(row, "friction_reason") or "").strip() or None
                 ),
-                "recommended_action": action,
+                "recommended_action": safe_recommendation(action, confidence=str(_read(row, "territory_confidence") or _read(row, "confidence") or "weak")),
+                "summary": safe_summary(
+                    _read(row, "summary")
+                    or _read(row, "why_hot")
+                    or ", ".join(evidence)
+                ),
                 "pilot_readiness_estimate": _pilot_readiness_label(row, str(priority["opportunity_level"]), maturity),
                 "evidence_summary": evidence,
                 "intent_score": max(_int(_read(row, "intent_score")), _int(_read(row, "lead_intent_score")), _int(_read(row, "score"))),
@@ -354,7 +376,7 @@ def build_founder_alerts(rows: Iterable) -> list[dict[str, object]]:
     alerts: list[dict[str, object]] = []
     for item in queue:
         level = str(item.get("opportunity_level") or "")
-        territory = str(item.get("territory") or "Unknown")
+        territory = safe_territory(item.get("territory"))
         interest = str(item.get("dominant_interest") or "unknown")
         friction = str(item.get("possible_friction") or "").strip()
         evidence = list(item.get("evidence_summary") or [])
@@ -430,7 +452,7 @@ def build_founder_alerts(rows: Iterable) -> list[dict[str, object]]:
 def group_founder_signals_by_territory(rows: Iterable) -> list[dict[str, object]]:
     grouped: dict[str, list[dict[str, object]]] = defaultdict(list)
     for item in build_founder_priority_queue(rows):
-        grouped[str(item.get("territory") or "Unknown")].append(item)
+        grouped[safe_territory(item.get("territory"))].append(item)
 
     output: list[dict[str, object]] = []
     for territory, items in grouped.items():

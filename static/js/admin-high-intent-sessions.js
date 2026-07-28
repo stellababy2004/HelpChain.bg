@@ -110,7 +110,7 @@
 
             '<div class="hc-live-intent-row__action">' +
               '<span>' + esc(momentumFor(s)) + '</span>' +
-              '<strong>Action recommandee: ' + esc(s.recommendation || "Observer les prochaines visites") + '</strong>' +
+              '<strong>Action recommandee: ' + esc(s.recommendation || "Continue monitoring") + '</strong>' +
             '</div>' +
           '</div>';
       }).join("");

@@ -14,7 +14,7 @@ async function loadRevenue() {
   const data = await res.json();
 
   document.getElementById("revTotal").textContent =
-    data.total_estimated_revenue_label || "Not enough data available";
+    data.total_estimated_revenue_label || "No CRM opportunity linked.";
 
   const sessionsAll = (data.sessions || [])
     .sort((a, b) => (b.score || 0) - (a.score || 0));
@@ -27,7 +27,7 @@ async function loadRevenue() {
   });
 
   const lostEl = document.getElementById("revLost");
-  if (lostEl) lostEl.textContent = lost > 0 ? lost + " EUR" : "Not enough data available";
+  if (lostEl) lostEl.textContent = lost > 0 ? lost + " EUR" : "No CRM opportunity linked.";
 
   const sessions = sessionsAll.slice(0, 10);
 
@@ -45,8 +45,8 @@ async function loadRevenue() {
     const scoreExplain = (s.score_components || [])
       .map(component => `+${component.points} ${component.label}`)
       .join("; ");
-    const valueLabel = s.value_available ? `${s.value} EUR` : (s.value_label || "Not enough data available");
-    const note = `${label} | ${s.tier || "COLD"} | score ${s.score || 0} | value ${valueLabel} | explain: ${scoreExplain || "Not enough data available"} | pages: ${pagesList.join(", ")}`;
+    const valueLabel = s.value_available ? `${s.value} EUR` : (s.value_label || "No CRM opportunity linked.");
+    const note = `${label} | ${s.tier || "COLD"} | score ${s.score || 0} | value ${valueLabel} | explain: ${scoreExplain || "Score explanation unavailable."} | pages: ${pagesList.join(", ")}`;
     const actionClass = (s.tier === "HOT" || s.tier === "WARM") ? "" : "hc-rev-actions--muted";
 
     return `
