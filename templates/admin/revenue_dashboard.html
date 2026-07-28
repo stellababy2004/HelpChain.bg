@@ -8,6 +8,16 @@
 {% endblock %}
 
 {% block admin_content %}
+{% macro metric_meta(metric) -%}
+  {% set meta = metric.meta if metric and metric.meta else {} %}
+  <small class="hc-muted d-block mt-1">
+    Source: {{ (meta.source_tables or [])|join(', ') or 'Not enough data available' }}
+    · Updated: {{ meta.last_updated.strftime('%Y-%m-%d %H:%M:%S UTC') if meta.last_updated else 'Not enough data available' }}
+    · Confidence: {{ meta.confidence or 'low' }}
+  </small>
+  <small class="hc-muted d-block">Explain: {{ meta.explain or metric.reason or 'Not enough data available' }}</small>
+  <small class="hc-muted d-block">Query: {{ meta.query_origin or 'Not enough data available' }}</small>
+{%- endmacro %}
 <div class="hc-revenue-page hc-admin-module-page hc-admin-module-page--pipeline">
 <div class="hc-admin-wrap hc-admin-wrap--wide hc-admin-shell hc-admin-list-shell">
   <div class="hc-card hc-admin-headerCard mb-3">
@@ -27,27 +37,33 @@
   <section class="hc-revenue-kpis hc-revenue-kpi-grid mb-3" aria-label="Revenue KPIs">
     <article class="hc-revenue-kpi">
       <span class="hc-revenue-kpi__label">New Leads</span>
-      <strong class="hc-revenue-kpi__value">{{ metrics.new_leads }}</strong>
+      <strong class="hc-revenue-kpi__value">{{ metrics.new_leads.display }}</strong>
+      {{ metric_meta(metrics.new_leads) }}
     </article>
     <article class="hc-revenue-kpi hc-revenue-kpi--hot">
       <span class="hc-revenue-kpi__label">Hot Leads</span>
-      <strong class="hc-revenue-kpi__value">{{ metrics.hot_leads }}</strong>
+      <strong class="hc-revenue-kpi__value">{{ metrics.hot_leads.display }}</strong>
+      {{ metric_meta(metrics.hot_leads) }}
     </article>
     <article class="hc-revenue-kpi hc-revenue-kpi--due">
       <span class="hc-revenue-kpi__label">Overdue Follow-ups</span>
-      <strong class="hc-revenue-kpi__value">{{ metrics.overdue_followups }}</strong>
+      <strong class="hc-revenue-kpi__value">{{ metrics.overdue_followups.display }}</strong>
+      {{ metric_meta(metrics.overdue_followups) }}
     </article>
     <article class="hc-revenue-kpi hc-revenue-kpi--demo">
       <span class="hc-revenue-kpi__label">Demos Pending</span>
-      <strong class="hc-revenue-kpi__value">{{ metrics.demos_pending }}</strong>
+      <strong class="hc-revenue-kpi__value">{{ metrics.demos_pending.display }}</strong>
+      {{ metric_meta(metrics.demos_pending) }}
     </article>
     <article class="hc-revenue-kpi hc-revenue-kpi--money">
       <span class="hc-revenue-kpi__label">Active Pipeline EUR</span>
-      <strong class="hc-revenue-kpi__value">{{ metrics.active_pipeline }}</strong>
+      <strong class="hc-revenue-kpi__value">{{ metrics.active_pipeline.display }}</strong>
+      {{ metric_meta(metrics.active_pipeline) }}
     </article>
     <article class="hc-revenue-kpi hc-revenue-kpi--money">
       <span class="hc-revenue-kpi__label">Won This Month EUR</span>
-      <strong class="hc-revenue-kpi__value">{{ metrics.won_this_month }}</strong>
+      <strong class="hc-revenue-kpi__value">{{ metrics.won_this_month.display }}</strong>
+      {{ metric_meta(metrics.won_this_month) }}
     </article>
   </section>
 
@@ -552,6 +568,17 @@
                       <span class="badge {{ row.score_class }}">{{ row.score_bucket }}</span>
                       <span class="hc-revenue-sub">{{ row.score }}/100</span>
                     </div>
+                    <details class="small mt-1">
+                      <summary>Explain</summary>
+                      <div class="hc-muted">
+                        Confidence: {{ row.score_confidence }} · Formula: {{ row.score_formula_version }}
+                      </div>
+                      {% for component in row.score_components %}
+                        <div class="hc-muted">+{{ component.points }} {{ component.label }}</div>
+                      {% else %}
+                        <div class="hc-muted">Not enough data available</div>
+                      {% endfor %}
+                    </details>
                   </div>
                   <div class="hc-revenue-pipeline__cell" role="cell">
                     <div class="hc-revenue-pipeline__mobile-label">Last Activity</div>
@@ -563,7 +590,11 @@
                   </div>
                   <div class="hc-revenue-pipeline__cell hc-revenue-pipeline__cell--value" role="cell">
                     <div class="hc-revenue-pipeline__mobile-label">Value</div>
-                    EUR {{ row.estimated_value }}
+                    {% if row.estimated_value_available %}
+                      EUR {{ row.estimated_value_display }}
+                    {% else %}
+                      {{ row.estimated_value_display }}
+                    {% endif %}
                   </div>
                   <div class="hc-revenue-pipeline__cell hc-revenue-pipeline__cell--actions" role="cell">
                     <div class="hc-revenue-pipeline__mobile-label">Actions</div>
@@ -619,7 +650,7 @@
               </div>
               <div class="hc-muted small mt-1">{{ item.why_hot }}</div>
               <div class="small mt-2"><strong>Next:</strong> {{ item.next_best_action }}</div>
-              <div class="small text-muted">Estimated value: EUR {{ item.estimated_value }}</div>
+              <div class="small text-muted">Estimated value: {{ item.estimated_value_display }}</div>
             </div>
           {% else %}
             <div class="hc-empty-state">
@@ -653,15 +684,18 @@
         <div class="p-3 hc-revenue-forecast">
           <div class="hc-revenue-forecast__item">
             <div class="hc-muted small">Weighted Pipeline</div>
-            <strong>EUR {{ forecast.weighted_pipeline }}</strong>
+            <strong>{{ forecast.weighted_pipeline.display }}</strong>
+            {{ metric_meta(forecast.weighted_pipeline) }}
           </div>
           <div class="hc-revenue-forecast__item">
             <div class="hc-muted small">Likely This Month</div>
-            <strong>EUR {{ forecast.likely_this_month }}</strong>
+            <strong>{{ forecast.likely_this_month.display }}</strong>
+            {{ metric_meta(forecast.likely_this_month) }}
           </div>
           <div class="hc-revenue-forecast__item">
             <div class="hc-muted small">Closed Won</div>
-            <strong>EUR {{ forecast.closed_won }}</strong>
+            <strong>{{ forecast.closed_won.display }}</strong>
+            {{ metric_meta(forecast.closed_won) }}
           </div>
         </div>
       </div>

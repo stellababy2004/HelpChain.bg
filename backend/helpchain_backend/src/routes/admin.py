@@ -77,6 +77,8 @@ from ..models import (
     CaseParticipant,
     CaseCollaborator,
     IntegrationConnector,
+    MetricDefinition,
+    MetricRun,
     Notification,
     NotificationJob,
     OrganizationAccessRequest,
@@ -90,6 +92,7 @@ from ..models import (
     RequestLog,
     RequestMetric,
     SecurityEvent,
+    ScoreExplanation,
     UiLocaleLock,
     UiTranslationFreeze,
     UiTranslation,
@@ -10995,6 +10998,69 @@ REVENUE_STAGE_WEIGHTS = {
     "lost": 0.00,
     "paused": 0.00,
 }
+REVENUE_SCORE_FORMULA_VERSION = "revenue_priority_v2_explainable"
+REVENUE_METRIC_FORMULA_VERSION = "revenue_dashboard_v2_lineage"
+
+
+def _metric_unavailable(reason: str) -> dict[str, object]:
+    return {
+        "available": False,
+        "value": None,
+        "display": "Not enough data available",
+        "reason": reason,
+    }
+
+
+def _metric_available(value: object) -> dict[str, object]:
+    return {
+        "available": True,
+        "value": value,
+        "display": value,
+        "reason": "",
+    }
+
+
+def _revenue_metric_meta(
+    *,
+    source_tables: list[str],
+    query_origin: str,
+    confidence: str,
+    updated_at: datetime,
+    explain: str,
+) -> dict[str, object]:
+    return {
+        "source_tables": source_tables,
+        "query_origin": query_origin,
+        "confidence": confidence,
+        "last_updated": updated_at,
+        "explain": explain,
+        "formula_version": REVENUE_METRIC_FORMULA_VERSION,
+    }
+
+
+def _metric_payload(
+    value: object,
+    *,
+    source_tables: list[str],
+    query_origin: str,
+    confidence: str,
+    updated_at: datetime,
+    explain: str,
+    unavailable_reason: str | None = None,
+) -> dict[str, object]:
+    payload = (
+        _metric_unavailable(unavailable_reason)
+        if unavailable_reason
+        else _metric_available(value)
+    )
+    payload["meta"] = _revenue_metric_meta(
+        source_tables=source_tables,
+        query_origin=query_origin,
+        confidence=confidence,
+        updated_at=updated_at,
+        explain=explain,
+    )
+    return payload
 
 
 def _revenue_has_followup_fields(table_name: str) -> bool:
@@ -11043,15 +11109,24 @@ def _revenue_stage_label(stage: str) -> str:
     }.get(stage, stage.replace("_", " ").title())
 
 
-def _revenue_estimated_value(row, item_type: str, stage: str) -> int:
-    if stage == "won":
-        base = 750 if item_type == "access_request" else 500
-    elif item_type == "access_request":
-        estimated_users = getattr(row, "estimated_users", None) or 0
-        base = max(500, min(1500, int(estimated_users or 0) * 50)) if estimated_users else 750
-    else:
-        base = 400
-    return int(base)
+def _revenue_amount(row, _item_type: str) -> int | None:
+    # Real CRM opportunity amounts are not modeled yet. Do not infer EUR from
+    # lead type, stage, estimated users, or territory.
+    for field_name in ("amount_eur", "opportunity_amount_eur", "contract_value_eur"):
+        amount = getattr(row, field_name, None)
+        if amount is None:
+            continue
+        try:
+            normalized = int(amount)
+        except Exception:
+            continue
+        if normalized >= 0:
+            return normalized
+    return None
+
+
+def _unavailable_revenue_amount() -> dict[str, object]:
+    return _metric_unavailable("No CRM opportunity amount is stored for this item.")
 
 
 def _revenue_city_relevance(city: str | None) -> int:
@@ -11080,6 +11155,88 @@ def _revenue_stage_score(stage: str) -> int:
         "lost": 0,
         "paused": 5,
     }.get(stage, 5)
+
+
+def _score_component(code: str, label: str, points: int, evidence: dict[str, object]) -> dict[str, object]:
+    return {
+        "code": code,
+        "label": label,
+        "points": int(points),
+        "evidence": evidence,
+    }
+
+
+def _revenue_score_payload(
+    row,
+    *,
+    item_type: str,
+    stage: str,
+    audience_points: int,
+    audience_context: dict | None,
+    last_activity: datetime | None,
+) -> dict[str, object]:
+    components: list[dict[str, object]] = []
+
+    stage_points = _revenue_stage_score(stage)
+    if stage_points > 0:
+        components.append(
+            _score_component(
+                "stage",
+                f"Stage: {_revenue_stage_label(stage)}",
+                stage_points,
+                {"source_field": "status", "value": getattr(row, "status", None)},
+            )
+        )
+
+    if audience_points > 0:
+        components.append(
+            _score_component(
+                "audience_context",
+                "Captured audience intent",
+                audience_points,
+                {
+                    "source_field": "notes" if item_type == "professional_lead" else "internal_notes",
+                    "intent_tier": (audience_context or {}).get("lead_intent_tier"),
+                    "intent_score": (audience_context or {}).get("lead_intent_score"),
+                },
+            )
+        )
+
+    recency_points = _revenue_recent_activity_score(last_activity)
+    if recency_points > 0:
+        components.append(
+            _score_component(
+                "recent_activity",
+                "Recent activity",
+                recency_points,
+                {"last_activity": last_activity.isoformat() if isinstance(last_activity, datetime) else None},
+            )
+        )
+
+    city_points = _revenue_city_relevance(getattr(row, "city", None))
+    if city_points > 0:
+        components.append(
+            _score_component(
+                "territory_relevance",
+                "Known territory relevance",
+                city_points,
+                {"source_field": "city", "value": getattr(row, "city", None)},
+            )
+        )
+
+    total = min(100, sum(int(component["points"]) for component in components))
+    evidence = {
+        "source_table": "professional_leads" if item_type == "professional_lead" else "organization_access_requests",
+        "source_id": int(getattr(row, "id", 0) or 0),
+        "formula_version": REVENUE_SCORE_FORMULA_VERSION,
+    }
+    return {
+        "total": total,
+        "components": components,
+        "evidence": evidence,
+        "originating_event_ids": [],
+        "confidence": "medium" if components else "low",
+    }
 
 
 def _revenue_audience_score(notes: str | None) -> tuple[int, dict | None]:
@@ -11534,20 +11691,22 @@ def _revenue_row_from_professional_lead(lead: ProfessionalLead) -> SimpleNamespa
     stage = _revenue_stage(getattr(lead, "status", None), "professional_lead")
     audience_points, audience_context = _revenue_audience_score(getattr(lead, "notes", None))
     last_activity = _revenue_last_activity(lead, "professional_lead")
-    score = min(
-        100,
-        20
-        + _revenue_stage_score(stage)
-        + audience_points
-        + _revenue_recent_activity_score(last_activity)
-        + _revenue_city_relevance(getattr(lead, "city", None)),
+    score_payload = _revenue_score_payload(
+        lead,
+        item_type="professional_lead",
+        stage=stage,
+        audience_points=audience_points,
+        audience_context=audience_context,
+        last_activity=last_activity,
     )
+    score = int(score_payload["total"])
     bucket = _revenue_score_bucket(score)
     has_followup_fields = _revenue_has_followup_fields("professional_leads")
     next_action_at = getattr(lead, "next_action_at", None) if has_followup_fields else None
     next_action_note = getattr(lead, "next_action_note", None) if has_followup_fields else None
     next_action_state = _revenue_next_action_state(next_action_at)
-    value = _revenue_estimated_value(lead, "professional_lead", stage)
+    value = _revenue_amount(lead, "professional_lead")
+    value_payload = _metric_available(value) if value is not None else _unavailable_revenue_amount()
     organization = (getattr(lead, "organization", None) or getattr(lead, "profession", None) or "Professional lead").strip()
     contact = (getattr(lead, "full_name", None) or getattr(lead, "email", None) or "-").strip()
     reasons = []
@@ -11605,10 +11764,18 @@ def _revenue_row_from_professional_lead(lead: ProfessionalLead) -> SimpleNamespa
         next_action_state=next_action_state,
         next_action_label=_revenue_next_action_label(next_action_at, next_action_note),
         estimated_value=value,
-        weighted_value=int(value * REVENUE_STAGE_WEIGHTS.get(stage, 0.05)),
+        estimated_value_display=value if value is not None else "Not enough data available",
+        estimated_value_available=value is not None,
+        estimated_value_reason=value_payload.get("reason", ""),
+        weighted_value=int(value * REVENUE_STAGE_WEIGHTS.get(stage, 0.05)) if value is not None else None,
         action_url=url_for("admin.admin_professional_lead_detail", lead_id=lead.id),
         why_hot=", ".join(reasons),
         next_best_action=next_best_action,
+        score_components=score_payload["components"],
+        score_evidence=score_payload["evidence"],
+        score_originating_event_ids=score_payload["originating_event_ids"],
+        score_confidence=score_payload["confidence"],
+        score_formula_version=REVENUE_SCORE_FORMULA_VERSION,
         intent_score=founder_meta["intent_score"],
         intent_tier=founder_meta["intent_tier"],
         intent_label=founder_meta["intent_label"],
@@ -11639,20 +11806,22 @@ def _revenue_row_from_access_request(row: OrganizationAccessRequest) -> SimpleNa
     stage = _revenue_stage(getattr(row, "status", None), "access_request")
     audience_points, audience_context = _revenue_audience_score(getattr(row, "internal_notes", None))
     last_activity = _revenue_last_activity(row, "access_request")
-    score = min(
-        100,
-        30
-        + _revenue_stage_score(stage)
-        + audience_points
-        + _revenue_recent_activity_score(last_activity)
-        + _revenue_city_relevance(getattr(row, "city", None)),
+    score_payload = _revenue_score_payload(
+        row,
+        item_type="access_request",
+        stage=stage,
+        audience_points=audience_points,
+        audience_context=audience_context,
+        last_activity=last_activity,
     )
+    score = int(score_payload["total"])
     bucket = _revenue_score_bucket(score)
     has_followup_fields = _revenue_has_followup_fields("organization_access_requests")
     next_action_at = getattr(row, "next_action_at", None) if has_followup_fields else None
     next_action_note = getattr(row, "next_action_note", None) if has_followup_fields else None
     next_action_state = _revenue_next_action_state(next_action_at)
-    value = _revenue_estimated_value(row, "access_request", stage)
+    value = _revenue_amount(row, "access_request")
+    value_payload = _metric_available(value) if value is not None else _unavailable_revenue_amount()
     reasons = ["access request submitted"]
     intent_summary = audience_context.get("institutional_intent") if isinstance(audience_context, dict) else None
     if audience_context:
@@ -11706,10 +11875,18 @@ def _revenue_row_from_access_request(row: OrganizationAccessRequest) -> SimpleNa
         next_action_state=next_action_state,
         next_action_label=_revenue_next_action_label(next_action_at, next_action_note),
         estimated_value=value,
-        weighted_value=int(value * REVENUE_STAGE_WEIGHTS.get(stage, 0.05)),
+        estimated_value_display=value if value is not None else "Not enough data available",
+        estimated_value_available=value is not None,
+        estimated_value_reason=value_payload.get("reason", ""),
+        weighted_value=int(value * REVENUE_STAGE_WEIGHTS.get(stage, 0.05)) if value is not None else None,
         action_url=url_for("admin.admin_organization_access_request_detail", req_id=row.id),
         why_hot=", ".join(reasons),
         next_best_action=next_best_action,
+        score_components=score_payload["components"],
+        score_evidence=score_payload["evidence"],
+        score_originating_event_ids=score_payload["originating_event_ids"],
+        score_confidence=score_payload["confidence"],
+        score_formula_version=REVENUE_SCORE_FORMULA_VERSION,
         intent_score=founder_meta["intent_score"],
         intent_tier=founder_meta["intent_tier"],
         intent_label=founder_meta["intent_label"],
@@ -11802,7 +11979,64 @@ def _build_revenue_pipeline_rows() -> list[SimpleNamespace]:
         ),
         reverse=True,
     )
+    _persist_revenue_score_explanations(rows)
     return rows
+
+
+def _persist_revenue_score_explanations(rows: list[SimpleNamespace]) -> None:
+    if not rows or not _table_exists("score_explanations"):
+        return
+    try:
+        now = _now_utc()
+        for row in rows:
+            subject_type = str(getattr(row, "kind", "") or "")
+            subject_id = str(getattr(row, "id", "") or "")
+            if not subject_type or not subject_id:
+                continue
+            existing = (
+                ScoreExplanation.query.filter_by(
+                    score_key="revenue_priority",
+                    subject_type=subject_type,
+                    subject_id=subject_id,
+                )
+                .order_by(ScoreExplanation.id.desc())
+                .first()
+            )
+            payload = existing or ScoreExplanation(
+                score_key="revenue_priority",
+                subject_type=subject_type,
+                subject_id=subject_id,
+                total_score=0,
+                formula_version=REVENUE_SCORE_FORMULA_VERSION,
+                confidence="low",
+                component_list_json="[]",
+                evidence_json="{}",
+                originating_event_ids_json="[]",
+            )
+            payload.total_score = int(getattr(row, "score", 0) or 0)
+            payload.formula_version = str(getattr(row, "score_formula_version", None) or REVENUE_SCORE_FORMULA_VERSION)
+            payload.confidence = str(getattr(row, "score_confidence", None) or "low")
+            payload.component_list_json = json.dumps(
+                list(getattr(row, "score_components", None) or []),
+                ensure_ascii=True,
+                sort_keys=True,
+            )
+            payload.evidence_json = json.dumps(
+                dict(getattr(row, "score_evidence", None) or {}),
+                ensure_ascii=True,
+                sort_keys=True,
+            )
+            payload.originating_event_ids_json = json.dumps(
+                list(getattr(row, "score_originating_event_ids", None) or []),
+                ensure_ascii=True,
+                sort_keys=True,
+            )
+            payload.computed_at = now
+            if existing is None:
+                db.session.add(payload)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 
 def _filter_revenue_rows(rows: list[SimpleNamespace], filters: dict) -> list[SimpleNamespace]:
@@ -11846,42 +12080,92 @@ def _filter_revenue_rows(rows: list[SimpleNamespace], filters: dict) -> list[Sim
 
 def _revenue_metrics(rows: list[SimpleNamespace]) -> dict:
     now = _now_utc()
-    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    open_rows = [row for row in rows if row.stage not in {"won", "lost", "paused"}]
-    won_rows = [
-        row
-        for row in rows
-        if row.stage == "won"
-        and (_as_aware_utc(row.last_activity) or datetime.min.replace(tzinfo=timezone.utc)) >= month_start
-    ]
+    source_tables = ["professional_leads", "organization_access_requests"]
     return {
-        "new_leads": sum(1 for row in rows if row.stage == "new"),
-        "hot_leads": sum(1 for row in rows if row.score_bucket in {"Hot", "Very Hot"} and row.stage not in {"won", "lost"}),
-        "overdue_followups": sum(1 for row in rows if row.next_action_state == "overdue"),
-        "demos_pending": sum(1 for row in rows if row.stage in {"demo_booked", "demo_done"}),
-        "active_pipeline": sum(row.estimated_value for row in open_rows),
-        "won_this_month": sum(row.estimated_value for row in won_rows),
+        "new_leads": _metric_payload(
+            sum(1 for row in rows if row.stage == "new"),
+            source_tables=source_tables,
+            query_origin="_build_revenue_pipeline_rows + _revenue_metrics(stage == 'new')",
+            confidence="high",
+            updated_at=now,
+            explain="Counts visible pipeline rows whose normalized stage is new.",
+        ),
+        "hot_leads": _metric_payload(
+            sum(1 for row in rows if row.score_bucket in {"Hot", "Very Hot"} and row.stage not in {"won", "lost"}),
+            source_tables=source_tables + ["score_explanations"],
+            query_origin="_build_revenue_pipeline_rows + explained revenue_priority score bucket",
+            confidence="medium",
+            updated_at=now,
+            explain="Counts open rows whose persisted explained score places them in Hot or Very Hot.",
+        ),
+        "overdue_followups": _metric_payload(
+            sum(1 for row in rows if row.next_action_state == "overdue"),
+            source_tables=source_tables,
+            query_origin="_build_revenue_pipeline_rows + next_action_at <= today",
+            confidence="high",
+            updated_at=now,
+            explain="Counts rows with next_action_at due today or earlier.",
+        ),
+        "demos_pending": _metric_payload(
+            sum(1 for row in rows if row.stage in {"demo_booked", "demo_done"}),
+            source_tables=source_tables,
+            query_origin="_build_revenue_pipeline_rows + normalized stage in demo_booked/demo_done",
+            confidence="medium",
+            updated_at=now,
+            explain="Counts rows whose source status maps to a pending demo stage.",
+        ),
+        "active_pipeline": _metric_payload(
+            None,
+            source_tables=["crm_opportunities"],
+            query_origin="crm_opportunities.amount_eur WHERE stage NOT IN ('won','lost','paused')",
+            confidence="low",
+            updated_at=now,
+            explain="Requires a real CRM opportunity amount. Lead type and estimated users are not used as money.",
+            unavailable_reason="No CRM opportunity amount table/field is available.",
+        ),
+        "won_this_month": _metric_payload(
+            None,
+            source_tables=["crm_opportunities"],
+            query_origin="crm_opportunities.amount_eur WHERE stage = 'won' AND closed_at >= month_start",
+            confidence="low",
+            updated_at=now,
+            explain="Requires real closed-won CRM opportunity amounts.",
+            unavailable_reason="No CRM opportunity amount table/field is available.",
+        ),
     }
 
 
 def _revenue_forecast(rows: list[SimpleNamespace]) -> dict:
     now = _now_utc()
-    month_end = now + timedelta(days=30)
-    active_rows = [row for row in rows if row.stage not in {"lost", "paused"}]
-    likely_rows = [
-        row
-        for row in active_rows
-        if row.stage in {"pilot_proposed", "negotiation", "won"}
-        or (
-            row.next_action_at
-            and (_as_aware_utc(row.next_action_at) or now) <= month_end
-            and row.score >= 60
-        )
-    ]
+    source_tables = ["crm_opportunities"]
     return {
-        "weighted_pipeline": sum(row.weighted_value for row in active_rows),
-        "likely_this_month": sum(row.weighted_value for row in likely_rows),
-        "closed_won": sum(row.estimated_value for row in active_rows if row.stage == "won"),
+        "weighted_pipeline": _metric_payload(
+            None,
+            source_tables=source_tables,
+            query_origin="SUM(amount_eur * stage_probability) FROM crm_opportunities",
+            confidence="low",
+            updated_at=now,
+            explain="Requires real opportunity amount and probability.",
+            unavailable_reason="No CRM opportunity amount/probability data is available.",
+        ),
+        "likely_this_month": _metric_payload(
+            None,
+            source_tables=source_tables,
+            query_origin="SUM(weighted_amount_eur) FROM crm_opportunities WHERE expected_close_at <= now + 30 days",
+            confidence="low",
+            updated_at=now,
+            explain="Requires expected close date plus real opportunity amount.",
+            unavailable_reason="No CRM opportunity amount/close-date data is available.",
+        ),
+        "closed_won": _metric_payload(
+            None,
+            source_tables=source_tables,
+            query_origin="SUM(amount_eur) FROM crm_opportunities WHERE stage = 'won'",
+            confidence="low",
+            updated_at=now,
+            explain="Requires closed-won opportunity records with amount.",
+            unavailable_reason="No CRM closed-won opportunity amount data is available.",
+        ),
     }
 
 
@@ -11892,7 +12176,7 @@ def _revenue_focus(rows: list[SimpleNamespace]) -> dict:
         key=lambda row: (
             row.score,
             1 if row.next_action_state == "overdue" else 0,
-            row.weighted_value,
+            row.weighted_value or 0,
         ),
         reverse=True,
     )[:5]
