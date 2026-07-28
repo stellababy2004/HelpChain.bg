@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import re
 import unicodedata
@@ -71,11 +71,19 @@ def safe_summary(value: Any) -> str:
 
 
 def safe_recommendation(value: Any, *, confidence: str | None = None) -> str:
+    # Preserve an explicit recommendation. Confidence controls only the
+    # fallback shown when no usable recommendation has been produced.
+    if not is_placeholder_value(value):
+        return str(value).strip()
+
     confidence_value = _fold(confidence or "")
-    if confidence_value in {"weak", "very low", "very_low", "low"}:
-        return "Insufficient evidence" if confidence_value in {"weak", "very low", "very_low"} else "Continue monitoring"
-    return safe_display_text(value, "No priority recommendation available.")
+    if confidence_value in {"weak", "very low", "very_low"}:
+        return "Insufficient evidence"
+    if confidence_value == "low":
+        return "Continue monitoring"
+    return "No priority recommendation available."
 
 
 def safe_unavailable(value: Any, fallback: str) -> str:
     return safe_display_text(value, fallback)
+

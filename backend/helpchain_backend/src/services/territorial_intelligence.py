@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from collections import Counter
 import re
@@ -280,7 +280,7 @@ def recommend_founder_action(summary: dict[str, object]) -> str:
     pilot_readiness = str(summary.get("pilot_readiness_estimate") or "").strip()
     confidence = str(summary.get("confidence") or "weak")
     if confidence == "weak":
-        return "Insufficient evidence"
+        return "Observe and monitor"
     if priority == "Strategic" and confidence == "strong":
         return "Prioritize founder outreach this week"
     if priority == "Strategic" and confidence == "moderate":
@@ -353,3 +353,4 @@ def detect_priority_territories(rows: Iterable[dict]) -> list[dict[str, object]]
         reverse=True,
     )
     return summaries
+
