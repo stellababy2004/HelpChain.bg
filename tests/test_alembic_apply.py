@@ -77,3 +77,85 @@ def test_alembic_upgrade_on_clean_sqlite():
     # Expect at least these core tables to be present after applying migrations
     assert len(tables) > 0, "No tables created by Alembic migrations"
     assert "structures" in tables, f"Expected 'structures' table not found in {tables}"
+
+
+def test_enterprise_structure_migration_upgrade_and_downgrade():
+    repo_root = pathlib.Path(__file__).resolve().parents[1]
+    alembic_ini = repo_root / "migrations" / "alembic.ini"
+
+    db_dir = repo_root / "backend" / "instance"
+    db_dir.mkdir(parents=True, exist_ok=True)
+    db_file = db_dir / "alembic_enterprise_structure_test.db"
+    if db_file.exists():
+        db_file.unlink()
+    db_file.touch()
+    db_url = f"sqlite:///{db_file}"
+
+    cfg = Config(str(alembic_ini))
+    cfg.set_main_option("sqlalchemy.url", db_url)
+    cfg.set_main_option("script_location", str(repo_root / "migrations"))
+
+    if canonical_db is None or Migrate is None:
+        raise RuntimeError(
+            "Required Flask extensions (backend.extensions or flask_migrate) not importable"
+        )
+
+    app = Flask(__name__)
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+    app.config.setdefault(
+        "SQLALCHEMY_ENGINE_OPTIONS", {"connect_args": {"check_same_thread": False}}
+    )
+    canonical_db.init_app(app)
+    Migrate(app, canonical_db)
+
+    enterprise_structure_columns = {
+        "organization_type",
+        "description",
+        "legal_name",
+        "registration_number",
+        "website",
+        "email",
+        "phone",
+        "emergency_phone",
+        "opening_hours",
+        "head_office",
+        "departments_json",
+        "territory",
+        "capabilities_json",
+        "languages_json",
+        "priority_domains_json",
+        "accepted_case_types_json",
+        "required_documents_json",
+        "supported_populations_json",
+        "risk_level",
+        "updated_at",
+    }
+    enterprise_service_columns = {
+        "category",
+        "availability",
+        "capacity",
+        "responsible_professionals_json",
+        "opening_hours",
+        "coverage",
+        "updated_at",
+    }
+
+    with app.app_context():
+        command.upgrade(cfg, "20260728_1500")
+        engine = canonical_db.engine
+        inspector = inspect(engine)
+        assert "structure_contacts" in inspector.get_table_names()
+        assert "structure_coverage_areas" in inspector.get_table_names()
+        structure_columns = {col["name"] for col in inspector.get_columns("structures")}
+        service_columns = {col["name"] for col in inspector.get_columns("structure_services")}
+        assert enterprise_structure_columns <= structure_columns
+        assert enterprise_service_columns <= service_columns
+
+        command.downgrade(cfg, "20260728_0900")
+        inspector = inspect(engine)
+        assert "structure_contacts" not in inspector.get_table_names()
+        assert "structure_coverage_areas" not in inspector.get_table_names()
+        structure_columns = {col["name"] for col in inspector.get_columns("structures")}
+        service_columns = {col["name"] for col in inspector.get_columns("structure_services")}
+        assert enterprise_structure_columns.isdisjoint(structure_columns)
+        assert enterprise_service_columns.isdisjoint(service_columns)

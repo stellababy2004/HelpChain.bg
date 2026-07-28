@@ -877,6 +877,7 @@ class Structure(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     slug = db.Column(db.String(80), unique=True, nullable=False)
+    organization_type = db.Column(db.String(64), nullable=True, index=True)
     status = db.Column(
         db.String(16),
         nullable=False,
@@ -884,8 +885,39 @@ class Structure(db.Model):
         server_default="pending",
         index=True,
     )
+    description = db.Column(db.Text, nullable=True)
+    legal_name = db.Column(db.String(255), nullable=True)
+    registration_number = db.Column(db.String(120), nullable=True)
+    website = db.Column(db.String(255), nullable=True)
+    email = db.Column(db.String(255), nullable=True)
+    phone = db.Column(db.String(80), nullable=True)
+    emergency_phone = db.Column(db.String(80), nullable=True)
+    opening_hours = db.Column(db.Text, nullable=True)
+    head_office = db.Column(db.Text, nullable=True)
+    departments_json = db.Column(db.Text, nullable=True)
+    territory = db.Column(db.String(255), nullable=True, index=True)
+    capabilities_json = db.Column(db.Text, nullable=True)
+    languages_json = db.Column(db.Text, nullable=True)
+    priority_domains_json = db.Column(db.Text, nullable=True)
+    accepted_case_types_json = db.Column(db.Text, nullable=True)
+    required_documents_json = db.Column(db.Text, nullable=True)
+    supported_populations_json = db.Column(db.Text, nullable=True)
+    risk_level = db.Column(db.String(32), nullable=True)
     created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    updated_at = db.Column(db.DateTime, nullable=True, onupdate=utc_now)
     services = relationship("StructureService", back_populates="structure", lazy="select")
+    contacts = relationship(
+        "StructureContact",
+        back_populates="structure",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
+    coverage_areas = relationship(
+        "StructureCoverageArea",
+        back_populates="structure",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
 
 
 class StructureService(db.Model):
@@ -895,8 +927,15 @@ class StructureService(db.Model):
     structure_id = Column(Integer, ForeignKey("structures.id"), nullable=False, index=True)
     code = Column(String(64), nullable=False)
     name = Column(String(255), nullable=False)
+    category = Column(String(80), nullable=True, index=True)
+    availability = Column(String(80), nullable=True)
+    capacity = Column(Integer, nullable=True)
+    responsible_professionals_json = Column(Text, nullable=True)
+    opening_hours = Column(Text, nullable=True)
+    coverage = Column(Text, nullable=True)
     is_active = Column(Boolean, nullable=False, default=True, server_default=db.true())
     created_at = Column(DateTime, nullable=False, default=utc_now)
+    updated_at = Column(DateTime, nullable=True, onupdate=utc_now)
 
     structure = relationship("Structure", back_populates="services", lazy="joined")
     requests = relationship("Request", back_populates="service", lazy="select")
@@ -905,6 +944,59 @@ class StructureService(db.Model):
         UniqueConstraint("structure_id", "code", name="uq_structure_services_structure_code"),
         UniqueConstraint("structure_id", "name", name="uq_structure_services_structure_name"),
         Index("ix_structure_services_structure_active", "structure_id", "is_active"),
+    )
+
+
+class StructureContact(db.Model):
+    __tablename__ = "structure_contacts"
+
+    id = Column(Integer, primary_key=True)
+    structure_id = Column(Integer, ForeignKey("structures.id"), nullable=False, index=True)
+    contact_type = Column(String(40), nullable=False, index=True)
+    name = Column(String(255), nullable=True)
+    role = Column(String(120), nullable=True)
+    email = Column(String(255), nullable=True)
+    phone = Column(String(80), nullable=True)
+    availability = Column(Text, nullable=True)
+    escalation_order = Column(Integer, nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True, server_default=db.true())
+    created_at = Column(DateTime, nullable=False, default=utc_now, index=True)
+    updated_at = Column(DateTime, nullable=True, onupdate=utc_now)
+
+    structure = relationship("Structure", back_populates="contacts", lazy="joined")
+
+    __table_args__ = (
+        Index("ix_structure_contacts_structure_type", "structure_id", "contact_type"),
+        Index("ix_structure_contacts_structure_active", "structure_id", "is_active"),
+    )
+
+
+class StructureCoverageArea(db.Model):
+    __tablename__ = "structure_coverage_areas"
+
+    id = Column(Integer, primary_key=True)
+    structure_id = Column(Integer, ForeignKey("structures.id"), nullable=False, index=True)
+    area_type = Column(String(40), nullable=False, index=True)
+    name = Column(String(255), nullable=False)
+    postal_code = Column(String(32), nullable=True, index=True)
+    department = Column(String(120), nullable=True, index=True)
+    coverage_radius_km = Column(Float, nullable=True)
+    population_served = Column(Integer, nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True, server_default=db.true())
+    created_at = Column(DateTime, nullable=False, default=utc_now, index=True)
+    updated_at = Column(DateTime, nullable=True, onupdate=utc_now)
+
+    structure = relationship("Structure", back_populates="coverage_areas", lazy="joined")
+
+    __table_args__ = (
+        Index("ix_structure_coverage_structure_type", "structure_id", "area_type"),
+        Index("ix_structure_coverage_structure_active", "structure_id", "is_active"),
+        UniqueConstraint(
+            "structure_id",
+            "area_type",
+            "name",
+            name="uq_structure_coverage_structure_type_name",
+        ),
     )
 
 

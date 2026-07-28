@@ -1,6 +1,28 @@
 import pytest
+from contextlib import contextmanager
+
+from sqlalchemy import event
 
 pytestmark = pytest.mark.shared_platform
+
+
+@contextmanager
+def _count_select_queries(app):
+    from backend.extensions import db
+
+    counts = {"select": 0}
+
+    def before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
+        if str(statement or "").lstrip().lower().startswith("select"):
+            counts["select"] += 1
+
+    with app.app_context():
+        engine = db.engine
+    event.listen(engine, "before_cursor_execute", before_cursor_execute)
+    try:
+        yield counts
+    finally:
+        event.remove(engine, "before_cursor_execute", before_cursor_execute)
 
 
 def _login_admin(client, admin_user):
@@ -97,6 +119,53 @@ def test_structure_create_success(client, session):
     assert created.name == "Structure A"
 
 
+def test_structure_create_accepts_valid_organization_type(client, session):
+    admin = _make_admin(
+        session, username="creator_valid_type", email="creator_valid_type@test.local", role="superadmin"
+    )
+    _login_admin(client, admin)
+    resp = client.post(
+        "/admin/structures/new",
+        data={
+            "name": "CCAS Valid Type",
+            "slug": "ccas-valid-type",
+            "organization_type": "ccas",
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 303
+
+    from backend.models import Structure
+
+    created = Structure.query.filter_by(slug="ccas-valid-type").first()
+    assert created is not None
+    assert created.organization_type == "ccas"
+
+
+def test_structure_create_rejects_invalid_organization_type(client, session):
+    admin = _make_admin(
+        session,
+        username="creator_invalid_type",
+        email="creator_invalid_type@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+    resp = client.post(
+        "/admin/structures/new",
+        data={
+            "name": "Invalid Type",
+            "slug": "invalid-type",
+            "organization_type": "invented_agency",
+        },
+        follow_redirects=False,
+    )
+    assert resp.status_code == 400
+
+    from backend.models import Structure
+
+    assert Structure.query.filter_by(slug="invalid-type").first() is None
+
+
 @pytest.mark.parametrize(
     "payload",
     [
@@ -136,6 +205,120 @@ def test_structure_detail_loads(client, session):
     _login_admin(client, admin)
     resp = client.get(f"/admin/structures/{st.id}", follow_redirects=False)
     assert resp.status_code == 200
+
+
+def test_structure_operational_intelligence_endpoint(client, session):
+    st = _make_structure(session, name="Operational Detail", slug="operational-detail")
+    admin = _make_admin(
+        session,
+        username="ops_intel_admin",
+        email="ops_intel_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.get(
+        f"/admin/structures/{st.id}/operational-intelligence",
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert payload["profile"]["name"] == "Operational Detail"
+    assert payload["capacity"]["active_cases"]["source_tables"] == ["requests"]
+    assert payload["health"]["display"] == "Not enough operational data"
+
+
+def test_structure_operational_intelligence_blocks_foreign_structure(client, session):
+    own = _make_structure(session, name="Own Tenant", slug="own-tenant")
+    foreign = _make_structure(session, name="Foreign Tenant", slug="foreign-tenant")
+    admin = _make_admin(
+        session,
+        username="tenant_ops_intel_admin",
+        email="tenant_ops_intel_admin@test.local",
+        role="superadmin",
+        structure_id=own.id,
+    )
+    _login_admin(client, admin)
+
+    resp = client.get(
+        f"/admin/structures/{foreign.id}/operational-intelligence",
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 403
+
+
+def test_empty_intervenant_availability_does_not_count_as_available(client, session):
+    from backend.models import Intervenant
+
+    st = _make_structure(session, name="Availability Truth", slug="availability-truth")
+    admin = _make_admin(
+        session,
+        username="availability_admin",
+        email="availability_admin@test.local",
+        role="superadmin",
+    )
+    session.add(
+        Intervenant(
+            structure_id=st.id,
+            name="Unknown Availability",
+            actor_type="social_worker",
+            availability="",
+            is_active=True,
+        )
+    )
+    session.commit()
+    _login_admin(client, admin)
+
+    resp = client.get(
+        f"/admin/structures/{st.id}/operational-intelligence",
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert payload["capacity"]["professionals"]["value"] == 1
+    assert payload["capacity"]["available_professionals"]["value"] == 0
+
+
+def test_structures_index_query_count_is_not_per_structure(client, session, app):
+    admin = _make_admin(
+        session,
+        username="query_count_admin",
+        email="query_count_admin@test.local",
+        role="superadmin",
+    )
+    for index in range(8):
+        st = _make_structure(session, name=f"Query Org {index}", slug=f"query-org-{index}")
+        user = _make_user(session, username=f"query-user-{index}", email=f"query-user-{index}@test.local")
+        _make_request(session, title=f"Query Request {index}", user_id=user.id, structure_id=st.id)
+    _login_admin(client, admin)
+
+    with _count_select_queries(app) as counts:
+        resp = client.get("/admin/structures", follow_redirects=False)
+
+    assert resp.status_code == 200
+    assert counts["select"] <= 12
+
+
+def test_structure_detail_query_count_is_materially_reduced(client, session, app):
+    st = _make_structure(session, name="Detail Query Count", slug="detail-query-count")
+    user = _make_user(session, username="detail-query-user", email="detail-query-user@test.local")
+    _make_request(session, title="Detail Query Request", user_id=user.id, structure_id=st.id)
+    admin = _make_admin(
+        session,
+        username="detail_query_admin",
+        email="detail_query_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    with _count_select_queries(app) as counts:
+        resp = client.get(f"/admin/structures/{st.id}", follow_redirects=False)
+
+    assert resp.status_code == 200
+    assert counts["select"] <= 30
 
 
 def test_assign_admin_success(client, session):

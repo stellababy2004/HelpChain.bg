@@ -1,0 +1,251 @@
+{% extends "layouts/admin_workspace.html" %}
+{% block title %}{{ _('Admin') }} - Organization | HelpChain{% endblock %}
+{% block admin_body_class %} hc-admin-requests-page{% endblock %}
+
+{% macro metric_card(item) -%}
+  <div class="col-12 col-sm-6 col-xl-3">
+    <div class="card shadow-sm p-3 h-100">
+      <div class="text-muted small">{{ item.label }}</div>
+      <div class="h3 mb-1">{{ item.display }}</div>
+      <div class="small text-muted">Confidence {{ item.confidence }}</div>
+    </div>
+  </div>
+{%- endmacro %}
+
+{% macro lineage(metric) -%}
+  {% if dashboard_mode == 'operations' %}
+    <details class="small text-muted mt-2">
+      <summary>Metric lineage</summary>
+      <div>Metric: {{ metric.key }}</div>
+      <div>Source tables: {{ metric.source_tables|join(', ') }}</div>
+      <div>Query: {{ metric.query_origin }}</div>
+      <div>Updated: {{ metric.updated_at|format_datetime_fr if metric.updated_at else 'Not enough operational data' }}</div>
+      <div>{{ metric.explanation }}</div>
+    </details>
+  {% endif %}
+{%- endmacro %}
+
+{% block admin_content %}
+<div class="container-fluid mt-4">
+  <div class="d-flex flex-wrap gap-2 align-items-start justify-content-between mb-4">
+    <div>
+      <div class="text-muted small">Enterprise Organization</div>
+      <h2 class="mb-1">{{ enterprise.profile.name }}</h2>
+      <div class="text-muted">
+        {{ enterprise.profile.organization_type.label }} - {{ enterprise.profile.status }} - Slug: {{ structure.slug }}
+      </div>
+      <div class="small text-muted mt-1">
+        Created {{ enterprise.profile.created_at|format_datetime_fr if enterprise.profile.created_at else 'Not enough operational data' }}
+        - Last activity {{ enterprise.profile.last_activity|format_datetime_fr if enterprise.profile.last_activity else 'Not enough operational data' }}
+      </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_structure_detail', structure_id=structure.id, mode='executive') }}">Executive</a>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_structure_detail', structure_id=structure.id, mode='operations') }}">Operations</a>
+      <a class="btn btn-primary btn-sm" href="{{ url_for('admin.admin_structure_intervenants', structure_id=structure.id) }}">Professionals</a>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    {% for item in enterprise.executive_kpis %}
+      {{ metric_card(item) }}
+    {% endfor %}
+  </div>
+
+  <div class="row g-4">
+    <div class="col-12 col-xl-8">
+      <div class="card shadow-sm p-3 mb-4">
+        <div class="d-flex flex-wrap justify-content-between gap-3 mb-3">
+          <div>
+            <h5 class="mb-1">Organization Profile</h5>
+            <div class="text-muted small">Operational identity and business readiness.</div>
+          </div>
+          <span class="badge" style="background: {{ enterprise.profile.organization_type.color }};">
+            {{ enterprise.profile.organization_type.label }}
+          </span>
+        </div>
+        <div class="row g-3">
+          <div class="col-12 col-md-6"><div class="text-muted small">Description</div><strong>{{ enterprise.profile.description }}</strong></div>
+          <div class="col-12 col-md-6"><div class="text-muted small">Legal name</div><strong>{{ enterprise.profile.legal_name }}</strong></div>
+          <div class="col-12 col-md-4"><div class="text-muted small">Registration number</div><strong>{{ enterprise.profile.registration_number }}</strong></div>
+          <div class="col-12 col-md-4"><div class="text-muted small">Website</div><strong>{{ enterprise.profile.website }}</strong></div>
+          <div class="col-12 col-md-4"><div class="text-muted small">Territory</div><strong>{{ enterprise.profile.territory }}</strong></div>
+          <div class="col-12 col-md-4"><div class="text-muted small">Email</div><strong>{{ enterprise.profile.email }}</strong></div>
+          <div class="col-12 col-md-4"><div class="text-muted small">Phone</div><strong>{{ enterprise.profile.phone }}</strong></div>
+          <div class="col-12 col-md-4"><div class="text-muted small">Emergency phone</div><strong>{{ enterprise.profile.emergency_phone }}</strong></div>
+          <div class="col-12 col-md-6"><div class="text-muted small">Opening hours</div><strong>{{ enterprise.profile.opening_hours }}</strong></div>
+          <div class="col-12 col-md-6"><div class="text-muted small">Head office</div><strong>{{ enterprise.profile.head_office }}</strong></div>
+          <div class="col-12">
+            <div class="text-muted small">Departments</div>
+            {% if enterprise.profile.departments %}
+              {% for department in enterprise.profile.departments %}
+                <span class="badge text-bg-light border">{{ department }}</span>
+              {% endfor %}
+            {% else %}
+              <strong>Not enough operational data</strong>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Organization Capacity</h5>
+        <div class="row g-3">
+          {% for metric in enterprise.capacity.values() %}
+            <div class="col-12 col-md-6 col-xl-4">
+              <div class="border rounded p-3 h-100">
+                <div class="text-muted small">{{ metric.label }}</div>
+                <div class="h5 mb-1">{{ metric.display }}</div>
+                <div class="small text-muted">Confidence {{ metric.confidence }}</div>
+                {{ lineage(metric) }}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Services Offered</h5>
+        {% if enterprise.services %}
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>Service</th>
+                  <th>Category</th>
+                  <th>Availability</th>
+                  <th>Capacity</th>
+                  <th>Responsible professionals</th>
+                  <th>Coverage</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for service in enterprise.services %}
+                  <tr>
+                    <td>{{ service.name }}</td>
+                    <td>{{ service.category }}</td>
+                    <td>{{ service.availability }}</td>
+                    <td>{{ service.capacity_display }}</td>
+                    <td>{{ service.responsible_professionals|join(', ') if service.responsible_professionals else 'Not enough operational data' }}</td>
+                    <td>{{ service.coverage }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-muted">Not enough operational data</div>
+        {% endif %}
+      </div>
+
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Recent Activity</h5>
+        {% if enterprise.activity %}
+          <div class="list-group list-group-flush">
+            {% for event in enterprise.activity %}
+              <div class="list-group-item px-0">
+                <div class="fw-semibold">{{ event.label }}</div>
+                <div class="small text-muted">
+                  {{ event.timestamp|format_datetime_fr if event.timestamp else 'Not enough operational data' }}
+                  - User {{ event.user }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-muted">Not enough operational data</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-2">Health Explainability</h5>
+        <div class="display-6">{{ enterprise.health.display }}</div>
+        <div class="small text-muted mb-2">Confidence {{ enterprise.health.confidence }} - Trend {{ enterprise.health.trend }}</div>
+        <p class="mb-3">{{ enterprise.health.explanation }}</p>
+        <div class="mb-3">
+          <div class="fw-semibold">Positive factors</div>
+          {% for item in enterprise.health.positive_factors %}
+            <div class="small">+ {{ item }}</div>
+          {% else %}
+            <div class="small text-muted">Not enough operational data</div>
+          {% endfor %}
+        </div>
+        <div class="mb-3">
+          <div class="fw-semibold">Negative factors</div>
+          {% for item in enterprise.health.negative_factors %}
+            <div class="small">- {{ item }}</div>
+          {% else %}
+            <div class="small text-muted">No negative operational factors detected.</div>
+          {% endfor %}
+        </div>
+        <div>
+          <div class="fw-semibold">Recommendations</div>
+          {% for item in enterprise.health.recommendations %}
+            <div class="small">{{ item }}</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Operational Alerts</h5>
+        {% for alert in enterprise.alerts %}
+          <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+            <div>
+              <div class="fw-semibold">{{ alert.label }}</div>
+              <div class="small text-muted">{{ alert.source }}</div>
+            </div>
+            <span class="badge {% if alert.severity == 'critical' %}text-bg-danger{% elif alert.severity == 'high' %}text-bg-warning{% else %}text-bg-secondary{% endif %}">{{ alert.count }}</span>
+          </div>
+        {% else %}
+          <div class="text-muted">No operational alerts detected.</div>
+        {% endfor %}
+      </div>
+
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Territorial Coverage</h5>
+        <div class="small text-muted mb-2">Source: {{ enterprise.coverage.source }} - Confidence {{ enterprise.coverage.confidence }}</div>
+        <div class="mb-2"><strong>Cities:</strong> {{ enterprise.coverage.covered_cities|join(', ') if enterprise.coverage.covered_cities else 'Not enough operational data' }}</div>
+        <div class="mb-2"><strong>Districts:</strong> {{ enterprise.coverage.covered_districts|join(', ') if enterprise.coverage.covered_districts else 'Not enough operational data' }}</div>
+        <div class="mb-2"><strong>Departments:</strong> {{ enterprise.coverage.departments|join(', ') if enterprise.coverage.departments else 'Not enough operational data' }}</div>
+        <div class="mb-2"><strong>Postal codes:</strong> {{ enterprise.coverage.postal_codes|join(', ') if enterprise.coverage.postal_codes else 'Not enough operational data' }}</div>
+        <div><strong>Population served:</strong> {{ enterprise.coverage.population_served if enterprise.coverage.population_served else 'Not enough operational data' }}</div>
+      </div>
+
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Contact Directory</h5>
+        {% for contact in enterprise.contacts.escalation_chain %}
+          <div class="border-bottom py-2">
+            <div class="fw-semibold">{{ contact.name }}</div>
+            <div class="small text-muted">{{ contact.type }} - {{ contact.role }}</div>
+            <div class="small">{{ contact.email }} - {{ contact.phone }}</div>
+            <div class="small text-muted">{{ contact.availability }}</div>
+          </div>
+        {% else %}
+          <div class="text-muted">Not enough operational data</div>
+        {% endfor %}
+      </div>
+
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">AI Routing Readiness</h5>
+        <div class="small"><strong>Capabilities:</strong> {{ enterprise.ai_readiness.capabilities|join(', ') if enterprise.ai_readiness.capabilities else 'Not enough operational data' }}</div>
+        <div class="small"><strong>Languages:</strong> {{ enterprise.ai_readiness.languages|join(', ') if enterprise.ai_readiness.languages else 'Not enough operational data' }}</div>
+        <div class="small"><strong>Availability:</strong> {{ enterprise.ai_readiness.availability }}</div>
+        <div class="small"><strong>Response time:</strong> {{ enterprise.ai_readiness.response_time }}</div>
+        <div class="small"><strong>Priority domains:</strong> {{ enterprise.ai_readiness.priority_domains|join(', ') if enterprise.ai_readiness.priority_domains else 'Not enough operational data' }}</div>
+        <div class="small"><strong>Accepted case types:</strong> {{ enterprise.ai_readiness.accepted_case_types|join(', ') if enterprise.ai_readiness.accepted_case_types else 'Not enough operational data' }}</div>
+        <div class="small"><strong>Required documents:</strong> {{ enterprise.ai_readiness.required_documents|join(', ') if enterprise.ai_readiness.required_documents else 'Not enough operational data' }}</div>
+        <div class="small"><strong>Supported populations:</strong> {{ enterprise.ai_readiness.supported_populations|join(', ') if enterprise.ai_readiness.supported_populations else 'Not enough operational data' }}</div>
+        <div class="small"><strong>Risk level:</strong> {{ enterprise.ai_readiness.risk_level }}</div>
+        {% if dashboard_mode == 'operations' %}
+          <details class="small text-muted mt-2">
+            <summary>Matching score inputs</summary>
+            <pre class="mb-0">{{ enterprise.ai_readiness.matching_score_inputs }}</pre>
+          </details>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

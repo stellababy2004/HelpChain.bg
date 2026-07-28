@@ -4,7 +4,7 @@ import math
 from types import SimpleNamespace
 from datetime import datetime, timedelta
 
-from flask import abort, flash, redirect, render_template, request, session, url_for
+from flask import abort, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user
 from sqlalchemy import and_, func, or_
 
@@ -18,6 +18,11 @@ from ..services.organization_onboarding import (
     approve_access_request,
     mark_access_request_need_info,
     reject_access_request,
+)
+from ..services.enterprise_structure_intelligence import (
+    MetricValue,
+    ORGANIZATION_TYPES,
+    build_enterprise_structure_dashboard,
 )
 from ..services.prospect_auto_capture import (
     append_audience_context_to_notes,
@@ -158,6 +163,35 @@ def _structure_capacity_metrics(structure_id: int) -> dict[str, int | None]:
     }
 
 
+def _structure_dashboard_mode() -> str:
+    mode = (request.args.get("mode") or "").strip().lower()
+    if mode in {"operations", "developer"}:
+        return "operations"
+    return "executive"
+
+
+def _serialize_value(value):
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, MetricValue):
+        return {
+            "key": value.key,
+            "label": value.label,
+            "value": value.value,
+            "display": value.display,
+            "source_tables": value.source_tables,
+            "query_origin": value.query_origin,
+            "confidence": value.confidence,
+            "updated_at": value.updated_at.isoformat() if value.updated_at else None,
+            "explanation": value.explanation,
+        }
+    if isinstance(value, dict):
+        return {str(k): _serialize_value(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_serialize_value(item) for item in value]
+    return value
+
+
 def _intervenant_display_name(row: Intervenant) -> str:
     return getattr(row, "name", None) or f"Intervenant #{row.id}"
 
@@ -182,7 +216,75 @@ def _split_intervenant_location(row: Intervenant) -> tuple[str, str]:
 def admin_structures():
     _require_global_admin()
     rows = Structure.query.order_by(Structure.name.asc(), Structure.id.asc()).all()
-    return render_template("admin/structures.html", structures=rows), 200
+    structure_ids = [int(row.id) for row in rows]
+    open_filter = or_(
+        Request.status.is_(None),
+        ~func.lower(func.coalesce(Request.status, "")).in_(list(CLOSED_STATUSES)),
+    )
+    latest_activity_by_structure = {}
+    users_by_structure = {}
+    active_requests_by_structure = {}
+    services_by_structure = {}
+    if structure_ids:
+        latest_activity_by_structure = {
+            int(structure_id): latest_activity
+            for structure_id, latest_activity in db.session.query(
+                Request.structure_id,
+                func.max(Request.created_at),
+            )
+            .filter(Request.structure_id.in_(structure_ids))
+            .group_by(Request.structure_id)
+            .all()
+            if structure_id is not None
+        }
+        users_by_structure = {
+            int(structure_id): int(count or 0)
+            for structure_id, count in db.session.query(
+                AdminUser.structure_id,
+                func.count(AdminUser.id),
+            )
+            .filter(AdminUser.structure_id.in_(structure_ids))
+            .group_by(AdminUser.structure_id)
+            .all()
+            if structure_id is not None
+        }
+        active_requests_by_structure = {
+            int(structure_id): int(count or 0)
+            for structure_id, count in db.session.query(
+                Request.structure_id,
+                func.count(Request.id),
+            )
+            .filter(Request.structure_id.in_(structure_ids))
+            .filter(open_filter)
+            .group_by(Request.structure_id)
+            .all()
+            if structure_id is not None
+        }
+        services_by_structure = {
+            int(structure_id): int(count or 0)
+            for structure_id, count in db.session.query(
+                StructureService.structure_id,
+                func.count(StructureService.id),
+            )
+            .filter(StructureService.structure_id.in_(structure_ids))
+            .filter(StructureService.is_active.is_(True))
+            .group_by(StructureService.structure_id)
+            .all()
+            if structure_id is not None
+        }
+    structure_rows = []
+    for row in rows:
+        structure_rows.append(
+            {
+                "structure": row,
+                "organization_type": getattr(row, "organization_type", None) or "Not enough operational data",
+                "users_count": users_by_structure.get(int(row.id), 0),
+                "active_requests": active_requests_by_structure.get(int(row.id), 0),
+                "services_count": services_by_structure.get(int(row.id), 0),
+                "last_activity": latest_activity_by_structure.get(int(row.id)),
+            }
+        )
+    return render_template("admin/structures_enterprise.html", structures=rows, structure_rows=structure_rows), 200
 
 
 @admin_bp.get("/organizations/requests")
@@ -359,7 +461,10 @@ def admin_organization_access_request_need_info(req_id: int):
 @admin_role_required("superadmin")
 def admin_structure_new():
     _require_global_admin()
-    return render_template("admin/structure_new.html"), 200
+    return render_template(
+        "admin/structure_new.html",
+        organization_types=ORGANIZATION_TYPES,
+    ), 200
 
 
 @admin_bp.post("/structures/new")
@@ -369,12 +474,28 @@ def admin_structure_create():
     _require_global_admin()
     name = (request.form.get("name") or "").strip()
     slug = (request.form.get("slug") or "").strip()
+    organization_type = (request.form.get("organization_type") or "").strip()
+    status = (request.form.get("status") or "pending").strip().lower()
+    description = (request.form.get("description") or "").strip()
+    legal_name = (request.form.get("legal_name") or "").strip()
+    registration_number = (request.form.get("registration_number") or "").strip()
+    website = (request.form.get("website") or "").strip()
+    email = (request.form.get("email") or "").strip()
+    phone = (request.form.get("phone") or "").strip()
+    emergency_phone = (request.form.get("emergency_phone") or "").strip()
+    opening_hours = (request.form.get("opening_hours") or "").strip()
+    head_office = (request.form.get("head_office") or "").strip()
+    territory = (request.form.get("territory") or "").strip()
 
     errors = {}
     if not name:
         errors["name"] = "Le nom est requis."
     if not slug:
         errors["slug"] = "Le slug est requis."
+    if status not in {"pending", "active", "inactive", "suspended"}:
+        errors["status"] = "Statut invalide."
+    if organization_type and organization_type not in ORGANIZATION_TYPES:
+        errors["organization_type"] = "Type d'organisation invalide."
 
     if slug:
         existing = Structure.query.filter(Structure.slug == slug).first()
@@ -387,13 +508,30 @@ def admin_structure_create():
         return (
             render_template(
                 "admin/structure_new.html",
-                form_data={"name": name, "slug": slug},
+                form_data=request.form,
                 form_errors=errors,
+                organization_types=ORGANIZATION_TYPES,
             ),
             400,
         )
 
-    row = Structure(name=name, slug=slug, created_at=datetime.utcnow())
+    row = Structure(
+        name=name,
+        slug=slug,
+        organization_type=organization_type or None,
+        status=status,
+        description=description or None,
+        legal_name=legal_name or None,
+        registration_number=registration_number or None,
+        website=website or None,
+        email=email or None,
+        phone=phone or None,
+        emergency_phone=emergency_phone or None,
+        opening_hours=opening_hours or None,
+        head_office=head_office or None,
+        territory=territory or None,
+        created_at=datetime.utcnow(),
+    )
     db.session.add(row)
     db.session.commit()
 
@@ -418,41 +556,26 @@ def admin_structure_create():
 @admin_role_required("superadmin")
 def admin_structure_detail(structure_id: int):
     structure = _structure_or_403(structure_id)
-    users_count = AdminUser.query.filter(AdminUser.structure_id == structure_id).count()
-
-    open_filter = or_(
-        Request.status.is_(None),
-        ~func.lower(Request.status).in_(list(CLOSED_STATUSES)),
-    )
-    active_requests = (
-        Request.query.filter(Request.structure_id == structure_id).filter(open_filter).count()
-    )
-    done_requests = (
-        Request.query.filter(Request.structure_id == structure_id)
-        .filter(func.lower(Request.status) == "done")
-        .count()
-    )
-    recent_requests = (
-        Request.query.filter_by(structure_id=structure_id)
-        .order_by(Request.created_at.desc())
-        .limit(10)
-        .all()
-    )
+    intelligence = build_enterprise_structure_dashboard(structure)
 
     return (
         render_template(
-            "admin/structure_dashboard.html",
+            "admin/structure_enterprise_dashboard.html",
             structure=structure,
-            users_count=users_count,
-            active_requests=active_requests,
-            done_requests=done_requests,
-            recent_requests=recent_requests,
-            health_score=compute_structure_health(structure_id),
-            alerts=compute_structure_alerts(structure_id),
-            capacity_metrics=_structure_capacity_metrics(structure_id),
+            enterprise=intelligence,
+            dashboard_mode=_structure_dashboard_mode(),
         ),
         200,
     )
+
+
+@admin_bp.get("/structures/<int:structure_id>/operational-intelligence")
+@admin_required
+@admin_role_required("superadmin")
+def admin_structure_operational_intelligence(structure_id: int):
+    structure = _structure_or_403(structure_id)
+    intelligence = build_enterprise_structure_dashboard(structure)
+    return jsonify(_serialize_value(intelligence)), 200
 
 
 @admin_bp.get("/structures/<int:structure_id>/intervenants")
