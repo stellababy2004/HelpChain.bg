@@ -14,20 +14,20 @@ async function loadRevenue() {
   const data = await res.json();
 
   document.getElementById("revTotal").textContent =
-    (data.total_estimated_revenue || 0) + " €";
+    data.total_estimated_revenue_label || "Not enough data available";
 
   const sessionsAll = (data.sessions || [])
     .sort((a, b) => (b.score || 0) - (a.score || 0));
 
   let lost = 0;
   sessionsAll.forEach(s => {
-    if ((s.tier || "") === "HOT" && (s.value || 0) > 0) {
+    if ((s.tier || "") === "HOT" && s.value_available) {
       lost += s.value;
     }
   });
 
   const lostEl = document.getElementById("revLost");
-  if (lostEl) lostEl.textContent = lost + " €";
+  if (lostEl) lostEl.textContent = lost > 0 ? lost + " EUR" : "Not enough data available";
 
   const sessions = sessionsAll.slice(0, 10);
 
@@ -42,7 +42,11 @@ async function loadRevenue() {
       .map(p => `<span class="hc-rev-chip">${p}</span>`)
       .join("");
 
-    const note = `${label} | ${s.tier || "COLD"} | score ${s.score || 0} | estimated ${s.value || 0} EUR | pages: ${pagesList.join(", ")}`;
+    const scoreExplain = (s.score_components || [])
+      .map(component => `+${component.points} ${component.label}`)
+      .join("; ");
+    const valueLabel = s.value_available ? `${s.value} EUR` : (s.value_label || "Not enough data available");
+    const note = `${label} | ${s.tier || "COLD"} | score ${s.score || 0} | value ${valueLabel} | explain: ${scoreExplain || "Not enough data available"} | pages: ${pagesList.join(", ")}`;
     const actionClass = (s.tier === "HOT" || s.tier === "WARM") ? "" : "hc-rev-actions--muted";
 
     return `
@@ -50,7 +54,7 @@ async function loadRevenue() {
         <td><strong>${label}</strong></td>
         <td><strong>${s.score || 0}</strong></td>
         <td><span class="hc-rev-tier hc-rev-tier--${tier}">${s.tier || "COLD"}</span></td>
-        <td class="hc-rev-value"><strong>${s.value || 0} €</strong></td>
+        <td class="hc-rev-value"><strong>${valueLabel}</strong></td>
         <td><div class="hc-rev-pages">${pages || '<span class="text-muted">-</span>'}</div></td>
         <td>
           <div class="hc-rev-actions ${actionClass}">

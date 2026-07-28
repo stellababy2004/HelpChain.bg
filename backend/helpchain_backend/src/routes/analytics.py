@@ -29,6 +29,151 @@ analytics_bp = Blueprint(
 csrf.exempt(analytics_bp)
 
 
+REVENUE_VISITOR_SCORE_FORMULA_VERSION = "legacy_revenue_visitor_v2_explainable"
+
+
+def _revenue_score_component(code, label, points, evidence):
+    return {
+        "code": code,
+        "label": label,
+        "points": int(points),
+        "evidence": evidence,
+    }
+
+
+def _explain_legacy_revenue_session(events):
+    page_views = 0
+    cta_events = 0
+    demo_starts = 0
+    form_submits = 0
+    demo_page_views = 0
+    pages = set()
+    event_ids = []
+
+    for event in events:
+        if getattr(event, "id", None) is not None:
+            event_ids.append(int(event.id))
+        page_url = getattr(event, "page_url", None)
+        if page_url:
+            pages.add(page_url)
+        event_type = getattr(event, "event_type", None) or ""
+        if event_type == "page_view":
+            page_views += 1
+        if event_type.startswith("cta_"):
+            cta_events += 1
+        if event_type == "demo_form_start":
+            demo_starts += 1
+        if event_type.endswith("_form_submit"):
+            form_submits += 1
+        if page_url == "/demo":
+            demo_page_views += 1
+
+    components = []
+    if page_views:
+        components.append(
+            _revenue_score_component(
+                "page_views",
+                "Page views",
+                page_views,
+                {"event_type": "page_view", "count": page_views},
+            )
+        )
+    if cta_events:
+        components.append(
+            _revenue_score_component(
+                "cta_events",
+                "CTA interactions",
+                cta_events * 10,
+                {"event_type_prefix": "cta_", "count": cta_events},
+            )
+        )
+    if demo_starts:
+        components.append(
+            _revenue_score_component(
+                "demo_form_start",
+                "Demo form started",
+                demo_starts * 30,
+                {"event_type": "demo_form_start", "count": demo_starts},
+            )
+        )
+    if form_submits:
+        components.append(
+            _revenue_score_component(
+                "form_submit",
+                "Form submitted",
+                form_submits * 100,
+                {"event_type_suffix": "_form_submit", "count": form_submits},
+            )
+        )
+    if demo_page_views:
+        components.append(
+            _revenue_score_component(
+                "demo_page",
+                "Demo page visited",
+                demo_page_views * 20,
+                {"page_url": "/demo", "count": demo_page_views},
+            )
+        )
+
+    total_score = sum(component["points"] for component in components)
+    return {
+        "total_score": int(total_score),
+        "components": components,
+        "evidence": {
+            "source_table": "analytics_events",
+            "source_row_count": len(events),
+            "formula_version": REVENUE_VISITOR_SCORE_FORMULA_VERSION,
+        },
+        "originating_event_ids": event_ids,
+        "pages": list(pages),
+        "confidence": "medium" if events else "low",
+    }
+
+
+def _persist_legacy_revenue_score(session_id, explanation):
+    try:
+        from ..extensions import db
+        from ..models import ScoreExplanation
+
+        existing = (
+            ScoreExplanation.query.filter_by(
+                score_key="legacy_revenue_visitor",
+                subject_type="analytics_session",
+                subject_id=str(session_id),
+            )
+            .order_by(ScoreExplanation.id.desc())
+            .first()
+        )
+        row = existing or ScoreExplanation(
+            score_key="legacy_revenue_visitor",
+            subject_type="analytics_session",
+            subject_id=str(session_id),
+            total_score=0,
+            formula_version=REVENUE_VISITOR_SCORE_FORMULA_VERSION,
+            confidence="low",
+            component_list_json="[]",
+            evidence_json="{}",
+            originating_event_ids_json="[]",
+        )
+        row.total_score = int(explanation["total_score"])
+        row.formula_version = REVENUE_VISITOR_SCORE_FORMULA_VERSION
+        row.confidence = str(explanation.get("confidence") or "low")
+        row.component_list_json = json.dumps(explanation.get("components") or [], sort_keys=True)
+        row.evidence_json = json.dumps(explanation.get("evidence") or {}, sort_keys=True)
+        row.originating_event_ids_json = json.dumps(
+            explanation.get("originating_event_ids") or [],
+            sort_keys=True,
+        )
+        if existing is None:
+            db.session.add(row)
+        db.session.commit()
+    except Exception:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+
+
 @analytics_bp.route("/analytics")
 def analytics_page():
     # Redirect to admin analytics if user is admin, otherwise to login
@@ -451,50 +596,42 @@ def admin_revenue_intelligence():
     results = []
 
     for sid, evts in sessions.items():
-        score = 0
-        pages = set()
-
-        for e in evts:
-            pages.add(e.page_url)
-
-            if e.event_type == "page_view":
-                score += 1
-            elif e.event_type.startswith("cta_"):
-                score += 10
-            elif e.event_type == "demo_form_start":
-                score += 30
-            elif e.event_type == "demo_form_submit":
-                score += 100
-
-            if e.page_url == "/demo":
-                score += 20
+        explanation = _explain_legacy_revenue_session(evts)
+        score = int(explanation["total_score"])
+        _persist_legacy_revenue_score(sid, explanation)
 
         if score >= 80:
             tier = "READY"
-            value = 800
         elif score >= 40:
             tier = "HOT"
-            value = 300
         elif score >= 10:
             tier = "WARM"
-            value = 80
         else:
             tier = "COLD"
-            value = 0
 
         results.append({
             "session": sid,
             "score": score,
             "tier": tier,
-            "value": value,
-            "pages": list(pages)
+            "value": None,
+            "value_available": False,
+            "value_label": "Not enough data available",
+            "value_reason": "No CRM opportunity amount is linked to this analytics session.",
+            "score_components": explanation["components"],
+            "score_evidence": explanation["evidence"],
+            "originating_event_ids": explanation["originating_event_ids"],
+            "score_confidence": explanation["confidence"],
+            "score_formula_version": REVENUE_VISITOR_SCORE_FORMULA_VERSION,
+            "pages": explanation["pages"],
         })
-
-    total_value = sum(r["value"] for r in results)
 
     return jsonify({
         "sessions": results,
-        "total_estimated_revenue": total_value
+        "total_estimated_revenue": None,
+        "total_estimated_revenue_label": "Not enough data available",
+        "total_estimated_revenue_reason": "No CRM opportunity amount table/field is available for analytics sessions.",
+        "source_tables": ["analytics_events", "score_explanations", "crm_opportunities"],
+        "confidence": "low",
     })
 
 
@@ -518,26 +655,13 @@ def admin_revenue_alerts():
     alerts = []
 
     for sid, evts in sessions.items():
-        score = 0
-        pages = set()
-        has_demo = False
-        has_cta = False
-        has_submit = False
-
-        for e in evts:
-            pages.add(e.page_url or "/unknown")
-
-            if e.event_type == "page_view":
-                score += 1
-            if e.event_type.startswith("cta_"):
-                score += 10
-                has_cta = True
-            if e.page_url == "/demo":
-                score += 20
-                has_demo = True
-            if e.event_type.endswith("_form_submit"):
-                score += 100
-                has_submit = True
+        explanation = _explain_legacy_revenue_session(evts)
+        score = int(explanation["total_score"])
+        components = {component["code"] for component in explanation["components"]}
+        has_demo = "demo_page" in components
+        has_cta = "cta_events" in components
+        has_submit = "form_submit" in components
+        _persist_legacy_revenue_score(sid, explanation)
 
         if score >= 40 or (has_demo and has_cta and not has_submit):
             alerts.append({
@@ -545,8 +669,14 @@ def admin_revenue_alerts():
                 "score": score,
                 "level": "HOT" if score < 80 else "READY",
                 "message": "Visitor proche conversion: demo/CTA detecte sans formulaire soumis.",
-                "estimated_value": 300 if score < 80 else 800,
-                "pages": list(pages)[:5],
+                "estimated_value": None,
+                "estimated_value_label": "Not enough data available",
+                "estimated_value_reason": "No CRM opportunity amount is linked to this analytics session.",
+                "score_components": explanation["components"],
+                "score_evidence": explanation["evidence"],
+                "originating_event_ids": explanation["originating_event_ids"],
+                "score_confidence": explanation["confidence"],
+                "pages": explanation["pages"][:5],
             })
 
     alerts.sort(key=lambda a: a["score"], reverse=True)
@@ -597,25 +727,13 @@ def admin_revenue_alert_dispatch():
     dispatched = []
 
     for sid, evts in sessions.items():
-        score = 0
-        pages = set()
-        has_demo = False
-        has_cta = False
-        has_submit = False
-
-        for e in evts:
-            pages.add(e.page_url or "/unknown")
-            if e.event_type == "page_view":
-                score += 1
-            if e.event_type.startswith("cta_"):
-                score += 10
-                has_cta = True
-            if e.page_url == "/demo":
-                score += 20
-                has_demo = True
-            if e.event_type.endswith("_form_submit"):
-                score += 100
-                has_submit = True
+        explanation = _explain_legacy_revenue_session(evts)
+        score = int(explanation["total_score"])
+        components = {component["code"] for component in explanation["components"]}
+        has_demo = "demo_page" in components
+        has_cta = "cta_events" in components
+        has_submit = "form_submit" in components
+        pages = explanation["pages"]
 
         if not (score >= 40 or (has_demo and has_cta and not has_submit)):
             continue
@@ -625,8 +743,16 @@ def admin_revenue_alert_dispatch():
             continue
 
         level = "READY" if score >= 80 else "HOT"
-        value = 800 if score >= 80 else 300
-        message = f"[HelpChain] {level} visitor detected | score={score} | estimated={value} EUR | pages={', '.join(list(pages)[:5])}"
+        _persist_legacy_revenue_score(sid, explanation)
+        score_detail = ", ".join(
+            f"+{component['points']} {component['label']}"
+            for component in explanation["components"]
+        )
+        message = (
+            f"[HelpChain] {level} visitor detected | score={score} "
+            f"| amount=Not enough data available | explain={score_detail} "
+            f"| pages={', '.join(list(pages)[:5])}"
+        )
 
         if slack_webhook:
             try:
@@ -652,7 +778,14 @@ def admin_revenue_alert_dispatch():
                 current_app.logger.warning("Revenue email alert failed: %s", exc)
 
         _SENT_REVENUE_ALERTS.add(alert_key)
-        dispatched.append({"session": sid[:12], "level": level, "score": score, "value": value})
+        dispatched.append({
+            "session": sid[:12],
+            "level": level,
+            "score": score,
+            "value": None,
+            "value_label": "Not enough data available",
+            "score_components": explanation["components"],
+        })
 
     return jsonify({"ok": True, "dispatched": dispatched, "count": len(dispatched)})
 

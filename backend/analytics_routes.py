@@ -588,10 +588,22 @@ async def analytics_trends():
     """Get trend data for charts"""
     try:
         months = int(request.args.get("months", 6))
+        demo_mode = bool(current_app.config.get("DEMO_MODE")) if current_app else False
 
-        # For now, return mock trend data
-        # In a real implementation, this would query historical data
-        import datetime
+        if not demo_mode:
+            return jsonify(
+                {
+                    "labels": [],
+                    "requests": [],
+                    "completed": [],
+                    "volunteers": [],
+                    "available": False,
+                    "reason": "Historical trend queries are not implemented for this endpoint.",
+                    "confidence": "low",
+                    "source_tables": ["help_requests", "volunteers"],
+                    "last_updated": datetime.now().isoformat(),
+                }
+            )
 
         labels = []
         requests = []
@@ -601,7 +613,7 @@ async def analytics_trends():
         for i in range(months):
             date = datetime.datetime.now() - datetime.timedelta(days=30 * i)
             labels.append(date.strftime("%Y-%m"))
-            requests.append(100 + i * 10)  # Mock data
+            requests.append(100 + i * 10)
             completed.append(80 + i * 8)
             volunteers.append(50 + i * 5)
 
@@ -622,7 +634,7 @@ async def analytics_trends():
 def admin_analytics():
     """Analytics dashboard - professional template"""
     try:
-        # Sample fallbacks to keep the dashboard functional when data is unavailable
+        demo_mode = bool(current_app.config.get("DEMO_MODE")) if current_app else False
         sample_dashboard_stats = {
             "totals": {
                 "requests": 1250,
@@ -679,6 +691,59 @@ def admin_analytics():
             ],
             "counts": [450, 320, 280, 150, 50],
         }
+        unavailable_dashboard_stats = {
+            "totals": {
+                "requests": 0,
+                "volunteers": 0,
+            },
+            "available": False,
+            "reason": "Dashboard analytics source query did not return data.",
+            "confidence": "low",
+            "source_tables": ["help_requests", "volunteers"],
+            "last_updated": datetime.now().isoformat(),
+        }
+        unavailable_performance_metrics = {
+            "success_rate": None,
+            "utilization_rate": None,
+            "completed_requests": 0,
+            "active_requests": 0,
+            "active_volunteers": 0,
+            "available": False,
+            "reason": "Performance metric source query did not return data.",
+            "confidence": "low",
+            "source_tables": ["help_requests", "volunteers"],
+            "last_updated": datetime.now().isoformat(),
+        }
+        unavailable_predictions = {
+            "labels": [],
+            "requests_predicted": [],
+            "volunteers_predicted": [],
+            "available": False,
+            "reason": "Prediction model output is unavailable.",
+            "confidence": "low",
+            "source_tables": ["help_requests", "volunteers"],
+            "last_updated": datetime.now().isoformat(),
+        }
+        unavailable_trends_data = {
+            "labels": [],
+            "requests": [],
+            "completed": [],
+            "volunteers": [],
+            "available": False,
+            "reason": "Historical trend query did not return data.",
+            "confidence": "low",
+            "source_tables": ["help_requests", "volunteers"],
+            "last_updated": datetime.now().isoformat(),
+        }
+        unavailable_category_stats = {
+            "categories": [],
+            "counts": [],
+            "available": False,
+            "reason": "Category aggregation did not return data.",
+            "confidence": "low",
+            "source_tables": ["help_requests"],
+            "last_updated": datetime.now().isoformat(),
+        }
 
         try:
             from admin_analytics import AnalyticsEngine
@@ -693,12 +758,14 @@ def admin_analytics():
         days, start_dt, end_dt = _parse_period_args()
         logger = current_app.logger if current_app else None
 
-        dashboard_stats = sample_dashboard_stats
-        performance_metrics = sample_performance_metrics
-        predictions = sample_predictions
-        recommendations = sample_recommendations
-        category_stats = sample_category_stats
-        trends_data = sample_trends_data
+        dashboard_stats = sample_dashboard_stats if demo_mode else unavailable_dashboard_stats
+        performance_metrics = (
+            sample_performance_metrics if demo_mode else unavailable_performance_metrics
+        )
+        predictions = sample_predictions if demo_mode else unavailable_predictions
+        recommendations = sample_recommendations if demo_mode else []
+        category_stats = sample_category_stats if demo_mode else unavailable_category_stats
+        trends_data = sample_trends_data if demo_mode else unavailable_trends_data
         geo_data = {"requests": [], "volunteers": []}
         live_stats = {}
         advanced_analytics = {}
@@ -712,7 +779,7 @@ def admin_analytics():
             except Exception as analytics_error:
                 if logger:
                     logger.warning(
-                        "Falling back to sample analytics data: %s", analytics_error
+                        "Dashboard analytics data unavailable: %s", analytics_error
                     )
             else:
                 live_stats = dashboard_stats.get("real_time", {}) or {}
@@ -1388,28 +1455,28 @@ async def check_alerts():
 async def get_alerts_history():
     """Get alerts history (placeholder for now)"""
     try:
-        # In a real implementation, this would query a database table
-        # For now, return sample history
-        history = [
-            {
-                "id": "alert_001",
-                "alert_id": "traffic_spike",
-                "name": "Traffic Spike Alert",
-                "severity": "high",
-                "triggered_at": (datetime.now() - timedelta(hours=2)).isoformat(),
-                "resolved_at": (datetime.now() - timedelta(hours=1)).isoformat(),
-                "status": "resolved",
-            },
-            {
-                "id": "alert_002",
-                "alert_id": "error_rate_high",
-                "name": "High Error Rate Alert",
-                "severity": "critical",
-                "triggered_at": (datetime.now() - timedelta(minutes=30)).isoformat(),
-                "resolved_at": None,
-                "status": "active",
-            },
-        ]
+        history = []
+        if current_app and current_app.config.get("DEMO_MODE"):
+            history = [
+                {
+                    "id": "alert_001",
+                    "alert_id": "traffic_spike",
+                    "name": "Traffic Spike Alert",
+                    "severity": "high",
+                    "triggered_at": (datetime.now() - timedelta(hours=2)).isoformat(),
+                    "resolved_at": (datetime.now() - timedelta(hours=1)).isoformat(),
+                    "status": "resolved",
+                },
+                {
+                    "id": "alert_002",
+                    "alert_id": "error_rate_high",
+                    "name": "High Error Rate Alert",
+                    "severity": "critical",
+                    "triggered_at": (datetime.now() - timedelta(minutes=30)).isoformat(),
+                    "resolved_at": None,
+                    "status": "active",
+                },
+            ]
 
         return jsonify(
             {
@@ -1417,6 +1484,10 @@ async def get_alerts_history():
                 "total_alerts": len(history),
                 "active_alerts": len([h for h in history if h["status"] == "active"]),
                 "generated_at": datetime.now().isoformat(),
+                "available": bool(history),
+                "reason": "" if history else "No persisted alert history table is available.",
+                "confidence": "low" if not history else "demo",
+                "source_tables": ["alert_history"],
             }
         )
 

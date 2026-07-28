@@ -357,8 +357,9 @@ class AdvancedAnalytics:
         try:
             from flask import current_app
 
+            demo_mode = bool(current_app.config.get("DEMO_MODE")) if current_app else False
             if not current_app:
-                return self._get_sample_analytics()
+                return _minimal_analytics()
 
             start_dt, end_dt, period_days = self._normalize_period(
                 days=days, start_date=start_date, end_date=end_date
@@ -389,35 +390,40 @@ class AdvancedAnalytics:
                 },
             }
 
-            # Check if we have any meaningful data, if not provide sample data
+            # Empty production datasets must stay empty. Sample analytics are only
+            # allowed when DEMO_MODE is explicitly enabled.
             has_data = (
                 analytics["overview"]["total_page_views"] > 0
                 or analytics["overview"]["unique_visitors"] > 0
                 or analytics["chatbot_analytics"]["total_conversations"] > 0
             )
-            print(f"DEBUG: has_data = {has_data}")
-            print(
-                f"DEBUG: total_page_views = {analytics['overview']['total_page_views']}"
-            )
-            print(
-                f"DEBUG: unique_visitors = {analytics['overview']['unique_visitors']}"
-            )
-            print(
-                f"DEBUG: total_conversations = {analytics['chatbot_analytics']['total_conversations']}"
-            )
-
-            if not has_data:
-                print("DEBUG: Returning sample data")
+            if not has_data and demo_mode:
                 analytics = self._get_sample_analytics()
-            else:
-                print("DEBUG: Returning real data")
+            elif not has_data:
+                analytics["data_availability"] = {
+                    "available": False,
+                    "reason": "No analytics events, visitor sessions, or chatbot conversations were found for this period.",
+                    "confidence": "high",
+                    "source_tables": [
+                        "analytics_events",
+                        "user_behaviors",
+                        "chatbot_conversations",
+                    ],
+                    "last_updated": utc_now().isoformat(),
+                }
+                analytics["is_sample_data"] = False
 
             self._cache[cache_key] = analytics
             return analytics
 
         except Exception as e:
             logger.error(f"Error getting dashboard analytics: {e}")
-            return self._get_sample_analytics()
+            try:
+                if current_app and current_app.config.get("DEMO_MODE"):
+                    return self._get_sample_analytics()
+            except Exception:
+                pass
+            return _minimal_analytics()
 
     def _get_overview_metrics(
         self, start_date: datetime, end_date: datetime
@@ -1473,7 +1479,7 @@ _real_analytics = None
 
 
 def _minimal_analytics() -> dict:
-    """Return a minimal analytics structure used by admin views in TESTING."""
+    """Return a minimal non-demo analytics structure when data is unavailable."""
     return {
         "overview": {
             "unique_visitors": 0,
@@ -1516,7 +1522,18 @@ def _minimal_analytics() -> dict:
             "chatbot_messages_last_hour": 0,
             "timestamp": utc_now().isoformat(),
         },
-        "is_sample_data": True,
+        "data_availability": {
+            "available": False,
+            "reason": "Analytics service is unavailable or has not been initialized.",
+            "confidence": "low",
+            "source_tables": [
+                "analytics_events",
+                "user_behaviors",
+                "chatbot_conversations",
+            ],
+            "last_updated": utc_now().isoformat(),
+        },
+        "is_sample_data": False,
     }
 
 
