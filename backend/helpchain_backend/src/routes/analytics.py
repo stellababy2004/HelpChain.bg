@@ -585,7 +585,12 @@ def admin_revenue_intelligence():
     from backend.models_with_analytics import AnalyticsEvent
     from collections import defaultdict
 
-    events = AnalyticsEvent.query.all()
+    events = (
+        AnalyticsEvent.query
+        .order_by(AnalyticsEvent.created_at.desc())
+        .limit(2000)
+        .all()
+    )
 
     sessions = defaultdict(list)
 
@@ -645,7 +650,12 @@ def admin_revenue_alerts():
     from backend.models_with_analytics import AnalyticsEvent
     from collections import defaultdict
 
-    events = AnalyticsEvent.query.order_by(AnalyticsEvent.created_at.desc()).all()
+    events = (
+        AnalyticsEvent.query
+        .order_by(AnalyticsEvent.created_at.desc())
+        .limit(2000)
+        .all()
+    )
     sessions = defaultdict(list)
 
     for e in events:
@@ -718,7 +728,12 @@ def admin_revenue_alert_dispatch():
     smtp_password = os.getenv("SMTP_PASSWORD")
     email_from = os.getenv("SMTP_FROM") or smtp_user
 
-    events = AnalyticsEvent.query.all()
+    events = (
+        AnalyticsEvent.query
+        .order_by(AnalyticsEvent.created_at.desc())
+        .limit(2000)
+        .all()
+    )
     sessions = defaultdict(list)
 
     for e in events:
@@ -788,4 +803,5 @@ def admin_revenue_alert_dispatch():
         })
 
     return jsonify({"ok": True, "dispatched": dispatched, "count": len(dispatched)})
+
 

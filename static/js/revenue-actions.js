@@ -35,4 +35,5 @@
   container.innerHTML = actions || "<div class='text-muted'>No actionable signals</div>";
 }
 
-document.addEventListener("DOMContentLoaded", loadActions);
+// Automatic duplicate intelligence request disabled.
+

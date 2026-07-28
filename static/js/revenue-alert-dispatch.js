@@ -15,4 +15,5 @@
   }
 }
 
-document.addEventListener("DOMContentLoaded", dispatchRevenueAlerts);
+// Automatic dispatch disabled: alerts must be triggered explicitly.
+
