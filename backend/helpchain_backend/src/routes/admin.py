@@ -10876,6 +10876,10 @@ def _build_audience_map_context() -> dict:
         "intent_signals": sum(session_intent.values()),
     }
     context["kpi_meta"] = {
+        "metric_key": "audience.dashboard_rollup",
+        "formula_version": "audience_dashboard_v2_lineage",
+        "owner": "audience",
+        "refresh_interval_seconds": 300,
         "source_tables": ["analytics_events", "user_behaviors"],
         "query_origin": "_build_audience_map_context event/session/location aggregations",
         "last_updated": now,
@@ -11040,31 +11044,41 @@ def _metric_available(value: object) -> dict[str, object]:
 
 def _revenue_metric_meta(
     *,
+    metric_key: str,
     source_tables: list[str],
     query_origin: str,
     confidence: str,
     updated_at: datetime,
     explain: str,
+    owner: str = "revenue",
+    refresh_interval_seconds: int = 300,
 ) -> dict[str, object]:
     return {
+        "metric_key": metric_key,
         "source_tables": source_tables,
         "query_origin": query_origin,
         "confidence": confidence,
         "last_updated": updated_at,
         "explain": explain,
         "formula_version": REVENUE_METRIC_FORMULA_VERSION,
+        "owner": owner,
+        "refresh_interval_seconds": refresh_interval_seconds,
     }
 
 
 def _metric_payload(
+    metric_key: str,
     value: object,
     *,
+    display_name: str,
     source_tables: list[str],
     query_origin: str,
     confidence: str,
     updated_at: datetime,
     explain: str,
     unavailable_reason: str | None = None,
+    owner: str = "revenue",
+    refresh_interval_seconds: int = 300,
 ) -> dict[str, object]:
     payload = (
         _metric_unavailable(unavailable_reason)
@@ -11072,13 +11086,73 @@ def _metric_payload(
         else _metric_available(value)
     )
     payload["meta"] = _revenue_metric_meta(
+        metric_key=metric_key,
         source_tables=source_tables,
         query_origin=query_origin,
         confidence=confidence,
         updated_at=updated_at,
         explain=explain,
+        owner=owner,
+        refresh_interval_seconds=refresh_interval_seconds,
+    )
+    _persist_metric_registry_entry(
+        metric_key=metric_key,
+        display_name=display_name,
+        value_payload=payload,
+        source_tables=source_tables,
+        query_origin=query_origin,
+        confidence=confidence,
+        updated_at=updated_at,
+        owner=owner,
+        refresh_interval_seconds=refresh_interval_seconds,
     )
     return payload
+
+
+def _persist_metric_registry_entry(
+    *,
+    metric_key: str,
+    display_name: str,
+    value_payload: dict[str, object],
+    source_tables: list[str],
+    query_origin: str,
+    confidence: str,
+    updated_at: datetime,
+    owner: str,
+    refresh_interval_seconds: int,
+) -> None:
+    if not _table_exists("metric_definitions") or not _table_exists("metric_runs"):
+        return
+    try:
+        source_tables_json = json.dumps(source_tables, ensure_ascii=True, sort_keys=True)
+        definition = MetricDefinition.query.filter_by(metric_key=metric_key).first()
+        if definition is None:
+            definition = MetricDefinition(metric_key=metric_key, display_name=display_name)
+            db.session.add(definition)
+        definition.display_name = display_name
+        definition.formula_version = REVENUE_METRIC_FORMULA_VERSION
+        definition.owner = owner
+        definition.refresh_interval_seconds = int(refresh_interval_seconds)
+        definition.confidence = confidence
+        definition.source_tables_json = source_tables_json
+        definition.query_origin = query_origin
+        definition.description = str((value_payload.get("meta") or {}).get("explain") or "")
+
+        run = MetricRun(
+            metric_key=metric_key,
+            formula_version=REVENUE_METRIC_FORMULA_VERSION,
+            value_json=json.dumps(value_payload.get("value"), ensure_ascii=True, sort_keys=True),
+            status="available" if value_payload.get("available") else "unavailable",
+            unavailable_reason=str(value_payload.get("reason") or ""),
+            source_tables_json=source_tables_json,
+            query_origin=query_origin,
+            confidence=confidence,
+            computed_at=updated_at,
+        )
+        db.session.add(run)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 
 def _revenue_has_followup_fields(table_name: str) -> bool:
@@ -12101,7 +12175,9 @@ def _revenue_metrics(rows: list[SimpleNamespace]) -> dict:
     source_tables = ["professional_leads", "organization_access_requests"]
     return {
         "new_leads": _metric_payload(
+            "revenue.new_leads",
             sum(1 for row in rows if row.stage == "new"),
+            display_name="New Leads",
             source_tables=source_tables,
             query_origin="_build_revenue_pipeline_rows + _revenue_metrics(stage == 'new')",
             confidence="high",
@@ -12109,7 +12185,9 @@ def _revenue_metrics(rows: list[SimpleNamespace]) -> dict:
             explain="Counts visible pipeline rows whose normalized stage is new.",
         ),
         "hot_leads": _metric_payload(
+            "revenue.hot_leads",
             sum(1 for row in rows if row.score_bucket in {"Hot", "Very Hot"} and row.stage not in {"won", "lost"}),
+            display_name="Hot Leads",
             source_tables=source_tables + ["score_explanations"],
             query_origin="_build_revenue_pipeline_rows + explained revenue_priority score bucket",
             confidence="medium",
@@ -12117,7 +12195,9 @@ def _revenue_metrics(rows: list[SimpleNamespace]) -> dict:
             explain="Counts open rows whose persisted explained score places them in Hot or Very Hot.",
         ),
         "overdue_followups": _metric_payload(
+            "revenue.overdue_followups",
             sum(1 for row in rows if row.next_action_state == "overdue"),
+            display_name="Overdue Follow-ups",
             source_tables=source_tables,
             query_origin="_build_revenue_pipeline_rows + next_action_at <= today",
             confidence="high",
@@ -12125,7 +12205,9 @@ def _revenue_metrics(rows: list[SimpleNamespace]) -> dict:
             explain="Counts rows with next_action_at due today or earlier.",
         ),
         "demos_pending": _metric_payload(
+            "revenue.demos_pending",
             sum(1 for row in rows if row.stage in {"demo_booked", "demo_done"}),
+            display_name="Demos Pending",
             source_tables=source_tables,
             query_origin="_build_revenue_pipeline_rows + normalized stage in demo_booked/demo_done",
             confidence="medium",
@@ -12133,7 +12215,9 @@ def _revenue_metrics(rows: list[SimpleNamespace]) -> dict:
             explain="Counts rows whose source status maps to a pending demo stage.",
         ),
         "active_pipeline": _metric_payload(
+            "revenue.active_pipeline_eur",
             None,
+            display_name="Active Pipeline EUR",
             source_tables=["crm_opportunities"],
             query_origin="crm_opportunities.amount_eur WHERE stage NOT IN ('won','lost','paused')",
             confidence="low",
@@ -12142,7 +12226,9 @@ def _revenue_metrics(rows: list[SimpleNamespace]) -> dict:
             unavailable_reason="No CRM opportunity amount table/field is available.",
         ),
         "won_this_month": _metric_payload(
+            "revenue.won_this_month_eur",
             None,
+            display_name="Won This Month EUR",
             source_tables=["crm_opportunities"],
             query_origin="crm_opportunities.amount_eur WHERE stage = 'won' AND closed_at >= month_start",
             confidence="low",
@@ -12158,7 +12244,9 @@ def _revenue_forecast(rows: list[SimpleNamespace]) -> dict:
     source_tables = ["crm_opportunities"]
     return {
         "weighted_pipeline": _metric_payload(
+            "revenue.forecast.weighted_pipeline_eur",
             None,
+            display_name="Weighted Pipeline EUR",
             source_tables=source_tables,
             query_origin="SUM(amount_eur * stage_probability) FROM crm_opportunities",
             confidence="low",
@@ -12167,7 +12255,9 @@ def _revenue_forecast(rows: list[SimpleNamespace]) -> dict:
             unavailable_reason="No CRM opportunity amount/probability data is available.",
         ),
         "likely_this_month": _metric_payload(
+            "revenue.forecast.likely_this_month_eur",
             None,
+            display_name="Likely This Month EUR",
             source_tables=source_tables,
             query_origin="SUM(weighted_amount_eur) FROM crm_opportunities WHERE expected_close_at <= now + 30 days",
             confidence="low",
@@ -12176,7 +12266,9 @@ def _revenue_forecast(rows: list[SimpleNamespace]) -> dict:
             unavailable_reason="No CRM opportunity amount/close-date data is available.",
         ),
         "closed_won": _metric_payload(
+            "revenue.forecast.closed_won_eur",
             None,
+            display_name="Closed Won EUR",
             source_tables=source_tables,
             query_origin="SUM(amount_eur) FROM crm_opportunities WHERE stage = 'won'",
             confidence="low",

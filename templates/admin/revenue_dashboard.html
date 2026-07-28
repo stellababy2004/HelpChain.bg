@@ -11,6 +11,11 @@
 {% macro metric_meta(metric) -%}
   {% set meta = metric.meta if metric and metric.meta else {} %}
   <small class="hc-muted d-block mt-1">
+    Metric: {{ meta.metric_key or 'Not enough data available' }}
+    · Owner: {{ meta.owner or 'Not enough data available' }}
+    · Refresh: {{ meta.refresh_interval_seconds or 'Not enough data available' }}s
+  </small>
+  <small class="hc-muted d-block">
     Source: {{ (meta.source_tables or [])|join(', ') or 'Not enough data available' }}
     · Updated: {{ meta.last_updated.strftime('%Y-%m-%d %H:%M:%S UTC') if meta.last_updated else 'Not enough data available' }}
     · Confidence: {{ meta.confidence or 'low' }}
