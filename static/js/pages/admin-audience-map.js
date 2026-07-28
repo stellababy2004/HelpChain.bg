@@ -109,7 +109,9 @@
   }
 
   function formatDepartment(point) {
-    return point.departmentNumber + " " + point.departmentName;
+    var number = point.departmentNumber || point.department_code || "";
+    var name = point.departmentName || point.department || "";
+    return String((number + " " + name).trim() || "Not enough data available");
   }
 
   function formatEuro(value) {
@@ -130,7 +132,10 @@
 
   function buildPopupHtml(point) {
     var meta = getPriorityMeta(point.priority);
-    var sourceLabel = point.intelligence_source === "observed" ? "Signal observe" : "Estimation territoriale";
+    var sourceLabel = String(point.intelligence_source || "").indexOf("observed") !== -1
+      ? "Signal observe"
+      : "Not enough data available";
+    var structuresLabel = point.structures_label || point.structures || "Not enough data available";
     return [
       '<div class="hc-audience-popup">',
       '<div class="hc-audience-popup__eyebrow">' + escapeHtml(meta.popupEyebrow) + "</div>",
@@ -139,8 +144,8 @@
       '<span class="hc-audience-popup__dept">Departement ' + escapeHtml(formatDepartment(point)) + "</span>",
       "</div>",
       '<div class="hc-audience-popup__stats">',
-      "<span><strong>" + escapeHtml(sourceLabel) + "</strong><em>" + escapeHtml(point.needs) + "</em></span>",
-      "<span><strong>Structures probables</strong><em>" + escapeHtml(point.structures) + "</em></span>",
+      "<span><strong>" + escapeHtml(sourceLabel) + "</strong><em>" + escapeHtml(point.needs || "Not enough data available") + "</em></span>",
+      "<span><strong>Structures</strong><em>" + escapeHtml(structuresLabel) + "</em></span>",
       "<span><strong>Priorite</strong><em>" + escapeHtml(point.priority) + "</em></span>",
       "</div>",
       '<div class="hc-audience-popup__recommendation"><strong>Recommandation</strong><p>' + escapeHtml(point.recommendation) + "</p></div>",
@@ -228,17 +233,8 @@
     return "Garder en observation";
   }
 
-  function opportunityValueFromScore(score) {
-    if (score >= 90) {
-      return 590;
-    }
-    if (score >= 75) {
-      return 390;
-    }
-    if (score >= 55) {
-      return 190;
-    }
-    return 0;
+  function unavailableOpportunityValue() {
+    return null;
   }
 
   function founderLeadBadgeClass(priority) {
@@ -381,9 +377,7 @@
   }
 
   function estimatedOpportunityThisWeek() {
-    return REVENUE_RADAR.reduce(function (sum, row) {
-      return sum + (Number(row.potential) || 0);
-    }, 0);
+    return null;
   }
 
   function buildQualifiedQueue() {
@@ -452,7 +446,7 @@
           sourceLabel: "Signal qualifie",
           action: suggestedActionForScore(score),
           focusSlug: item.focusSlug || "paris",
-          estimatedValue: opportunityValueFromScore(score),
+          estimatedValue: unavailableOpportunityValue(),
         };
       })
       .sort(function (a, b) {
@@ -497,7 +491,7 @@
           sourceLabel: "Signal qualifie",
           action: suggestedActionForScore(Number(row.score) || 0),
           focusSlug: String(row.focus_slug || "").trim() || findFocusSlug(row.territory, row.department),
-          estimatedValue: opportunityValueFromScore(Number(row.score) || 0),
+          estimatedValue: unavailableOpportunityValue(),
         };
       });
   }
@@ -539,7 +533,7 @@
           lastActivity: String(row.last_activity || "recent"),
           focusSlug: String(row.focus_slug || "").trim() || findFocusSlug(row.territory_hint, ""),
           salesNote: String(row.sales_note || "").trim(),
-          estimatedValue: opportunityValueFromScore(bestScore),
+          estimatedValue: unavailableOpportunityValue(),
         };
       });
   }
@@ -609,17 +603,15 @@
         title: "Opportunite qualifiee cette semaine",
         modeLabel: "Signal qualifie",
         label: "Signal qualifie + niveau d'activité",
-        context: "Projection interne basee sur signaux qualifies, non facturee.",
-        value: queue.rows.reduce(function (sum, row) {
-          return sum + (Number(row.estimatedValue) || 0);
-        }, 0),
+        context: "Aucun montant n'est calcule sans opportunite CRM.",
+        value: null,
       };
     }
     return {
-      title: "Opportunite estimee cette semaine",
-      modeLabel: "Signal analytique",
+      title: "Opportunite cette semaine",
+      modeLabel: "Not enough data available",
       label: "Niveau d'activité",
-      context: "Projection interne, non facturee.",
+      context: "Not enough data available: no CRM opportunity amount is linked to audience signals.",
       value: estimatedOpportunityThisWeek(),
     };
   }
@@ -674,35 +666,14 @@
   }
 
   function recommendationLogic() {
-    return [
-      {
-        title: "Prioriser Paris cette semaine.",
-        reason: "Fort volume + pages institutionnelles vues.",
-        focusSlug: "paris",
-      },
-      {
-        title: "Relancer Hauts-de-Seine via email cible.",
-        reason: "Signal modere mais solvabilite elevee.",
-        focusSlug: "nanterre",
-      },
-      {
-        title: "Suivre le signal territorial Seine-Saint-Denis.",
-        reason: "Interet croissant.",
-        focusSlug: "saint-denis",
-      },
-      {
-        title: "Suspendre Yvelines pour l'instant.",
-        reason: "Signal trop faible pour prioriser l'action.",
-        focusSlug: "versailles",
-      },
-    ];
+    return [];
   }
 
   var defaultLat = Number(root.dataset.defaultLat || 48.8566);
   var defaultLng = Number(root.dataset.defaultLng || 2.3522);
   var defaultZoom = Number(root.dataset.defaultZoom || 10);
-  var totalNeeds = LOCATIONS.reduce(function (sum, point) { return sum + point.needs; }, 0);
-  var totalStructures = LOCATIONS.reduce(function (sum, point) { return sum + point.structures; }, 0);
+  var totalNeeds = LOCATIONS.reduce(function (sum, point) { return sum + (Number(point.needs) || 0); }, 0);
+  var totalStructures = LOCATIONS.reduce(function (sum, point) { return sum + (Number(point.structures) || 0); }, 0);
   var highPriorityCount = LOCATIONS.filter(function (point) { return point.priority === "Haute"; }).length;
   var mediumPriorityCount = LOCATIONS.filter(function (point) { return point.priority === "Moyenne"; }).length;
 
@@ -897,8 +868,8 @@
   function updateSidebar(point) {
     var detailCard = document.getElementById("audienceMapDetailCard");
     setText("audienceMapDetailCity", point.city);
-    setText("audienceMapDetailDemand", point.needs);
-    setText("audienceMapDetailStructures", point.structures);
+    setText("audienceMapDetailDemand", point.needs || "Not enough data available");
+    setText("audienceMapDetailStructures", point.structures_label || point.structures || "Not enough data available");
     setText("audienceMapDetailDepartment", formatDepartment(point));
     setText("audienceMapDetailPriority", point.priority);
     setText("audienceMapDetailIntensity", getPriorityMeta(point.priority).intensity);
@@ -965,7 +936,7 @@
         '<span class="audience-inline-tag">Signal analytique</span>',
         '<span class="audience-radar-row__badge">' + escapeHtml(row.priority) + "</span>",
         '<strong>Signal: ' + escapeHtml(row.score) + "</strong>",
-        '<em>Niveau: ' + escapeHtml(euroPerMonth(row.potential)) + "</em>",
+        '<em>Montant: Not enough data available</em>',
         "</span>",
       ].join("");
       button.addEventListener("click", function () {
@@ -1021,7 +992,17 @@
       return;
     }
     recommendationsEl.innerHTML = "";
-    recommendationLogic().forEach(function (item, index) {
+    var recommendations = recommendationLogic();
+    if (!recommendations.length) {
+      recommendationsEl.innerHTML = [
+        '<div class="hc-empty-state">',
+        '<div class="hc-empty-state__title">Not enough data available</div>',
+        '<div class="hc-empty-state__text">No recommendation is shown until it can be traced to observed signals.</div>',
+        "</div>",
+      ].join("");
+      return;
+    }
+    recommendations.forEach(function (item, index) {
       var button = document.createElement("button");
       button.type = "button";
       button.className = "audience-action-item";
@@ -1196,7 +1177,7 @@
       return;
     }
     var mode = estimatedOpportunityMode();
-    estimatedOpportunityEl.textContent = operationalActivityLevel(mode.value);
+    estimatedOpportunityEl.textContent = "Not enough data available";
     if (opportunityTitleEl) {
       opportunityTitleEl.innerHTML =
         escapeHtml(mode.title) +
@@ -1273,18 +1254,18 @@
 
   if (cityListEl) {
     LOCATIONS.slice()
-      .sort(function (a, b) { return b.needs - a.needs; })
+      .sort(function (a, b) { return (Number(b.needs) || 0) - (Number(a.needs) || 0); })
       .slice(0, 5)
       .forEach(function (point, index) {
         var button = document.createElement("button");
         button.type = "button";
         button.className = "audience-city-item";
         button.setAttribute("data-city-slug", point.slug);
-        button.setAttribute("title", point.city + " - " + point.needs + " signaux");
+        button.setAttribute("title", point.city + " - " + (point.needs || "Not enough data available") + " signaux");
         button.innerHTML =
           '<span class="audience-city-item__rank">' + (index + 1) + '.</span>' +
           '<span class="audience-city-item__label">' + escapeHtml(point.city) + '</span>' +
-          '<span class="audience-city-item__meta">' + escapeHtml(point.needs) + ' signaux</span>' +
+          '<span class="audience-city-item__meta">' + escapeHtml(point.needs || "Not enough data available") + ' signaux</span>' +
           '<span class="audience-city-item__arrow" aria-hidden="true">›</span>';
         button.addEventListener("click", function () {
           focusCity(point.slug);
@@ -1303,12 +1284,14 @@
   runSafeRender("Forecast", renderForecast);
   runSafeRender("Shortlist", renderShortlist);
 
-  var markerGroup = L.featureGroup(
-    LOCATIONS.map(function (point) { return markerRegistry[point.slug]; })
-  );
-  map.fitBounds(markerGroup.getBounds().pad(0.16));
-  if (map.getZoom() > defaultZoom) {
-    map.setZoom(defaultZoom);
+  if (LOCATIONS.length) {
+    var markerGroup = L.featureGroup(
+      LOCATIONS.map(function (point) { return markerRegistry[point.slug]; })
+    );
+    map.fitBounds(markerGroup.getBounds().pad(0.16));
+    if (map.getZoom() > defaultZoom) {
+      map.setZoom(defaultZoom);
+    }
   }
 
   heatLayer.eachLayer(function (layer) { layer.bringToBack(); });
@@ -1316,7 +1299,9 @@
   coreRing.bringToBack();
   window.setTimeout(function () {
     map.invalidateSize();
-    focusCity("paris");
+    if (LOCATIONS.length) {
+      focusCity(LOCATIONS[0].slug);
+    }
     if (liveManager) liveManager.stable("Intelligence live", 260);
   }, 0);
 })();

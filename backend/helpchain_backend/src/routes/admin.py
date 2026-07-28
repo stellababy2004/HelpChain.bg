@@ -10210,12 +10210,21 @@ def _build_audience_map_context() -> dict:
         observed = int(map_location_counts.get(normalized_label, 0) or 0)
         if current_app.config.get("DEMO_MODE"):
             estimated_demands = max(int(point["default_demands"]), observed)
+            structures = max(
+                int(point["default_structures"]),
+                min(int(point["default_structures"]) + 2, max(1, math.ceil(estimated_demands * 0.6))),
+            )
+            intelligence_source = "demo_seeded" if not observed else "observed_demo_enriched"
+            priority_label = point["priority"]
+            recommendation_label = point["recommendation"]
         else:
+            if observed <= 0:
+                continue
             estimated_demands = observed
-        structures = max(
-            int(point["default_structures"]),
-            min(int(point["default_structures"]) + 2, max(1, math.ceil(estimated_demands * 0.6))),
-        )
+            structures = None
+            intelligence_source = "observed"
+            priority_label = "Observation"
+            recommendation_label = "Not enough data available"
         department_name = AUDIENCE_CITY_MARKERS.get(normalized_label, {}).get("department", "Ile-de-France")
         department_code = _audience_department_code(point["label"]) or "--"
         business_points.append(
@@ -10233,10 +10242,11 @@ def _build_audience_map_context() -> dict:
                 "estimated_demands": estimated_demands,
                 "needs": estimated_demands,
                 "structures": structures,
-                "priority": point["priority"],
-                "recommendation": point["recommendation"],
+                "structures_label": structures if structures is not None else "Not enough data available",
+                "priority": priority_label,
+                "recommendation": recommendation_label,
                 "observed_signals": observed,
-                "intelligence_source": "observed" if observed else "territorial_estimation",
+                "intelligence_source": intelligence_source,
             }
         )
     context["map_locations"] = business_points
@@ -10865,6 +10875,14 @@ def _build_audience_map_context() -> dict:
         "key_pages": len(key_page_set),
         "intent_signals": sum(session_intent.values()),
     }
+    context["kpi_meta"] = {
+        "source_tables": ["analytics_events", "user_behaviors"],
+        "query_origin": "_build_audience_map_context event/session/location aggregations",
+        "last_updated": now,
+        "confidence": "high" if context["analytics_available"] else "low",
+        "explain": "Counts are derived from analytics event rows and user behavior locations in the selected 7-day window.",
+    }
+    context["last_updated"] = now
 
     if region_counts:
         region, count = region_counts.most_common(1)[0]
