@@ -22,15 +22,101 @@ from backend.models import (
 )
 
 
-UNAVAILABLE = "Not enough operational data"
+UNAVAILABLE = "Donnée indisponible"
+NO_RECENT_ACTIVITY = "Aucune activité récente. Les événements apparaîtront ici."
 CLOSED_STATUSES = {"done", "closed", "resolved", "completed", "cancelled", "archived"}
 BUSY_ASSIGNMENT_STATUSES = {"active", "assigned", "accepted", "in_progress"}
 AVAILABLE_STATUSES = {"available", "disponible"}
 
+STATUS_LABELS = {
+    "pending": "En attente",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "suspended": "Suspendu",
+    "available": "Disponible",
+    "disponible": "Disponible",
+    "open": "Ouvert",
+    "ouvert": "Ouvert",
+    "unavailable": "Indisponible",
+    "indisponible": "Indisponible",
+    "limited": "Capacité limitée",
+    "saturated": "Saturé",
+}
+
+PRIORITY_LABELS = {
+    "low": "Faible",
+    "medium": "Normale",
+    "normal": "Normale",
+    "high": "Haute",
+    "urgent": "Urgente",
+    "critical": "Critique",
+}
+
+RISK_LABELS = {
+    "low": "Faible",
+    "medium": "Modéré",
+    "moderate": "Modéré",
+    "high": "Élevé",
+    "critical": "Critique",
+}
+
+BUSINESS_LABELS = {
+    "administrative_support": "Accompagnement administratif",
+    "benefits_guidance": "Orientation droits et prestations",
+    "case_coordination": "Coordination des dossiers",
+    "case_management": "Gestion de dossier",
+    "child_support": "Soutien à l'enfance",
+    "city": "Ville",
+    "crisis_coordination": "Coordination de crise",
+    "department": "Département",
+    "district": "Quartier",
+    "education_support": "Soutien éducatif",
+    "emergency_assistance": "Assistance d'urgence",
+    "emergency_housing": "Hébergement d'urgence",
+    "emergency_medical_response": "Urgence médicale",
+    "emergency_response": "Réponse d'urgence",
+    "emergency_triage": "Triage d'urgence",
+    "field_support": "Appui terrain",
+    "financial_assistance": "Aides financières",
+    "food_assistance": "Aide alimentaire",
+    "humanitarian_response": "Réponse humanitaire",
+    "legal_assistance": "Aide juridique",
+    "medical_assistance": "Assistance médicale",
+    "protection_orders": "Mesures de protection",
+    "psychological_support": "Soutien psychologique",
+    "public_case_intake": "Accueil des demandes publiques",
+    "risk_escalation": "Escalade des risques",
+    "security_response": "Réponse sécurité",
+    "social_support": "Accompagnement social",
+    "territorial_coordination": "Coordination territoriale",
+    "territorial_governance": "Gouvernance territoriale",
+    "volunteer_coordination": "Coordination bénévoles",
+    "volunteer_dispatch": "Mobilisation bénévoles",
+}
+
+SERVICE_CATEGORIES: dict[str, str] = {
+    "social_support": "Accompagnement social",
+    "food_assistance": "Aide alimentaire",
+    "emergency_housing": "Hébergement d'urgence",
+    "psychological_support": "Soutien psychologique",
+    "child_protection": "Protection de l'enfance",
+    "domestic_violence": "Violences intrafamiliales",
+    "administrative_support": "Accompagnement administratif",
+    "professional_integration": "Insertion professionnelle",
+    "health": "Santé",
+    "disability": "Handicap",
+    "elderly": "Personnes âgées",
+    "solidarity_transport": "Transport solidaire",
+    "housing": "Logement",
+    "financial_assistance": "Aides financières",
+    "orientation": "Orientation",
+    "coordination": "Coordination",
+}
+
 
 ORGANIZATION_TYPES: dict[str, dict[str, Any]] = {
     "municipality": {
-        "label": "Municipality",
+        "label": "Municipalité",
         "icon": "building-2",
         "color": "#2563eb",
         "permissions": ["requests.view", "requests.assign", "territory.manage"],
@@ -51,21 +137,21 @@ ORGANIZATION_TYPES: dict[str, dict[str, Any]] = {
         "default_capabilities": ["volunteer_coordination", "field_support"],
     },
     "ngo": {
-        "label": "NGO",
+        "label": "ONG",
         "icon": "globe-2",
         "color": "#0891b2",
         "permissions": ["requests.view", "missions.accept", "reports.view"],
         "default_capabilities": ["humanitarian_response", "case_coordination"],
     },
     "hospital": {
-        "label": "Hospital",
+        "label": "Hôpital",
         "icon": "hospital",
         "color": "#dc2626",
         "permissions": ["requests.view", "medical.route"],
         "default_capabilities": ["medical_assistance", "emergency_triage"],
     },
     "clinic": {
-        "label": "Clinic",
+        "label": "Clinique",
         "icon": "stethoscope",
         "color": "#ea580c",
         "permissions": ["requests.view", "medical.route"],
@@ -79,14 +165,14 @@ ORGANIZATION_TYPES: dict[str, dict[str, Any]] = {
         "default_capabilities": ["security_response", "risk_escalation"],
     },
     "fire_department": {
-        "label": "Fire Department",
+        "label": "Pompiers",
         "icon": "flame",
         "color": "#b91c1c",
         "permissions": ["requests.view", "emergency.route"],
         "default_capabilities": ["emergency_response"],
     },
     "emergency_medical": {
-        "label": "Emergency Medical",
+        "label": "SAMU / urgence médicale",
         "icon": "siren",
         "color": "#be123c",
         "permissions": ["requests.view", "emergency.route", "medical.route"],
@@ -100,7 +186,7 @@ ORGANIZATION_TYPES: dict[str, dict[str, Any]] = {
         "default_capabilities": ["financial_assistance", "benefits_guidance"],
     },
     "prefecture": {
-        "label": "Prefecture",
+        "label": "Préfecture",
         "icon": "landmark",
         "color": "#334155",
         "permissions": ["requests.view", "territory.manage", "reports.view"],
@@ -114,35 +200,35 @@ ORGANIZATION_TYPES: dict[str, dict[str, Any]] = {
         "default_capabilities": ["legal_assistance", "protection_orders"],
     },
     "volunteer_network": {
-        "label": "Volunteer Network",
+        "label": "Réseau bénévole",
         "icon": "users",
         "color": "#9333ea",
         "permissions": ["missions.accept", "requests.view"],
         "default_capabilities": ["volunteer_dispatch"],
     },
     "food_bank": {
-        "label": "Food Bank",
+        "label": "Banque alimentaire",
         "icon": "package",
         "color": "#ca8a04",
         "permissions": ["requests.view", "services.fulfill"],
         "default_capabilities": ["food_assistance"],
     },
     "shelter": {
-        "label": "Shelter",
+        "label": "Centre d'hébergement",
         "icon": "home",
         "color": "#0284c7",
         "permissions": ["requests.view", "housing.route"],
         "default_capabilities": ["emergency_housing"],
     },
     "school": {
-        "label": "School",
+        "label": "Établissement scolaire",
         "icon": "graduation-cap",
         "color": "#4f46e5",
         "permissions": ["requests.view", "child_protection.route"],
         "default_capabilities": ["child_support", "education_support"],
     },
     "social_service": {
-        "label": "Social Service",
+        "label": "Service social",
         "icon": "clipboard-list",
         "color": "#059669",
         "permissions": ["requests.view", "requests.assign", "services.manage"],
@@ -189,6 +275,43 @@ def _display_text(value: Any, fallback: str = UNAVAILABLE) -> str:
     if not text or text.lower() in {"test", "demo", "sample", "cabinet", "structure_locale"}:
         return fallback
     return text
+
+
+def _label(value: Any, registry: dict[str, str], fallback: str = UNAVAILABLE) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        return fallback
+    key = raw.lower().replace(" ", "_").replace("-", "_")
+    if key in registry:
+        return registry[key]
+    if raw in registry.values():
+        return raw
+    return BUSINESS_LABELS.get(key) or raw.replace("_", " ").capitalize()
+
+
+def _confidence_label(value: Any) -> str:
+    return _label(value, {"high": "élevée", "medium": "moyenne", "low": "faible"}, "faible")
+
+
+def business_label(value: Any, fallback: str = UNAVAILABLE) -> str:
+    return _label(value, {**BUSINESS_LABELS, **SERVICE_CATEGORIES}, fallback)
+
+
+def status_label(value: Any, fallback: str = UNAVAILABLE) -> str:
+    return _label(value, STATUS_LABELS, fallback)
+
+
+def priority_label(value: Any, fallback: str = UNAVAILABLE) -> str:
+    return _label(value, PRIORITY_LABELS, fallback)
+
+
+def risk_label(value: Any, fallback: str = UNAVAILABLE) -> str:
+    return _label(value, RISK_LABELS, fallback)
+
+
+def serialize_json_list(values: list[str]) -> str | None:
+    cleaned = [str(value).strip() for value in values if str(value).strip()]
+    return json.dumps(cleaned, ensure_ascii=False) if cleaned else None
 
 
 def _active_request_filter():
@@ -262,9 +385,9 @@ def organization_type_definition(structure: Structure) -> dict[str, Any]:
 def build_organization_profile(structure: Structure) -> dict[str, Any]:
     type_def = organization_type_definition(structure)
     return {
-        "name": _display_text(getattr(structure, "name", None), "Unnamed organization"),
+        "name": _display_text(getattr(structure, "name", None), "Organisation sans nom"),
         "organization_type": type_def,
-        "status": _display_text(getattr(structure, "status", None)),
+        "status": status_label(getattr(structure, "status", None)),
         "description": _display_text(getattr(structure, "description", None)),
         "legal_name": _display_text(getattr(structure, "legal_name", None)),
         "registration_number": _display_text(getattr(structure, "registration_number", None)),
@@ -281,30 +404,240 @@ def build_organization_profile(structure: Structure) -> dict[str, Any]:
     }
 
 
+def _service_cases_by_id(structure_id: int) -> dict[int, int]:
+    return {
+        int(service_id): int(count or 0)
+        for service_id, count in db.session.query(Request.service_id, func.count(Request.id))
+        .filter(Request.structure_id == structure_id)
+        .filter(Request.service_id.isnot(None))
+        .filter(_active_request_filter())
+        .group_by(Request.service_id)
+        .all()
+        if service_id is not None
+    }
+
+
+def _service_waiting_hours_by_id(structure_id: int) -> dict[int, float]:
+    return {
+        int(service_id): round(float(seconds or 0) / 3600.0, 1)
+        for service_id, seconds in db.session.query(Request.service_id, func.avg(RequestMetric.time_to_assign))
+        .join(RequestMetric, RequestMetric.request_id == Request.id)
+        .filter(Request.structure_id == structure_id)
+        .filter(Request.service_id.isnot(None))
+        .filter(RequestMetric.time_to_assign.isnot(None))
+        .group_by(Request.service_id)
+        .all()
+        if service_id is not None and seconds is not None
+    }
+
+
+def _serialize_service(
+    row: StructureService,
+    case_counts: dict[int, int],
+    waiting_hours: dict[int, float],
+) -> dict[str, Any]:
+    service_id = int(row.id)
+    capacity = getattr(row, "capacity", None)
+    active_cases = case_counts.get(service_id, 0)
+    available_capacity = max(int(capacity) - active_cases, 0) if capacity is not None else None
+    availability_key = str(getattr(row, "availability", "") or "").strip().lower()
+    is_available = availability_key in AVAILABLE_STATUSES and bool(getattr(row, "is_active", False))
+    status_key = str(getattr(row, "status", "") or "").strip().lower()
+    blocking_statuses = {"archived", "inactive", "suspended", "closed", "unavailable", "indisponible"}
+    is_routable = (
+        bool(getattr(row, "is_active", False))
+        and availability_key in {"available", "disponible", "open", "ouvert"}
+        and status_key == "active"
+        and status_key not in blocking_statuses
+    )
+    non_routable_reason = None
+    if not bool(getattr(row, "is_active", False)):
+        non_routable_reason = "Service inactif"
+    elif status_key in blocking_statuses or (status_key and status_key != "active"):
+        non_routable_reason = "Statut non routable"
+    elif not status_key:
+        non_routable_reason = "Statut actif non confirmé"
+    elif availability_key not in {"available", "disponible", "open", "ouvert"}:
+        non_routable_reason = "Disponibilité non confirmée"
+    professionals = _json_list(getattr(row, "responsible_professionals_json", None))
+    average_waiting_time = waiting_hours.get(service_id)
+    return {
+        "id": service_id,
+        "code": _display_text(getattr(row, "code", None)),
+        "name": _display_text(row.name, "Service sans nom"),
+        "category_key": _display_text(getattr(row, "category", None), ""),
+        "category": business_label(getattr(row, "category", None), "Catégorie non renseignée"),
+        "description": _display_text(getattr(row, "description", None), "Description non renseignée"),
+        "status": status_label(getattr(row, "status", None), "Statut non renseigné"),
+        "priority": priority_label(getattr(row, "priority", None), "Priorité non renseignée"),
+        "availability": status_label(getattr(row, "availability", None), "Disponibilité non renseignée"),
+        "is_available": is_available,
+        "is_routable": is_routable,
+        "non_routable_reason": non_routable_reason,
+        "capacity": capacity,
+        "capacity_display": str(capacity) if capacity is not None else "Capacité non renseignée",
+        "available_capacity": available_capacity,
+        "available_capacity_display": (
+            str(available_capacity)
+            if available_capacity is not None
+            else "Capacité disponible non calculable"
+        ),
+        "responsible_professionals": professionals,
+        "responsible_professionals_display": (
+            ", ".join(professionals) if professionals else "Aucun professionnel affecté."
+        ),
+        "professionals_count": len(professionals),
+        "opening_hours": _display_text(getattr(row, "opening_hours", None), "Horaires non renseignés"),
+        "coverage": _display_text(getattr(row, "coverage", None), "Couverture non renseignée"),
+        "response_sla_hours": getattr(row, "response_sla_hours", None),
+        "response_sla_display": (
+            f"{row.response_sla_hours} h"
+            if getattr(row, "response_sla_hours", None) is not None
+            else "SLA non renseigné"
+        ),
+        "target_population": _display_text(
+            getattr(row, "target_population", None), "Public cible non renseigné"
+        ),
+        "eligibility": _display_text(
+            getattr(row, "eligibility", None), "Conditions d'éligibilité non renseignées"
+        ),
+        "required_documents": [
+            business_label(item, item)
+            for item in _json_list(getattr(row, "required_documents_json", None))
+        ],
+        "languages": [
+            business_label(item, item) for item in _json_list(getattr(row, "languages_json", None))
+        ],
+        "contact": {
+            "name": _display_text(getattr(row, "contact_name", None), "Contact non renseigné"),
+            "email": _display_text(getattr(row, "contact_email", None), "Email non renseigné"),
+            "phone": _display_text(getattr(row, "contact_phone", None), "Téléphone non renseigné"),
+        },
+        "tags": [business_label(item, item) for item in _json_list(getattr(row, "tags_json", None))],
+        "risk_level": risk_label(getattr(row, "risk_level", None), "Risque non renseigné"),
+        "territory": _display_text(
+            getattr(row, "territory", None),
+            _display_text(getattr(row, "coverage", None), "Territoire non renseigné"),
+        ),
+        "referral_required": getattr(row, "referral_required", None),
+        "referral_required_display": (
+            "Orientation requise"
+            if getattr(row, "referral_required", None) is True
+            else (
+                "Orientation non requise"
+                if getattr(row, "referral_required", None) is False
+                else "Règle d'orientation non renseignée"
+            )
+        ),
+        "emergency_support": getattr(row, "emergency_support", None),
+        "emergency_support_display": (
+            "Prise en charge d'urgence"
+            if getattr(row, "emergency_support", None) is True
+            else (
+                "Pas de prise en charge d'urgence"
+                if getattr(row, "emergency_support", None) is False
+                else "Support d'urgence non renseigné"
+            )
+        ),
+        "is_active": bool(getattr(row, "is_active", False)),
+        "active_cases": active_cases,
+        "average_waiting_time": average_waiting_time,
+        "average_waiting_time_display": (
+            f"{average_waiting_time} h"
+            if average_waiting_time is not None
+            else "Temps d'attente non calculable"
+        ),
+        "created_at": getattr(row, "created_at", None),
+        "updated_at": getattr(row, "updated_at", None),
+    }
+
+
 def build_services_catalog(structure_id: int) -> list[dict[str, Any]]:
     rows = (
         StructureService.query.filter(StructureService.structure_id == structure_id)
         .order_by(StructureService.is_active.desc(), StructureService.name.asc())
         .all()
     )
-    return [
-        {
-            "name": _display_text(row.name),
-            "category": _display_text(getattr(row, "category", None)),
-            "availability": _display_text(getattr(row, "availability", None)),
-            "capacity": getattr(row, "capacity", None),
-            "capacity_display": (
-                str(getattr(row, "capacity", None))
-                if getattr(row, "capacity", None) is not None
-                else UNAVAILABLE
-            ),
-            "responsible_professionals": _json_list(getattr(row, "responsible_professionals_json", None)),
-            "opening_hours": _display_text(getattr(row, "opening_hours", None)),
-            "coverage": _display_text(getattr(row, "coverage", None)),
-            "is_active": bool(getattr(row, "is_active", False)),
+    if not rows:
+        return []
+    case_counts = _service_cases_by_id(structure_id)
+    waiting_hours = _service_waiting_hours_by_id(structure_id)
+    return [_serialize_service(row, case_counts, waiting_hours) for row in rows]
+
+
+def build_services_dashboard(structure_id: int, services: list[dict[str, Any]]) -> dict[str, Any]:
+    if not services:
+        return {
+            "total_services": 0,
+            "by_category": {},
+            "available_services": 0,
+            "unavailable_services": 0,
+            "high_demand_services": [],
+            "capacity_per_service": [],
+            "average_waiting_time": None,
+            "average_waiting_time_display": "Temps d'attente non calculable",
+            "professionals_assigned": 0,
+            "cases_by_service": [],
+            "monthly_evolution": [],
+            "response_sla": [],
+            "source": "structure_services",
+            "confidence": "faible",
+            "updated_at": _now(),
         }
-        for row in rows
+    by_category: dict[str, int] = {}
+    for item in services:
+        by_category[item["category"]] = by_category.get(item["category"], 0) + 1
+    high_demand = [
+        item
+        for item in services
+        if item["capacity"] is not None
+        and item["active_cases"] >= int(item["capacity"])
+        and item["active_cases"] > 0
     ]
+    waiting_values = [
+        item["average_waiting_time"]
+        for item in services
+        if item["average_waiting_time"] is not None
+    ]
+    avg_waiting = round(sum(waiting_values) / len(waiting_values), 1) if waiting_values else None
+    monthly_rows = (
+        db.session.query(StructureService.name, func.count(Request.id))
+        .join(Request, Request.service_id == StructureService.id)
+        .filter(Request.structure_id == structure_id)
+        .filter(Request.created_at >= _now() - timedelta(days=30))
+        .group_by(StructureService.name)
+        .all()
+    )
+    return {
+        "total_services": len(services),
+        "by_category": by_category,
+        "available_services": len([item for item in services if item["is_available"]]),
+        "unavailable_services": len([item for item in services if not item["is_available"]]),
+        "high_demand_services": high_demand,
+        "capacity_per_service": [
+            {
+                "name": item["name"],
+                "capacity": item["capacity"],
+                "available_capacity": item["available_capacity"],
+                "active_cases": item["active_cases"],
+            }
+            for item in services
+        ],
+        "average_waiting_time": avg_waiting,
+        "average_waiting_time_display": (
+            f"{avg_waiting} h" if avg_waiting is not None else "Temps d'attente non calculable"
+        ),
+        "professionals_assigned": sum(item["professionals_count"] for item in services),
+        "cases_by_service": [{"name": item["name"], "cases": item["active_cases"]} for item in services],
+        "monthly_evolution": [
+            {"service": _display_text(name, "Service sans nom"), "cases": int(count or 0)}
+            for name, count in monthly_rows
+        ],
+        "response_sla": [{"name": item["name"], "sla": item["response_sla_display"]} for item in services],
+        "source": "structure_services, requests, request_metrics",
+        "confidence": "élevée" if services else "faible",
+        "updated_at": _now(),
+    }
 
 
 def build_capacity_metrics(structure_id: int) -> dict[str, MetricValue]:
@@ -342,6 +675,7 @@ def build_capacity_metrics(structure_id: int) -> dict[str, MetricValue]:
         db.session.query(func.sum(StructureService.capacity)).filter(
             StructureService.structure_id == structure_id,
             StructureService.is_active.is_(True),
+            func.lower(func.coalesce(StructureService.availability, "")).in_(list(AVAILABLE_STATUSES)),
         )
     )
     max_capacity = int(max_capacity) if max_capacity is not None else None
@@ -372,28 +706,28 @@ def build_capacity_metrics(structure_id: int) -> dict[str, MetricValue]:
     burnout_risk = None
     if workload is not None:
         if workload >= 100:
-            burnout_risk = "Critical"
+            burnout_risk = "Critique"
         elif workload >= 80:
-            burnout_risk = "High"
+            burnout_risk = "Élevé"
         elif workload >= 60:
-            burnout_risk = "Moderate"
+            burnout_risk = "Modéré"
         else:
-            burnout_risk = "Low"
+            burnout_risk = "Faible"
 
     return {
-        "professionals": _metric("structure.professionals", "Professionals", professionals, source_tables=["intervenants"], query_origin="count intervenants where structure_id = :id", confidence="high", explanation="Total professionals linked to this organization."),
-        "available_professionals": _metric("structure.available_professionals", "Available Professionals", available_professionals, source_tables=["intervenants"], query_origin="count active intervenants with available/empty availability", confidence="medium", explanation="Professionals marked active and available."),
-        "busy_professionals": _metric("structure.busy_professionals", "Busy Professionals", busy_professionals, source_tables=["assignments"], query_origin="distinct intervenants with active assignments", confidence="medium", explanation="Professionals with active assignment records."),
-        "active_cases": _metric("structure.active_cases", "Current Active Cases", active_cases, source_tables=["requests"], query_origin="count requests excluding closed statuses", confidence="high", explanation="Open operational requests owned by this organization."),
-        "maximum_capacity": _metric("structure.maximum_capacity", "Maximum Capacity", max_capacity, source_tables=["structure_services"], query_origin="sum capacity from active structure_services", confidence="medium" if max_capacity is not None else "low", explanation="Configured service capacity. Unavailable until service capacity is entered."),
-        "available_capacity": _metric("structure.available_capacity", "Available Capacity", available_capacity, source_tables=["structure_services", "requests"], query_origin="sum service capacity minus active requests", confidence="medium" if available_capacity is not None else "low", explanation="Remaining configured capacity after active cases."),
-        "average_response_time": _metric("structure.average_response_time", "Average Response Time", avg_response_hours, source_tables=["request_metrics", "requests"], query_origin="avg request_metrics.time_to_assign joined to requests", confidence="medium" if avg_response_hours is not None else "low", explanation="Average time to first assignment.", suffix="h"),
-        "workload_percent": _metric("structure.workload_percent", "Current Workload", workload, source_tables=["structure_services", "requests"], query_origin="active request count / configured service capacity", confidence="medium" if workload is not None else "low", explanation="Workload based on configured service capacity.", suffix="%"),
-        "burnout_risk": _metric("structure.burnout_risk", "Burnout Risk", burnout_risk, source_tables=["structure_services", "requests"], query_origin="workload percent risk band", confidence="medium" if burnout_risk else "low", explanation="Risk band derived from workload percentage."),
-        "monthly_cases": _metric("structure.monthly_cases", "Monthly Cases", monthly_cases, source_tables=["requests"], query_origin="count requests created in last 30 days", confidence="high", explanation="Requests received during the last 30 days."),
-        "weekly_cases": _metric("structure.weekly_cases", "Weekly Cases", weekly_cases, source_tables=["requests"], query_origin="count requests created in last 7 days", confidence="high", explanation="Requests received during the last 7 days."),
-        "daily_cases": _metric("structure.daily_cases", "Daily Cases", daily_cases, source_tables=["requests"], query_origin="count requests created in last 24 hours", confidence="high", explanation="Requests received during the last 24 hours."),
-        "average_resolution_time": _metric("structure.average_resolution_time", "Average Resolution Time", avg_resolution_hours, source_tables=["request_metrics", "requests"], query_origin="avg request_metrics.time_to_complete joined to requests", confidence="medium" if avg_resolution_hours is not None else "low", explanation="Average completion time for resolved requests.", suffix="h"),
+        "professionals": _metric("structure.professionals", "Professionnels", professionals, source_tables=["intervenants"], query_origin="count intervenants where structure_id = :id", confidence="élevée", explanation="Nombre total de professionnels rattachés à l'organisation."),
+        "available_professionals": _metric("structure.available_professionals", "Professionnels disponibles", available_professionals, source_tables=["intervenants"], query_origin="count active intervenants with availability in available/disponible", confidence="moyenne", explanation="Professionnels actifs avec une disponibilité explicitement disponible."),
+        "busy_professionals": _metric("structure.busy_professionals", "Professionnels occupés", busy_professionals, source_tables=["assignments"], query_origin="distinct intervenants with active assignments", confidence="moyenne", explanation="Professionnels associés à des affectations actives."),
+        "active_cases": _metric("structure.active_cases", "Dossiers actifs", active_cases, source_tables=["requests"], query_origin="count requests excluding closed statuses", confidence="élevée", explanation="Demandes opérationnelles ouvertes rattachées à l'organisation."),
+        "maximum_capacity": _metric("structure.maximum_capacity", "Capacité maximale disponible", max_capacity, source_tables=["structure_services"], query_origin="sum capacity from active and explicitly available structure_services", confidence="moyenne" if max_capacity is not None else "faible", explanation="Capacité configurée uniquement sur les services explicitement disponibles."),
+        "available_capacity": _metric("structure.available_capacity", "Capacité disponible", available_capacity, source_tables=["structure_services", "requests"], query_origin="available service capacity minus active requests", confidence="moyenne" if available_capacity is not None else "faible", explanation="Capacité restante après dossiers actifs."),
+        "average_response_time": _metric("structure.average_response_time", "Temps de réponse moyen", avg_response_hours, source_tables=["request_metrics", "requests"], query_origin="avg request_metrics.time_to_assign joined to requests", confidence="moyenne" if avg_response_hours is not None else "faible", explanation="Temps moyen avant première affectation.", suffix=" h"),
+        "workload_percent": _metric("structure.workload_percent", "Charge actuelle", workload, source_tables=["structure_services", "requests"], query_origin="active request count / explicitly available configured service capacity", confidence="moyenne" if workload is not None else "faible", explanation="Charge calculée à partir de la capacité de services disponible.", suffix="%"),
+        "burnout_risk": _metric("structure.burnout_risk", "Risque de surcharge", burnout_risk, source_tables=["structure_services", "requests"], query_origin="workload percent risk band", confidence="moyenne" if burnout_risk else "faible", explanation="Niveau de risque dérivé du taux de charge."),
+        "monthly_cases": _metric("structure.monthly_cases", "Dossiers mensuels", monthly_cases, source_tables=["requests"], query_origin="count requests created in last 30 days", confidence="élevée", explanation="Demandes reçues sur les 30 derniers jours."),
+        "weekly_cases": _metric("structure.weekly_cases", "Dossiers hebdomadaires", weekly_cases, source_tables=["requests"], query_origin="count requests created in last 7 days", confidence="élevée", explanation="Demandes reçues sur les 7 derniers jours."),
+        "daily_cases": _metric("structure.daily_cases", "Dossiers du jour", daily_cases, source_tables=["requests"], query_origin="count requests created in last 24 hours", confidence="élevée", explanation="Demandes reçues sur les dernières 24 heures."),
+        "average_resolution_time": _metric("structure.average_resolution_time", "Temps moyen de résolution", avg_resolution_hours, source_tables=["request_metrics", "requests"], query_origin="avg request_metrics.time_to_complete joined to requests", confidence="moyenne" if avg_resolution_hours is not None else "faible", explanation="Temps moyen de résolution des demandes clôturées.", suffix=" h"),
     }
 
 
@@ -432,8 +766,8 @@ def build_territorial_coverage(structure_id: int) -> dict[str, Any]:
         "departments": sorted({item["department"] for item in configured if item["department"] != UNAVAILABLE}),
         "postal_codes": sorted({item["postal_code"] for item in configured if item["postal_code"] != UNAVAILABLE}),
         "population_served": sum(int(item["population_served"] or 0) for item in configured) or None,
-        "source": "structure_coverage_areas" if configured else "requests.city inferred from active data",
-        "confidence": "high" if configured else ("medium" if inferred_cities else "low"),
+        "source": "structure_coverage_areas" if configured else "Données déduites des villes présentes dans les demandes actives",
+        "confidence": "élevée" if configured else ("moyenne" if inferred_cities else "faible"),
     }
 
 
@@ -508,12 +842,12 @@ def build_health_explanation(structure_id: int, capacity: dict[str, MetricValue]
         return {
             "score": None,
             "display": UNAVAILABLE,
-            "confidence": "low",
+            "confidence": "faible",
             "trend": UNAVAILABLE,
-            "explanation": "Health cannot be calculated until operational records exist.",
+            "explanation": "Le score de santé sera calculé dès que des dossiers, services ou capacités réels seront enregistrés.",
             "positive_factors": [],
             "negative_factors": [],
-            "recommendations": ["Enter services, capacity, contacts, and operational coverage."],
+            "recommendations": ["Renseigner les services, capacités, contacts et zones couvertes."],
         }
 
     score = 100
@@ -522,34 +856,34 @@ def build_health_explanation(structure_id: int, capacity: dict[str, MetricValue]
     recommendations: list[str] = []
     if overdue:
         score -= min(30, overdue * 5)
-        negative.append(f"{overdue} overdue active case(s)")
-        recommendations.append("Review overdue cases and assign owners.")
+        negative.append(f"{overdue} dossier(s) actif(s) en retard")
+        recommendations.append("Revoir les dossiers en retard et attribuer un responsable.")
     if stale:
         score -= min(20, stale * 4)
-        negative.append(f"{stale} case(s) without activity for more than 72h")
-        recommendations.append("Reopen inactive cases and record next actions.")
+        negative.append(f"{stale} dossier(s) sans activité depuis plus de 72 h")
+        recommendations.append("Relancer les dossiers inactifs et enregistrer une prochaine action.")
     if unassigned:
         score -= min(25, unassigned * 5)
-        negative.append(f"{unassigned} active case(s) without owner")
-        recommendations.append("Assign owners to unassigned cases.")
+        negative.append(f"{unassigned} dossier(s) actif(s) sans responsable")
+        recommendations.append("Affecter les dossiers non attribués.")
     if critical:
         score -= min(20, critical * 6)
-        negative.append(f"{critical} critical or high-risk case(s)")
-        recommendations.append("Escalate critical cases through the duty chain.")
+        negative.append(f"{critical} dossier(s) critique(s) ou à risque élevé")
+        recommendations.append("Escalader les dossiers critiques via la chaîne d'astreinte.")
     if available_capacity is not None and available_capacity <= 0 and (active_cases or 0) > 0:
         score -= 20
-        negative.append("No available configured capacity")
-        recommendations.append("Increase service capacity or redirect cases to partners.")
+        negative.append("Aucune capacité configurée disponible")
+        recommendations.append("Augmenter la capacité ou réorienter vers un partenaire.")
     if available_professionals == 0 and (active_cases or 0) > 0:
         score -= 20
-        negative.append("No available professional recorded")
-        recommendations.append("Update professional availability or add backup coordinators.")
+        negative.append("Aucun professionnel disponible enregistré")
+        recommendations.append("Mettre à jour les disponibilités ou ajouter un coordinateur de secours.")
     if not negative:
-        positive.append("No overdue, stale, unassigned, or critical active cases detected")
+        positive.append("Aucun dossier actif en retard, inactif, non attribué ou critique détecté")
     if (available_professionals or 0) > 0:
-        positive.append(f"{available_professionals} available professional(s)")
+        positive.append(f"{available_professionals} professionnel(s) disponible(s)")
     if available_capacity is not None and available_capacity > 0:
-        positive.append(f"{available_capacity} configured capacity slot(s) available")
+        positive.append(f"{available_capacity} place(s) de capacité disponible(s)")
 
     confidence = min(95, 45 + signal_count * 15 + min((active_cases or 0), 10) * 2)
     return {
@@ -557,10 +891,10 @@ def build_health_explanation(structure_id: int, capacity: dict[str, MetricValue]
         "display": str(max(0, int(score))),
         "confidence": f"{confidence}%",
         "trend": UNAVAILABLE,
-        "explanation": "Health is derived from active workload, overdue cases, ownership, critical risk, capacity, and professional availability.",
+        "explanation": "Le score de santé est dérivé de la charge active, des retards, de l'affectation, du risque, de la capacité et de la disponibilité des professionnels.",
         "positive_factors": positive,
         "negative_factors": negative,
-        "recommendations": recommendations or ["Continue monitoring operational workload."],
+        "recommendations": recommendations or ["Poursuivre le suivi de la charge opérationnelle."],
     }
 
 
@@ -572,11 +906,11 @@ def build_operational_alerts(structure_id: int, capacity: dict[str, MetricValue]
     alerts = []
 
     checks = [
-        ("missing_owner", "Missing owner", Request.query.filter(Request.structure_id == structure_id).filter(Request.owner_id.is_(None)).filter(active_filter), "high"),
-        ("urgent_unassigned", "Urgent unassigned", Request.query.filter(Request.structure_id == structure_id).filter(Request.owner_id.is_(None)).filter(func.lower(func.coalesce(Request.priority, "")).in_(["urgent", "critical", "high"])).filter(active_filter), "critical"),
-        ("late_requests", "Late requests", Request.query.filter(Request.structure_id == structure_id).filter(active_filter).filter(Request.created_at < overdue_cutoff), "high"),
-        ("inactivity_72h", "72h inactivity", Request.query.filter(Request.structure_id == structure_id).filter(or_(Request.updated_at < stale_cutoff, and_(Request.updated_at.is_(None), Request.created_at < stale_cutoff))), "medium"),
-        ("high_risk_cases", "High-risk cases", Request.query.filter(Request.structure_id == structure_id).filter(active_filter).filter(func.lower(func.coalesce(Request.risk_level, "")) == "critical"), "critical"),
+        ("missing_owner", "Dossier sans responsable", Request.query.filter(Request.structure_id == structure_id).filter(Request.owner_id.is_(None)).filter(active_filter), "high"),
+        ("urgent_unassigned", "Urgence non attribuée", Request.query.filter(Request.structure_id == structure_id).filter(Request.owner_id.is_(None)).filter(func.lower(func.coalesce(Request.priority, "")).in_(["urgent", "critical", "high"])).filter(active_filter), "critical"),
+        ("late_requests", "Dossiers en retard", Request.query.filter(Request.structure_id == structure_id).filter(active_filter).filter(Request.created_at < overdue_cutoff), "high"),
+        ("inactivity_72h", "Inactivité 72 h", Request.query.filter(Request.structure_id == structure_id).filter(or_(Request.updated_at < stale_cutoff, and_(Request.updated_at.is_(None), Request.created_at < stale_cutoff))), "medium"),
+        ("high_risk_cases", "Dossiers à risque élevé", Request.query.filter(Request.structure_id == structure_id).filter(active_filter).filter(func.lower(func.coalesce(Request.risk_level, "")) == "critical"), "critical"),
     ]
     for key, label, query, severity in checks:
         count = _count(query) or 0
@@ -584,15 +918,15 @@ def build_operational_alerts(structure_id: int, capacity: dict[str, MetricValue]
             alerts.append({"key": key, "label": label, "count": count, "severity": severity, "source": "requests"})
 
     if capacity["available_capacity"].value is not None and capacity["available_capacity"].value <= 0 and (capacity["active_cases"].value or 0) > 0:
-        alerts.append({"key": "capacity_exceeded", "label": "Capacity exceeded", "count": capacity["active_cases"].value, "severity": "critical", "source": "structure_services + requests"})
+        alerts.append({"key": "capacity_exceeded", "label": "Capacité dépassée", "count": capacity["active_cases"].value, "severity": "critical", "source": "structure_services + requests"})
     if capacity["available_professionals"].value == 0 and (capacity["active_cases"].value or 0) > 0:
-        alerts.append({"key": "no_professional_available", "label": "No professional available", "count": capacity["active_cases"].value, "severity": "critical", "source": "intervenants + requests"})
+        alerts.append({"key": "no_professional_available", "label": "Aucun professionnel disponible", "count": capacity["active_cases"].value, "severity": "critical", "source": "intervenants + requests"})
 
     inactive_services = _count(
         StructureService.query.filter(StructureService.structure_id == structure_id).filter(StructureService.is_active.is_(False))
     ) or 0
     if inactive_services:
-        alerts.append({"key": "critical_service_unavailable", "label": "Critical service unavailable", "count": inactive_services, "severity": "high", "source": "structure_services"})
+        alerts.append({"key": "service_unavailable", "label": "Service indisponible", "count": inactive_services, "severity": "high", "source": "structure_services"})
 
     communication_failures = _count(
         RequestActivity.query.join(Request, RequestActivity.request_id == Request.id)
@@ -600,7 +934,7 @@ def build_operational_alerts(structure_id: int, capacity: dict[str, MetricValue]
         .filter(func.lower(func.coalesce(RequestActivity.action, "")).in_(["notification_failed", "communication_failed"]))
     ) or 0
     if communication_failures:
-        alerts.append({"key": "communication_failure", "label": "Communication failure", "count": communication_failures, "severity": "medium", "source": "request_activities"})
+        alerts.append({"key": "communication_failure", "label": "Échec de communication", "count": communication_failures, "severity": "medium", "source": "request_activities"})
     return alerts
 
 
@@ -615,8 +949,8 @@ def build_recent_activity(structure_id: int) -> list[dict[str, Any]]:
     timeline = [
         {
             "icon": "activity",
-            "label": _display_text(row.action).replace("_", " ").title(),
-            "user": _display_text(getattr(getattr(row, "actor", None), "username", None)),
+            "label": business_label(row.action, _display_text(row.action).replace("_", " ").capitalize()),
+            "user": _display_text(getattr(getattr(row, "actor", None), "username", None), "Utilisateur non renseigné"),
             "timestamp": row.created_at,
             "organization": UNAVAILABLE,
         }
@@ -634,8 +968,8 @@ def build_recent_activity(structure_id: int) -> list[dict[str, Any]]:
     return [
         {
             "icon": "inbox",
-            "label": f"Emergency request received: {_display_text(row.title, 'Untitled request')}",
-            "user": _display_text(getattr(getattr(row, "owner", None), "username", None)),
+            "label": f"Demande reçue : {_display_text(row.title, 'Demande sans titre')}",
+            "user": _display_text(getattr(getattr(row, "owner", None), "username", None), "Responsable non attribué"),
             "timestamp": row.created_at,
             "organization": UNAVAILABLE,
         }
@@ -646,29 +980,123 @@ def build_recent_activity(structure_id: int) -> list[dict[str, Any]]:
 def build_ai_readiness(structure: Structure, capacity: dict[str, MetricValue], services: list[dict[str, Any]]) -> dict[str, Any]:
     type_def = organization_type_definition(structure)
     configured_capabilities = _json_list(getattr(structure, "capabilities_json", None))
-    capabilities = configured_capabilities or type_def.get("default_capabilities", [])
+    capability_keys = configured_capabilities or type_def.get("default_capabilities", [])
+    service_inputs = [
+        {
+            "service_id": item["id"],
+            "name": item["name"],
+            "category": item["category"],
+            "capacity": item["capacity"],
+            "available_capacity": item["available_capacity"],
+            "territory": item["territory"],
+            "priority": item["priority"],
+            "availability": item["availability"],
+            "languages": item["languages"],
+            "target_population": item["target_population"],
+            "required_documents": item["required_documents"],
+            "average_waiting_time_hours": item["average_waiting_time"],
+            "response_sla_hours": item["response_sla_hours"],
+        }
+        for item in services
+        if item.get("is_routable")
+    ]
+    non_routable_services = [
+        {
+            "service_id": item["id"],
+            "name": item["name"],
+            "category": item["category"],
+            "reason": item.get("non_routable_reason") or "Service non routable",
+            "availability": item["availability"],
+            "status": item["status"],
+        }
+        for item in services
+        if not item.get("is_routable")
+    ]
     return {
-        "capabilities": capabilities,
-        "languages": _json_list(getattr(structure, "languages_json", None)),
-        "availability": _display_text(getattr(structure, "opening_hours", None)),
+        "capabilities": [business_label(item, item) for item in capability_keys],
+        "languages": [business_label(item, item) for item in _json_list(getattr(structure, "languages_json", None))],
+        "availability": _display_text(getattr(structure, "opening_hours", None), "Disponibilité de l'organisation non renseignée"),
         "response_time": capacity["average_response_time"].display,
-        "priority_domains": _json_list(getattr(structure, "priority_domains_json", None)),
-        "accepted_case_types": _json_list(getattr(structure, "accepted_case_types_json", None)),
-        "required_documents": _json_list(getattr(structure, "required_documents_json", None)),
-        "supported_populations": _json_list(getattr(structure, "supported_populations_json", None)),
-        "risk_level": _display_text(getattr(structure, "risk_level", None)),
+        "priority_domains": [business_label(item, item) for item in _json_list(getattr(structure, "priority_domains_json", None))],
+        "accepted_case_types": [business_label(item, item) for item in _json_list(getattr(structure, "accepted_case_types_json", None))],
+        "required_documents": [business_label(item, item) for item in _json_list(getattr(structure, "required_documents_json", None))],
+        "supported_populations": [business_label(item, item) for item in _json_list(getattr(structure, "supported_populations_json", None))],
+        "risk_level": risk_label(getattr(structure, "risk_level", None)),
         "matching_score_inputs": {
             "organization_type": type_def.get("key"),
-            "services": [item["name"] for item in services],
+            "services": service_inputs,
+            "routable_services": service_inputs,
+            "non_routable_services": non_routable_services,
             "available_capacity": capacity["available_capacity"].value,
             "average_response_time_hours": capacity["average_response_time"].value,
+            "confidence": "moyenne" if service_inputs else "faible",
         },
+    }
+
+
+def build_service_detail(structure_id: int, service_id: int) -> dict[str, Any] | None:
+    row = StructureService.query.filter(
+        StructureService.structure_id == structure_id,
+        StructureService.id == service_id,
+    ).first()
+    if row is None:
+        return None
+    service = _serialize_service(row, _service_cases_by_id(structure_id), _service_waiting_hours_by_id(structure_id))
+    recent_requests = (
+        Request.query.filter(Request.structure_id == structure_id)
+        .filter(Request.service_id == service_id)
+        .order_by(Request.created_at.desc())
+        .limit(10)
+        .all()
+    )
+    activities = (
+        RequestActivity.query.join(Request, RequestActivity.request_id == Request.id)
+        .filter(Request.structure_id == structure_id)
+        .filter(Request.service_id == service_id)
+        .order_by(RequestActivity.created_at.desc())
+        .limit(10)
+        .all()
+    )
+    alerts = []
+    if service["capacity"] is not None and service["active_cases"] >= int(service["capacity"]) and service["active_cases"] > 0:
+        alerts.append({"label": "Capacité atteinte", "severity": "critical", "source": "Capacité du service et dossiers actifs"})
+    if not service["is_available"]:
+        alerts.append({"label": "Service non disponible", "severity": "high", "source": "Disponibilité du service"})
+    return {
+        "service": service,
+        "related_organizations": [],
+        "cases": [
+            {
+                "id": req.id,
+                "title": _display_text(req.title, "Demande sans titre"),
+                "status": status_label(req.status, "Statut non renseigné"),
+                "priority": priority_label(req.priority, "Priorité non renseignée"),
+                "created_at": req.created_at,
+            }
+            for req in recent_requests
+        ],
+        "performance": {
+            "active_cases": service["active_cases"],
+            "average_waiting_time": service["average_waiting_time_display"],
+            "response_sla": service["response_sla_display"],
+            "source": "requests, request_metrics, structure_services",
+        },
+        "recent_activity": [
+            {
+                "label": business_label(item.action, _display_text(item.action).replace("_", " ").capitalize()),
+                "timestamp": item.created_at,
+            }
+            for item in activities
+        ],
+        "alerts": alerts,
+        "generated_at": _now(),
     }
 
 
 def build_enterprise_structure_dashboard(structure: Structure) -> dict[str, Any]:
     capacity = build_capacity_metrics(int(structure.id))
     services = build_services_catalog(int(structure.id))
+    services_dashboard = build_services_dashboard(int(structure.id), services)
     profile = build_organization_profile(structure)
     coverage = build_territorial_coverage(int(structure.id))
     contacts = build_contact_directory(int(structure.id))
@@ -679,19 +1107,21 @@ def build_enterprise_structure_dashboard(structure: Structure) -> dict[str, Any]
     alerts = build_operational_alerts(int(structure.id), capacity)
     users_count = _count(AdminUser.query.filter(AdminUser.structure_id == structure.id))
     executive_kpis = [
-        {"label": "Health", "display": health["display"], "confidence": health["confidence"]},
-        {"label": "Capacity", "display": capacity["available_capacity"].display, "confidence": capacity["available_capacity"].confidence},
-        {"label": "Cases", "display": capacity["active_cases"].display, "confidence": capacity["active_cases"].confidence},
-        {"label": "Professionals", "display": capacity["professionals"].display, "confidence": capacity["professionals"].confidence},
-        {"label": "Services", "display": str(len(services)) if services else UNAVAILABLE, "confidence": "high" if services else "low"},
-        {"label": "Coverage", "display": str(len(coverage["covered_cities"])) if coverage["covered_cities"] else UNAVAILABLE, "confidence": coverage["confidence"]},
-        {"label": "Response Time", "display": capacity["average_response_time"].display, "confidence": capacity["average_response_time"].confidence},
-        {"label": "Escalations", "display": str(len([item for item in alerts if item["severity"] in {"high", "critical"}])), "confidence": "medium"},
+        {"label": "Santé", "display": health["display"], "confidence": health["confidence"]},
+        {"label": "Capacité", "display": capacity["available_capacity"].display, "confidence": capacity["available_capacity"].confidence},
+        {"label": "Dossiers", "display": capacity["active_cases"].display, "confidence": capacity["active_cases"].confidence},
+        {"label": "Professionnels", "display": capacity["professionals"].display, "confidence": capacity["professionals"].confidence},
+        {"label": "Services proposés", "display": str(len(services)) if services else "Aucun service enregistré", "confidence": "élevée" if services else "faible"},
+        {"label": "Couverture territoriale", "display": str(len(coverage["covered_cities"])) if coverage["covered_cities"] else "Couverture non renseignée", "confidence": coverage["confidence"]},
+        {"label": "Temps de réponse", "display": capacity["average_response_time"].display, "confidence": capacity["average_response_time"].confidence},
+        {"label": "Escalades", "display": str(len([item for item in alerts if item["severity"] in {"high", "critical"}])), "confidence": "moyenne"},
     ]
     return {
         "profile": profile,
         "organization_type_registry": ORGANIZATION_TYPES,
+        "service_categories": SERVICE_CATEGORIES,
         "services": services,
+        "services_dashboard": services_dashboard,
         "capacity": capacity,
         "coverage": coverage,
         "contacts": contacts,

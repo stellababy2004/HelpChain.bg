@@ -226,7 +226,7 @@ def test_structure_operational_intelligence_endpoint(client, session):
     payload = resp.get_json()
     assert payload["profile"]["name"] == "Operational Detail"
     assert payload["capacity"]["active_cases"]["source_tables"] == ["requests"]
-    assert payload["health"]["display"] == "Not enough operational data"
+    assert payload["health"]["display"] == "Donnée indisponible"
 
 
 def test_structure_operational_intelligence_blocks_foreign_structure(client, session):
@@ -282,6 +282,38 @@ def test_empty_intervenant_availability_does_not_count_as_available(client, sess
     assert payload["capacity"]["available_professionals"]["value"] == 0
 
 
+def test_empty_service_availability_does_not_increase_available_capacity(client, session):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name="Service Availability", slug="service-availability")
+    admin = _make_admin(
+        session,
+        username="service_availability_admin",
+        email="service_availability_admin@test.local",
+        role="superadmin",
+    )
+    session.add(
+        StructureService(
+            structure_id=st.id,
+            code="unknown-availability",
+            name="Disponibilité inconnue",
+            category="social_support",
+            capacity=12,
+            availability="",
+            is_active=True,
+        )
+    )
+    session.commit()
+    _login_admin(client, admin)
+
+    resp = client.get(f"/admin/structures/{st.id}/operational-intelligence", follow_redirects=False)
+
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert payload["capacity"]["maximum_capacity"]["value"] is None
+    assert payload["capacity"]["available_capacity"]["value"] is None
+
+
 def test_structures_index_query_count_is_not_per_structure(client, session, app):
     admin = _make_admin(
         session,
@@ -319,6 +351,447 @@ def test_structure_detail_query_count_is_materially_reduced(client, session, app
 
     assert resp.status_code == 200
     assert counts["select"] <= 30
+
+
+def test_structure_service_create_accepts_valid_category(client, session):
+    admin = _make_admin(
+        session,
+        username="service_creator",
+        email="service_creator@test.local",
+        role="superadmin",
+    )
+    st = _make_structure(session, name="Service Owner", slug="service-owner")
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/services/new",
+        data={
+            "name": "Accueil social",
+            "category": "social_support",
+            "availability": "available",
+            "status": "active",
+            "capacity": "5",
+            "professionals": "Marie Martin",
+            "languages": "français",
+        },
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 303
+    from backend.models import StructureService
+
+    service = StructureService.query.filter_by(structure_id=st.id, name="Accueil social").first()
+    assert service is not None
+    assert service.category == "social_support"
+    assert service.capacity == 5
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("capacity", "-1"),
+        ("response_sla_hours", "-1"),
+        ("capacity", "12.5"),
+        ("capacity", "abc"),
+        ("capacity", "100001"),
+        ("response_sla_hours", "525601"),
+    ],
+)
+def test_structure_service_create_rejects_invalid_capacity_and_sla(client, session, field, value):
+    admin = _make_admin(
+        session,
+        username=f"service_invalid_{field}_{value}".replace("-", "neg").replace(".", "_"),
+        email=f"service_invalid_{field}_{value}".replace("-", "neg").replace(".", "_") + "@test.local",
+        role="superadmin",
+    )
+    st = _make_structure(session, name=f"Invalid {field}", slug=f"invalid-{field}-{abs(hash(value))}")
+    _login_admin(client, admin)
+    data = {"name": "Service borne", "category": "social_support"}
+    data[field] = value
+
+    resp = client.post(f"/admin/structures/{st.id}/services/new", data=data, follow_redirects=False)
+
+    assert resp.status_code == 400
+
+
+def test_structure_service_create_accepts_zero_and_empty_numeric_values(client, session):
+    admin = _make_admin(
+        session,
+        username="service_zero_numeric",
+        email="service_zero_numeric@test.local",
+        role="superadmin",
+    )
+    st = _make_structure(session, name="Zero Numeric", slug="zero-numeric")
+    _login_admin(client, admin)
+
+    zero_resp = client.post(
+        f"/admin/structures/{st.id}/services/new",
+        data={
+            "name": "Service zero",
+            "category": "social_support",
+            "capacity": "0",
+            "response_sla_hours": "0",
+        },
+        follow_redirects=False,
+    )
+    empty_resp = client.post(
+        f"/admin/structures/{st.id}/services/new",
+        data={"name": "Service empty", "category": "food_assistance"},
+        follow_redirects=False,
+    )
+
+    assert zero_resp.status_code == 303
+    assert empty_resp.status_code == 303
+    from backend.models import StructureService
+
+    zero = StructureService.query.filter_by(structure_id=st.id, name="Service zero").first()
+    empty = StructureService.query.filter_by(structure_id=st.id, name="Service empty").first()
+    assert zero.capacity == 0
+    assert zero.response_sla_hours == 0
+    assert empty.capacity is None
+    assert empty.response_sla_hours is None
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected"),
+    [
+        ("referral_required", "yes", True),
+        ("referral_required", "no", False),
+        ("referral_required", "", None),
+        ("emergency_support", "yes", True),
+        ("emergency_support", "no", False),
+        ("emergency_support", "", None),
+    ],
+)
+def test_structure_service_create_accepts_strict_boolean_values(client, session, field, value, expected):
+    admin = _make_admin(
+        session,
+        username=f"service_bool_{field}_{value or 'empty'}",
+        email=f"service_bool_{field}_{value or 'empty'}@test.local",
+        role="superadmin",
+    )
+    st = _make_structure(session, name=f"Bool {field} {value or 'empty'}", slug=f"bool-{field}-{value or 'empty'}")
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/services/new",
+        data={"name": "Bool service", "category": "social_support", field: value},
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 303
+    from backend.models import StructureService
+
+    service = StructureService.query.filter_by(structure_id=st.id, name="Bool service").first()
+    assert getattr(service, field) is expected
+
+
+@pytest.mark.parametrize("field", ["referral_required", "emergency_support"])
+def test_structure_service_create_rejects_invalid_boolean_values(client, session, field):
+    admin = _make_admin(
+        session,
+        username=f"service_invalid_bool_{field}",
+        email=f"service_invalid_bool_{field}@test.local",
+        role="superadmin",
+    )
+    st = _make_structure(session, name=f"Invalid Bool {field}", slug=f"invalid-bool-{field}")
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/services/new",
+        data={"name": "Bool service", "category": "social_support", field: "maybe"},
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 400
+
+
+def test_structure_service_create_rejects_invalid_category(client, session):
+    admin = _make_admin(
+        session,
+        username="service_invalid_category",
+        email="service_invalid_category@test.local",
+        role="superadmin",
+    )
+    st = _make_structure(session, name="Invalid Category Owner", slug="invalid-category-owner")
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/services/new",
+        data={"name": "Invented", "category": "invented_category"},
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 400
+
+
+def test_structure_service_detail_is_scoped_to_structure(client, session):
+    from backend.models import StructureService
+
+    admin = _make_admin(
+        session,
+        username="service_scope_admin",
+        email="service_scope_admin@test.local",
+        role="superadmin",
+    )
+    own = _make_structure(session, name="Own Service Tenant", slug="own-service-tenant")
+    foreign = _make_structure(session, name="Foreign Service Tenant", slug="foreign-service-tenant")
+    service = StructureService(
+        structure_id=foreign.id,
+        code="foreign-service",
+        name="Foreign service",
+        category="social_support",
+    )
+    session.add(service)
+    session.commit()
+    _login_admin(client, admin)
+
+    resp = client.get(
+        f"/admin/structures/{own.id}/services/{service.id}",
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 404
+
+
+@pytest.mark.parametrize(
+    "path_template",
+    [
+        "/admin/structures/{foreign_id}/services",
+        "/admin/structures/{foreign_id}/services/new",
+    ],
+)
+def test_tenant_admin_cannot_access_foreign_service_pages(client, session, path_template):
+    own = _make_structure(session, name="Own Service Scope", slug="own-service-scope")
+    foreign = _make_structure(session, name="Foreign Service Scope", slug="foreign-service-scope")
+    admin = _make_admin(
+        session,
+        username="tenant_service_pages_admin",
+        email=f"tenant_service_pages_{path_template.count('/') }@test.local",
+        role="superadmin",
+        structure_id=own.id,
+    )
+    _login_admin(client, admin)
+
+    resp = client.get(path_template.format(foreign_id=foreign.id), follow_redirects=False)
+
+    assert resp.status_code == 403
+
+
+def test_tenant_admin_cannot_post_foreign_service_create(client, session):
+    from backend.models import StructureService
+
+    own = _make_structure(session, name="Own Service Post", slug="own-service-post")
+    foreign = _make_structure(session, name="Foreign Service Post", slug="foreign-service-post")
+    admin = _make_admin(
+        session,
+        username="tenant_service_post_admin",
+        email="tenant_service_post_admin@test.local",
+        role="superadmin",
+        structure_id=own.id,
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{foreign.id}/services/new",
+        data={"name": "Leaked service", "category": "social_support"},
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 403
+    assert StructureService.query.filter_by(structure_id=foreign.id, name="Leaked service").first() is None
+
+
+def test_tenant_admin_cannot_access_foreign_service_detail(client, session):
+    from backend.models import StructureService
+
+    own = _make_structure(session, name="Own Detail Scope", slug="own-detail-scope")
+    foreign = _make_structure(session, name="Foreign Detail Scope", slug="foreign-detail-scope")
+    service = StructureService(
+        structure_id=foreign.id,
+        code="foreign-service-detail",
+        name="Foreign service detail",
+        category="social_support",
+    )
+    session.add(service)
+    session.commit()
+    admin = _make_admin(
+        session,
+        username="tenant_service_detail_admin",
+        email="tenant_service_detail_admin@test.local",
+        role="superadmin",
+        structure_id=own.id,
+    )
+    _login_admin(client, admin)
+
+    resp = client.get(
+        f"/admin/structures/{foreign.id}/services/{service.id}",
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 403
+
+
+def test_service_catalog_uses_french_business_labels(client, session):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name="Business Labels", slug="business-labels")
+    admin = _make_admin(
+        session,
+        username="business_labels_admin",
+        email="business_labels_admin@test.local",
+        role="superadmin",
+    )
+    session.add(
+        StructureService(
+            structure_id=st.id,
+            code="social",
+            name="Accueil social",
+            category="social_support",
+            availability="available",
+            status="active",
+            is_active=True,
+        )
+    )
+    session.commit()
+    _login_admin(client, admin)
+
+    resp = client.get(f"/admin/structures/{st.id}/operational-intelligence", follow_redirects=False)
+
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert payload["services"][0]["category"] == "Accompagnement social"
+    assert payload["services"][0]["availability"] == "Disponible"
+    assert payload["ai_readiness"]["matching_score_inputs"]["services"][0]["category"] == "Accompagnement social"
+
+
+def test_ai_routing_includes_only_explicitly_routable_services(client, session):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name="Routing Eligibility", slug="routing-eligibility")
+    admin = _make_admin(
+        session,
+        username="routing_eligibility_admin",
+        email="routing_eligibility_admin@test.local",
+        role="superadmin",
+    )
+    services = [
+        StructureService(
+            structure_id=st.id,
+            code="active-available",
+            name="Actif disponible",
+            category="social_support",
+            status="active",
+            availability="available",
+            is_active=True,
+        ),
+        StructureService(
+            structure_id=st.id,
+            code="inactive",
+            name="Inactif",
+            category="social_support",
+            status="active",
+            availability="available",
+            is_active=False,
+        ),
+        StructureService(
+            structure_id=st.id,
+            code="unavailable",
+            name="Indisponible",
+            category="social_support",
+            status="active",
+            availability="unavailable",
+            is_active=True,
+        ),
+        StructureService(
+            structure_id=st.id,
+            code="missing-availability",
+            name="Disponibilité manquante",
+            category="social_support",
+            status="active",
+            availability="",
+            is_active=True,
+        ),
+    ]
+    session.add_all(services)
+    session.commit()
+    _login_admin(client, admin)
+
+    resp = client.get(f"/admin/structures/{st.id}/operational-intelligence", follow_redirects=False)
+
+    assert resp.status_code == 200
+    routing = resp.get_json()["ai_readiness"]["matching_score_inputs"]
+    assert [item["name"] for item in routing["routable_services"]] == ["Actif disponible"]
+    non_routable = {item["name"]: item["reason"] for item in routing["non_routable_services"]}
+    assert non_routable["Inactif"] == "Service inactif"
+    assert non_routable["Indisponible"] == "Disponibilité non confirmée"
+    assert non_routable["Disponibilité manquante"] == "Disponibilité non confirmée"
+
+
+def test_french_localization_hides_targeted_english_business_labels(client, session):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name="Clinique Locale", slug="clinique-locale")
+    st.organization_type = "clinic"
+    session.add(
+        StructureService(
+            structure_id=st.id,
+            code="social",
+            name="Accueil social",
+            category="social_support",
+            status="active",
+            availability="available",
+            is_active=True,
+        )
+    )
+    session.commit()
+    admin = _make_admin(
+        session,
+        username="french_labels_admin",
+        email="french_labels_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    detail = client.get(f"/admin/structures/{st.id}", follow_redirects=False).get_data(as_text=True)
+    services = client.get(f"/admin/structures/{st.id}/services", follow_redirects=False).get_data(as_text=True)
+    service_id = StructureService.query.filter_by(structure_id=st.id, code="social").first().id
+    service_detail = client.get(
+        f"/admin/structures/{st.id}/services/{service_id}",
+        follow_redirects=False,
+    ).get_data(as_text=True)
+    combined = "\n".join([detail, services, service_detail])
+
+    assert "Clinique" in combined
+    for forbidden in [
+        "Clinic",
+        "Not enough operational data",
+        "requests.city inferred from active data",
+        "Health Explainability",
+        "Service Detail",
+        "Matching score inputs",
+        "social_support",
+    ]:
+        assert forbidden not in combined
+
+
+def test_operational_intelligence_uses_french_confidence_and_source(client, session):
+    st = _make_structure(session, name="French Confidence", slug="french-confidence")
+    admin = _make_admin(
+        session,
+        username="french_confidence_admin",
+        email="french_confidence_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.get(f"/admin/structures/{st.id}/operational-intelligence", follow_redirects=False)
+
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert payload["coverage"]["confidence"] == "faible"
+    assert payload["coverage"]["source"] == "Données déduites des villes présentes dans les demandes actives"
+    assert payload["profile"]["organization_type"]["label"] != "Clinic"
 
 
 def test_assign_admin_success(client, session):

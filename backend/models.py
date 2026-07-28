@@ -928,9 +928,25 @@ class StructureService(db.Model):
     code = Column(String(64), nullable=False)
     name = Column(String(255), nullable=False)
     category = Column(String(80), nullable=True, index=True)
+    description = Column(Text, nullable=True)
+    status = Column(String(32), nullable=True, index=True)
+    priority = Column(String(32), nullable=True, index=True)
     availability = Column(String(80), nullable=True)
     capacity = Column(Integer, nullable=True)
     responsible_professionals_json = Column(Text, nullable=True)
+    response_sla_hours = Column(Integer, nullable=True)
+    target_population = Column(Text, nullable=True)
+    eligibility = Column(Text, nullable=True)
+    required_documents_json = Column(Text, nullable=True)
+    languages_json = Column(Text, nullable=True)
+    contact_name = Column(String(255), nullable=True)
+    contact_email = Column(String(255), nullable=True)
+    contact_phone = Column(String(80), nullable=True)
+    tags_json = Column(Text, nullable=True)
+    risk_level = Column(String(32), nullable=True)
+    territory = Column(String(255), nullable=True, index=True)
+    referral_required = Column(Boolean, nullable=True)
+    emergency_support = Column(Boolean, nullable=True)
     opening_hours = Column(Text, nullable=True)
     coverage = Column(Text, nullable=True)
     is_active = Column(Boolean, nullable=False, default=True, server_default=db.true())
@@ -944,6 +960,9 @@ class StructureService(db.Model):
         UniqueConstraint("structure_id", "code", name="uq_structure_services_structure_code"),
         UniqueConstraint("structure_id", "name", name="uq_structure_services_structure_name"),
         Index("ix_structure_services_structure_active", "structure_id", "is_active"),
+        Index("ix_structure_services_structure_status", "structure_id", "status"),
+        Index("ix_structure_services_structure_category", "structure_id", "category"),
+        Index("ix_structure_services_structure_availability", "structure_id", "availability"),
     )
 
 

@@ -11,7 +11,7 @@
     <div class="hc-row hc-admin-headerTop">
       <div>
         <h1 class="hc-admin-title">Créer une structure</h1>
-        <div class="hc-muted">Operational organization profile</div>
+        <div class="hc-muted">Profil opérationnel de l'organisation</div>
       </div>
       <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_structures') }}">Retour</a>
     </div>
@@ -49,19 +49,19 @@
       </div>
       <div class="row g-3">
         <div class="col-12 col-md-6">
-          <label class="form-label" for="organization_type">Organization Type</label>
+          <label class="form-label" for="organization_type">Type d'organisation</label>
           <select class="form-select" id="organization_type" name="organization_type">
-            <option value="">Not enough operational data</option>
+            <option value="">Type non renseigné</option>
             {% for key, item in organization_types.items() %}
               <option value="{{ key }}" {% if form_data and form_data.get('organization_type') == key %}selected{% endif %}>{{ item.label }}</option>
             {% endfor %}
           </select>
         </div>
         <div class="col-12 col-md-6">
-          <label class="form-label" for="status">Status</label>
+          <label class="form-label" for="status">Statut</label>
           <select class="form-select {% if form_errors and form_errors.get('status') %}is-invalid{% endif %}" id="status" name="status">
             {% for value in ['pending', 'active', 'inactive', 'suspended'] %}
-              <option value="{{ value }}" {% if (form_data and form_data.get('status') == value) or (not form_data and value == 'pending') %}selected{% endif %}>{{ value|title }}</option>
+              <option value="{{ value }}" {% if (form_data and form_data.get('status') == value) or (not form_data and value == 'pending') %}selected{% endif %}>{% if value == 'pending' %}En attente{% elif value == 'active' %}Actif{% elif value == 'inactive' %}Inactif{% else %}Suspendu{% endif %}</option>
             {% endfor %}
           </select>
           {% if form_errors and form_errors.get('status') %}
@@ -73,15 +73,15 @@
           <textarea class="form-control" id="description" name="description" rows="3">{{ form_data.get('description') if form_data else '' }}</textarea>
         </div>
         <div class="col-12 col-md-6">
-          <label class="form-label" for="legal_name">Legal Name</label>
+          <label class="form-label" for="legal_name">Raison sociale</label>
           <input class="form-control" id="legal_name" name="legal_name" value="{{ form_data.get('legal_name') if form_data else '' }}">
         </div>
         <div class="col-12 col-md-6">
-          <label class="form-label" for="registration_number">Registration Number</label>
+          <label class="form-label" for="registration_number">Numéro d'enregistrement</label>
           <input class="form-control" id="registration_number" name="registration_number" value="{{ form_data.get('registration_number') if form_data else '' }}">
         </div>
         <div class="col-12 col-md-6">
-          <label class="form-label" for="website">Website</label>
+          <label class="form-label" for="website">Site web</label>
           <input class="form-control" id="website" name="website" value="{{ form_data.get('website') if form_data else '' }}">
         </div>
         <div class="col-12 col-md-6">
@@ -89,23 +89,23 @@
           <input class="form-control" id="email" name="email" value="{{ form_data.get('email') if form_data else '' }}">
         </div>
         <div class="col-12 col-md-6">
-          <label class="form-label" for="phone">Phone</label>
+          <label class="form-label" for="phone">Téléphone</label>
           <input class="form-control" id="phone" name="phone" value="{{ form_data.get('phone') if form_data else '' }}">
         </div>
         <div class="col-12 col-md-6">
-          <label class="form-label" for="emergency_phone">Emergency Phone</label>
+          <label class="form-label" for="emergency_phone">Téléphone d'urgence</label>
           <input class="form-control" id="emergency_phone" name="emergency_phone" value="{{ form_data.get('emergency_phone') if form_data else '' }}">
         </div>
         <div class="col-12 col-md-6">
-          <label class="form-label" for="opening_hours">Opening Hours</label>
+          <label class="form-label" for="opening_hours">Horaires d'ouverture</label>
           <textarea class="form-control" id="opening_hours" name="opening_hours" rows="2">{{ form_data.get('opening_hours') if form_data else '' }}</textarea>
         </div>
         <div class="col-12 col-md-6">
-          <label class="form-label" for="head_office">Head Office</label>
+          <label class="form-label" for="head_office">Siège</label>
           <textarea class="form-control" id="head_office" name="head_office" rows="2">{{ form_data.get('head_office') if form_data else '' }}</textarea>
         </div>
         <div class="col-12">
-          <label class="form-label" for="territory">Territory</label>
+          <label class="form-label" for="territory">Territoire</label>
           <input class="form-control" id="territory" name="territory" value="{{ form_data.get('territory') if form_data else '' }}">
         </div>
       </div>

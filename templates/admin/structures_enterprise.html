@@ -1,5 +1,5 @@
 {% extends "layouts/admin_workspace.html" %}
-{% block title %}{{ _('Admin') }} - Organizations | HelpChain{% endblock %}
+{% block title %}{{ _('Admin') }} - Organisations | HelpChain{% endblock %}
 {% block admin_body_class %} hc-admin-structures-page hc-density-compact{% endblock %}
 {% block admin_workspace_css %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/admin-structures.css') }}">
@@ -10,36 +10,36 @@
   <div class="hc-card hc-admin-headerCard">
     <div class="hc-row hc-admin-headerTop">
       <div>
-        <h1 class="hc-admin-title">Organizations</h1>
-        <div class="hc-muted">Enterprise organizations operating on HelpChain</div>
-        <div class="small text-muted mt-1">{{ structures|length }} visible organization{% if structures|length != 1 %}s{% endif %}</div>
+        <h1 class="hc-admin-title">Organisations</h1>
+        <div class="hc-muted">Organisations opérationnelles rattachées à HelpChain</div>
+        <div class="small text-muted mt-1">{{ structures|length }} organisation{% if structures|length != 1 %}s{% endif %} visible{% if structures|length != 1 %}s{% endif %}</div>
       </div>
-      <a class="btn btn-primary btn-sm" href="{{ url_for('admin.admin_structure_new') }}">Create</a>
+      <a class="btn btn-primary btn-sm" href="{{ url_for('admin.admin_structure_new') }}">Créer</a>
     </div>
   </div>
 
   <div class="row g-3 mb-3">
     <div class="col-12 col-md-3">
       <div class="hc-card hc-structure-metric h-100">
-        <div class="text-muted small">Organizations</div>
+        <div class="text-muted small">Organisations</div>
         <div class="h4 mb-0">{{ structures|length }}</div>
       </div>
     </div>
     <div class="col-12 col-md-3">
       <div class="hc-card hc-structure-metric h-100">
-        <div class="text-muted small">Users</div>
+        <div class="text-muted small">Utilisateurs</div>
         <div class="h4 mb-0">{{ structure_rows|sum(attribute='users_count') if structure_rows else 0 }}</div>
       </div>
     </div>
     <div class="col-12 col-md-3">
       <div class="hc-card hc-structure-metric h-100">
-        <div class="text-muted small">Active Cases</div>
+        <div class="text-muted small">Dossiers actifs</div>
         <div class="h4 mb-0">{{ structure_rows|sum(attribute='active_requests') if structure_rows else 0 }}</div>
       </div>
     </div>
     <div class="col-12 col-md-3">
       <div class="hc-card hc-structure-metric h-100">
-        <div class="text-muted small">Services</div>
+        <div class="text-muted small">Services proposés</div>
         <div class="h4 mb-0">{{ structure_rows|sum(attribute='services_count') if structure_rows else 0 }}</div>
       </div>
     </div>
@@ -47,21 +47,21 @@
 
   <div class="hc-card hc-admin-table-shell">
     <div class="hc-card__section hc-card__section--header hc-structures-tableHeader">
-      <strong>Organization Registry</strong>
-      <span class="hc-muted small">Operational organizations, activity, services and status.</span>
+      <strong>Registre des organisations</strong>
+      <span class="hc-muted small">Organisations, activité, services et statut.</span>
     </div>
     <div class="hc-structures-table-wrap">
       <table class="hc-structures-table">
         <thead>
           <tr>
-            <th scope="col">Organization</th>
+            <th scope="col">Organisation</th>
             <th scope="col">Type</th>
             <th scope="col">Slug</th>
-            <th scope="col" class="text-center">Users</th>
-            <th scope="col" class="text-center">Active Cases</th>
+            <th scope="col" class="text-center">Utilisateurs</th>
+            <th scope="col" class="text-center">Dossiers actifs</th>
             <th scope="col" class="text-center">Services</th>
-            <th scope="col" class="text-center">Last Activity</th>
-            <th scope="col" class="text-center">Status</th>
+            <th scope="col" class="text-center">Dernière activité</th>
+            <th scope="col" class="text-center">Statut</th>
             <th scope="col" class="text-end">Actions</th>
           </tr>
         </thead>
@@ -69,18 +69,18 @@
           {% for item in structure_rows %}
           {% set st = item.structure %}
           <tr>
-            <td class="hc-structure-name" title="{{ st.name }}">{{ st.name or 'Unnamed organization' }}</td>
+            <td class="hc-structure-name" title="{{ st.name }}">{{ st.name or 'Organisation sans nom' }}</td>
             <td class="text-muted">{{ item.organization_type }}</td>
             <td class="hc-structure-slug text-muted" title="{{ st.slug }}">{{ st.slug }}</td>
             <td class="text-center">{{ item.users_count }}</td>
             <td class="text-center">{{ item.active_requests }}</td>
             <td class="text-center">{{ item.services_count }}</td>
-            <td class="text-center text-muted">{{ item.last_activity|format_datetime_fr if item.last_activity else 'Not enough operational data' }}</td>
+            <td class="text-center text-muted">{{ item.last_activity|format_datetime_fr if item.last_activity else 'Aucune activité récente' }}</td>
             <td class="text-center">
-              <span class="badge text-bg-light border hc-structure-status">{{ st.status or 'Not enough operational data' }}</span>
+              <span class="badge text-bg-light border hc-structure-status">{{ st.status or 'Statut non renseigné' }}</span>
             </td>
             <td class="text-end">
-              <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_structure_detail', structure_id=st.id) }}">Open</a>
+              <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_structure_detail', structure_id=st.id) }}">Ouvrir</a>
             </td>
           </tr>
           {% endfor %}
@@ -88,8 +88,8 @@
           <tr class="hc-empty-row">
             <td colspan="9" class="hc-structures-empty-cell">
               <div class="hc-empty-state">
-                <div class="hc-empty-state__title">No organization</div>
-                <div class="hc-empty-state__text">No operational organization is registered in this administration workspace yet.</div>
+                <div class="hc-empty-state__title">Aucune organisation</div>
+                <div class="hc-empty-state__text">Aucune organisation opérationnelle n'est encore enregistrée.</div>
               </div>
             </td>
           </tr>

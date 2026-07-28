@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+import re
 from types import SimpleNamespace
 from datetime import datetime, timedelta
 
@@ -22,7 +23,13 @@ from ..services.organization_onboarding import (
 from ..services.enterprise_structure_intelligence import (
     MetricValue,
     ORGANIZATION_TYPES,
+    PRIORITY_LABELS,
+    RISK_LABELS,
+    SERVICE_CATEGORIES,
+    STATUS_LABELS,
+    build_service_detail,
     build_enterprise_structure_dashboard,
+    serialize_json_list,
 )
 from ..services.prospect_auto_capture import (
     append_audience_context_to_notes,
@@ -170,6 +177,51 @@ def _structure_dashboard_mode() -> str:
     return "executive"
 
 
+SERVICE_STATUS_VALUES = {"active", "inactive", "available", "unavailable", "limited", "saturated"}
+SERVICE_AVAILABILITY_VALUES = {"available", "disponible", "unavailable", "indisponible", "limited", "saturated"}
+SERVICE_PRIORITY_VALUES = set(PRIORITY_LABELS)
+SERVICE_RISK_VALUES = set(RISK_LABELS)
+SERVICE_CAPACITY_MAX = 100000
+SERVICE_SLA_MINUTES_MAX = 525600
+
+
+def _slug_code(value: str) -> str:
+    cleaned = re.sub(r"[^a-z0-9]+", "-", value.strip().lower())
+    return cleaned.strip("-")[:64] or "service"
+
+
+def _bounded_int_or_none(value: str, *, minimum: int, maximum: int, field_label: str) -> int | None:
+    value = str(value or "").strip()
+    if not value:
+        return None
+    if not re.fullmatch(r"\d+", value):
+        raise ValueError(f"{field_label} doit être un entier compris entre {minimum} et {maximum}.")
+    parsed = int(value)
+    if parsed < minimum or parsed > maximum:
+        raise ValueError(f"{field_label} doit être compris entre {minimum} et {maximum}.")
+    return parsed
+
+
+def _bool_or_none(value: str | None, *, field_label: str) -> bool | None:
+    cleaned = str(value or "").strip()
+    if cleaned == "":
+        return None
+    if cleaned == "yes":
+        return True
+    if cleaned == "no":
+        return False
+    raise ValueError(f"{field_label} doit valoir oui, non ou rester vide.")
+
+
+def _service_select_options() -> dict[str, object]:
+    return {
+        "service_categories": SERVICE_CATEGORIES,
+        "service_statuses": STATUS_LABELS,
+        "service_priorities": PRIORITY_LABELS,
+        "service_risks": RISK_LABELS,
+    }
+
+
 def _serialize_value(value):
     if isinstance(value, datetime):
         return value.isoformat()
@@ -274,10 +326,16 @@ def admin_structures():
         }
     structure_rows = []
     for row in rows:
+        organization_type_key = getattr(row, "organization_type", None)
+        organization_type_label = (
+            ORGANIZATION_TYPES.get(organization_type_key or "", {}).get("label")
+            if organization_type_key
+            else None
+        )
         structure_rows.append(
             {
                 "structure": row,
-                "organization_type": getattr(row, "organization_type", None) or "Not enough operational data",
+                "organization_type": organization_type_label or "Type non renseigné",
                 "users_count": users_by_structure.get(int(row.id), 0),
                 "active_requests": active_requests_by_structure.get(int(row.id), 0),
                 "services_count": services_by_structure.get(int(row.id), 0),
@@ -564,6 +622,190 @@ def admin_structure_detail(structure_id: int):
             structure=structure,
             enterprise=intelligence,
             dashboard_mode=_structure_dashboard_mode(),
+        ),
+        200,
+    )
+
+
+@admin_bp.get("/structures/<int:structure_id>/services")
+@admin_required
+@admin_role_required("superadmin")
+def admin_structure_services(structure_id: int):
+    structure = _structure_or_403(structure_id)
+    intelligence = build_enterprise_structure_dashboard(structure)
+    return (
+        render_template(
+            "admin/structure_services.html",
+            structure=structure,
+            enterprise=intelligence,
+        ),
+        200,
+    )
+
+
+@admin_bp.get("/structures/<int:structure_id>/services/new")
+@admin_required
+@admin_role_required("superadmin")
+def admin_structure_service_new(structure_id: int):
+    structure = _structure_or_403(structure_id)
+    return (
+        render_template(
+            "admin/structure_service_new.html",
+            structure=structure,
+            **_service_select_options(),
+        ),
+        200,
+    )
+
+
+@admin_bp.post("/structures/<int:structure_id>/services/new")
+@admin_required
+@admin_role_required("superadmin")
+def admin_structure_service_create(structure_id: int):
+    structure = _structure_or_403(structure_id)
+    name = (request.form.get("name") or "").strip()
+    category = (request.form.get("category") or "").strip()
+    status = (request.form.get("status") or "").strip().lower()
+    priority = (request.form.get("priority") or "").strip().lower()
+    availability = (request.form.get("availability") or "").strip().lower()
+    risk_level = (request.form.get("risk_level") or "").strip().lower()
+    errors = {}
+    if not name:
+        errors["name"] = "Le nom du service est requis."
+    if not category or category not in SERVICE_CATEGORIES:
+        errors["category"] = "Catégorie de service invalide."
+    if status and status not in SERVICE_STATUS_VALUES:
+        errors["status"] = "Statut de service invalide."
+    if availability and availability not in SERVICE_AVAILABILITY_VALUES:
+        errors["availability"] = "Disponibilité invalide."
+    if priority and priority not in SERVICE_PRIORITY_VALUES:
+        errors["priority"] = "Priorité invalide."
+    if risk_level and risk_level not in SERVICE_RISK_VALUES:
+        errors["risk_level"] = "Niveau de risque invalide."
+    try:
+        capacity = _bounded_int_or_none(
+            request.form.get("capacity") or "",
+            minimum=0,
+            maximum=SERVICE_CAPACITY_MAX,
+            field_label="La capacité",
+        )
+    except ValueError as exc:
+        errors["capacity"] = str(exc)
+        capacity = None
+    try:
+        response_sla_minutes = _bounded_int_or_none(
+            request.form.get("response_sla_hours") or "",
+            minimum=0,
+            maximum=SERVICE_SLA_MINUTES_MAX,
+            field_label="Le SLA",
+        )
+    except ValueError as exc:
+        errors["response_sla_hours"] = str(exc)
+        response_sla_hours = None
+    else:
+        response_sla_hours = response_sla_minutes
+    try:
+        referral_required = _bool_or_none(
+            request.form.get("referral_required"),
+            field_label="Orientation requise",
+        )
+    except ValueError as exc:
+        errors["referral_required"] = str(exc)
+        referral_required = None
+    try:
+        emergency_support = _bool_or_none(
+            request.form.get("emergency_support"),
+            field_label="Prise en charge d'urgence",
+        )
+    except ValueError as exc:
+        errors["emergency_support"] = str(exc)
+        emergency_support = None
+
+    if errors:
+        for msg in errors.values():
+            flash(msg, "danger")
+        return (
+            render_template(
+                "admin/structure_service_new.html",
+                structure=structure,
+                form_data=request.form,
+                form_errors=errors,
+                **_service_select_options(),
+            ),
+            400,
+        )
+
+    code_base = _slug_code(name)
+    code = code_base
+    suffix = 2
+    while StructureService.query.filter(
+        StructureService.structure_id == structure.id,
+        StructureService.code == code,
+    ).first():
+        code = f"{code_base[:58]}-{suffix}"
+        suffix += 1
+
+    service = StructureService(
+        structure_id=structure.id,
+        code=code,
+        name=name,
+        category=category,
+        description=(request.form.get("description") or "").strip() or None,
+        status=status or None,
+        priority=priority or None,
+        availability=availability or None,
+        opening_hours=(request.form.get("opening_hours") or "").strip() or None,
+        capacity=capacity,
+        responsible_professionals_json=serialize_json_list(
+            (request.form.get("professionals") or "").splitlines()
+        ),
+        response_sla_hours=response_sla_hours,
+        target_population=(request.form.get("target_population") or "").strip() or None,
+        eligibility=(request.form.get("eligibility") or "").strip() or None,
+        required_documents_json=serialize_json_list(
+            (request.form.get("required_documents") or "").splitlines()
+        ),
+        languages_json=serialize_json_list((request.form.get("languages") or "").splitlines()),
+        contact_name=(request.form.get("contact_name") or "").strip() or None,
+        contact_email=(request.form.get("contact_email") or "").strip() or None,
+        contact_phone=(request.form.get("contact_phone") or "").strip() or None,
+        tags_json=serialize_json_list((request.form.get("tags") or "").splitlines()),
+        risk_level=risk_level or None,
+        territory=(request.form.get("territory") or "").strip() or None,
+        coverage=(request.form.get("territory") or "").strip() or None,
+        referral_required=referral_required,
+        emergency_support=emergency_support,
+        is_active=(status or "active") != "inactive",
+        created_at=datetime.utcnow(),
+    )
+    db.session.add(service)
+    db.session.commit()
+    audit_admin_action(
+        action="STRUCTURE_SERVICE_CREATED",
+        target_type="StructureService",
+        target_id=service.id,
+        payload={"structure_id": structure.id, "service": {"id": service.id, "name": service.name}},
+    )
+    flash("Service créé.", "success")
+    return redirect(
+        url_for("admin.admin_structure_service_detail", structure_id=structure.id, service_id=service.id),
+        code=303,
+    )
+
+
+@admin_bp.get("/structures/<int:structure_id>/services/<int:service_id>")
+@admin_required
+@admin_role_required("superadmin")
+def admin_structure_service_detail(structure_id: int, service_id: int):
+    structure = _structure_or_403(structure_id)
+    detail = build_service_detail(int(structure.id), int(service_id))
+    if detail is None:
+        abort(404)
+    return (
+        render_template(
+            "admin/structure_service_detail.html",
+            structure=structure,
+            detail=detail,
         ),
         200,
     )

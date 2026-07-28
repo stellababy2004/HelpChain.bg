@@ -1,0 +1,107 @@
+{% extends "layouts/admin_workspace.html" %}
+{% block title %}{{ _('Admin') }} - {{ detail.service.name }} | HelpChain{% endblock %}
+{% block admin_body_class %} hc-admin-requests-page{% endblock %}
+
+{% block admin_content %}
+{% set service = detail.service %}
+<div class="container-fluid mt-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <div class="text-muted small">{{ structure.name }} · {{ service.category }}</div>
+      <h2 class="mb-1">{{ service.name }}</h2>
+      <div class="d-flex flex-wrap gap-2">
+        <span class="badge {% if service.is_available %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ service.availability }}</span>
+        <span class="badge text-bg-light border">{{ service.priority }}</span>
+        <span class="badge text-bg-light border">{{ service.risk_level }}</span>
+      </div>
+    </div>
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_structure_services', structure_id=structure.id) }}">Retour aux services</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-12 col-xl-8">
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Description</h5>
+        <p class="mb-0">{{ service.description }}</p>
+      </div>
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Conditions de prise en charge</h5>
+        <div class="row g-3">
+          <div class="col-12 col-md-6"><div class="text-muted small">Public cible</div><strong>{{ service.target_population }}</strong></div>
+          <div class="col-12 col-md-6"><div class="text-muted small">Éligibilité</div><strong>{{ service.eligibility }}</strong></div>
+          <div class="col-12"><div class="text-muted small">Documents requis</div>{{ service.required_documents|join(', ') if service.required_documents else 'Aucun document requis renseigné.' }}</div>
+          <div class="col-12"><div class="text-muted small">Langues</div>{{ service.languages|join(', ') if service.languages else 'Aucune langue renseignée.' }}</div>
+        </div>
+      </div>
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Dossiers rattachés</h5>
+        {% for case in detail.cases %}
+          <div class="border-bottom py-2">
+            <div class="fw-semibold">{{ case.title }}</div>
+            <div class="small text-muted">{{ case.status }} · {{ case.priority }} · {{ case.created_at|format_datetime_fr if case.created_at else 'Date indisponible' }}</div>
+          </div>
+        {% else %}
+          <div class="text-muted">Aucun dossier rattaché à ce service.</div>
+        {% endfor %}
+      </div>
+      <div class="card shadow-sm p-3">
+        <h5 class="mb-3">Activité récente</h5>
+        {% for event in detail.recent_activity %}
+          <div class="border-bottom py-2">
+            <div class="fw-semibold">{{ event.label }}</div>
+            <div class="small text-muted">{{ event.timestamp|format_datetime_fr if event.timestamp else 'Date indisponible' }}</div>
+          </div>
+        {% else %}
+          <div class="text-muted">Aucune activité récente. Les événements apparaîtront ici.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Capacité actuelle</h5>
+        <div class="small"><strong>Capacité :</strong> {{ service.capacity_display }}</div>
+        <div class="small"><strong>Capacité disponible :</strong> {{ service.available_capacity_display }}</div>
+        <div class="small"><strong>Dossiers actifs :</strong> {{ service.active_cases }}</div>
+        <div class="small"><strong>Temps d'attente :</strong> {{ service.average_waiting_time_display }}</div>
+        <div class="small"><strong>SLA :</strong> {{ service.response_sla_display }}</div>
+      </div>
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Professionnels</h5>
+        <div>{{ service.responsible_professionals_display }}</div>
+      </div>
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Disponibilité et territoire</h5>
+        <div class="small"><strong>Horaires :</strong> {{ service.opening_hours }}</div>
+        <div class="small"><strong>Territoire :</strong> {{ service.territory }}</div>
+        <div class="small"><strong>Orientation :</strong> {{ service.referral_required_display }}</div>
+        <div class="small"><strong>Urgence :</strong> {{ service.emergency_support_display }}</div>
+      </div>
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Contact</h5>
+        <div class="small"><strong>Nom :</strong> {{ service.contact.name }}</div>
+        <div class="small"><strong>Email :</strong> {{ service.contact.email }}</div>
+        <div class="small"><strong>Téléphone :</strong> {{ service.contact.phone }}</div>
+      </div>
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Performance</h5>
+        <div class="small text-muted mb-2">Source : {{ detail.performance.source }}</div>
+        <div class="small"><strong>Dossiers actifs :</strong> {{ detail.performance.active_cases }}</div>
+        <div class="small"><strong>Temps d'attente :</strong> {{ detail.performance.average_waiting_time }}</div>
+        <div class="small"><strong>SLA :</strong> {{ detail.performance.response_sla }}</div>
+      </div>
+      <div class="card shadow-sm p-3">
+        <h5 class="mb-3">Alertes</h5>
+        {% for alert in detail.alerts %}
+          <div class="d-flex justify-content-between border-bottom py-2">
+            <span>{{ alert.label }}</span>
+            <span class="badge {% if alert.severity == 'critical' %}text-bg-danger{% else %}text-bg-warning{% endif %}">{{ alert.source }}</span>
+          </div>
+        {% else %}
+          <div class="text-muted">Aucune alerte pour ce service.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -159,3 +159,64 @@ def test_enterprise_structure_migration_upgrade_and_downgrade():
         service_columns = {col["name"] for col in inspector.get_columns("structure_services")}
         assert enterprise_structure_columns.isdisjoint(structure_columns)
         assert enterprise_service_columns.isdisjoint(service_columns)
+
+
+def test_enterprise_service_catalog_migration_upgrade_and_downgrade():
+    repo_root = pathlib.Path(__file__).resolve().parents[1]
+    alembic_ini = repo_root / "migrations" / "alembic.ini"
+
+    db_dir = repo_root / "backend" / "instance"
+    db_dir.mkdir(parents=True, exist_ok=True)
+    db_file = db_dir / "alembic_enterprise_service_catalog_test.db"
+    if db_file.exists():
+        db_file.unlink()
+    db_file.touch()
+    db_url = f"sqlite:///{db_file}"
+
+    cfg = Config(str(alembic_ini))
+    cfg.set_main_option("sqlalchemy.url", db_url)
+    cfg.set_main_option("script_location", str(repo_root / "migrations"))
+
+    if canonical_db is None or Migrate is None:
+        raise RuntimeError(
+            "Required Flask extensions (backend.extensions or flask_migrate) not importable"
+        )
+
+    app = Flask(__name__)
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+    app.config.setdefault(
+        "SQLALCHEMY_ENGINE_OPTIONS", {"connect_args": {"check_same_thread": False}}
+    )
+    canonical_db.init_app(app)
+    Migrate(app, canonical_db)
+
+    service_catalog_columns = {
+        "description",
+        "status",
+        "priority",
+        "response_sla_hours",
+        "target_population",
+        "eligibility",
+        "required_documents_json",
+        "languages_json",
+        "contact_name",
+        "contact_email",
+        "contact_phone",
+        "tags_json",
+        "risk_level",
+        "territory",
+        "referral_required",
+        "emergency_support",
+    }
+
+    with app.app_context():
+        command.upgrade(cfg, "20260728_1800")
+        engine = canonical_db.engine
+        inspector = inspect(engine)
+        service_columns = {col["name"] for col in inspector.get_columns("structure_services")}
+        assert service_catalog_columns <= service_columns
+
+        command.downgrade(cfg, "20260728_1500")
+        inspector = inspect(engine)
+        service_columns = {col["name"] for col in inspector.get_columns("structure_services")}
+        assert service_catalog_columns.isdisjoint(service_columns)

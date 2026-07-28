@@ -1,0 +1,63 @@
+{% extends "layouts/admin_workspace.html" %}
+{% block title %}{{ _('Admin') }} - Services proposés | HelpChain{% endblock %}
+{% block admin_body_class %} hc-admin-requests-page{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid mt-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <div class="text-muted small">{{ structure.name }}</div>
+      <h2 class="mb-1">Services proposés</h2>
+      <div class="text-muted">Catalogue opérationnel, capacité, disponibilité et routage.</div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_structure_detail', structure_id=structure.id) }}">Retour</a>
+      <a class="btn btn-primary btn-sm" href="{{ url_for('admin.admin_structure_service_new', structure_id=structure.id) }}">Ajouter un service</a>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-3"><div class="card p-3 h-100"><div class="text-muted small">Services</div><div class="h4 mb-0">{{ enterprise.services_dashboard.total_services }}</div></div></div>
+    <div class="col-12 col-md-3"><div class="card p-3 h-100"><div class="text-muted small">Disponibles</div><div class="h4 mb-0">{{ enterprise.services_dashboard.available_services }}</div></div></div>
+    <div class="col-12 col-md-3"><div class="card p-3 h-100"><div class="text-muted small">Indisponibles</div><div class="h4 mb-0">{{ enterprise.services_dashboard.unavailable_services }}</div></div></div>
+    <div class="col-12 col-md-3"><div class="card p-3 h-100"><div class="text-muted small">Temps d'attente moyen</div><div class="h4 mb-0">{{ enterprise.services_dashboard.average_waiting_time_display }}</div></div></div>
+  </div>
+
+  <div class="card shadow-sm p-3 mb-4">
+    <h5 class="mb-3">Services par catégorie</h5>
+    {% if enterprise.services_dashboard.by_category %}
+      <div class="d-flex flex-wrap gap-2">
+        {% for category, count in enterprise.services_dashboard.by_category.items() %}
+          <span class="badge text-bg-light border">{{ category }} · {{ count }}</span>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="text-muted">Aucun service enregistré. Ajoutez votre premier service.</div>
+    {% endif %}
+  </div>
+
+  <div class="row g-3">
+    {% for service in enterprise.services %}
+      <div class="col-12 col-lg-6 col-xxl-4">
+        <a class="text-decoration-none text-reset" href="{{ url_for('admin.admin_structure_service_detail', structure_id=structure.id, service_id=service.id) }}">
+          <div class="card shadow-sm p-3 h-100">
+            <div class="d-flex justify-content-between gap-2 mb-2">
+              <strong>{{ service.name }}</strong>
+              <span class="badge {% if service.is_available %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ service.availability }}</span>
+            </div>
+            <div class="text-muted small mb-2">{{ service.category }}</div>
+            <div class="small">Capacité : {{ service.capacity_display }} · Disponible : {{ service.available_capacity_display }}</div>
+            <div class="small">Dossiers actifs : {{ service.active_cases }}</div>
+            <div class="small">SLA : {{ service.response_sla_display }}</div>
+            <div class="small text-muted mt-2">{{ service.responsible_professionals_display }}</div>
+          </div>
+        </a>
+      </div>
+    {% else %}
+      <div class="col-12">
+        <div class="card p-4 text-muted">Aucun service enregistré. Ajoutez votre premier service.</div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

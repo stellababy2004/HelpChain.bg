@@ -1,0 +1,105 @@
+{% extends "layouts/admin_workspace.html" %}
+{% block title %}{{ _('Admin') }} - Nouveau service | HelpChain{% endblock %}
+{% block admin_body_class %} hc-admin-requests-page{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid mt-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <div class="text-muted small">{{ structure.name }}</div>
+      <h2 class="mb-1">Ajouter un service</h2>
+      <div class="text-muted">Chaque champ renseigné devient une donnée exploitable pour le routage et le pilotage.</div>
+    </div>
+    <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_structure_services', structure_id=structure.id) }}">Retour</a>
+  </div>
+
+  <div class="card shadow-sm p-3">
+    <form method="POST" action="{{ url_for('admin.admin_structure_service_create', structure_id=structure.id) }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="name">Nom du service</label>
+          <input class="form-control {% if form_errors and form_errors.get('name') %}is-invalid{% endif %}" id="name" name="name" value="{{ form_data.get('name') if form_data else '' }}" required>
+          {% if form_errors and form_errors.get('name') %}<div class="invalid-feedback">{{ form_errors.get('name') }}</div>{% endif %}
+        </div>
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="category">Catégorie</label>
+          <select class="form-select {% if form_errors and form_errors.get('category') %}is-invalid{% endif %}" id="category" name="category" required>
+            <option value="">Sélectionner une catégorie</option>
+            {% for key, label in service_categories.items() %}
+              <option value="{{ key }}" {% if form_data and form_data.get('category') == key %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          {% if form_errors and form_errors.get('category') %}<div class="invalid-feedback">{{ form_errors.get('category') }}</div>{% endif %}
+        </div>
+        <div class="col-12">
+          <label class="form-label" for="description">Description</label>
+          <textarea class="form-control" id="description" name="description" rows="3">{{ form_data.get('description') if form_data else '' }}</textarea>
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="status">Statut</label>
+          <select class="form-select" id="status" name="status">
+            <option value="">Statut non renseigné</option>
+            {% for value in ['active', 'inactive', 'limited', 'saturated'] %}
+              <option value="{{ value }}" {% if form_data and form_data.get('status') == value %}selected{% endif %}>{{ service_statuses.get(value) }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="availability">Disponibilité</label>
+          <select class="form-select" id="availability" name="availability">
+            <option value="">Disponibilité non renseignée</option>
+            <option value="available" {% if form_data and form_data.get('availability') == 'available' %}selected{% endif %}>Disponible</option>
+            <option value="unavailable" {% if form_data and form_data.get('availability') == 'unavailable' %}selected{% endif %}>Indisponible</option>
+            <option value="limited" {% if form_data and form_data.get('availability') == 'limited' %}selected{% endif %}>Capacité limitée</option>
+            <option value="saturated" {% if form_data and form_data.get('availability') == 'saturated' %}selected{% endif %}>Saturé</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="priority">Priorité</label>
+          <select class="form-select" id="priority" name="priority">
+            <option value="">Priorité non renseignée</option>
+            {% for value in ['low', 'medium', 'high', 'urgent', 'critical'] %}
+              <option value="{{ value }}" {% if form_data and form_data.get('priority') == value %}selected{% endif %}>{{ service_priorities.get(value) }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="capacity">Capacité</label>
+          <input class="form-control" id="capacity" name="capacity" type="number" min="0" value="{{ form_data.get('capacity') if form_data else '' }}">
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="response_sla_hours">SLA de réponse (minutes)</label>
+          <input class="form-control" id="response_sla_hours" name="response_sla_hours" type="number" min="0" value="{{ form_data.get('response_sla_hours') if form_data else '' }}">
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="form-label" for="risk_level">Niveau de risque</label>
+          <select class="form-select" id="risk_level" name="risk_level">
+            <option value="">Risque non renseigné</option>
+            {% for value in ['low', 'medium', 'high', 'critical'] %}
+              <option value="{{ value }}" {% if form_data and form_data.get('risk_level') == value %}selected{% endif %}>{{ service_risks.get(value) }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-6"><label class="form-label" for="opening_hours">Horaires d'ouverture</label><textarea class="form-control" id="opening_hours" name="opening_hours" rows="2">{{ form_data.get('opening_hours') if form_data else '' }}</textarea></div>
+        <div class="col-12 col-md-6"><label class="form-label" for="territory">Territoire</label><textarea class="form-control" id="territory" name="territory" rows="2">{{ form_data.get('territory') if form_data else '' }}</textarea></div>
+        <div class="col-12 col-md-6"><label class="form-label" for="target_population">Public cible</label><textarea class="form-control" id="target_population" name="target_population" rows="2">{{ form_data.get('target_population') if form_data else '' }}</textarea></div>
+        <div class="col-12 col-md-6"><label class="form-label" for="eligibility">Conditions d'éligibilité</label><textarea class="form-control" id="eligibility" name="eligibility" rows="2">{{ form_data.get('eligibility') if form_data else '' }}</textarea></div>
+        <div class="col-12 col-md-4"><label class="form-label" for="professionals">Professionnels affectés</label><textarea class="form-control" id="professionals" name="professionals" rows="4">{{ form_data.get('professionals') if form_data else '' }}</textarea><div class="form-text">Un professionnel par ligne.</div></div>
+        <div class="col-12 col-md-4"><label class="form-label" for="required_documents">Documents requis</label><textarea class="form-control" id="required_documents" name="required_documents" rows="4">{{ form_data.get('required_documents') if form_data else '' }}</textarea><div class="form-text">Un document par ligne.</div></div>
+        <div class="col-12 col-md-4"><label class="form-label" for="languages">Langues</label><textarea class="form-control" id="languages" name="languages" rows="4">{{ form_data.get('languages') if form_data else '' }}</textarea><div class="form-text">Une langue par ligne.</div></div>
+        <div class="col-12 col-md-4"><label class="form-label" for="contact_name">Contact</label><input class="form-control" id="contact_name" name="contact_name" value="{{ form_data.get('contact_name') if form_data else '' }}"></div>
+        <div class="col-12 col-md-4"><label class="form-label" for="contact_email">Email contact</label><input class="form-control" id="contact_email" name="contact_email" value="{{ form_data.get('contact_email') if form_data else '' }}"></div>
+        <div class="col-12 col-md-4"><label class="form-label" for="contact_phone">Téléphone contact</label><input class="form-control" id="contact_phone" name="contact_phone" value="{{ form_data.get('contact_phone') if form_data else '' }}"></div>
+        <div class="col-12"><label class="form-label" for="tags">Tags</label><textarea class="form-control" id="tags" name="tags" rows="2">{{ form_data.get('tags') if form_data else '' }}</textarea></div>
+        <div class="col-12 col-md-6"><label class="form-label" for="referral_required">Orientation requise</label><select class="form-select" id="referral_required" name="referral_required"><option value="">Non renseigné</option><option value="yes">Oui</option><option value="no">Non</option></select></div>
+        <div class="col-12 col-md-6"><label class="form-label" for="emergency_support">Prise en charge d'urgence</label><select class="form-select" id="emergency_support" name="emergency_support"><option value="">Non renseigné</option><option value="yes">Oui</option><option value="no">Non</option></select></div>
+      </div>
+      <div class="d-flex gap-2 mt-4">
+        <button class="btn btn-primary btn-sm" type="submit">Créer le service</button>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_structure_services', structure_id=structure.id) }}">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
