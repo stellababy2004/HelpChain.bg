@@ -1,0 +1,270 @@
+﻿/* =========================================================
+   HELPCHAIN HOMEPAGE HERO — CANONICAL LAYOUT
+   Single source of truth for desktop, tablet and mobile.
+   ========================================================= */
+
+body.hc-page-home .hc-home-premium__hero {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  padding: clamp(42px, 4.5vw, 64px) 24px clamp(36px, 4vw, 56px) !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+body.hc-page-home .hc-home-premium__hero-grid {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 0.92fr) minmax(520px, 1.08fr) !important;
+  align-items: center !important;
+  width: min(100%, 1240px) !important;
+  max-width: 1240px !important;
+  min-width: 0 !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+  gap: clamp(32px, 4vw, 56px) !important;
+  box-sizing: border-box !important;
+}
+
+body.hc-page-home .hc-home-premium__hero-copy {
+  position: relative !important;
+  z-index: 3 !important;
+  display: grid !important;
+  gap: 18px !important;
+  width: 100% !important;
+  max-width: 620px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+body.hc-page-home .hc-home-premium__hero-copy h1 {
+  width: auto !important;
+  max-width: 13ch !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: clamp(3rem, 5vw, 4.65rem) !important;
+  line-height: 1.01 !important;
+  letter-spacing: -0.055em !important;
+  font-weight: 780 !important;
+  text-wrap: balance !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+  transform: none !important;
+}
+
+body.hc-page-home .hc-home-premium__eyebrow {
+  margin: 0 !important;
+}
+
+body.hc-page-home .hc-home-premium__lead {
+  width: 100% !important;
+  max-width: 56ch !important;
+  margin: 0 !important;
+  font-size: 1.05rem !important;
+  line-height: 1.65 !important;
+}
+
+body.hc-page-home .hc-home-premium__hero-support {
+  display: grid !important;
+  gap: 14px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin-top: 4px !important;
+}
+
+body.hc-page-home .hc-home-premium__hero-actions {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+body.hc-page-home .hc-home-premium__hero-actions .btn {
+  width: auto !important;
+  min-height: 46px !important;
+  padding: 0.72rem 1.08rem !important;
+}
+
+body.hc-page-home .hc-home-premium__preview {
+  position: relative !important;
+  inset: auto !important;
+  z-index: 2 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+body.hc-page-home .hc-home-premium__shot-card--hero {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  transform: none !important;
+}
+
+
+/* ---------------- Tablet ---------------- */
+
+@media (max-width: 1199.98px) {
+  body.hc-page-home .hc-home-premium__hero-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 28px !important;
+  }
+
+  body.hc-page-home .hc-home-premium__hero-copy {
+    max-width: 760px !important;
+  }
+
+  body.hc-page-home .hc-home-premium__hero-copy h1 {
+    max-width: 15ch !important;
+  }
+
+  body.hc-page-home .hc-home-premium__preview {
+    max-width: 900px !important;
+  }
+}
+
+
+/* ---------------- Mobile ---------------- */
+
+@media (max-width: 767.98px) {
+  body.hc-page-home {
+    overflow-x: hidden !important;
+  }
+
+  body.hc-page-home .hc-home-premium__hero {
+    min-height: 0 !important;
+    padding: 22px 16px 30px !important;
+    overflow: hidden !important;
+  }
+
+  body.hc-page-home .hc-home-premium__hero-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 22px !important;
+    gap: 22px !important;
+    border-radius: 22px !important;
+    box-sizing: border-box !important;
+  }
+
+  body.hc-page-home .hc-home-premium__hero-copy {
+    display: grid !important;
+    gap: 13px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  body.hc-page-home .hc-home-premium__hero-copy h1 {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    font-size: clamp(1.85rem, 8.2vw, 2.45rem) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.042em !important;
+    text-wrap: balance !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    hyphens: none !important;
+  }
+
+  body.hc-page-home .hc-home-premium__eyebrow {
+    font-size: 0.72rem !important;
+    line-height: 1.35 !important;
+    letter-spacing: 0.075em !important;
+  }
+
+  body.hc-page-home .hc-home-premium__lead {
+    max-width: 100% !important;
+    margin: 0 !important;
+    font-size: 0.98rem !important;
+    line-height: 1.55 !important;
+  }
+
+  body.hc-page-home .hc-home-premium__hero-support,
+  body.hc-page-home .hc-home-premium__hero-supportInline {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  body.hc-page-home .hc-home-premium__hero-actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+    margin: 2px 0 0 !important;
+  }
+
+  body.hc-page-home .hc-home-premium__hero-actions .btn {
+    width: 100% !important;
+    min-height: 44px !important;
+    padding: 0.68rem 0.9rem !important;
+    justify-content: center !important;
+    font-size: 0.94rem !important;
+  }
+
+  body.hc-page-home .hc-home-premium__hero-supportMeta,
+  body.hc-page-home .hc-home-premium__hero-demo-note {
+    max-width: 100% !important;
+    margin: 0 !important;
+    overflow-wrap: break-word !important;
+  }
+
+  body.hc-page-home .hc-home-premium__preview {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 2px auto 0 !important;
+    transform: none !important;
+  }
+
+  body.hc-page-home .hc-home-premium__shot-card--hero {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    transform: none !important;
+  }
+}
+
+
+/* ---------------- Small phones ---------------- */
+
+@media (max-width: 430px) {
+  body.hc-page-home .hc-home-premium__hero {
+    padding: 16px 12px 26px !important;
+  }
+
+  body.hc-page-home .hc-home-premium__hero-grid {
+    padding: 18px !important;
+    gap: 18px !important;
+    border-radius: 18px !important;
+  }
+
+  body.hc-page-home .hc-home-premium__hero-copy h1 {
+    font-size: clamp(1.72rem, 8vw, 2.08rem) !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.038em !important;
+  }
+
+  body.hc-page-home .hc-home-premium__lead {
+    font-size: 0.95rem !important;
+    line-height: 1.52 !important;
+  }
+}
