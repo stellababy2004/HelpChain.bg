@@ -539,29 +539,7 @@
   }
 
   function buildEstimatedQueue() {
-    return buildFounderQueue().map(function (item) {
-      var fallbackSignal = 0;
-      if (item.badge === "Haute priorite") {
-        fallbackSignal = 82;
-      } else if (item.badge === "Chaud") {
-        fallbackSignal = 68;
-      } else {
-        fallbackSignal = 42;
-      }
-      return {
-        kind: "estimated",
-        territory: item.territory,
-        detectedSignal: item.reason,
-        score: fallbackSignal,
-        scoreLabel: "Signal " + fallbackSignal,
-        priority: item.badge,
-        badgeClass: item.badgeClass,
-        sourceLabel: "Signal analytique",
-        action: item.action,
-        focusSlug: item.focusSlug,
-        estimatedValue: 0,
-      };
-    });
+    return [];
   }
 
   function founderQueueRows() {

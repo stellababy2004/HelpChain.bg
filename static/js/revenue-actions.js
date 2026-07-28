@@ -11,16 +11,11 @@
     .slice(0, 5)
     .map(s => {
       const pages = (s.pages || []).join(", ");
-
-      let action = "Review manually";
-
-      if (pages.includes("/demo")) {
-        action = "🔥 Contact for demo follow-up";
-      } else if (pages.includes("/offre")) {
-        action = "💰 Push pricing / offer";
-      } else if (pages.includes("/contact")) {
-        action = "📩 Check contact intent";
-      }
+      const action = "Review explainable signal";
+      const scoreExplain = (s.score_components || [])
+        .map(component => `+${component.points} ${component.label}`)
+        .join(" · ") || "Explain: Not enough data available";
+      const valueLabel = s.value_label || "Not enough data available";
 
       return `
         <div style="
@@ -31,7 +26,8 @@
           margin-bottom:10px;
         ">
           <strong>${action}</strong><br/>
-          <small>Score ${s.score} • ${s.value} € • ${pages}</small>
+          <small>Score ${s.score} • ${valueLabel} • ${pages}</small><br/>
+          <small>${scoreExplain}</small>
         </div>
       `;
     }).join("");
