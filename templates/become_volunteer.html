@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block title %}{{ _("Accès intervenant") }} | HelpChain{% endblock %}
 
 {% block content %}
@@ -164,11 +164,7 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-  window.addEventListener("DOMContentLoaded", function () {
-    var hp = document.getElementById("hp_company_fax");
-    if (hp) hp.removeAttribute("readonly");
-  });
-</script>
+<script src="{{ url_for('static', filename='js/volunteer-honeypot.js') }}"></script>
 <script src="{{ url_for('static', filename='js/volunteer_step1.js') }}"></script>
 {% endblock %}
+

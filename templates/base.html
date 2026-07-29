@@ -803,7 +803,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
             <span class="hc-brand-title">HelpChain</span>
           </span>
         </a>
-        {% if not is_any_logged_in and not hide_full_nav %}
+        {% if not is_any_logged_in and (not hide_full_nav or request.path == '/become_volunteer') %}
           <button
             class="hc-mobile-nav-toggle"
             type="button"
@@ -1246,7 +1246,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
       </div>
     </nav>
 
-    {% if not is_any_logged_in and not hide_full_nav %}
+    {% if not is_any_logged_in and (not hide_full_nav or request.path == '/become_volunteer') %}
     <!-- HC_NAV_DEBUG: mobile nav block rendered -->
     <div class="hc-mobile-nav" id="hcMobileNav" aria-hidden="true">
       {% set mobile_ep = request.endpoint or '' %}
@@ -1981,7 +1981,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
     ></script>
     {% endif %}
     <script src="{{ url_for('static', filename='js/hc-core.js') }}" defer></script>
-    <script src="{{ url_for('static', filename='js/public-mobile-nav.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/public-mobile-nav.js') }}?v=20260728-stable-3" defer></script>
     <script src="{{ url_for('static', filename='js/public-nav.js') }}?v=20260519-v3-nav" defer></script>
     <script src="{{ url_for('static', filename='js/admin-top-nav.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/lead-capture.js') }}?v=5" defer></script>
@@ -1994,6 +1994,7 @@ href="{{ url_for('static', filename='css/components/hc-unified-maps.css') }}">
   <script src="{{ url_for('static', filename='js/admin-high-intent-sessions.js') }}?v=1"></script>
 </body>
 </html>
+
 
 
 
