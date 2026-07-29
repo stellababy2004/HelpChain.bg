@@ -67,6 +67,7 @@
         </div>
         <div class="row g-3">
           <div class="col-12 col-md-6"><div class="text-muted small">Description</div><strong>{{ enterprise.profile.description }}</strong></div>
+          <div class="col-12 col-md-6"><div class="text-muted small">Statut opérationnel</div><strong>{{ enterprise.profile.status }}</strong></div>
           <div class="col-12 col-md-6"><div class="text-muted small">Raison sociale</div><strong>{{ enterprise.profile.legal_name }}</strong></div>
           <div class="col-12 col-md-4"><div class="text-muted small">Numéro d'enregistrement</div><strong>{{ enterprise.profile.registration_number }}</strong></div>
           <div class="col-12 col-md-4"><div class="text-muted small">Site web</div><strong>{{ enterprise.profile.website }}</strong></div>
@@ -87,6 +88,59 @@
             {% endif %}
           </div>
         </div>
+        <hr>
+        <h6 class="mb-3">Mettre à jour le workspace</h6>
+        <form method="POST" action="{{ url_for('admin.admin_structure_workspace_update', structure_id=structure.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <label class="form-label" for="workspace_status">Statut</label>
+              <select class="form-select" id="workspace_status" name="status">
+                {% for value in ['pending', 'active', 'inactive', 'suspended'] %}
+                  <option value="{{ value }}" {% if structure.status == value %}selected{% endif %}>{{ value|capitalize }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label" for="workspace_type">Type d'organisation</label>
+              <select class="form-select" id="workspace_type" name="organization_type">
+                <option value="">Non renseigné</option>
+                {% for key, item in enterprise.organization_type_registry.items() %}
+                  <option value="{{ key }}" {% if structure.organization_type == key %}selected{% endif %}>{{ item.label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label" for="workspace_risk_level">Niveau de risque</label>
+              <select class="form-select" id="workspace_risk_level" name="risk_level">
+                <option value="">Non renseigné</option>
+                {% for value in ['low', 'medium', 'high', 'critical'] %}
+                  <option value="{{ value }}" {% if structure.risk_level == value %}selected{% endif %}>{{ value|capitalize }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12"><label class="form-label" for="workspace_description">Description</label><textarea class="form-control" id="workspace_description" name="description" rows="2">{{ structure.description or '' }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="workspace_legal_name">Raison sociale</label><input class="form-control" id="workspace_legal_name" name="legal_name" value="{{ structure.legal_name or '' }}"></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="workspace_registration_number">Numéro d'enregistrement</label><input class="form-control" id="workspace_registration_number" name="registration_number" value="{{ structure.registration_number or '' }}"></div>
+            <div class="col-12 col-md-4"><label class="form-label" for="workspace_website">Site web</label><input class="form-control" id="workspace_website" name="website" value="{{ structure.website or '' }}"></div>
+            <div class="col-12 col-md-4"><label class="form-label" for="workspace_email">Email</label><input class="form-control" id="workspace_email" name="email" value="{{ structure.email or '' }}"></div>
+            <div class="col-12 col-md-4"><label class="form-label" for="workspace_phone">Téléphone</label><input class="form-control" id="workspace_phone" name="phone" value="{{ structure.phone or '' }}"></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="workspace_emergency_phone">Téléphone d'urgence</label><input class="form-control" id="workspace_emergency_phone" name="emergency_phone" value="{{ structure.emergency_phone or '' }}"></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="workspace_territory">Territoire</label><input class="form-control" id="workspace_territory" name="territory" value="{{ structure.territory or '' }}"></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="workspace_opening_hours">Horaires</label><textarea class="form-control" id="workspace_opening_hours" name="opening_hours" rows="2">{{ structure.opening_hours or '' }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="workspace_head_office">Siège</label><textarea class="form-control" id="workspace_head_office" name="head_office" rows="2">{{ structure.head_office or '' }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="workspace_departments">Départements</label><textarea class="form-control" id="workspace_departments" name="departments" rows="3">{{ enterprise.profile.departments|join('\n') }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="workspace_capabilities">Capacités</label><textarea class="form-control" id="workspace_capabilities" name="capabilities" rows="3">{{ enterprise.ai_readiness.capabilities|join('\n') }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="workspace_languages">Langues</label><textarea class="form-control" id="workspace_languages" name="languages" rows="3">{{ enterprise.ai_readiness.languages|join('\n') }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="workspace_priority_domains">Domaines prioritaires</label><textarea class="form-control" id="workspace_priority_domains" name="priority_domains" rows="3">{{ enterprise.ai_readiness.priority_domains|join('\n') }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="workspace_case_types">Types de dossiers acceptés</label><textarea class="form-control" id="workspace_case_types" name="accepted_case_types" rows="3">{{ enterprise.ai_readiness.accepted_case_types|join('\n') }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="workspace_required_documents">Documents requis</label><textarea class="form-control" id="workspace_required_documents" name="required_documents" rows="3">{{ enterprise.ai_readiness.required_documents|join('\n') }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="workspace_supported_populations">Publics accompagnés</label><textarea class="form-control" id="workspace_supported_populations" name="supported_populations" rows="3">{{ enterprise.ai_readiness.supported_populations|join('\n') }}</textarea></div>
+          </div>
+          <div class="mt-3">
+            <button class="btn btn-primary btn-sm" type="submit">Enregistrer le workspace</button>
+          </div>
+        </form>
       </div>
 
       <div class="card shadow-sm p-3 mb-4">
@@ -167,6 +221,28 @@
 
     <div class="col-12 col-xl-4">
       <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-2">Readiness opérationnelle</h5>
+        <div class="display-6">{{ enterprise.readiness.display }}</div>
+        <div class="small text-muted mb-2">{{ enterprise.readiness.contacts_configured }} contact(s) · {{ enterprise.readiness.active_services }} service(s) actif(s)</div>
+        <div class="mb-3">
+          <div class="fw-semibold">Informations manquantes</div>
+          {% for item in enterprise.readiness.missing_information %}
+            <div class="small">- {{ item }}</div>
+          {% else %}
+            <div class="small text-muted">Aucune lacune de configuration critique détectée.</div>
+          {% endfor %}
+        </div>
+        <div>
+          <div class="fw-semibold">Recommandations</div>
+          {% for item in enterprise.readiness.recommendations %}
+            <div class="small">{{ item }}</div>
+          {% else %}
+            <div class="small text-muted">Aucune recommandation supplémentaire.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card shadow-sm p-3 mb-4">
         <h5 class="mb-2">Explication du score de santé</h5>
         <div class="display-6">{{ enterprise.health.display }}</div>
         <div class="small text-muted mb-2">Confiance {{ enterprise.health.confidence }} - Tendance {{ enterprise.health.trend }}</div>
@@ -214,10 +290,43 @@
         <h5 class="mb-3">Couverture territoriale</h5>
         <div class="small text-muted mb-2">Source : {{ enterprise.coverage.source }} - Confiance {{ enterprise.coverage.confidence }}</div>
         <div class="mb-2"><strong>Villes :</strong> {{ enterprise.coverage.covered_cities|join(', ') if enterprise.coverage.covered_cities else 'Aucune ville couverte renseignée.' }}</div>
+        <div class="mb-2"><strong>Communes :</strong> {{ enterprise.coverage.covered_communes|join(', ') if enterprise.coverage.covered_communes else 'Aucune commune renseignée.' }}</div>
         <div class="mb-2"><strong>Quartiers :</strong> {{ enterprise.coverage.covered_districts|join(', ') if enterprise.coverage.covered_districts else 'Aucun quartier renseigné.' }}</div>
         <div class="mb-2"><strong>Départements :</strong> {{ enterprise.coverage.departments|join(', ') if enterprise.coverage.departments else 'Aucun département renseigné.' }}</div>
+        <div class="mb-2"><strong>Régions :</strong> {{ enterprise.coverage.regions|join(', ') if enterprise.coverage.regions else 'Aucune région renseignée.' }}</div>
         <div class="mb-2"><strong>Codes postaux :</strong> {{ enterprise.coverage.postal_codes|join(', ') if enterprise.coverage.postal_codes else 'Aucun code postal renseigné.' }}</div>
-        <div><strong>Population couverte :</strong> {{ enterprise.coverage.population_served if enterprise.coverage.population_served else 'Population non renseignée.' }}</div>
+        <div class="mb-2"><strong>Population couverte :</strong> {{ enterprise.coverage.population_served if enterprise.coverage.population_served else 'Population non renseignée.' }}</div>
+        <div class="mb-3"><strong>Préparation géométrique :</strong> {{ 'Oui' if enterprise.coverage.geometry_ready else 'Non' }}</div>
+        <form method="POST" action="{{ url_for('admin.admin_structure_coverage_create', structure_id=structure.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="row g-2">
+            <div class="col-12"><label class="form-label" for="coverage_name">Nom</label><input class="form-control form-control-sm" id="coverage_name" name="name" required></div>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="coverage_area_type">Type</label>
+              <select class="form-select form-select-sm" id="coverage_area_type" name="area_type">
+                {% for key, label in coverage_area_labels.items() %}
+                  <option value="{{ key }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="coverage_geometry_kind">Géométrie</label>
+              <select class="form-select form-select-sm" id="coverage_geometry_kind" name="geometry_kind">
+                {% for value in geometry_kind_values %}
+                  <option value="{{ value }}">{{ value }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6"><label class="form-label" for="coverage_postal_code">Code postal</label><input class="form-control form-control-sm" id="coverage_postal_code" name="postal_code"></div>
+            <div class="col-6"><label class="form-label" for="coverage_department">Département</label><input class="form-control form-control-sm" id="coverage_department" name="department"></div>
+            <div class="col-6"><label class="form-label" for="coverage_region">Région</label><input class="form-control form-control-sm" id="coverage_region" name="region"></div>
+            <div class="col-6"><label class="form-label" for="coverage_administrative_code">Code administratif</label><input class="form-control form-control-sm" id="coverage_administrative_code" name="administrative_code"></div>
+            <div class="col-6"><label class="form-label" for="coverage_radius_km">Rayon km</label><input class="form-control form-control-sm" id="coverage_radius_km" name="coverage_radius_km" type="number" min="0"></div>
+            <div class="col-6"><label class="form-label" for="coverage_population_served">Population</label><input class="form-control form-control-sm" id="coverage_population_served" name="population_served" type="number" min="0"></div>
+            <div class="col-12"><label class="form-label" for="coverage_geometry_data_json">Référence géométrique</label><textarea class="form-control form-control-sm" id="coverage_geometry_data_json" name="geometry_data_json" rows="2"></textarea></div>
+          </div>
+          <button class="btn btn-outline-primary btn-sm mt-3" type="submit">Ajouter une zone</button>
+        </form>
       </div>
 
       <div class="card shadow-sm p-3 mb-4">
@@ -227,11 +336,41 @@
             <div class="fw-semibold">{{ contact.name }}</div>
             <div class="small text-muted">{{ contact.type }} - {{ contact.role }}</div>
             <div class="small">{{ contact.email }} - {{ contact.phone }}</div>
-            <div class="small text-muted">{{ contact.availability }}</div>
+            <div class="small text-muted">{{ contact.availability }} · Canal préféré : {{ contact.preferred_communication }}</div>
           </div>
         {% else %}
           <div class="text-muted">Aucun contact enregistré. Ajoutez un contact d'astreinte.</div>
         {% endfor %}
+        <hr>
+        <form method="POST" action="{{ url_for('admin.admin_structure_contact_create', structure_id=structure.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="row g-2">
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="contact_type">Type</label>
+              <select class="form-select form-select-sm" id="contact_type" name="contact_type">
+                {% for key, label in contact_type_labels.items() %}
+                  <option value="{{ key }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="preferred_communication">Canal préféré</label>
+              <select class="form-select form-select-sm" id="preferred_communication" name="preferred_communication">
+                <option value="">Non renseigné</option>
+                {% for key, label in preferred_communication_labels.items() %}
+                  <option value="{{ key }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12"><label class="form-label" for="contact_name">Nom</label><input class="form-control form-control-sm" id="contact_name" name="name"></div>
+            <div class="col-12"><label class="form-label" for="contact_role">Rôle</label><input class="form-control form-control-sm" id="contact_role" name="role"></div>
+            <div class="col-6"><label class="form-label" for="contact_email">Email</label><input class="form-control form-control-sm" id="contact_email" name="email"></div>
+            <div class="col-6"><label class="form-label" for="contact_phone">Téléphone</label><input class="form-control form-control-sm" id="contact_phone" name="phone"></div>
+            <div class="col-8"><label class="form-label" for="contact_availability">Disponibilité</label><input class="form-control form-control-sm" id="contact_availability" name="availability"></div>
+            <div class="col-4"><label class="form-label" for="contact_escalation_order">Ordre</label><input class="form-control form-control-sm" id="contact_escalation_order" name="escalation_order" type="number" min="1"></div>
+          </div>
+          <button class="btn btn-outline-primary btn-sm mt-3" type="submit">Ajouter un contact</button>
+        </form>
       </div>
 
       <div class="card shadow-sm p-3 mb-4">

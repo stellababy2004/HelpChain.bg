@@ -875,6 +875,380 @@ def test_tenant_scoping_structure_bound_admin_filtered(client, session):
     assert int(payload.get("new_requests") or 0) == 1
 
 
+def test_operational_intelligence_includes_readiness_for_empty_workspace(client, session):
+    st = _make_structure(session, name="Readiness Empty", slug="readiness-empty")
+    admin = _make_admin(
+        session,
+        username="readiness_empty_admin",
+        email="readiness_empty_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.get(f"/admin/structures/{st.id}/operational-intelligence", follow_redirects=False)
+
+    assert resp.status_code == 200
+    payload = resp.get_json()
+    assert payload["readiness"]["score"] == 0
+    assert "Operational contacts" in payload["readiness"]["missing_information"]
+    assert payload["executive_kpis"][0]["label"] == "Readiness"
+    assert payload["executive_kpis"][0]["display"] == "0%"
+
+
+def test_readiness_score_is_bounded_and_deterministic(client, session):
+    from backend.models import StructureContact, StructureCoverageArea, StructureService
+
+    st = _make_structure(session, name="Readiness Full", slug="readiness-full")
+    st.status = "active"
+    st.email = "ops@readiness.test"
+    st.phone = "0101010101"
+    st.opening_hours = "24/7"
+    session.add(
+        StructureContact(
+            structure_id=st.id,
+            contact_type="operational",
+            name="Ops Lead",
+            email="lead@readiness.test",
+            preferred_communication="phone",
+            is_active=True,
+        )
+    )
+    session.add(
+        StructureService(
+            structure_id=st.id,
+            code="ready-service",
+            name="Ready Service",
+            category="social_support",
+            status="active",
+            availability="available",
+            opening_hours="24/7",
+            capacity=12,
+            is_active=True,
+        )
+    )
+    session.add(
+        StructureCoverageArea(
+            structure_id=st.id,
+            area_type="city",
+            name="Paris",
+            is_active=True,
+        )
+    )
+    session.commit()
+    admin = _make_admin(
+        session,
+        username="readiness_full_admin",
+        email="readiness_full_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    first = client.get(f"/admin/structures/{st.id}/operational-intelligence", follow_redirects=False)
+    second = client.get(f"/admin/structures/{st.id}/operational-intelligence", follow_redirects=False)
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    first_payload = first.get_json()
+    second_payload = second.get_json()
+    assert 0 <= first_payload["readiness"]["score"] <= 100
+    assert first_payload["readiness"] == second_payload["readiness"]
+    assert any("géométrie" in item for item in first_payload["readiness"]["recommendations"])
+
+
+def test_structure_workspace_update_persists_enterprise_fields(client, session):
+    st = _make_structure(session, name="Workspace Update", slug="workspace-update")
+    admin = _make_admin(
+        session,
+        username="workspace_update_admin",
+        email="workspace_update_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/workspace",
+        data={
+            "status": "active",
+            "organization_type": "ccas",
+            "risk_level": "high",
+            "description": "Coordination locale",
+            "email": "ops@workspace.test",
+            "phone": "+33123456789",
+            "opening_hours": "24/7",
+            "departments": "75\n92",
+            "capabilities": "social_support\ncase_coordination",
+            "languages": "fr\nbg",
+            "priority_domains": "housing",
+            "accepted_case_types": "family_support",
+            "required_documents": "ID",
+            "supported_populations": "families",
+        },
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 303
+    session.refresh(st)
+    assert st.status == "active"
+    assert st.organization_type == "ccas"
+    assert st.email == "ops@workspace.test"
+    assert st.departments_json is not None
+    assert st.capabilities_json is not None
+
+
+def test_structure_contact_create_persists_preferred_communication(client, session):
+    from backend.models import StructureContact
+
+    st = _make_structure(session, name="Contact Owner", slug="contact-owner")
+    admin = _make_admin(
+        session,
+        username="contact_create_admin",
+        email="contact_create_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/contacts/new",
+        data={
+            "contact_type": "operational",
+            "name": "Marie Ops",
+            "role": "Coordinator",
+            "email": "marie@example.test",
+            "phone": "0102030405",
+            "availability": "Weekdays",
+            "preferred_communication": "phone",
+            "escalation_order": "1",
+        },
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 303
+    contact = StructureContact.query.filter_by(structure_id=st.id, name="Marie Ops").first()
+    assert contact is not None
+    assert contact.contact_type == "operational"
+    assert contact.preferred_communication == "phone"
+
+
+def test_structure_contact_create_rejects_empty_contact_payload(client, session):
+    from backend.models import StructureContact
+
+    st = _make_structure(session, name="Contact Empty", slug="contact-empty")
+    admin = _make_admin(
+        session,
+        username="contact_empty_admin",
+        email="contact_empty_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/contacts/new",
+        data={"contact_type": "operational"},
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 303
+    assert StructureContact.query.filter_by(structure_id=st.id).count() == 0
+
+
+def test_structure_contact_create_deduplicates_exact_contact(client, session):
+    from backend.models import StructureContact
+
+    st = _make_structure(session, name="Contact Duplicate", slug="contact-duplicate")
+    admin = _make_admin(
+        session,
+        username="contact_duplicate_admin",
+        email="contact_duplicate_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+    data = {
+        "contact_type": "operational",
+        "name": "Marie Ops",
+        "role": "Coordinator",
+        "email": "marie@example.test",
+        "phone": "0102030405",
+        "preferred_communication": "phone",
+    }
+
+    first = client.post(f"/admin/structures/{st.id}/contacts/new", data=data, follow_redirects=False)
+    second = client.post(f"/admin/structures/{st.id}/contacts/new", data=data, follow_redirects=False)
+
+    assert first.status_code == 303
+    assert second.status_code == 303
+    assert StructureContact.query.filter_by(structure_id=st.id, name="Marie Ops").count() == 1
+
+
+def test_structure_coverage_create_supports_phase5_fields(client, session):
+    from backend.models import StructureCoverageArea
+
+    st = _make_structure(session, name="Coverage Owner", slug="coverage-owner")
+    admin = _make_admin(
+        session,
+        username="coverage_create_admin",
+        email="coverage_create_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/coverage/new",
+        data={
+            "area_type": "commune",
+            "name": "Nanterre",
+            "postal_code": "92000",
+            "department": "Hauts-de-Seine",
+            "region": "Ile-de-France",
+            "administrative_code": "92050",
+            "coverage_radius_km": "12",
+            "population_served": "96000",
+            "geometry_kind": "external_reference",
+            "geometry_data_json": '{"source":"insee"}',
+        },
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 303
+    area = StructureCoverageArea.query.filter_by(structure_id=st.id, name="Nanterre").first()
+    assert area is not None
+    assert area.area_type == "commune"
+    assert area.region == "Ile-de-France"
+    assert area.administrative_code == "92050"
+    assert area.geometry_kind == "external_reference"
+
+    intelligence = client.get(f"/admin/structures/{st.id}/operational-intelligence", follow_redirects=False)
+    payload = intelligence.get_json()
+    assert "Nanterre" in payload["coverage"]["covered_communes"]
+    assert "Ile-de-France" in payload["coverage"]["regions"]
+
+
+def test_structure_coverage_create_rejects_invalid_geometry_json(client, session):
+    from backend.models import StructureCoverageArea
+
+    st = _make_structure(session, name="Coverage Invalid JSON", slug="coverage-invalid-json")
+    admin = _make_admin(
+        session,
+        username="coverage_invalid_json_admin",
+        email="coverage_invalid_json_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/coverage/new",
+        data={"area_type": "city", "name": "Paris", "geometry_data_json": "{not-json}"},
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 303
+    assert StructureCoverageArea.query.filter_by(structure_id=st.id).count() == 0
+
+
+def test_structure_coverage_create_deduplicates_same_area(client, session):
+    from backend.models import StructureCoverageArea
+
+    st = _make_structure(session, name="Coverage Duplicate", slug="coverage-duplicate")
+    admin = _make_admin(
+        session,
+        username="coverage_duplicate_admin",
+        email="coverage_duplicate_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+    data = {"area_type": "city", "name": "Paris"}
+
+    first = client.post(f"/admin/structures/{st.id}/coverage/new", data=data, follow_redirects=False)
+    second = client.post(f"/admin/structures/{st.id}/coverage/new", data=data, follow_redirects=False)
+
+    assert first.status_code == 303
+    assert second.status_code == 303
+    assert StructureCoverageArea.query.filter_by(structure_id=st.id, name="Paris").count() == 1
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/admin/structures/999999/workspace",
+        "/admin/structures/999999/contacts/new",
+        "/admin/structures/999999/coverage/new",
+    ],
+)
+def test_workspace_mutations_return_404_for_unknown_structure(client, session, path):
+    admin = _make_admin(
+        session,
+        username="unknown_structure_admin",
+        email="unknown_structure_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(path, data={}, follow_redirects=False)
+
+    assert resp.status_code == 404
+
+
+@pytest.mark.parametrize(
+    "path,data",
+    [
+        ("/admin/structures/{foreign_id}/workspace", {"status": "active"}),
+        ("/admin/structures/{foreign_id}/contacts/new", {"contact_type": "primary"}),
+        ("/admin/structures/{foreign_id}/coverage/new", {"area_type": "city", "name": "Paris"}),
+    ],
+)
+def test_tenant_admin_cannot_post_foreign_workspace_mutations(client, session, path, data):
+    own = _make_structure(session, name="Own Workspace Scope", slug="own-workspace-scope")
+    foreign = _make_structure(session, name="Foreign Workspace Scope", slug="foreign-workspace-scope")
+    admin = _make_admin(
+        session,
+        username="tenant_workspace_admin",
+        email="tenant_workspace_admin@test.local",
+        role="superadmin",
+        structure_id=own.id,
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(path.format(foreign_id=foreign.id), data=data, follow_redirects=False)
+
+    assert resp.status_code == 403
+
+
+@pytest.mark.parametrize(
+    "path,data",
+    [
+        ("/admin/structures/{structure_id}/workspace", {"status": "active"}),
+        ("/admin/structures/{structure_id}/contacts/new", {"contact_type": "primary", "name": "Ops"}),
+        ("/admin/structures/{structure_id}/coverage/new", {"area_type": "city", "name": "Paris"}),
+    ],
+)
+def test_workspace_mutations_require_authentication(client, session, path, data):
+    st = _make_structure(session, name="Auth Workspace", slug="auth-workspace")
+
+    resp = client.post(path.format(structure_id=st.id), data=data, follow_redirects=False)
+
+    assert resp.status_code in (302, 303)
+    assert "/admin/login" in (resp.headers.get("Location") or "")
+
+
+def test_structure_dashboard_renders_empty_workspace_safely(client, session):
+    st = _make_structure(session, name="Render Empty", slug="render-empty")
+    admin = _make_admin(
+        session,
+        username="render_empty_admin",
+        email="render_empty_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.get(f"/admin/structures/{st.id}", follow_redirects=False)
+    body = resp.get_data(as_text=True)
+
+    assert resp.status_code == 200
+    assert "Readiness" in body
+    assert "Ajouter un contact" in body
+    assert "Ajouter une zone" in body
+    assert "col-12 col-md-6" in body
+
+
 @pytest.mark.parametrize("role", ["ops", "readonly"])
 def test_ops_readonly_cannot_access_structure_routes(client, session, role):
     admin = _make_admin(

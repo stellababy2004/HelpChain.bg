@@ -113,6 +113,30 @@ SERVICE_CATEGORIES: dict[str, str] = {
     "coordination": "Coordination",
 }
 
+CONTACT_TYPE_LABELS: dict[str, str] = {
+    "primary": "Primary",
+    "operational": "Operational",
+    "emergency": "Emergency",
+    "escalation": "Escalation",
+    "after_hours": "After-hours",
+}
+
+PREFERRED_COMMUNICATION_LABELS: dict[str, str] = {
+    "phone": "Telephone",
+    "email": "Email",
+    "sms": "SMS",
+    "secure_portal": "Secure portal",
+}
+
+COVERAGE_AREA_LABELS: dict[str, str] = {
+    "city": "City",
+    "commune": "Commune",
+    "postal_code": "Postal code",
+    "department": "Department",
+    "region": "Region",
+    "district": "District",
+}
+
 
 ORGANIZATION_TYPES: dict[str, dict[str, Any]] = {
     "municipality": {
@@ -309,6 +333,18 @@ def risk_label(value: Any, fallback: str = UNAVAILABLE) -> str:
     return _label(value, RISK_LABELS, fallback)
 
 
+def contact_type_label(value: Any, fallback: str = UNAVAILABLE) -> str:
+    return _label(value, CONTACT_TYPE_LABELS, fallback)
+
+
+def preferred_communication_label(value: Any, fallback: str = UNAVAILABLE) -> str:
+    return _label(value, PREFERRED_COMMUNICATION_LABELS, fallback)
+
+
+def coverage_area_label(value: Any, fallback: str = UNAVAILABLE) -> str:
+    return _label(value, COVERAGE_AREA_LABELS, fallback)
+
+
 def serialize_json_list(values: list[str]) -> str | None:
     cleaned = [str(value).strip() for value in values if str(value).strip()]
     return json.dumps(cleaned, ensure_ascii=False) if cleaned else None
@@ -489,9 +525,10 @@ def _serialize_service(
         "professionals_count": len(professionals),
         "opening_hours": _display_text(getattr(row, "opening_hours", None), "Horaires non renseignés"),
         "coverage": _display_text(getattr(row, "coverage", None), "Couverture non renseignée"),
+        "notes": _display_text(getattr(row, "notes", None), "Notes non renseignées"),
         "response_sla_hours": getattr(row, "response_sla_hours", None),
         "response_sla_display": (
-            f"{row.response_sla_hours} h"
+            f"{row.response_sla_hours} min"
             if getattr(row, "response_sla_hours", None) is not None
             else "SLA non renseigné"
         ),
@@ -572,11 +609,16 @@ def build_services_dashboard(structure_id: int, services: list[dict[str, Any]]) 
             "by_category": {},
             "available_services": 0,
             "unavailable_services": 0,
+            "active_services": 0,
             "high_demand_services": [],
             "capacity_per_service": [],
             "average_waiting_time": None,
             "average_waiting_time_display": "Temps d'attente non calculable",
             "professionals_assigned": 0,
+            "assigned_operators": 0,
+            "services_with_sla": 0,
+            "sla_coverage_percent": None,
+            "sla_coverage_display": "SLA non renseigné",
             "cases_by_service": [],
             "monthly_evolution": [],
             "response_sla": [],
@@ -613,6 +655,7 @@ def build_services_dashboard(structure_id: int, services: list[dict[str, Any]]) 
         "by_category": by_category,
         "available_services": len([item for item in services if item["is_available"]]),
         "unavailable_services": len([item for item in services if not item["is_available"]]),
+        "active_services": len([item for item in services if item["is_active"]]),
         "high_demand_services": high_demand,
         "capacity_per_service": [
             {
@@ -628,6 +671,19 @@ def build_services_dashboard(structure_id: int, services: list[dict[str, Any]]) 
             f"{avg_waiting} h" if avg_waiting is not None else "Temps d'attente non calculable"
         ),
         "professionals_assigned": sum(item["professionals_count"] for item in services),
+        "assigned_operators": sum(item["professionals_count"] for item in services),
+        "services_with_sla": len([item for item in services if item["response_sla_hours"] is not None]),
+        "sla_coverage_percent": round(
+            (len([item for item in services if item["response_sla_hours"] is not None]) / len(services)) * 100,
+            1,
+        )
+        if services
+        else None,
+        "sla_coverage_display": (
+            f"{round((len([item for item in services if item['response_sla_hours'] is not None]) / len(services)) * 100, 1)}%"
+            if services
+            else "SLA non renseigné"
+        ),
         "cases_by_service": [{"name": item["name"], "cases": item["active_cases"]} for item in services],
         "monthly_evolution": [
             {"service": _display_text(name, "Service sans nom"), "cases": int(count or 0)}
@@ -750,22 +806,40 @@ def build_territorial_coverage(structure_id: int) -> dict[str, Any]:
     ]
     configured = [
         {
-            "type": _display_text(row.area_type),
+            "type_key": _display_text(row.area_type, "").lower(),
+            "type": coverage_area_label(row.area_type),
             "name": _display_text(row.name),
             "postal_code": _display_text(row.postal_code),
             "department": _display_text(row.department),
+            "region": _display_text(getattr(row, "region", None)),
+            "administrative_code": _display_text(getattr(row, "administrative_code", None)),
             "coverage_radius_km": row.coverage_radius_km,
             "population_served": row.population_served,
+            "geometry_kind": _display_text(getattr(row, "geometry_kind", None)),
+            "geometry_configured": bool(getattr(row, "geometry_data_json", None)),
         }
         for row in rows
     ]
     return {
         "configured": configured,
-        "covered_cities": [item["name"] for item in configured if item["type"].lower() == "city"] or inferred_cities,
-        "covered_districts": [item["name"] for item in configured if item["type"].lower() == "district"],
+        "covered_cities": [item["name"] for item in configured if item["type_key"] == "city"] or inferred_cities,
+        "covered_communes": [item["name"] for item in configured if item["type_key"] == "commune"],
+        "covered_districts": [item["name"] for item in configured if item["type_key"] == "district"],
+        "regions": sorted({item["region"] for item in configured if item["region"] != UNAVAILABLE}),
         "departments": sorted({item["department"] for item in configured if item["department"] != UNAVAILABLE}),
-        "postal_codes": sorted({item["postal_code"] for item in configured if item["postal_code"] != UNAVAILABLE}),
+        "postal_codes": sorted(
+            {item["postal_code"] for item in configured if item["postal_code"] != UNAVAILABLE}
+            | {item["name"] for item in configured if item["type_key"] == "postal_code"}
+        ),
+        "administrative_codes": sorted(
+            {
+                item["administrative_code"]
+                for item in configured
+                if item["administrative_code"] != UNAVAILABLE
+            }
+        ),
         "population_served": sum(int(item["population_served"] or 0) for item in configured) or None,
+        "geometry_ready": any(item["geometry_configured"] for item in configured),
         "source": "structure_coverage_areas" if configured else "Données déduites des villes présentes dans les demandes actives",
         "confidence": "élevée" if configured else ("moyenne" if inferred_cities else "faible"),
     }
@@ -784,24 +858,198 @@ def build_contact_directory(structure_id: int) -> dict[str, Any]:
     )
     contacts = [
         {
-            "type": _display_text(row.contact_type),
+            "type_key": _display_text(row.contact_type, "").lower(),
+            "type": contact_type_label(row.contact_type),
             "name": _display_text(row.name),
             "role": _display_text(row.role),
             "email": _display_text(row.email),
             "phone": _display_text(row.phone),
             "availability": _display_text(row.availability),
+            "preferred_communication": preferred_communication_label(
+                getattr(row, "preferred_communication", None)
+            ),
             "escalation_order": row.escalation_order,
         }
         for row in rows
     ]
-    by_type = {item["type"].lower().replace(" ", "_"): item for item in contacts}
+    by_type = {item["type_key"].replace(" ", "_"): item for item in contacts}
     return {
         "contacts": contacts,
-        "primary": by_type.get("primary") or by_type.get("primary_contact"),
-        "secondary": by_type.get("secondary") or by_type.get("secondary_contact"),
-        "emergency": by_type.get("emergency") or by_type.get("emergency_contact"),
-        "duty_manager": by_type.get("duty_manager"),
+        "primary": by_type.get("primary"),
+        "operational": by_type.get("operational"),
+        "emergency": by_type.get("emergency"),
+        "escalation": by_type.get("escalation"),
+        "after_hours": by_type.get("after_hours"),
         "escalation_chain": contacts,
+        "types_configured": sorted({item["type"] for item in contacts}),
+    }
+
+
+def build_operational_readiness(
+    structure: Structure,
+    *,
+    contacts: dict[str, Any],
+    services: list[dict[str, Any]],
+    coverage: dict[str, Any],
+    capacity: dict[str, MetricValue],
+) -> dict[str, Any]:
+    missing: list[str] = []
+    recommendations: list[str] = []
+
+    structure_status = str(getattr(structure, "status", "") or "").strip().lower()
+    opening_hours = str(getattr(structure, "opening_hours", "") or "").strip()
+    communication_channels = [
+        value
+        for value in (
+            getattr(structure, "email", None),
+            getattr(structure, "phone", None),
+            getattr(structure, "emergency_phone", None),
+        )
+        if str(value or "").strip()
+    ]
+    active_service_count = len([item for item in services if item.get("is_active")])
+    services_with_capacity = len([item for item in services if item.get("capacity") is not None])
+    services_with_hours = len([item for item in services if "non renseign" not in item.get("opening_hours", "").lower()])
+    contacts_with_channels = len(
+        [
+            item
+            for item in contacts.get("contacts", [])
+            if "non renseign" not in item.get("email", "").lower()
+            or "non renseign" not in item.get("phone", "").lower()
+        ]
+    )
+    preferred_communication_count = len(
+        [
+            item
+            for item in contacts.get("contacts", [])
+            if "non renseign" not in item.get("preferred_communication", "").lower()
+        ]
+    )
+    coverage_entries = len(coverage.get("configured", []))
+    coverage_scope_count = sum(
+        1
+        for values in (
+            coverage.get("covered_cities", []),
+            coverage.get("covered_communes", []),
+            coverage.get("postal_codes", []),
+            coverage.get("departments", []),
+            coverage.get("regions", []),
+        )
+        if values
+    )
+    has_any_signal = any(
+        [
+            bool(contacts.get("contacts")),
+            bool(services),
+            bool(coverage.get("configured")),
+            bool(opening_hours),
+            bool(communication_channels),
+            capacity["maximum_capacity"].value is not None,
+        ]
+    )
+
+    checks = [
+        (
+            "Operational status",
+            structure_status in {"active", "inactive", "suspended"},
+            10,
+            "Renseigner le statut opérationnel de l'organisation.",
+        ),
+        (
+            "Operational contacts",
+            bool(contacts.get("contacts")),
+            15,
+            "Ajouter au moins un contact opérationnel ou principal.",
+        ),
+        (
+            "Contact communication preferences",
+            preferred_communication_count > 0,
+            10,
+            "Préciser le canal de communication préféré pour les contacts clés.",
+        ),
+        (
+            "Contact reachability",
+            contacts_with_channels > 0 or bool(communication_channels),
+            10,
+            "Renseigner email, téléphone ou ligne d'urgence.",
+        ),
+        (
+            "Active services",
+            active_service_count > 0,
+            15,
+            "Configurer au moins un service actif.",
+        ),
+        (
+            "Service operating hours",
+            services_with_hours > 0 or bool(opening_hours),
+            10,
+            "Ajouter les horaires d'ouverture de l'organisation ou des services.",
+        ),
+        (
+            "Configured capacity",
+            services_with_capacity > 0 or capacity["maximum_capacity"].value is not None,
+            10,
+            "Renseigner une capacité de service exploitable.",
+        ),
+        (
+            "Coverage configured",
+            coverage_entries > 0,
+            10,
+            "Ajouter au moins une zone de couverture.",
+        ),
+        (
+            "Coverage scope",
+            coverage_scope_count > 0,
+            5,
+            "Préciser villes, communes, codes postaux, départements ou régions desservis.",
+        ),
+        (
+            "Workspace communication channels",
+            bool(communication_channels),
+            5,
+            "Renseigner les canaux de communication de l'organisation.",
+        ),
+    ]
+
+    if not has_any_signal:
+        for label, _, _, recommendation in checks:
+            missing.append(label)
+            recommendations.append(recommendation)
+        recommendations.append(
+            "Préparer un format de géométrie de couverture pour de futures zones polygonales."
+        )
+        return {
+            "score": 0,
+            "display": "0%",
+            "missing_information": missing,
+            "recommendations": recommendations,
+            "coverage_scope_count": 0,
+            "contacts_configured": 0,
+            "active_services": 0,
+        }
+
+    score = 0
+    for label, condition, points, recommendation in checks:
+        if condition:
+            score += points
+        else:
+            missing.append(label)
+            recommendations.append(recommendation)
+
+    if not coverage.get("geometry_ready"):
+        recommendations.append(
+            "Préparer un format de géométrie de couverture pour de futures zones polygonales."
+        )
+    score = max(0, min(100, int(score)))
+
+    return {
+        "score": score,
+        "display": f"{score}%",
+        "missing_information": missing,
+        "recommendations": recommendations,
+        "coverage_scope_count": coverage_scope_count,
+        "contacts_configured": len(contacts.get("contacts", [])),
+        "active_services": active_service_count,
     }
 
 
@@ -1100,6 +1348,13 @@ def build_enterprise_structure_dashboard(structure: Structure) -> dict[str, Any]
     profile = build_organization_profile(structure)
     coverage = build_territorial_coverage(int(structure.id))
     contacts = build_contact_directory(int(structure.id))
+    readiness = build_operational_readiness(
+        structure,
+        contacts=contacts,
+        services=services,
+        coverage=coverage,
+        capacity=capacity,
+    )
     activity = build_recent_activity(int(structure.id))
     if activity:
         profile["last_activity"] = activity[0]["timestamp"]
@@ -1107,12 +1362,14 @@ def build_enterprise_structure_dashboard(structure: Structure) -> dict[str, Any]
     alerts = build_operational_alerts(int(structure.id), capacity)
     users_count = _count(AdminUser.query.filter(AdminUser.structure_id == structure.id))
     executive_kpis = [
+        {"label": "Readiness", "display": readiness["display"], "confidence": "élevée"},
         {"label": "Santé", "display": health["display"], "confidence": health["confidence"]},
         {"label": "Capacité", "display": capacity["available_capacity"].display, "confidence": capacity["available_capacity"].confidence},
-        {"label": "Dossiers", "display": capacity["active_cases"].display, "confidence": capacity["active_cases"].confidence},
-        {"label": "Professionnels", "display": capacity["professionals"].display, "confidence": capacity["professionals"].confidence},
-        {"label": "Services proposés", "display": str(len(services)) if services else "Aucun service enregistré", "confidence": "élevée" if services else "faible"},
-        {"label": "Couverture territoriale", "display": str(len(coverage["covered_cities"])) if coverage["covered_cities"] else "Couverture non renseignée", "confidence": coverage["confidence"]},
+        {"label": "Demandes actives", "display": capacity["active_cases"].display, "confidence": capacity["active_cases"].confidence},
+        {"label": "Services actifs", "display": str(services_dashboard["active_services"]), "confidence": "élevée" if services else "faible"},
+        {"label": "Opérateurs affectés", "display": str(services_dashboard["assigned_operators"]), "confidence": "moyenne" if services else "faible"},
+        {"label": "Couverture", "display": str(readiness["coverage_scope_count"]) if readiness["coverage_scope_count"] else "État neutre", "confidence": coverage["confidence"]},
+        {"label": "SLA configuré", "display": services_dashboard["sla_coverage_display"], "confidence": "moyenne" if services else "faible"},
         {"label": "Temps de réponse", "display": capacity["average_response_time"].display, "confidence": capacity["average_response_time"].confidence},
         {"label": "Escalades", "display": str(len([item for item in alerts if item["severity"] in {"high", "critical"}])), "confidence": "moyenne"},
     ]
@@ -1125,6 +1382,7 @@ def build_enterprise_structure_dashboard(structure: Structure) -> dict[str, Any]
         "capacity": capacity,
         "coverage": coverage,
         "contacts": contacts,
+        "readiness": readiness,
         "health": health,
         "alerts": alerts,
         "activity": activity,

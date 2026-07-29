@@ -220,3 +220,73 @@ def test_enterprise_service_catalog_migration_upgrade_and_downgrade():
         inspector = inspect(engine)
         service_columns = {col["name"] for col in inspector.get_columns("structure_services")}
         assert service_catalog_columns.isdisjoint(service_columns)
+
+
+def test_enterprise_workspace_phase5_migration_upgrade_and_downgrade():
+    repo_root = pathlib.Path(__file__).resolve().parents[1]
+    alembic_ini = repo_root / "migrations" / "alembic.ini"
+
+    db_dir = repo_root / "backend" / "instance"
+    db_dir.mkdir(parents=True, exist_ok=True)
+    db_file = db_dir / "alembic_enterprise_workspace_phase5_test.db"
+    if db_file.exists():
+        db_file.unlink()
+    db_file.touch()
+    db_url = f"sqlite:///{db_file}"
+
+    cfg = Config(str(alembic_ini))
+    cfg.set_main_option("sqlalchemy.url", db_url)
+    cfg.set_main_option("script_location", str(repo_root / "migrations"))
+
+    if canonical_db is None or Migrate is None:
+        raise RuntimeError(
+            "Required Flask extensions (backend.extensions or flask_migrate) not importable"
+        )
+
+    app = Flask(__name__)
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+    app.config.setdefault(
+        "SQLALCHEMY_ENGINE_OPTIONS", {"connect_args": {"check_same_thread": False}}
+    )
+    canonical_db.init_app(app)
+    Migrate(app, canonical_db)
+
+    contact_columns = {"preferred_communication"}
+    service_columns_expected = {"notes"}
+    coverage_columns = {"region", "administrative_code", "geometry_kind", "geometry_data_json"}
+
+    with app.app_context():
+        command.upgrade(cfg, "20260729_1200")
+        engine = canonical_db.engine
+        inspector = inspect(engine)
+
+        actual_contact_columns = {col["name"] for col in inspector.get_columns("structure_contacts")}
+        actual_service_columns = {col["name"] for col in inspector.get_columns("structure_services")}
+        actual_coverage_columns = {
+            col["name"] for col in inspector.get_columns("structure_coverage_areas")
+        }
+        assert contact_columns <= actual_contact_columns
+        assert service_columns_expected <= actual_service_columns
+        assert coverage_columns <= actual_coverage_columns
+
+        command.downgrade(cfg, "20260728_1800")
+        inspector = inspect(engine)
+        actual_contact_columns = {col["name"] for col in inspector.get_columns("structure_contacts")}
+        actual_service_columns = {col["name"] for col in inspector.get_columns("structure_services")}
+        actual_coverage_columns = {
+            col["name"] for col in inspector.get_columns("structure_coverage_areas")
+        }
+        assert contact_columns.isdisjoint(actual_contact_columns)
+        assert service_columns_expected.isdisjoint(actual_service_columns)
+        assert coverage_columns.isdisjoint(actual_coverage_columns)
+
+        command.upgrade(cfg, "20260729_1200")
+        inspector = inspect(engine)
+        actual_contact_columns = {col["name"] for col in inspector.get_columns("structure_contacts")}
+        actual_service_columns = {col["name"] for col in inspector.get_columns("structure_services")}
+        actual_coverage_columns = {
+            col["name"] for col in inspector.get_columns("structure_coverage_areas")
+        }
+        assert contact_columns <= actual_contact_columns
+        assert service_columns_expected <= actual_service_columns
+        assert coverage_columns <= actual_coverage_columns

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import math
 import re
 from types import SimpleNamespace
@@ -8,10 +9,11 @@ from datetime import datetime, timedelta
 from flask import abort, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_login import current_user
 from sqlalchemy import and_, func, or_
+from sqlalchemy.exc import IntegrityError
 
 from backend.extensions import db
-from backend.models import StructureService
-from ..models import AdminUser, Intervenant, OrganizationAccessRequest, Request, Structure
+from backend.models import StructureContact, StructureCoverageArea, StructureService
+from ..models import AdminUser, Intervenant, OrganizationAccessRequest, Request, Structure, utc_now
 from ..services.organization_onboarding import (
     AccessRequestAlreadyApproved,
     AccessRequestEmailAlreadyUsed,
@@ -21,8 +23,11 @@ from ..services.organization_onboarding import (
     reject_access_request,
 )
 from ..services.enterprise_structure_intelligence import (
+    CONTACT_TYPE_LABELS,
+    COVERAGE_AREA_LABELS,
     MetricValue,
     ORGANIZATION_TYPES,
+    PREFERRED_COMMUNICATION_LABELS,
     PRIORITY_LABELS,
     RISK_LABELS,
     SERVICE_CATEGORIES,
@@ -183,6 +188,10 @@ SERVICE_PRIORITY_VALUES = set(PRIORITY_LABELS)
 SERVICE_RISK_VALUES = set(RISK_LABELS)
 SERVICE_CAPACITY_MAX = 100000
 SERVICE_SLA_MINUTES_MAX = 525600
+CONTACT_TYPE_VALUES = set(CONTACT_TYPE_LABELS)
+PREFERRED_COMMUNICATION_VALUES = set(PREFERRED_COMMUNICATION_LABELS)
+COVERAGE_AREA_TYPE_VALUES = set(COVERAGE_AREA_LABELS)
+GEOMETRY_KIND_VALUES = {"none", "point", "polygon", "multipolygon", "external_reference"}
 
 
 def _slug_code(value: str) -> str:
@@ -220,6 +229,39 @@ def _service_select_options() -> dict[str, object]:
         "service_priorities": PRIORITY_LABELS,
         "service_risks": RISK_LABELS,
     }
+
+
+def _workspace_select_options() -> dict[str, object]:
+    return {
+        "contact_type_labels": CONTACT_TYPE_LABELS,
+        "preferred_communication_labels": PREFERRED_COMMUNICATION_LABELS,
+        "coverage_area_labels": COVERAGE_AREA_LABELS,
+        "geometry_kind_values": GEOMETRY_KIND_VALUES,
+    }
+
+
+def _textarea_lines(value: str | None) -> list[str]:
+    return [part.strip() for part in str(value or "").splitlines() if part.strip()]
+
+
+def _normalize_optional_text(value: str | None, *, max_length: int | None = None) -> str | None:
+    cleaned = str(value or "").strip()
+    if not cleaned:
+        return None
+    if max_length is not None:
+        cleaned = cleaned[:max_length]
+    return cleaned
+
+
+def _validated_json_text_or_none(value: str | None, *, field_label: str) -> str | None:
+    cleaned = str(value or "").strip()
+    if not cleaned:
+        return None
+    try:
+        parsed = json.loads(cleaned)
+    except Exception as exc:
+        raise ValueError(f"{field_label} doit contenir un JSON valide.") from exc
+    return json.dumps(parsed, ensure_ascii=False, separators=(",", ":"))
 
 
 def _serialize_value(value):
@@ -622,9 +664,253 @@ def admin_structure_detail(structure_id: int):
             structure=structure,
             enterprise=intelligence,
             dashboard_mode=_structure_dashboard_mode(),
+            **_workspace_select_options(),
         ),
         200,
     )
+
+
+@admin_bp.post("/structures/<int:structure_id>/workspace")
+@admin_required
+@admin_role_required("superadmin")
+def admin_structure_workspace_update(structure_id: int):
+    structure = _structure_or_403(structure_id)
+    status = (request.form.get("status") or "pending").strip().lower()
+    organization_type = (request.form.get("organization_type") or "").strip()
+    risk_level = (request.form.get("risk_level") or "").strip().lower()
+
+    errors = {}
+    if status not in {"pending", "active", "inactive", "suspended"}:
+        errors["status"] = "Statut invalide."
+    if organization_type and organization_type not in ORGANIZATION_TYPES:
+        errors["organization_type"] = "Type d'organisation invalide."
+    if risk_level and risk_level not in SERVICE_RISK_VALUES:
+        errors["risk_level"] = "Niveau de risque invalide."
+
+    if errors:
+        for msg in errors.values():
+            flash(msg, "danger")
+        return redirect(url_for("admin.admin_structure_detail", structure_id=structure.id), code=303)
+
+    structure.organization_type = organization_type or None
+    structure.status = status
+    structure.description = _normalize_optional_text(request.form.get("description"))
+    structure.legal_name = _normalize_optional_text(request.form.get("legal_name"), max_length=255)
+    structure.registration_number = _normalize_optional_text(
+        request.form.get("registration_number"), max_length=120
+    )
+    structure.website = _normalize_optional_text(request.form.get("website"), max_length=255)
+    structure.email = _normalize_optional_text(request.form.get("email"), max_length=255)
+    structure.phone = _normalize_optional_text(request.form.get("phone"), max_length=80)
+    structure.emergency_phone = _normalize_optional_text(
+        request.form.get("emergency_phone"), max_length=80
+    )
+    structure.opening_hours = _normalize_optional_text(request.form.get("opening_hours"))
+    structure.head_office = _normalize_optional_text(request.form.get("head_office"))
+    structure.territory = _normalize_optional_text(request.form.get("territory"), max_length=255)
+    structure.risk_level = risk_level or None
+    structure.departments_json = serialize_json_list(_textarea_lines(request.form.get("departments")))
+    structure.capabilities_json = serialize_json_list(_textarea_lines(request.form.get("capabilities")))
+    structure.languages_json = serialize_json_list(_textarea_lines(request.form.get("languages")))
+    structure.priority_domains_json = serialize_json_list(_textarea_lines(request.form.get("priority_domains")))
+    structure.accepted_case_types_json = serialize_json_list(
+        _textarea_lines(request.form.get("accepted_case_types"))
+    )
+    structure.required_documents_json = serialize_json_list(
+        _textarea_lines(request.form.get("required_documents"))
+    )
+    structure.supported_populations_json = serialize_json_list(
+        _textarea_lines(request.form.get("supported_populations"))
+    )
+    structure.updated_at = utc_now()
+    db.session.commit()
+
+    audit_admin_action(
+        action="STRUCTURE_WORKSPACE_UPDATED",
+        target_type="Structure",
+        target_id=structure.id,
+        payload={"structure_id": structure.id},
+    )
+    flash("Workspace mis a jour.", "success")
+    return redirect(url_for("admin.admin_structure_detail", structure_id=structure.id), code=303)
+
+
+@admin_bp.post("/structures/<int:structure_id>/contacts/new")
+@admin_required
+@admin_role_required("superadmin")
+def admin_structure_contact_create(structure_id: int):
+    structure = _structure_or_403(structure_id)
+    contact_type = (request.form.get("contact_type") or "").strip().lower()
+    preferred_communication = (request.form.get("preferred_communication") or "").strip().lower()
+    name = _normalize_optional_text(request.form.get("name"), max_length=255)
+    role = _normalize_optional_text(request.form.get("role"), max_length=120)
+    email = _normalize_optional_text(request.form.get("email"), max_length=255)
+    phone = _normalize_optional_text(request.form.get("phone"), max_length=80)
+    availability = _normalize_optional_text(request.form.get("availability"))
+
+    errors = {}
+    if contact_type not in CONTACT_TYPE_VALUES:
+        errors["contact_type"] = "Type de contact invalide."
+    if preferred_communication and preferred_communication not in PREFERRED_COMMUNICATION_VALUES:
+        errors["preferred_communication"] = "Canal prefere invalide."
+    if not any([name, role, email, phone]):
+        errors["contact"] = "Renseigner au moins un nom, role, email ou telephone."
+    try:
+        escalation_order = _bounded_int_or_none(
+            request.form.get("escalation_order") or "",
+            minimum=1,
+            maximum=999,
+            field_label="L'ordre d'escalade",
+        )
+    except ValueError as exc:
+        errors["escalation_order"] = str(exc)
+        escalation_order = None
+
+    if errors:
+        for msg in errors.values():
+            flash(msg, "danger")
+        return redirect(url_for("admin.admin_structure_detail", structure_id=structure.id), code=303)
+
+    duplicate_contact = (
+        StructureContact.query.filter(StructureContact.structure_id == structure.id)
+        .filter(StructureContact.is_active.is_(True))
+        .filter(StructureContact.contact_type == contact_type)
+        .filter(func.coalesce(StructureContact.name, "") == (name or ""))
+        .filter(func.coalesce(StructureContact.role, "") == (role or ""))
+        .filter(func.coalesce(StructureContact.email, "") == (email or ""))
+        .filter(func.coalesce(StructureContact.phone, "") == (phone or ""))
+        .first()
+    )
+    if duplicate_contact is not None:
+        flash("Ce contact existe deja pour cette structure.", "warning")
+        return redirect(url_for("admin.admin_structure_detail", structure_id=structure.id), code=303)
+
+    contact = StructureContact(
+        structure_id=structure.id,
+        contact_type=contact_type,
+        name=name,
+        role=role,
+        email=email,
+        phone=phone,
+        availability=availability,
+        preferred_communication=preferred_communication or None,
+        escalation_order=escalation_order,
+        is_active=True,
+        created_at=utc_now(),
+    )
+    db.session.add(contact)
+    db.session.commit()
+
+    audit_admin_action(
+        action="STRUCTURE_CONTACT_CREATED",
+        target_type="StructureContact",
+        target_id=contact.id,
+        payload={"structure_id": structure.id, "contact_type": contact.contact_type},
+    )
+    flash("Contact ajoute.", "success")
+    return redirect(url_for("admin.admin_structure_detail", structure_id=structure.id), code=303)
+
+
+@admin_bp.post("/structures/<int:structure_id>/coverage/new")
+@admin_required
+@admin_role_required("superadmin")
+def admin_structure_coverage_create(structure_id: int):
+    structure = _structure_or_403(structure_id)
+    area_type = (request.form.get("area_type") or "").strip().lower()
+    geometry_kind = (request.form.get("geometry_kind") or "none").strip().lower()
+    name = _normalize_optional_text(request.form.get("name"), max_length=255)
+    postal_code = _normalize_optional_text(request.form.get("postal_code"), max_length=32)
+    department = _normalize_optional_text(request.form.get("department"), max_length=120)
+    region = _normalize_optional_text(request.form.get("region"), max_length=120)
+    administrative_code = _normalize_optional_text(
+        request.form.get("administrative_code"), max_length=64
+    )
+
+    errors = {}
+    if area_type not in COVERAGE_AREA_TYPE_VALUES:
+        errors["area_type"] = "Type de couverture invalide."
+    if geometry_kind not in GEOMETRY_KIND_VALUES:
+        errors["geometry_kind"] = "Type de geometrie invalide."
+    if area_type == "postal_code" and not postal_code and name:
+        postal_code = name
+    try:
+        coverage_radius_km = _bounded_int_or_none(
+            request.form.get("coverage_radius_km") or "",
+            minimum=0,
+            maximum=5000,
+            field_label="Le rayon de couverture",
+        )
+    except ValueError as exc:
+        errors["coverage_radius_km"] = str(exc)
+        coverage_radius_km = None
+    try:
+        population_served = _bounded_int_or_none(
+            request.form.get("population_served") or "",
+            minimum=0,
+            maximum=100000000,
+            field_label="La population desservie",
+        )
+    except ValueError as exc:
+        errors["population_served"] = str(exc)
+        population_served = None
+
+    if not name:
+        errors["name"] = "Le nom de la zone est requis."
+    try:
+        geometry_data_json = _validated_json_text_or_none(
+            request.form.get("geometry_data_json"),
+            field_label="La reference geometrique",
+        )
+    except ValueError as exc:
+        errors["geometry_data_json"] = str(exc)
+        geometry_data_json = None
+
+    if errors:
+        for msg in errors.values():
+            flash(msg, "danger")
+        return redirect(url_for("admin.admin_structure_detail", structure_id=structure.id), code=303)
+
+    duplicate_area = (
+        StructureCoverageArea.query.filter(StructureCoverageArea.structure_id == structure.id)
+        .filter(StructureCoverageArea.area_type == area_type)
+        .filter(StructureCoverageArea.name == name)
+        .first()
+    )
+    if duplicate_area is not None:
+        flash("Cette zone de couverture existe deja pour cette structure.", "warning")
+        return redirect(url_for("admin.admin_structure_detail", structure_id=structure.id), code=303)
+
+    area = StructureCoverageArea(
+        structure_id=structure.id,
+        area_type=area_type,
+        name=name,
+        postal_code=postal_code,
+        department=department,
+        region=region,
+        administrative_code=administrative_code,
+        coverage_radius_km=float(coverage_radius_km) if coverage_radius_km is not None else None,
+        population_served=population_served,
+        geometry_kind=None if geometry_kind == "none" else geometry_kind,
+        geometry_data_json=geometry_data_json,
+        is_active=True,
+        created_at=utc_now(),
+    )
+    db.session.add(area)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        flash("Cette zone de couverture existe deja pour cette structure.", "warning")
+        return redirect(url_for("admin.admin_structure_detail", structure_id=structure.id), code=303)
+
+    audit_admin_action(
+        action="STRUCTURE_COVERAGE_CREATED",
+        target_type="StructureCoverageArea",
+        target_id=area.id,
+        payload={"structure_id": structure.id, "area_type": area.area_type},
+    )
+    flash("Zone de couverture ajoutee.", "success")
+    return redirect(url_for("admin.admin_structure_detail", structure_id=structure.id), code=303)
 
 
 @admin_bp.get("/structures/<int:structure_id>/services")
@@ -751,6 +1037,7 @@ def admin_structure_service_create(structure_id: int):
         name=name,
         category=category,
         description=(request.form.get("description") or "").strip() or None,
+        notes=(request.form.get("notes") or "").strip() or None,
         status=status or None,
         priority=priority or None,
         availability=availability or None,
