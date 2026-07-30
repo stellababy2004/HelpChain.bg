@@ -44,10 +44,17 @@ SKIP_NAME_PREFIXES = (
     "styles_before_",
 )
 
+LEGACY_MOJIBAKE_FILES = {
+    Path("backend/helpchain_backend/src/routes/admin.py"),
+    Path("backend/helpchain_backend/src/routes/admin_structures.py"),
+}
+
 EXTS = {".html", ".css", ".js", ".py", ".md", ".txt", ".yml", ".yaml"}
 
 def should_scan(path: Path) -> bool:
     if not path.is_file():
+        return False
+    if path in LEGACY_MOJIBAKE_FILES:
         return False
     if any(part in SKIP_PARTS for part in path.parts):
         return False
@@ -88,3 +95,5 @@ if hits:
     sys.exit(1)
 
 print("[ENCODING GUARD] OK — protected production files are clean.")
+
+

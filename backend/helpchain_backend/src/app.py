@@ -948,6 +948,15 @@ def create_app(config_object=None) -> Flask:
         app.logger.exception("Failed to register api blueprint")
         raise
 
+    
+    try:
+        from .routes.zoho_integrations import zoho_integrations_bp
+
+        csrf.exempt(zoho_integrations_bp)
+        app.register_blueprint(zoho_integrations_bp)
+    except Exception as e:
+        app.logger.info("zoho_integrations blueprint not loaded: %s", e)
+
     try:
         from .routes.analytics import analytics_bp
 
@@ -1760,6 +1769,8 @@ def _log_l10n_missing_once(
 if __name__ == "__main__":
     app = create_app()
     app.run(debug=True)
+
+
 
 
 
