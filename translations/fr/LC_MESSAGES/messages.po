@@ -2083,8 +2083,8 @@ msgid "Les détails s’afficheront ici. Rien n’est envoyé automatiquement."
 msgstr "Les détails s’afficheront ici. Rien n’est envoyé automatiquement."
 
 #: templates/admin_analytics.html:117
-msgid " This export contains personal data."
-msgstr " Cette exportation contient des données personnelles."
+msgid "This export contains personal data."
+msgstr "Cette exportation contient des données personnelles."
 
 #: templates/base.html:665
 msgid "Navigation comfort"
