@@ -1,0 +1,192 @@
+{% extends "layouts/admin_workspace.html" %}
+{% block title %}{{ _('Admin') }} - {{ detail.service.name }} | HelpChain{% endblock %}
+{% block admin_body_class %} hc-admin-requests-page{% endblock %}
+
+{% block admin_content %}
+{% set service = detail.service %}
+<div class="container-fluid mt-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+      <div class="text-muted small">{{ structure.name }} · {{ service.category }}</div>
+      <h2 class="mb-1">{{ service.name }}</h2>
+      <div class="d-flex flex-wrap gap-2">
+        <span class="badge {% if service.is_available %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ service.availability }}</span>
+        <span class="badge text-bg-light border">{{ service.priority }}</span>
+        <span class="badge text-bg-light border">{{ service.risk_level }}</span>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary btn-sm" href="#service-workspace">Modifier le service</a>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.admin_structure_services', structure_id=structure.id) }}">Retour aux services</a>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-12 col-xl-8">
+      <div class="card shadow-sm p-3 mb-4" id="service-workspace">
+        <h5 class="mb-3">Espace de travail du service</h5>
+        <form method="POST" action="{{ url_for('admin.admin_structure_service_update', structure_id=structure.id, service_id=service.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label" for="service_description">Description</label>
+              <textarea class="form-control" id="service_description" name="description" rows="3">{{ '' if 'non renseignée' in service.description else service.description }}</textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="service_notes">Notes opérationnelles</label>
+              <textarea class="form-control" id="service_notes" name="notes" rows="2">{{ '' if 'non renseignées' in service.notes else service.notes }}</textarea>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="service_category">Catégorie</label>
+              <select class="form-select" id="service_category" name="category">
+                {% for key, label in service_categories.items() %}
+                  <option value="{{ label }}" {% if service.category_key == key or service.category == label %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="service_status">Statut</label>
+              <select class="form-select" id="service_status" name="status">
+                <option value="">Non renseigné</option>
+                {% for value in ['active', 'inactive', 'limited', 'saturated', 'available', 'unavailable'] %}
+                  <option value="{{ value }}" {% if service.status|lower == service_statuses.get(value, value)|lower %}selected{% endif %}>{{ service_statuses.get(value) }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label" for="service_availability">Disponibilité</label>
+              <select class="form-select" id="service_availability" name="availability">
+                <option value="">Non renseignée</option>
+                {% for value in ['available', 'unavailable', 'limited', 'saturated'] %}
+                  <option value="{{ value }}" {% if service.availability|lower == service_statuses.get(value, value)|lower %}selected{% endif %}>{{ service_statuses.get(value) }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label" for="service_priority">Priorité</label>
+              <select class="form-select" id="service_priority" name="priority">
+                <option value="">Non renseignée</option>
+                {% for value in ['low', 'medium', 'high', 'urgent', 'critical'] %}
+                  <option value="{{ value }}" {% if service.priority|lower == service_priorities.get(value, value)|lower %}selected{% endif %}>{{ service_priorities.get(value) }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label" for="service_risk">Niveau de risque</label>
+              <select class="form-select" id="service_risk" name="risk_level">
+                <option value="">Non renseigné</option>
+                {% for value in ['low', 'medium', 'high', 'critical'] %}
+                  <option value="{{ value }}" {% if service.risk_level|lower == service_risks.get(value, value)|lower %}selected{% endif %}>{{ service_risks.get(value) }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-3"><label class="form-label" for="service_capacity">Capacité</label><input class="form-control" id="service_capacity" name="capacity" type="number" min="0" value="{{ service.capacity if service.capacity is not none else '' }}"></div>
+            <div class="col-12 col-md-3"><label class="form-label" for="service_available_capacity">Capacité disponible</label><input class="form-control" id="service_available_capacity" name="available_capacity_override" type="number" min="0" value="{{ service.available_capacity_override if service.available_capacity_override is not none else '' }}"></div>
+            <div class="col-12 col-md-3"><label class="form-label" for="service_sla">SLA (minutes)</label><input class="form-control" id="service_sla" name="response_sla_hours" type="number" min="0" value="{{ service.response_sla_hours if service.response_sla_hours is not none else '' }}"></div>
+            <div class="col-12 col-md-3"><label class="form-label" for="service_waiting">Temps d'attente (minutes)</label><input class="form-control" id="service_waiting" name="waiting_time_minutes" type="number" min="0" value="{{ service.waiting_time_minutes if service.waiting_time_minutes is not none else '' }}"></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="service_opening_hours">Horaires</label><textarea class="form-control" id="service_opening_hours" name="opening_hours" rows="2">{{ '' if 'non renseignés' in service.opening_hours else service.opening_hours }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="service_territory">Territoire</label><textarea class="form-control" id="service_territory" name="territory" rows="2">{{ '' if 'non renseigné' in service.territory else service.territory }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="service_target_population">Public cible</label><textarea class="form-control" id="service_target_population" name="target_population" rows="2">{{ '' if 'non renseigné' in service.target_population else service.target_population }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="service_eligibility">Règles d'éligibilité</label><textarea class="form-control" id="service_eligibility" name="eligibility" rows="2">{{ '' if 'non renseignées' in service.eligibility else service.eligibility }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="service_required_documents">Documents requis</label><textarea class="form-control" id="service_required_documents" name="required_documents" rows="3">{{ service.required_documents|join('\n') }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="service_languages">Langues supportées</label><textarea class="form-control" id="service_languages" name="languages" rows="3">{{ service.languages|join('\n') }}</textarea></div>
+            <div class="col-12 col-md-4"><label class="form-label" for="service_contact_name">Contact assigné</label><input class="form-control" id="service_contact_name" name="contact_name" value="{{ '' if 'non renseigné' in service.contact.name else service.contact.name }}"></div>
+            <div class="col-12 col-md-4"><label class="form-label" for="service_contact_email">E-mail du contact</label><input class="form-control" id="service_contact_email" name="contact_email" value="{{ '' if 'non renseigné' in service.contact.email else service.contact.email }}"></div>
+            <div class="col-12 col-md-4"><label class="form-label" for="service_contact_phone">Téléphone contact</label><input class="form-control" id="service_contact_phone" name="contact_phone" value="{{ '' if 'non renseigné' in service.contact.phone else service.contact.phone }}"></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="service_professionals">Professionnels assignés</label><textarea class="form-control" id="service_professionals" name="professionals" rows="4">{{ service.responsible_professionals|join('\n') }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="service_routing_rules">Règles de routage</label><textarea class="form-control" id="service_routing_rules" name="routing_rules" rows="4">{{ service.routing_rules|join('\n') }}</textarea></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="service_referral_required">Orientation requise</label><select class="form-select" id="service_referral_required" name="referral_required"><option value="">Non renseigné</option><option value="yes" {% if service.referral_required is sameas true %}selected{% endif %}>Oui</option><option value="no" {% if service.referral_required is sameas false %}selected{% endif %}>Non</option></select></div>
+            <div class="col-12 col-md-6"><label class="form-label" for="service_emergency_support">Prise en charge d'urgence</label><select class="form-select" id="service_emergency_support" name="emergency_support"><option value="">Non renseigné</option><option value="yes" {% if service.emergency_support is sameas true %}selected{% endif %}>Oui</option><option value="no" {% if service.emergency_support is sameas false %}selected{% endif %}>Non</option></select></div>
+          </div>
+          <div class="mt-3">
+            <button class="btn btn-primary btn-sm" type="submit">Enregistrer le service</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Description</h5>
+        <p class="mb-0">{{ service.description }}</p>
+      </div>
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Conditions de prise en charge</h5>
+        <div class="row g-3">
+          <div class="col-12 col-md-6"><div class="text-muted small">Public cible</div><strong>{{ service.target_population }}</strong></div>
+          <div class="col-12 col-md-6"><div class="text-muted small">Éligibilité</div><strong>{{ service.eligibility }}</strong></div>
+          <div class="col-12"><div class="text-muted small">Documents requis</div>{{ service.required_documents|join(', ') if service.required_documents else 'Aucun document requis renseigné.' }}</div>
+          <div class="col-12"><div class="text-muted small">Langues</div>{{ service.languages|join(', ') if service.languages else 'Aucune langue renseignée.' }}</div>
+        </div>
+      </div>
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Dossiers rattachés</h5>
+        {% for case in detail.cases %}
+          <div class="border-bottom py-2">
+            <div class="fw-semibold">{{ case.title }}</div>
+            <div class="small text-muted">{{ case.status }} · {{ case.priority }} · {{ case.created_at|format_datetime_fr if case.created_at else 'Date indisponible' }}</div>
+          </div>
+        {% else %}
+          <div class="text-muted">Aucun dossier rattaché à ce service.</div>
+        {% endfor %}
+      </div>
+      <div class="card shadow-sm p-3">
+        <h5 class="mb-3">Activité récente</h5>
+        {% for event in detail.recent_activity %}
+          <div class="border-bottom py-2">
+            <div class="fw-semibold">{{ event.label }}</div>
+            <div class="small text-muted">{{ event.timestamp|format_datetime_fr if event.timestamp else 'Date indisponible' }}</div>
+          </div>
+        {% else %}
+          <div class="text-muted">Aucune activité récente. Les événements apparaîtront ici.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="col-12 col-xl-4">
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Capacité actuelle</h5>
+        <div class="small"><strong>Capacité :</strong> {{ service.capacity_display }}</div>
+        <div class="small"><strong>Capacité disponible :</strong> {{ service.available_capacity_display }}</div>
+        <div class="small"><strong>Dossiers actifs :</strong> {{ service.active_cases }}</div>
+        <div class="small"><strong>Temps d'attente :</strong> {{ service.average_waiting_time_display }}</div>
+        <div class="small"><strong>SLA :</strong> {{ service.response_sla_display }}</div>
+      </div>
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Professionnels</h5>
+        <div>{{ service.responsible_professionals_display }}</div>
+      </div>
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Disponibilité et territoire</h5>
+        <div class="small"><strong>Horaires :</strong> {{ service.opening_hours }}</div>
+        <div class="small"><strong>Territoire :</strong> {{ service.territory }}</div>
+        <div class="small"><strong>Routage :</strong> {{ service.routing_rules_display }}</div>
+        <div class="small"><strong>Orientation :</strong> {{ service.referral_required_display }}</div>
+        <div class="small"><strong>Urgence :</strong> {{ service.emergency_support_display }}</div>
+      </div>
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Contact</h5>
+        <div class="small"><strong>Nom :</strong> {{ service.contact.name }}</div>
+        <div class="small"><strong>Email :</strong> {{ service.contact.email }}</div>
+        <div class="small"><strong>Téléphone :</strong> {{ service.contact.phone }}</div>
+      </div>
+      <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Performance</h5>
+        <div class="small text-muted mb-2">Source : {{ detail.performance.source }}</div>
+        <div class="small"><strong>Dossiers actifs :</strong> {{ detail.performance.active_cases }}</div>
+        <div class="small"><strong>Temps d'attente :</strong> {{ detail.performance.average_waiting_time }}</div>
+        <div class="small"><strong>SLA :</strong> {{ detail.performance.response_sla }}</div>
+      </div>
+      <div class="card shadow-sm p-3">
+        <h5 class="mb-3">Alertes</h5>
+        {% for alert in detail.alerts %}
+          <div class="d-flex justify-content-between border-bottom py-2">
+            <span>{{ alert.label }}</span>
+            <span class="badge {% if alert.severity == 'critical' %}text-bg-danger{% else %}text-bg-warning{% endif %}">{{ alert.source }}</span>
+          </div>
+        {% else %}
+          <div class="text-muted">Aucune alerte pour ce service.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

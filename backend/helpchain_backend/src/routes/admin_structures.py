@@ -188,6 +188,7 @@ SERVICE_PRIORITY_VALUES = set(PRIORITY_LABELS)
 SERVICE_RISK_VALUES = set(RISK_LABELS)
 SERVICE_CAPACITY_MAX = 100000
 SERVICE_SLA_MINUTES_MAX = 525600
+SERVICE_WAITING_MINUTES_MAX = 525600
 CONTACT_TYPE_VALUES = set(CONTACT_TYPE_LABELS)
 PREFERRED_COMMUNICATION_VALUES = set(PREFERRED_COMMUNICATION_LABELS)
 COVERAGE_AREA_TYPE_VALUES = set(COVERAGE_AREA_LABELS)
@@ -229,6 +230,19 @@ def _service_select_options() -> dict[str, object]:
         "service_priorities": PRIORITY_LABELS,
         "service_risks": RISK_LABELS,
     }
+
+
+def _normalize_service_category(value: str | None) -> str:
+    cleaned = str(value or "").strip()
+    if not cleaned:
+        return ""
+    if cleaned in SERVICE_CATEGORIES:
+        return cleaned
+    cleaned_lower = cleaned.lower()
+    for key, label in SERVICE_CATEGORIES.items():
+        if str(label).strip().lower() == cleaned_lower:
+            return key
+    return cleaned
 
 
 def _workspace_select_options() -> dict[str, object]:
@@ -950,7 +964,7 @@ def admin_structure_service_new(structure_id: int):
 def admin_structure_service_create(structure_id: int):
     structure = _structure_or_403(structure_id)
     name = (request.form.get("name") or "").strip()
-    category = (request.form.get("category") or "").strip()
+    category = _normalize_service_category(request.form.get("category"))
     status = (request.form.get("status") or "").strip().lower()
     priority = (request.form.get("priority") or "").strip().lower()
     availability = (request.form.get("availability") or "").strip().lower()
@@ -1090,11 +1104,154 @@ def admin_structure_service_detail(structure_id: int, service_id: int):
         abort(404)
     return (
         render_template(
-            "admin/structure_service_detail.html",
+            "admin/structure_service_workspace.html",
             structure=structure,
             detail=detail,
+            **_service_select_options(),
         ),
         200,
+    )
+
+
+@admin_bp.post("/structures/<int:structure_id>/services/<int:service_id>/workspace")
+@admin_required
+@admin_role_required("superadmin")
+def admin_structure_service_update(structure_id: int, service_id: int):
+    structure = _structure_or_403(structure_id)
+    service = StructureService.query.filter(
+        StructureService.structure_id == structure.id,
+        StructureService.id == service_id,
+    ).first()
+    if service is None:
+        abort(404)
+
+    category = _normalize_service_category(request.form.get("category"))
+    status = (request.form.get("status") or "").strip().lower()
+    priority = (request.form.get("priority") or "").strip().lower()
+    availability = (request.form.get("availability") or "").strip().lower()
+    risk_level = (request.form.get("risk_level") or "").strip().lower()
+    errors = {}
+    if not category or category not in SERVICE_CATEGORIES:
+        errors["category"] = "Catégorie de service invalide."
+    if status and status not in SERVICE_STATUS_VALUES:
+        errors["status"] = "Statut de service invalide."
+    if availability and availability not in SERVICE_AVAILABILITY_VALUES:
+        errors["availability"] = "Disponibilité invalide."
+    if priority and priority not in SERVICE_PRIORITY_VALUES:
+        errors["priority"] = "Priorité invalide."
+    if risk_level and risk_level not in SERVICE_RISK_VALUES:
+        errors["risk_level"] = "Niveau de risque invalide."
+    try:
+        capacity = _bounded_int_or_none(
+            request.form.get("capacity") or "",
+            minimum=0,
+            maximum=SERVICE_CAPACITY_MAX,
+            field_label="La capacité",
+        )
+    except ValueError as exc:
+        errors["capacity"] = str(exc)
+        capacity = None
+    try:
+        available_capacity_override = _bounded_int_or_none(
+            request.form.get("available_capacity_override") or "",
+            minimum=0,
+            maximum=SERVICE_CAPACITY_MAX,
+            field_label="La capacité disponible",
+        )
+    except ValueError as exc:
+        errors["available_capacity_override"] = str(exc)
+        available_capacity_override = None
+    try:
+        response_sla_hours = _bounded_int_or_none(
+            request.form.get("response_sla_hours") or "",
+            minimum=0,
+            maximum=SERVICE_SLA_MINUTES_MAX,
+            field_label="Le SLA",
+        )
+    except ValueError as exc:
+        errors["response_sla_hours"] = str(exc)
+        response_sla_hours = None
+    try:
+        waiting_time_minutes = _bounded_int_or_none(
+            request.form.get("waiting_time_minutes") or "",
+            minimum=0,
+            maximum=SERVICE_WAITING_MINUTES_MAX,
+            field_label="Le temps d'attente",
+        )
+    except ValueError as exc:
+        errors["waiting_time_minutes"] = str(exc)
+        waiting_time_minutes = None
+    try:
+        referral_required = _bool_or_none(
+            request.form.get("referral_required"),
+            field_label="Orientation requise",
+        )
+    except ValueError as exc:
+        errors["referral_required"] = str(exc)
+        referral_required = None
+    try:
+        emergency_support = _bool_or_none(
+            request.form.get("emergency_support"),
+            field_label="Prise en charge d'urgence",
+        )
+    except ValueError as exc:
+        errors["emergency_support"] = str(exc)
+        emergency_support = None
+
+    if capacity is not None and available_capacity_override is not None and available_capacity_override > capacity:
+        errors["available_capacity_override"] = "La capacité disponible ne peut pas dépasser la capacité."
+
+    if errors:
+        for msg in errors.values():
+            flash(msg, "danger")
+        return redirect(
+            url_for("admin.admin_structure_service_detail", structure_id=structure.id, service_id=service.id),
+            code=303,
+        )
+
+    service.description = _normalize_optional_text(request.form.get("description"))
+    service.notes = _normalize_optional_text(request.form.get("notes"))
+    service.category = category
+    service.status = status or None
+    service.priority = priority or None
+    service.risk_level = risk_level or None
+    service.availability = availability or None
+    service.capacity = capacity
+    service.available_capacity_override = available_capacity_override
+    service.response_sla_hours = response_sla_hours
+    service.waiting_time_minutes = waiting_time_minutes
+    service.opening_hours = _normalize_optional_text(request.form.get("opening_hours"))
+    service.target_population = _normalize_optional_text(request.form.get("target_population"))
+    service.eligibility = _normalize_optional_text(request.form.get("eligibility"))
+    service.required_documents_json = serialize_json_list(
+        _textarea_lines(request.form.get("required_documents"))
+    )
+    service.languages_json = serialize_json_list(_textarea_lines(request.form.get("languages")))
+    service.contact_name = _normalize_optional_text(request.form.get("contact_name"), max_length=255)
+    service.contact_email = _normalize_optional_text(request.form.get("contact_email"), max_length=255)
+    service.contact_phone = _normalize_optional_text(request.form.get("contact_phone"), max_length=80)
+    service.responsible_professionals_json = serialize_json_list(
+        _textarea_lines(request.form.get("professionals"))
+    )
+    service.routing_rules_json = serialize_json_list(_textarea_lines(request.form.get("routing_rules")))
+    service.referral_required = referral_required
+    service.emergency_support = emergency_support
+    service.territory = _normalize_optional_text(request.form.get("territory"), max_length=255)
+    service.coverage = service.territory
+    service.is_active = (status or "active") != "inactive"
+    service.updated_at = utc_now()
+    db.session.commit()
+
+    audit_admin_action(
+        action="STRUCTURE_SERVICE_UPDATED",
+        target_type="StructureService",
+        target_id=service.id,
+        payload={"structure_id": structure.id, "service_id": service.id},
+    )
+    flash("Service mis a jour.", "success")
+    return redirect(
+        url_for("admin.admin_structure_service_detail", structure_id=structure.id, service_id=service.id),
+        code=303,
     )
 
 

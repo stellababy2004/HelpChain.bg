@@ -1,5 +1,6 @@
 import pytest
 from contextlib import contextmanager
+import re
 
 from sqlalchemy import event
 
@@ -83,6 +84,12 @@ def _make_request(session, *, title, user_id, structure_id):
     session.add(req)
     session.commit()
     return req
+
+
+def _extract_csrf(html: str) -> str:
+    match = re.search(r'name="csrf_token"\s+value="([^"]+)"', html)
+    assert match is not None
+    return match.group(1)
 
 
 def test_structures_list_requires_global_admin(client):
@@ -626,6 +633,561 @@ def test_tenant_admin_cannot_access_foreign_service_detail(client, session):
 
     resp = client.get(
         f"/admin/structures/{foreign.id}/services/{service.id}",
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 403
+
+
+def test_service_workspace_renders_editor(client, session):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name="Workspace Render Service", slug="workspace-render-service")
+    service = StructureService(
+        structure_id=st.id,
+        code="workspace-render",
+        name="Workspace Render",
+        category="social_support",
+        status="active",
+        availability="available",
+    )
+    session.add(service)
+    session.commit()
+    admin = _make_admin(
+        session,
+        username="service_workspace_render_admin",
+        email="service_workspace_render_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.get(f"/admin/structures/{st.id}/services/{service.id}", follow_redirects=False)
+    body = resp.get_data(as_text=True)
+
+    assert resp.status_code == 200
+    assert "Espace de travail du service" in body
+    assert "Modifier le service" in body
+    assert "E-mail du contact" in body
+    assert 'name="csrf_token"' in body
+    assert "Règles de routage" in body
+
+
+def test_service_workspace_update_persists_operational_fields(client, session):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name="Workspace Update Service", slug="workspace-update-service")
+    service = StructureService(
+        structure_id=st.id,
+        code="workspace-update",
+        name="Workspace Update",
+        category="social_support",
+        status="active",
+        availability="available",
+        capacity=10,
+        is_active=True,
+    )
+    session.add(service)
+    session.commit()
+    admin = _make_admin(
+        session,
+        username="service_workspace_update_admin",
+        email="service_workspace_update_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/services/{service.id}/workspace",
+        data={
+            "category": "food_assistance",
+            "status": "active",
+            "availability": "available",
+            "priority": "high",
+            "risk_level": "critical",
+            "description": "Operational desk",
+            "notes": "Needs daily monitoring",
+            "capacity": "12",
+            "available_capacity_override": "7",
+            "response_sla_hours": "90",
+            "waiting_time_minutes": "45",
+            "opening_hours": "24/7",
+            "target_population": "Families",
+            "eligibility": "Referral required",
+            "required_documents": "ID\nProof of address",
+            "languages": "fr\nbg",
+            "contact_name": "Ops Lead",
+            "contact_email": "opslead@test.local",
+            "contact_phone": "0102030405",
+            "professionals": "Marie Martin\nPaul Dupont",
+            "routing_rules": "priority:critical\nterritory:local",
+            "referral_required": "yes",
+            "emergency_support": "no",
+            "territory": "Paris 11e",
+        },
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 303
+    session.refresh(service)
+    assert service.category == "food_assistance"
+    assert service.priority == "high"
+    assert service.risk_level == "critical"
+    assert service.capacity == 12
+    assert service.available_capacity_override == 7
+    assert service.response_sla_hours == 90
+    assert service.waiting_time_minutes == 45
+    assert service.routing_rules_json is not None
+    assert service.contact_name == "Ops Lead"
+    assert service.coverage == "Paris 11e"
+
+    intelligence = client.get(f"/admin/structures/{st.id}/operational-intelligence", follow_redirects=False)
+    payload = intelligence.get_json()
+    service_payload = next(item for item in payload["services"] if item["id"] == service.id)
+    assert service_payload["available_capacity"] == 7
+    assert service_payload["routing_rules"] == ["priority:critical", "territory:local"]
+    assert payload["readiness"]["score"] > 0
+    assert "Service operating hours" not in payload["readiness"]["missing_information"]
+    assert "Configured capacity" not in payload["readiness"]["missing_information"]
+    assert payload["services_dashboard"]["assigned_operators"] == 2
+    assert payload["services_dashboard"]["services_with_sla"] >= 1
+    ai_service = next(
+        item
+        for item in payload["ai_readiness"]["matching_score_inputs"]["services"]
+        if item["service_id"] == service.id
+    )
+    assert ai_service["routing_rules"] == ["priority:critical", "territory:local"]
+    assert ai_service["available_capacity"] == 7
+
+
+def test_service_workspace_update_rejects_invalid_available_capacity(client, session):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name="Workspace Invalid Capacity", slug="workspace-invalid-capacity")
+    service = StructureService(
+        structure_id=st.id,
+        code="workspace-invalid",
+        name="Workspace Invalid",
+        category="social_support",
+    )
+    session.add(service)
+    session.commit()
+    admin = _make_admin(
+        session,
+        username="service_workspace_invalid_admin",
+        email="service_workspace_invalid_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/services/{service.id}/workspace",
+        data={
+            "category": "social_support",
+            "capacity": "4",
+            "available_capacity_override": "5",
+        },
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 303
+    session.refresh(service)
+    assert service.available_capacity_override is None
+
+
+def test_service_workspace_update_unknown_structure_returns_404(client, session):
+    admin = _make_admin(
+        session,
+        username="service_workspace_unknown_structure_admin",
+        email="service_workspace_unknown_structure_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        "/admin/structures/999999/services/1/workspace",
+        data={"category": "Accompagnement social"},
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 404
+
+
+def test_service_workspace_update_unknown_service_returns_404(client, session):
+    st = _make_structure(session, name="Workspace Unknown Service", slug="workspace-unknown-service")
+    admin = _make_admin(
+        session,
+        username="service_workspace_unknown_service_admin",
+        email="service_workspace_unknown_service_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/services/999999/workspace",
+        data={"category": "Accompagnement social"},
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 404
+
+
+def test_service_workspace_update_foreign_service_id_returns_404(client, session):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name="Workspace Local Service Scope", slug="workspace-local-service-scope")
+    foreign = _make_structure(session, name="Workspace Foreign Service Scope", slug="workspace-foreign-service-scope")
+    foreign_service = StructureService(
+        structure_id=foreign.id,
+        code="foreign-scope",
+        name="Foreign Scope",
+        category="social_support",
+    )
+    session.add(foreign_service)
+    session.commit()
+    admin = _make_admin(
+        session,
+        username="service_workspace_foreign_service_admin",
+        email="service_workspace_foreign_service_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/services/{foreign_service.id}/workspace",
+        data={"category": "Accompagnement social"},
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 404
+
+
+def test_service_workspace_update_requires_authentication(client, session):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name="Workspace Save Auth", slug="workspace-save-auth")
+    service = StructureService(
+        structure_id=st.id,
+        code="workspace-save-auth",
+        name="Workspace Save Auth",
+        category="social_support",
+    )
+    session.add(service)
+    session.commit()
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/services/{service.id}/workspace",
+        data={"category": "Accompagnement social"},
+        follow_redirects=False,
+    )
+
+    assert resp.status_code in (302, 303)
+    assert "/admin/login" in (resp.headers.get("Location") or "")
+
+
+@pytest.mark.parametrize("role", ["admin", "ops", "readonly"])
+def test_service_workspace_update_blocks_non_superadmin_roles(client, session, role):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name=f"Workspace Role {role}", slug=f"workspace-role-{role}")
+    service = StructureService(
+        structure_id=st.id,
+        code=f"workspace-role-{role}",
+        name=f"Workspace Role {role}",
+        category="social_support",
+    )
+    session.add(service)
+    session.commit()
+    admin = _make_admin(
+        session,
+        username=f"service_workspace_{role}_admin",
+        email=f"service_workspace_{role}_admin@test.local",
+        role=role,
+        structure_id=st.id,
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/services/{service.id}/workspace",
+        data={"category": "Accompagnement social"},
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 403
+
+
+def test_service_workspace_update_invalid_values_do_not_partially_persist(client, session):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name="Workspace Atomic Save", slug="workspace-atomic-save")
+    service = StructureService(
+        structure_id=st.id,
+        code="workspace-atomic",
+        name="Workspace Atomic",
+        category="social_support",
+        description="Initial description",
+        capacity=4,
+        available_capacity_override=2,
+        priority="medium",
+        status="active",
+        is_active=True,
+    )
+    session.add(service)
+    session.commit()
+    admin = _make_admin(
+        session,
+        username="service_workspace_atomic_admin",
+        email="service_workspace_atomic_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/services/{service.id}/workspace",
+        data={
+            "category": "Accompagnement social",
+            "status": "bad-status",
+            "description": "Should not persist",
+            "capacity": "9",
+            "available_capacity_override": "3",
+        },
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 303
+    session.refresh(service)
+    assert service.status == "active"
+    assert service.description == "Initial description"
+    assert service.capacity == 4
+    assert service.available_capacity_override == 2
+
+
+def test_service_workspace_update_empty_optional_values_remain_neutral(client, session):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name="Workspace Empty Optional", slug="workspace-empty-optional")
+    service = StructureService(
+        structure_id=st.id,
+        code="workspace-empty",
+        name="Workspace Empty",
+        category="social_support",
+        status="active",
+        availability="available",
+        is_active=True,
+        description="Filled",
+        notes="Filled",
+        capacity=5,
+        available_capacity_override=1,
+        response_sla_hours=30,
+        waiting_time_minutes=15,
+        responsible_professionals_json='["Alice"]',
+        routing_rules_json='["existing"]',
+        contact_name="Lead",
+        target_population="Families",
+    )
+    session.add(service)
+    session.commit()
+    admin = _make_admin(
+        session,
+        username="service_workspace_empty_optional_admin",
+        email="service_workspace_empty_optional_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/services/{service.id}/workspace",
+        data={
+            "category": "Accompagnement social",
+            "status": "",
+            "availability": "",
+            "priority": "",
+            "risk_level": "",
+            "description": "",
+            "notes": "",
+            "capacity": "",
+            "available_capacity_override": "",
+            "response_sla_hours": "",
+            "waiting_time_minutes": "",
+            "opening_hours": "",
+            "target_population": "",
+            "eligibility": "",
+            "required_documents": "",
+            "languages": "",
+            "contact_name": "",
+            "contact_email": "",
+            "contact_phone": "",
+            "professionals": "",
+            "routing_rules": "",
+            "referral_required": "",
+            "emergency_support": "",
+            "territory": "",
+        },
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 303
+    session.refresh(service)
+    assert service.description is None
+    assert service.notes is None
+    assert service.capacity is None
+    assert service.available_capacity_override is None
+    assert service.response_sla_hours is None
+    assert service.waiting_time_minutes is None
+    assert service.contact_name is None
+    assert service.routing_rules_json is None
+
+    detail = client.get(f"/admin/structures/{st.id}/services/{service.id}", follow_redirects=False)
+    body = detail.get_data(as_text=True)
+    assert detail.status_code == 200
+    assert "Description non renseign" in body
+    assert "Aucune règle de routage" in body
+
+
+def test_service_workspace_update_duplicate_submission_is_safe(client, session):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name="Workspace Duplicate Save", slug="workspace-duplicate-save")
+    service = StructureService(
+        structure_id=st.id,
+        code="workspace-duplicate",
+        name="Workspace Duplicate",
+        category="social_support",
+    )
+    session.add(service)
+    session.commit()
+    admin = _make_admin(
+        session,
+        username="service_workspace_duplicate_admin",
+        email="service_workspace_duplicate_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+    payload = {
+        "category": "Accompagnement social",
+        "status": "active",
+        "availability": "available",
+        "capacity": "8",
+        "available_capacity_override": "6",
+        "routing_rules": "priority:high",
+    }
+
+    first = client.post(
+        f"/admin/structures/{st.id}/services/{service.id}/workspace",
+        data=payload,
+        follow_redirects=False,
+    )
+    second = client.post(
+        f"/admin/structures/{st.id}/services/{service.id}/workspace",
+        data=payload,
+        follow_redirects=False,
+    )
+
+    assert first.status_code == 303
+    assert second.status_code == 303
+    session.refresh(service)
+    assert StructureService.query.filter_by(structure_id=st.id, code="workspace-duplicate").count() == 1
+    assert service.available_capacity_override == 6
+    assert service.routing_rules_json == '["priority:high"]'
+
+
+def test_service_workspace_post_accepts_valid_csrf_when_enabled(client, session):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name="Workspace CSRF", slug="workspace-csrf")
+    service = StructureService(
+        structure_id=st.id,
+        code="workspace-csrf",
+        name="Workspace CSRF",
+        category="social_support",
+    )
+    session.add(service)
+    session.commit()
+    admin = _make_admin(
+        session,
+        username="service_workspace_csrf_admin",
+        email="service_workspace_csrf_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+    client.application.config["WTF_CSRF_ENABLED"] = True
+
+    page = client.get(f"/admin/structures/{st.id}/services/{service.id}", follow_redirects=False)
+    token = _extract_csrf(page.get_data(as_text=True))
+    resp = client.post(
+        f"/admin/structures/{st.id}/services/{service.id}/workspace",
+        data={"csrf_token": token, "category": "Accompagnement social"},
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 303
+
+
+def test_service_workspace_update_escapes_stored_html_on_reload(client, session):
+    from backend.models import StructureService
+
+    st = _make_structure(session, name="Workspace XSS", slug="workspace-xss")
+    service = StructureService(
+        structure_id=st.id,
+        code="workspace-xss",
+        name="Workspace XSS",
+        category="social_support",
+    )
+    session.add(service)
+    session.commit()
+    admin = _make_admin(
+        session,
+        username="service_workspace_xss_admin",
+        email="service_workspace_xss_admin@test.local",
+        role="superadmin",
+    )
+    _login_admin(client, admin)
+    script = '<script>alert("xss")</script>'
+
+    resp = client.post(
+        f"/admin/structures/{st.id}/services/{service.id}/workspace",
+        data={
+            "category": "Accompagnement social",
+            "description": script,
+            "notes": script,
+            "eligibility": script,
+            "routing_rules": script,
+            "contact_name": script,
+        },
+        follow_redirects=False,
+    )
+
+    assert resp.status_code == 303
+    detail = client.get(f"/admin/structures/{st.id}/services/{service.id}", follow_redirects=False)
+    body = detail.get_data(as_text=True)
+    assert "<script>alert(" not in body
+    assert "&lt;script&gt;alert" in body
+
+
+def test_tenant_admin_cannot_post_foreign_service_workspace(client, session):
+    from backend.models import StructureService
+
+    own = _make_structure(session, name="Own Service Workspace", slug="own-service-workspace")
+    foreign = _make_structure(session, name="Foreign Service Workspace", slug="foreign-service-workspace")
+    service = StructureService(
+        structure_id=foreign.id,
+        code="foreign-workspace",
+        name="Foreign Workspace",
+        category="social_support",
+    )
+    session.add(service)
+    session.commit()
+    admin = _make_admin(
+        session,
+        username="tenant_service_workspace_admin",
+        email="tenant_service_workspace_admin@test.local",
+        role="superadmin",
+        structure_id=own.id,
+    )
+    _login_admin(client, admin)
+
+    resp = client.post(
+        f"/admin/structures/{foreign.id}/services/{service.id}/workspace",
+        data={"category": "social_support"},
         follow_redirects=False,
     )
 

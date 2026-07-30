@@ -8,14 +8,29 @@ code queries tables such as `admin_users`.
 
 import os
 import pathlib
+import uuid
 
 import pytest
 
+def _ensure_backend_test_db_env() -> None:
+    """Point backend-only tests at a writable, isolated SQLite database."""
+    if os.environ.get("DATABASE_URL"):
+        return
+
+    runtime_root = pathlib.Path(__file__).resolve().parents[1] / ".pytest-runtime"
+    test_db_dir = runtime_root / "backend-db"
+    test_db_dir.mkdir(parents=True, exist_ok=True)
+    test_db_path = test_db_dir / f"test_local_{os.getpid()}_{uuid.uuid4().hex[:8]}.sqlite"
+    test_db_uri = f"sqlite:///{test_db_path.as_posix()}"
+
+    os.environ["DATABASE_URL"] = test_db_uri
+    os.environ.setdefault("SQLALCHEMY_DATABASE_URI", test_db_uri)
+    os.environ.setdefault("HC_DB_PATH", str(test_db_path))
+
+
 # 1) Ensure a file-backed SQLite URI is available early so the Flask app
 #    binds its engine to a persistent test DB file (shared across connections).
-if not os.environ.get("DATABASE_URL"):
-    test_db_path = pathlib.Path(__file__).with_name("test_local.sqlite")
-    os.environ["DATABASE_URL"] = f"sqlite:///{test_db_path.as_posix()}"
+_ensure_backend_test_db_env()
 
 # Mark we are running tests to activate test-specific paths in the app
 os.environ.setdefault("HELPCHAIN_TESTING", "1")
@@ -127,6 +142,19 @@ def prepare_database():
                     _db.drop_all()
             except Exception:
                 pass
+        try:
+            db_url = os.environ.get("DATABASE_URL") or ""
+            if db_url.startswith("sqlite:///"):
+                db_path = pathlib.Path(db_url.replace("sqlite:///", "", 1))
+                for candidate in (
+                    db_path,
+                    db_path.with_suffix(db_path.suffix + "-shm"),
+                    db_path.with_suffix(db_path.suffix + "-wal"),
+                ):
+                    if candidate.exists():
+                        candidate.unlink()
+        except Exception:
+            pass
 
     @pytest.fixture(scope="session", autouse=True)
     def external_admin_stub_backend():

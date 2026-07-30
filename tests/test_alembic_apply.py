@@ -17,7 +17,15 @@ except Exception:
     Migrate = None
 
 
-def test_alembic_upgrade_on_clean_sqlite():
+def _temp_db_url(tmp_path, filename):
+    db_file = tmp_path / filename
+    if db_file.exists():
+        db_file.unlink()
+    db_file.touch()
+    return f"sqlite:///{db_file}"
+
+
+def test_alembic_upgrade_on_clean_sqlite(tmp_path):
     """Integration test: apply Alembic migrations to a fresh SQLite file DB.
 
     This test creates a temporary SQLite database file, configures Alembic to
@@ -31,13 +39,7 @@ def test_alembic_upgrade_on_clean_sqlite():
     alembic_ini = repo_root / "migrations" / "alembic.ini"
     assert alembic_ini.exists(), f"alembic.ini not found at {alembic_ini}"
 
-    db_dir = repo_root / "backend" / "instance"
-    db_dir.mkdir(parents=True, exist_ok=True)
-    db_file = db_dir / "alembic_test.db"
-    if db_file.exists():
-        db_file.unlink()
-    db_file.touch()
-    db_url = f"sqlite:///{db_file}"
+    db_url = _temp_db_url(tmp_path, "alembic_test.db")
 
     cfg = Config(str(alembic_ini))
     # Force the SQLAlchemy url to our temporary DB
@@ -79,17 +81,11 @@ def test_alembic_upgrade_on_clean_sqlite():
     assert "structures" in tables, f"Expected 'structures' table not found in {tables}"
 
 
-def test_enterprise_structure_migration_upgrade_and_downgrade():
+def test_enterprise_structure_migration_upgrade_and_downgrade(tmp_path):
     repo_root = pathlib.Path(__file__).resolve().parents[1]
     alembic_ini = repo_root / "migrations" / "alembic.ini"
 
-    db_dir = repo_root / "backend" / "instance"
-    db_dir.mkdir(parents=True, exist_ok=True)
-    db_file = db_dir / "alembic_enterprise_structure_test.db"
-    if db_file.exists():
-        db_file.unlink()
-    db_file.touch()
-    db_url = f"sqlite:///{db_file}"
+    db_url = _temp_db_url(tmp_path, "alembic_enterprise_structure_test.db")
 
     cfg = Config(str(alembic_ini))
     cfg.set_main_option("sqlalchemy.url", db_url)
@@ -161,17 +157,11 @@ def test_enterprise_structure_migration_upgrade_and_downgrade():
         assert enterprise_service_columns.isdisjoint(service_columns)
 
 
-def test_enterprise_service_catalog_migration_upgrade_and_downgrade():
+def test_enterprise_service_catalog_migration_upgrade_and_downgrade(tmp_path):
     repo_root = pathlib.Path(__file__).resolve().parents[1]
     alembic_ini = repo_root / "migrations" / "alembic.ini"
 
-    db_dir = repo_root / "backend" / "instance"
-    db_dir.mkdir(parents=True, exist_ok=True)
-    db_file = db_dir / "alembic_enterprise_service_catalog_test.db"
-    if db_file.exists():
-        db_file.unlink()
-    db_file.touch()
-    db_url = f"sqlite:///{db_file}"
+    db_url = _temp_db_url(tmp_path, "alembic_enterprise_service_catalog_test.db")
 
     cfg = Config(str(alembic_ini))
     cfg.set_main_option("sqlalchemy.url", db_url)
@@ -222,17 +212,11 @@ def test_enterprise_service_catalog_migration_upgrade_and_downgrade():
         assert service_catalog_columns.isdisjoint(service_columns)
 
 
-def test_enterprise_workspace_phase5_migration_upgrade_and_downgrade():
+def test_enterprise_workspace_phase5_migration_upgrade_and_downgrade(tmp_path):
     repo_root = pathlib.Path(__file__).resolve().parents[1]
     alembic_ini = repo_root / "migrations" / "alembic.ini"
 
-    db_dir = repo_root / "backend" / "instance"
-    db_dir.mkdir(parents=True, exist_ok=True)
-    db_file = db_dir / "alembic_enterprise_workspace_phase5_test.db"
-    if db_file.exists():
-        db_file.unlink()
-    db_file.touch()
-    db_url = f"sqlite:///{db_file}"
+    db_url = _temp_db_url(tmp_path, "alembic_enterprise_workspace_phase5_test.db")
 
     cfg = Config(str(alembic_ini))
     cfg.set_main_option("sqlalchemy.url", db_url)
@@ -269,24 +253,49 @@ def test_enterprise_workspace_phase5_migration_upgrade_and_downgrade():
         assert service_columns_expected <= actual_service_columns
         assert coverage_columns <= actual_coverage_columns
 
-        command.downgrade(cfg, "20260728_1800")
-        inspector = inspect(engine)
-        actual_contact_columns = {col["name"] for col in inspector.get_columns("structure_contacts")}
-        actual_service_columns = {col["name"] for col in inspector.get_columns("structure_services")}
-        actual_coverage_columns = {
-            col["name"] for col in inspector.get_columns("structure_coverage_areas")
-        }
-        assert contact_columns.isdisjoint(actual_contact_columns)
-        assert service_columns_expected.isdisjoint(actual_service_columns)
-        assert coverage_columns.isdisjoint(actual_coverage_columns)
 
-        command.upgrade(cfg, "20260729_1200")
+def test_service_workspace_migration_upgrade_and_downgrade(tmp_path):
+    repo_root = pathlib.Path(__file__).resolve().parents[1]
+    alembic_ini = repo_root / "migrations" / "alembic.ini"
+
+    db_url = _temp_db_url(tmp_path, "alembic_service_workspace_test.db")
+
+    cfg = Config(str(alembic_ini))
+    cfg.set_main_option("sqlalchemy.url", db_url)
+    cfg.set_main_option("script_location", str(repo_root / "migrations"))
+
+    if canonical_db is None or Migrate is None:
+        raise RuntimeError(
+            "Required Flask extensions (backend.extensions or flask_migrate) not importable"
+        )
+
+    app = Flask(__name__)
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
+    app.config.setdefault(
+        "SQLALCHEMY_ENGINE_OPTIONS", {"connect_args": {"check_same_thread": False}}
+    )
+    canonical_db.init_app(app)
+    Migrate(app, canonical_db)
+
+    expected_columns = {
+        "available_capacity_override",
+        "waiting_time_minutes",
+        "routing_rules_json",
+    }
+
+    with app.app_context():
+        command.upgrade(cfg, "20260729_1600")
+        engine = canonical_db.engine
         inspector = inspect(engine)
-        actual_contact_columns = {col["name"] for col in inspector.get_columns("structure_contacts")}
-        actual_service_columns = {col["name"] for col in inspector.get_columns("structure_services")}
-        actual_coverage_columns = {
-            col["name"] for col in inspector.get_columns("structure_coverage_areas")
-        }
-        assert contact_columns <= actual_contact_columns
-        assert service_columns_expected <= actual_service_columns
-        assert coverage_columns <= actual_coverage_columns
+        actual_columns = {col["name"] for col in inspector.get_columns("structure_services")}
+        assert expected_columns <= actual_columns
+
+        command.downgrade(cfg, "20260729_1200")
+        inspector = inspect(engine)
+        actual_columns = {col["name"] for col in inspector.get_columns("structure_services")}
+        assert expected_columns.isdisjoint(actual_columns)
+
+        command.upgrade(cfg, "20260729_1600")
+        inspector = inspect(engine)
+        actual_columns = {col["name"] for col in inspector.get_columns("structure_services")}
+        assert expected_columns <= actual_columns

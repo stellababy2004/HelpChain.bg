@@ -475,7 +475,13 @@ def _serialize_service(
     service_id = int(row.id)
     capacity = getattr(row, "capacity", None)
     active_cases = case_counts.get(service_id, 0)
-    available_capacity = max(int(capacity) - active_cases, 0) if capacity is not None else None
+    available_capacity_override = getattr(row, "available_capacity_override", None)
+    computed_available_capacity = max(int(capacity) - active_cases, 0) if capacity is not None else None
+    available_capacity = (
+        max(int(available_capacity_override), 0)
+        if available_capacity_override is not None
+        else computed_available_capacity
+    )
     availability_key = str(getattr(row, "availability", "") or "").strip().lower()
     is_available = availability_key in AVAILABLE_STATUSES and bool(getattr(row, "is_active", False))
     status_key = str(getattr(row, "status", "") or "").strip().lower()
@@ -496,7 +502,13 @@ def _serialize_service(
     elif availability_key not in {"available", "disponible", "open", "ouvert"}:
         non_routable_reason = "Disponibilité non confirmée"
     professionals = _json_list(getattr(row, "responsible_professionals_json", None))
-    average_waiting_time = waiting_hours.get(service_id)
+    waiting_time_minutes = getattr(row, "waiting_time_minutes", None)
+    average_waiting_time = (
+        round(float(waiting_time_minutes) / 60.0, 1)
+        if waiting_time_minutes is not None
+        else waiting_hours.get(service_id)
+    )
+    routing_rules = _json_list(getattr(row, "routing_rules_json", None))
     return {
         "id": service_id,
         "code": _display_text(getattr(row, "code", None)),
@@ -513,6 +525,7 @@ def _serialize_service(
         "capacity": capacity,
         "capacity_display": str(capacity) if capacity is not None else "Capacité non renseignée",
         "available_capacity": available_capacity,
+        "available_capacity_override": available_capacity_override,
         "available_capacity_display": (
             str(available_capacity)
             if available_capacity is not None
@@ -526,6 +539,10 @@ def _serialize_service(
         "opening_hours": _display_text(getattr(row, "opening_hours", None), "Horaires non renseignés"),
         "coverage": _display_text(getattr(row, "coverage", None), "Couverture non renseignée"),
         "notes": _display_text(getattr(row, "notes", None), "Notes non renseignées"),
+        "routing_rules": routing_rules,
+        "routing_rules_display": (
+            ", ".join(routing_rules) if routing_rules else "Aucune règle de routage renseignée."
+        ),
         "response_sla_hours": getattr(row, "response_sla_hours", None),
         "response_sla_display": (
             f"{row.response_sla_hours} min"
@@ -579,6 +596,7 @@ def _serialize_service(
         "is_active": bool(getattr(row, "is_active", False)),
         "active_cases": active_cases,
         "average_waiting_time": average_waiting_time,
+        "waiting_time_minutes": waiting_time_minutes,
         "average_waiting_time_display": (
             f"{average_waiting_time} h"
             if average_waiting_time is not None
@@ -727,19 +745,25 @@ def build_capacity_metrics(structure_id: int) -> dict[str, MetricValue]:
             Request.created_at >= now - timedelta(days=30)
         )
     )
-    max_capacity = _scalar(
-        db.session.query(func.sum(StructureService.capacity)).filter(
-            StructureService.structure_id == structure_id,
-            StructureService.is_active.is_(True),
-            func.lower(func.coalesce(StructureService.availability, "")).in_(list(AVAILABLE_STATUSES)),
-        )
+    available_service_rows = (
+        StructureService.query.filter(StructureService.structure_id == structure_id)
+        .filter(StructureService.is_active.is_(True))
+        .filter(func.lower(func.coalesce(StructureService.availability, "")).in_(list(AVAILABLE_STATUSES)))
+        .all()
     )
-    max_capacity = int(max_capacity) if max_capacity is not None else None
-    available_capacity = (
-        max(max_capacity - int(active_cases or 0), 0)
-        if max_capacity is not None and active_cases is not None
-        else None
-    )
+    max_capacity = sum(int(row.capacity or 0) for row in available_service_rows if row.capacity is not None)
+    max_capacity = max_capacity if any(row.capacity is not None for row in available_service_rows) else None
+    available_capacity = 0
+    has_available_capacity_signal = False
+    service_case_counts = _service_cases_by_id(structure_id)
+    for row in available_service_rows:
+        if getattr(row, "available_capacity_override", None) is not None:
+            available_capacity += max(int(row.available_capacity_override or 0), 0)
+            has_available_capacity_signal = True
+        elif row.capacity is not None:
+            available_capacity += max(int(row.capacity) - service_case_counts.get(int(row.id), 0), 0)
+            has_available_capacity_signal = True
+    available_capacity = available_capacity if has_available_capacity_signal else None
     workload = (
         round((float(active_cases or 0) / float(max_capacity)) * 100, 1)
         if max_capacity and active_cases is not None
@@ -1242,6 +1266,7 @@ def build_ai_readiness(structure: Structure, capacity: dict[str, MetricValue], s
             "languages": item["languages"],
             "target_population": item["target_population"],
             "required_documents": item["required_documents"],
+            "routing_rules": item["routing_rules"],
             "average_waiting_time_hours": item["average_waiting_time"],
             "response_sla_hours": item["response_sla_hours"],
         }
