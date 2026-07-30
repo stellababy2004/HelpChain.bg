@@ -280,13 +280,7 @@
     <script type="application/json" id="geoData">
       {{ geo_data|tojson }}
     </script>
-    <script type="application/json" id="analyticsPageConfig">{{ {
-      "liveUrl": "/api/analytics/live",
-      "trendsUrl": "/api/analytics/trends",
-      "dashboardUrl": "/admin_analytics",
-      "exportUrl": "/api/analytics/export",
-      "exportConfirm": export_confirm
-    }|tojson }}</script>
+    <script type="application/json" id="analyticsPageConfig">{{ {"liveUrl": "/api/analytics/live", "trendsUrl": "/api/analytics/trends", "dashboardUrl": "/admin_analytics", "exportUrl": "/api/analytics/export", "exportConfirm": export_confirm}|tojson }}</script>
     <script src="{{ url_for('static', filename='js/pages/admin_analytics.js') }}" defer></script>
   </body>
 </html>
