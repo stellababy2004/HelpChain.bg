@@ -201,174 +201,63 @@
         </div>
       </div>
 
+      {% set overview = dashboard_stats.overview if dashboard_stats.overview is defined and dashboard_stats.overview else {} %}
+      {% set perf = performance_metrics if performance_metrics else {} %}
+      {% set trends_has_data = (trends_data.requests if trends_data.requests is defined and trends_data.requests else []) or (trends_data.completed if trends_data.completed is defined and trends_data.completed else []) or (trends_data.volunteers if trends_data.volunteers is defined and trends_data.volunteers else []) %}
+      {% set category_has_data = category_stats.counts if category_stats.counts is defined and category_stats.counts else [] %}
+      {% set predictions_has_data = (predictions.requests_predicted if predictions.requests_predicted is defined and predictions.requests_predicted else []) or (predictions.volunteers_predicted if predictions.volunteers_predicted is defined and predictions.volunteers_predicted else []) %}
+      {% set geo_has_data = (geo_data.requests if geo_data.requests is defined and geo_data.requests else []) or (geo_data.volunteers if geo_data.volunteers is defined and geo_data.volunteers else []) %}
+
+      {% if not trends_has_data and not category_has_data and not predictions_has_data and not geo_has_data %}
+      <div class="alert alert-secondary mb-4" role="status">
+        {{ _('No operational analytics available yet. Live metrics will appear when real activity is recorded.') }}
+      </div>
+      {% endif %}
+
       <!-- KPI Overview -->
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-value text-primary" id="totalRequests">
-            {{ dashboard_stats.overview.total_page_views|default(0) }}
-          </div>
+          <div class="kpi-value text-primary" id="totalRequests">{{ overview.total_page_views|default(0) }}</div>
           <div class="kpi-label">Общо заявки</div>
-          <div class="kpi-trend text-success">
-            <i class="fas fa-arrow-up"></i>
-            <span>+12.5%</span>
-          </div>
+          <div class="kpi-trend text-muted"><span>{{ _('Live data only') }}</span></div>
         </div>
-
         <div class="kpi-card">
-          <div class="kpi-value text-success" id="successRate">
-            {{
-            "%.1f"|format(dashboard_stats.overview.conversion_rate|default(0))
-            }}%
-          </div>
+          <div class="kpi-value text-success" id="successRate">{{ "%.1f"|format(overview.conversion_rate|default(0)) }}%</div>
           <div class="kpi-label">Успеваемост</div>
-          <div class="kpi-trend text-success">
-            <i class="fas fa-arrow-up"></i>
-            <span>+2.1%</span>
-          </div>
+          <div class="kpi-trend text-muted"><span>{{ _('Live data only') }}</span></div>
         </div>
-
         <div class="kpi-card">
-          <div class="kpi-value text-info" id="avgResponseTime">
-            {{
-            "%.1f"|format(dashboard_stats.overview.avg_session_time|default(0))
-            }}
-          </div>
+          <div class="kpi-value text-info" id="avgResponseTime">{{ "%.1f"|format(overview.avg_session_time|default(0)) }}</div>
           <div class="kpi-label">Средно време на сесия (мин)</div>
-          <div class="kpi-trend text-danger">
-            <i class="fas fa-arrow-down"></i>
-            <span>-0.5</span>
-          </div>
+          <div class="kpi-trend text-muted"><span>{{ _('Live data only') }}</span></div>
         </div>
-
         <div class="kpi-card">
-          <div class="kpi-value text-warning" id="activeVolunteers">
-            {{ dashboard_stats.overview.unique_visitors|default(0) }}
-          </div>
+          <div class="kpi-value text-warning" id="activeVolunteers">{{ overview.unique_visitors|default(0) }}</div>
           <div class="kpi-label">Уникални посетители</div>
-          <div class="kpi-trend text-success">
-            <i class="fas fa-arrow-up"></i>
-            <span>+8.3%</span>
-          </div>
+          <div class="kpi-trend text-muted"><span>{{ _('Live data only') }}</span></div>
         </div>
       </div>
 
-      <!-- Charts Row 1 -->
       <div class="row mb-4">
-        <div class="col-xl-8">
-          <div class="chart-container">
-            <div class="chart-header">
-              <h3 class="chart-title">
-                <i class="fas fa-chart-line me-2"></i>Трендове през времето
-              </h3>
-              <div class="chart-controls">
-                <select
-                  class="form-select form-select-sm"
-                  id="trendPeriod"
-                  onchange="updateTrendChart()"
-                  title="Select trend period"
-                >
-                  <option value="6">6 месеца</option>
-                  <option value="12" selected>12 месеца</option>
-                  <option value="24">24 месеца</option>
-                </select>
-              </div>
-            </div>
-            <canvas id="trendsChart" class="chart-canvas"></canvas>
-          </div>
-        </div>
-
-        <div class="col-xl-4">
-          <div class="chart-container">
-            <div class="chart-header">
-              <h3 class="chart-title">
-                <i class="fas fa-chart-pie me-2"></i>Разпределение по категории
-              </h3>
-            </div>
-            <canvas id="categoryChart" class="chart-canvas"></canvas>
-          </div>
-        </div>
+        <div class="col-xl-8"><div class="chart-container"><div class="chart-header"><h3 class="chart-title"><i class="fas fa-chart-line me-2"></i>Трендове през времето</h3><div class="chart-controls"><select class="form-select form-select-sm" id="trendPeriod" onchange="updateTrendChart()" title="Select trend period"><option value="6">6 месеца</option><option value="12" selected>12 месеца</option><option value="24">24 месеца</option></select></div></div>{% if trends_has_data %}<canvas id="trendsChart" class="chart-canvas"></canvas>{% else %}<div class="text-muted py-5 text-center">{{ _('No trend data available yet.') }}</div>{% endif %}</div></div>
+        <div class="col-xl-4"><div class="chart-container"><div class="chart-header"><h3 class="chart-title"><i class="fas fa-chart-pie me-2"></i>Разпределение по категории</h3></div>{% if category_has_data %}<canvas id="categoryChart" class="chart-canvas"></canvas>{% else %}<div class="text-muted py-5 text-center">{{ _('No category data available yet.') }}</div>{% endif %}</div></div>
       </div>
 
-      <!-- Charts Row 2 -->
       <div class="row mb-4">
-        <div class="col-xl-6">
-          <div class="chart-container">
-            <div class="chart-header">
-              <h3 class="chart-title">
-                <i class="fas fa-map-marked-alt me-2"></i>Географско
-                разпределение
-              </h3>
-            </div>
-            <canvas id="geoChart" class="chart-canvas-small"></canvas>
-          </div>
-        </div>
-
-        <div class="col-xl-6">
-          <div class="chart-container">
-            <div class="chart-header">
-              <h3 class="chart-title">
-                <i class="fas fa-crystal-ball me-2"></i>Прогнози за следващите 3
-                месеца
-              </h3>
-            </div>
-            <canvas id="predictionChart" class="chart-canvas-small"></canvas>
-          </div>
-        </div>
+        <div class="col-xl-6"><div class="chart-container"><div class="chart-header"><h3 class="chart-title"><i class="fas fa-map-marked-alt me-2"></i>Географско разпределение</h3></div>{% if geo_has_data %}<canvas id="geoChart" class="chart-canvas-small"></canvas>{% else %}<div class="text-muted py-5 text-center">{{ _('No geolocation data available yet.') }}</div>{% endif %}</div></div>
+        <div class="col-xl-6"><div class="chart-container"><div class="chart-header"><h3 class="chart-title"><i class="fas fa-crystal-ball me-2"></i>Прогнози за следващите 3 месеца</h3></div>{% if predictions_has_data %}<canvas id="predictionChart" class="chart-canvas-small"></canvas>{% else %}<div class="text-muted py-5 text-center">{{ _('No prediction data available yet.') }}</div>{% endif %}</div></div>
       </div>
 
-      <!-- Performance Metrics -->
       <div class="chart-container">
-        <div class="chart-header">
-          <h3 class="chart-title">
-            <i class="fas fa-tachometer-alt me-2"></i>Performance Metrics
-          </h3>
-        </div>
-
+        <div class="chart-header"><h3 class="chart-title"><i class="fas fa-tachometer-alt me-2"></i>{{ _('Performance Metrics') }}</h3></div>
         <div class="row">
-          <div class="col-md-3">
-            <div class="text-center">
-              <div class="display-4 text-primary mb-2">
-                {{
-                dashboard_stats.performance_metrics.endpoint_performance|length|default(0)
-                }}
-              </div>
-              <div class="text-muted">Endpoints</div>
-            </div>
-          </div>
-
-          <div class="col-md-3">
-            <div class="text-center">
-              <div class="display-4 text-success mb-2">
-                {{
-                dashboard_stats.chatbot_analytics.total_conversations|default(0)
-                }}
-              </div>
-              <div class="text-muted">Чатбот разговори</div>
-            </div>
-          </div>
-
-          <div class="col-md-3">
-            <div class="text-center">
-              <div class="display-4 text-warning mb-2">
-                {{ dashboard_stats.overview.bounce_rate|default(0) }}%
-              </div>
-              <div class="text-muted">Bounce Rate</div>
-            </div>
-          </div>
-
-          <div class="col-md-3">
-            <div class="text-center">
-              <div class="display-4 text-info mb-2">
-                {{ dashboard_stats.chatbot_analytics.average_rating|default(0)
-                }}
-              </div>
-              <div class="text-muted">Среден рейтинг</div>
-            </div>
-          </div>
+          <div class="col-md-3"><div class="text-center"><div class="display-4 text-primary mb-2">{{ perf.completed_requests|default(0) }}</div><div class="text-muted">{{ _('Completed requests') }}</div></div></div>
+          <div class="col-md-3"><div class="text-center"><div class="display-4 text-success mb-2">{{ perf.active_requests|default(0) }}</div><div class="text-muted">{{ _('Active requests') }}</div></div></div>
+          <div class="col-md-3"><div class="text-center"><div class="display-4 text-warning mb-2">{{ perf.active_volunteers|default(0) }}</div><div class="text-muted">{{ _('Active volunteers') }}</div></div></div>
+          <div class="col-md-3"><div class="text-center"><div class="display-4 text-info mb-2">{{ "%.1f"|format(perf.utilization_rate|default(0)) }}%</div><div class="text-muted">{{ _('Utilization rate') }}</div></div></div>
         </div>
       </div>
     </div>
-
     <!-- Bootstrap JS -->
     <script src="{{ url_for('static', filename='vendor/jsdelivr/bootstrap-5.3.0.bundle.min.js') }}"></script>
 
@@ -381,6 +270,9 @@
     </script>
     <script type="application/json" id="predictions">
       {{ predictions|tojson }}
+    </script>
+    <script type="application/json" id="geoData">
+      {{ geo_data|tojson }}
     </script>
 
     <!-- Custom JavaScript -->
@@ -399,14 +291,17 @@
       const predictions = JSON.parse(
         document.getElementById("predictions").textContent,
       );
+      const geoData = JSON.parse(
+        document.getElementById("geoData").textContent,
+      );
 
       console.log("Analytics data loaded:", {
         trendsData,
         categoryStats,
         predictions,
+        geoData,
       });
 
-      // Initialize charts when page loads
       document.addEventListener("DOMContentLoaded", function () {
         initializeCharts();
         startLiveUpdates();
@@ -414,200 +309,72 @@
 
       function initializeCharts() {
         try {
-          // Trends Chart
-          const trendsCtx = document
-            .getElementById("trendsChart")
-            .getContext("2d");
-          if (trendsCtx && trendsData) {
+          const trendsCanvas = document.getElementById("trendsChart");
+          const trendsCtx = trendsCanvas ? trendsCanvas.getContext("2d") : null;
+          if (trendsCtx && ((trendsData.requests || []).length || (trendsData.completed || []).length || (trendsData.volunteers || []).length)) {
             trendsChart = new Chart(trendsCtx, {
               type: "line",
               data: {
                 labels: trendsData.labels || [],
                 datasets: [
-                  {
-                    label: "Заявки",
-                    data: trendsData.requests || [],
-                    borderColor: "#667eea",
-                    backgroundColor: "rgba(102, 126, 234, 0.1)",
-                    tension: 0.4,
-                    fill: true,
-                  },
-                  {
-                    label: "Завършени",
-                    data: trendsData.completed || [],
-                    borderColor: "#28a745",
-                    backgroundColor: "rgba(40, 167, 69, 0.1)",
-                    tension: 0.4,
-                    fill: true,
-                  },
-                  {
-                    label: "Доброволци",
-                    data: trendsData.volunteers || [],
-                    borderColor: "#ffc107",
-                    backgroundColor: "rgba(255, 193, 7, 0.1)",
-                    tension: 0.4,
-                    fill: true,
-                  },
+                  { label: "Заявки", data: trendsData.requests || [], borderColor: "#667eea", backgroundColor: "rgba(102, 126, 234, 0.1)", tension: 0.4, fill: true },
+                  { label: "Завършени", data: trendsData.completed || [], borderColor: "#28a745", backgroundColor: "rgba(40, 167, 69, 0.1)", tension: 0.4, fill: true },
+                  { label: "Доброволци", data: trendsData.volunteers || [], borderColor: "#ffc107", backgroundColor: "rgba(255, 193, 7, 0.1)", tension: 0.4, fill: true },
                 ],
               },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: "top",
-                  },
-                },
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                  },
-                },
-              },
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "top" } }, scales: { y: { beginAtZero: true } } },
             });
-            console.log("Trends chart initialized successfully");
-          } else {
-            console.warn(
-              "Trends chart not initialized - missing data or canvas",
-            );
           }
         } catch (error) {
           console.error("Error initializing trends chart:", error);
         }
 
-        // Category Chart
         try {
-          const categoryCtx = document
-            .getElementById("categoryChart")
-            .getContext("2d");
-          if (categoryCtx) {
-            const categoryLabels =
-              Object.keys(categoryStats || {}).length > 0
-                ? Object.keys(categoryStats)
-                : ["Няма данни"];
-            const categoryData =
-              Object.values(categoryStats || {}).length > 0
-                ? Object.values(categoryStats)
-                : [1];
+          const categoryCanvas = document.getElementById("categoryChart");
+          const categoryCtx = categoryCanvas ? categoryCanvas.getContext("2d") : null;
+          if (categoryCtx && (categoryStats.counts || []).length) {
             categoryChart = new Chart(categoryCtx, {
               type: "doughnut",
-              data: {
-                labels: categoryLabels,
-                datasets: [
-                  {
-                    data: categoryData,
-                    backgroundColor: [
-                      "#667eea",
-                      "#28a745",
-                      "#ffc107",
-                      "#dc3545",
-                      "#6f42c1",
-                      "#20c997",
-                    ],
-                  },
-                ],
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: "bottom",
-                  },
-                },
-              },
+              data: { labels: categoryStats.categories || [], datasets: [{ data: categoryStats.counts || [], backgroundColor: ["#667eea", "#28a745", "#ffc107", "#dc3545", "#6f42c1", "#20c997"] }] },
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } },
             });
-            console.log("Category chart initialized successfully");
           }
         } catch (error) {
           console.error("Error initializing category chart:", error);
         }
 
-        // Geo Chart (simplified - would need actual map integration)
         try {
-          const geoCtx = document.getElementById("geoChart");
-          if (geoCtx) {
-            const geoContext = geoCtx.getContext("2d");
-            geoChart = new Chart(geoContext, {
+          const geoCanvas = document.getElementById("geoChart");
+          if (geoCanvas && (((geoData.requests || []).length) || ((geoData.volunteers || []).length))) {
+            geoChart = new Chart(geoCanvas.getContext("2d"), {
               type: "bar",
-              data: {
-                labels: ["София", "Пловдив", "Варна", "Бургас", "Други"],
-                datasets: [
-                  {
-                    label: "Заявки по регион",
-                    data: [45, 23, 18, 12, 8],
-                    backgroundColor: "#667eea",
-                  },
-                ],
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                  },
-                },
-              },
+              data: { labels: ["Requests", "Volunteers"], datasets: [{ label: "Mapped records", data: [(geoData.requests || []).length, (geoData.volunteers || []).length], backgroundColor: "#667eea" }] },
+              options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } },
             });
-            console.log("Geo chart initialized successfully");
           }
         } catch (error) {
           console.error("Error initializing geo chart:", error);
         }
 
-        // Prediction Chart
         try {
-          const predictionCtx = document.getElementById("predictionChart");
-          if (predictionCtx && predictions) {
-            const predContext = predictionCtx.getContext("2d");
-            predictionChart = new Chart(predContext, {
+          const predictionCanvas = document.getElementById("predictionChart");
+          if (predictionCanvas && (((predictions.requests_predicted || []).length) || ((predictions.volunteers_predicted || []).length))) {
+            predictionChart = new Chart(predictionCanvas.getContext("2d"), {
               type: "line",
               data: {
                 labels: predictions.labels || [],
                 datasets: [
-                  {
-                    label: "Прогноза заявки",
-                    data: predictions.requests_predicted || [],
-                    borderColor: "#dc3545",
-                    backgroundColor: "rgba(220, 53, 69, 0.1)",
-                    borderDash: [5, 5],
-                    tension: 0.4,
-                    fill: true,
-                  },
-                  {
-                    label: "Прогноза доброволци",
-                    data: predictions.volunteers_predicted || [],
-                    borderColor: "#ffc107",
-                    backgroundColor: "rgba(255, 193, 7, 0.1)",
-                    borderDash: [5, 5],
-                    tension: 0.4,
-                    fill: true,
-                  },
+                  { label: "Прогноза заявки", data: predictions.requests_predicted || [], borderColor: "#dc3545", backgroundColor: "rgba(220, 53, 69, 0.1)", borderDash: [5, 5], tension: 0.4, fill: true },
+                  { label: "Прогноза доброволци", data: predictions.volunteers_predicted || [], borderColor: "#ffc107", backgroundColor: "rgba(255, 193, 7, 0.1)", borderDash: [5, 5], tension: 0.4, fill: true },
                 ],
               },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: "top",
-                  },
-                },
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                  },
-                },
-              },
+              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "top" } }, scales: { y: { beginAtZero: true } } },
             });
-            console.log("Prediction chart initialized successfully");
           }
         } catch (error) {
           console.error("Error initializing prediction chart:", error);
         }
       }
-
       function startLiveUpdates() {
         // Update live stats every 30 seconds
         liveUpdateInterval = setInterval(updateLiveStats, 30000);
@@ -640,6 +407,7 @@
         const months = document.getElementById("trendPeriod").value;
 
         // Show loading
+        if (!trendsChart || !document.getElementById("trendsChart")) return;
         const chartContainer =
           document.getElementById("trendsChart").parentElement;
         chartContainer.style.position = "relative";
@@ -751,6 +519,9 @@
     </script>
   </body>
 </html>
+
+
+
 
 
 

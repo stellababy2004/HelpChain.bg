@@ -309,7 +309,7 @@
     };
 
     function startHelp(reqId, btnEl) {
-      var ok = window.confirm(reqId === "demo" ? hcI18n.confirmDemoInterest : hcI18n.confirmSendInterest);
+      var ok = window.confirm(hcI18n.confirmSendInterest);
       if (!ok) return;
       if (btnEl) {
         btnEl.disabled = true;
@@ -318,7 +318,7 @@
         var note = btnEl.closest(".hc-match-card") ? btnEl.closest(".hc-match-card").querySelector(".hc-waiting-note") : null;
         if (note) note.hidden = false;
       }
-      toast(reqId === "demo" ? hcI18n.toastDemoHelpSent : hcI18n.toastHelpSent);
+      toast(hcI18n.toastHelpSent);
     }
 
     document.addEventListener("click", function (e) {
@@ -346,7 +346,7 @@
         if (el.tagName === "A" && href && href !== "#" && !href.startsWith("javascript")) return;
         e.preventDefault();
         e.stopPropagation();
-        toast(hcI18n.toastDemoInlineDetails);
+        toast(I18N.toastDetails || hcI18n.toastDemoInlineDetails || "Les détails s'afficheront ici.");
         return;
       }
 
@@ -597,52 +597,6 @@
       setInterval(poll, intervalMs);
     })();
 
-    (function injectDemoCardWhenNeeded() {
-      function injectDemo() {
-        if (document.querySelector(".hc-match-card")) return;
-        var matchesMain = document.querySelector(".hc-vdash__matches");
-        if (!matchesMain) return;
-
-        var empty = matchesMain.querySelector(".hc-empty");
-        if (empty) empty.remove();
-
-        var slot = document.createElement("div");
-        slot.id = "hc-matches";
-        slot.className = "hc-soft-fade";
-        slot.innerHTML =
-          '<div class="hc-list">' +
-            '<article class="hc-listItem hc-soft-fade hc-match-card hc-demo-card" data-req-id="demo-1" data-demo="1">' +
-              '<div class="hc-listItem__top d-flex align-items-center justify-content-between">' +
-                '<strong class="hc-listItem__title">' + escHtml(hcI18n.demoTitle) + "</strong>" +
-                '<span class="hc-listItem__meta">' + escHtml(hcI18n.demoJustNow) + "</span>" +
-                '<span class="hc-demo-pill">' + escHtml(hcI18n.demoPill) + "</span>" +
-              "</div>" +
-              '<p class="hc-muted" style="margin:4px 0 8px;">' + escHtml(hcI18n.demoAppeared) + "</p>" +
-              '<div class="hc-listItem__body">' + escHtml(hcI18n.demoBody) + "</div>" +
-              '<p class="hc-why">' + escHtml(CFG.demoReason || "") + "</p>" +
-              '<div class="hc-listItem__actions">' +
-                '<a class="btn btn-sm btn-outline-primary hc-detail-link" href="javascript:void(0)" aria-disabled="true">' + escHtml(hcI18n.viewDetails) + "</a>" +
-                '<button class="btn btn-sm btn-primary hc-help-btn" type="button">' + escHtml(hcI18n.willHelp) + "</button>" +
-              "</div>" +
-              '<p class="hc-cta-hint">' + escHtml(hcI18n.inviteHint) + "</p>" +
-            "</article>" +
-          "</div>";
-        matchesMain.appendChild(slot);
-
-        if (window.hcBindHelpTooltips) window.hcBindHelpTooltips(document);
-        if (window.hcAfterCardsUpdate) {
-          window.hcAfterCardsUpdate.forEach(function (fn) {
-            try { fn(); } catch (_) {}
-          });
-        }
-      }
-
-      var qs = new URLSearchParams(window.location.search);
-      if (qs.get("demo_match") === "1" && !document.querySelector(".hc-match-card")) {
-        injectDemo();
-      }
-    })();
-
     (function seenStateWithStorage() {
       var key = "hcSeenRequests";
       function bindSeen() {
@@ -873,3 +827,5 @@
     })();
   }
 })();
+
+
