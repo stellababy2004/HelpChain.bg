@@ -214,8 +214,8 @@
       var btn = e.target.closest(".js-match-why");
       if (!btn) return;
 
-      var pct = btn.dataset.pct || "—";
-      var title = btn.dataset.title || "—";
+      var pct = btn.dataset.pct || "â€”";
+      var title = btn.dataset.title || "â€”";
       var reqId = btn.dataset.reqId || "";
       var breakdown = {};
       try {
@@ -234,7 +234,7 @@
       clearNode(mmBreakdown);
       mmBreakdown.appendChild(createRow("Skills match", skills, 45));
       mmBreakdown.appendChild(createRow("Location match", city, 25));
-      mmBreakdown.appendChild(createRow("Renforcement de priorité", priority, 20));
+      mmBreakdown.appendChild(createRow("Priority boost", priority, 20));
       mmBreakdown.appendChild(createRow("Volunteer activity", activity, 10));
       if (distance) mmBreakdown.appendChild(createRow("Distance", distance, 20));
 
@@ -287,25 +287,16 @@
 
   function bindHelpDelegation() {
     var hcI18n = {
-      toastDemoDetails: I18N.toastDemoDetails || "Démonstration : aperçu des détails.",
-      confirmDemoInterest: I18N.confirmDemoInterest || "Démonstration : envoyer votre intérêt ?",
-      confirmSendInterest: I18N.confirmSendInterest || "Envoyer votre intérêt ?",
-      pending: I18N.pending || "En attente",
-      toastDemoHelpSent: I18N.toastDemoHelpSent || "Démonstration : aide proposée.",
-      toastHelpSent: I18N.toastHelpSent || "Aide proposée.",
-      toastDemoInlineDetails: I18N.toastDemoInlineDetails || "Démonstration : détails affichés ici.",
-      newPill: I18N.newPill || "NOUVEAU",
-      tipTitle: I18N.tipTitle || "Étape suivante",
-      tipText: I18N.tipText || "Vous pouvez consulter les détails et décider ensuite.",
-      demoTitle: I18N.demoTitle || "Demande de démonstration",
-      demoJustNow: I18N.demoJustNow || "à l’instant",
-      demoPill: I18N.demoPill || "Démo",
-      demoAppeared: I18N.demoAppeared || "Vient d’apparaître.",
-      demoBody: I18N.demoBody || "La personne a besoin d’aide pour ses documents.",
-      viewDetails: I18N.viewDetails || "Voir les détails",
-      willHelp: I18N.willHelp || "Je vais aider",
-      inviteHint: I18N.inviteHint || "Ceci est une invitation, pas un engagement.",
-      processing: I18N.processing || "Traitement en cours..."
+      confirmSendInterest: I18N.confirmSendInterest || "Send your interest?",
+      pending: I18N.pending || "Pending",
+      toastHelpSent: I18N.toastHelpSent || "Help offer sent.",
+      newPill: I18N.newPill || "NEW",
+      tipTitle: I18N.tipTitle || "Next step",
+      tipText: I18N.tipText || "You can review the details and decide afterward.",
+      viewDetails: I18N.viewDetails || "View details",
+      willHelp: I18N.willHelp || "I can help",
+      inviteHint: I18N.inviteHint || "This is an invitation, not a commitment.",
+      processing: I18N.processing || "Processing..."
     };
 
     function startHelp(reqId, btnEl) {
@@ -346,7 +337,7 @@
         if (el.tagName === "A" && href && href !== "#" && !href.startsWith("javascript")) return;
         e.preventDefault();
         e.stopPropagation();
-        toast(I18N.toastDetails || hcI18n.toastDemoInlineDetails || "Les d�tails s'afficheront ici.");
+        toast(I18N.toastDetails || "Les details s'afficheront ici.");
         return;
       }
 
@@ -774,7 +765,7 @@
         var d = new Date(ts);
         if (isNaN(d.getTime())) return null;
         var diff = Math.floor((Date.now() - d.getTime()) / 1000);
-        if (diff < 60) return "à l’instant";
+        if (diff < 60) return "just now";
         var m = Math.floor(diff / 60);
         if (m < 60) return m + " min ago";
         var h = Math.floor(m / 60);
