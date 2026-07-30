@@ -634,67 +634,22 @@ async def analytics_trends():
 def admin_analytics():
     """Analytics dashboard - professional template"""
     try:
-        demo_mode = bool(current_app.config.get("DEMO_MODE")) if current_app else False
-        sample_dashboard_stats = {
-            "totals": {
-                "requests": 1250,
-                "volunteers": 89,
-            }
-        }
-        sample_performance_metrics = {
-            "success_rate": 85.5,
-            "utilization_rate": 72.3,
-            "completed_requests": 1087,
-            "active_requests": 15,
-            "active_volunteers": 67,
-        }
-        sample_predictions = {
-            "labels": [
-                "Днес",
-                "Утре",
-                "След 2 дни",
-                "След 3 дни",
-                "След 4 дни",
-                "След 5 дни",
-                "След 6 дни",
-            ],
-            "requests_predicted": [1250, 1320, 1280, 1410, 1350, 1380, 1420],
-            "volunteers_predicted": [89, 92, 88, 95, 91, 93, 97],
-        }
-        sample_recommendations = [
-            {
-                "priority": "high",
-                "title": "Оптимизирай разпределението на доброволците",
-                "description": "Има неравномерно разпределение в регионите с високо търсене",
-                "action": "Преразпредели 5 доброволци в София",
-            },
-            {
-                "priority": "medium",
-                "title": "Подобри отзивчивостта",
-                "description": "Средното време за отговор се е увеличило с 15%",
-                "action": "Обучи екипа за по-бързи отговори",
-            },
-        ]
-        sample_trends_data = {
-            "labels": ["Януари", "Февруари", "Март", "Април", "Май", "Юни"],
-            "requests": [850, 920, 1050, 1180, 1220, 1250],
-            "completed": [780, 880, 980, 1050, 1100, 1087],
-            "volunteers": [65, 72, 78, 82, 85, 89],
-        }
-        sample_category_stats = {
-            "categories": [
-                "Медицинска помощ",
-                "Транспорт",
-                "Пазаруване",
-                "Домакинска помощ",
-                "Други",
-            ],
-            "counts": [450, 320, 280, 150, 50],
-        }
         unavailable_dashboard_stats = {
             "totals": {
                 "requests": 0,
                 "volunteers": 0,
+            },
+            "overview": {
+                "total_page_views": 0,
+                "conversion_rate": 0,
+                "avg_session_time": 0,
+                "unique_visitors": 0,
+                "bounce_rate": 0,
+            },
+            "performance_metrics": {"endpoint_performance": []},
+            "chatbot_analytics": {
+                "total_conversations": 0,
+                "average_rating": 0,
             },
             "available": False,
             "reason": "Dashboard analytics source query did not return data.",
@@ -758,14 +713,12 @@ def admin_analytics():
         days, start_dt, end_dt = _parse_period_args()
         logger = current_app.logger if current_app else None
 
-        dashboard_stats = sample_dashboard_stats if demo_mode else unavailable_dashboard_stats
-        performance_metrics = (
-            sample_performance_metrics if demo_mode else unavailable_performance_metrics
-        )
-        predictions = sample_predictions if demo_mode else unavailable_predictions
-        recommendations = sample_recommendations if demo_mode else []
-        category_stats = sample_category_stats if demo_mode else unavailable_category_stats
-        trends_data = sample_trends_data if demo_mode else unavailable_trends_data
+        dashboard_stats = unavailable_dashboard_stats
+        performance_metrics = unavailable_performance_metrics
+        predictions = unavailable_predictions
+        recommendations = []
+        category_stats = unavailable_category_stats
+        trends_data = unavailable_trends_data
         geo_data = {"requests": [], "volunteers": []}
         live_stats = {}
         advanced_analytics = {}
@@ -1574,3 +1527,6 @@ async def export_analytics():
     except Exception as e:
         print(f"Error exporting analytics: {type(e).__name__}: {e}")
         return jsonify({"error": "Export failed"}), 500
+
+
+

@@ -2038,6 +2038,54 @@ msgstr "Dyslexia-friendly font"
 msgid "Use a clearer fallback font stack with increased spacing"
 msgstr "Use a clearer fallback font stack with increased spacing"
 
+#: backend/helpchain_backend/src/routes/analytics.py:258
+msgid "No analytics events available yet."
+msgstr "Aucun événement analytique n'est encore disponible."
+
+#: templates/admin_analytics.html:213
+msgid "No operational analytics available yet. Live metrics will appear when real activity is recorded."
+msgstr "Aucune analytique opérationnelle n'est encore disponible. Les métriques en direct apparaîtront lorsqu'une activité réelle sera enregistrée."
+
+#: templates/admin_analytics.html:222 templates/admin_analytics.html:227 templates/admin_analytics.html:232 templates/admin_analytics.html:237
+msgid "Live data only"
+msgstr "Données réelles uniquement"
+
+#: templates/admin_analytics.html:242
+msgid "No trend data available yet."
+msgstr "Aucune donnée de tendance n'est encore disponible."
+
+#: templates/admin_analytics.html:243
+msgid "No category data available yet."
+msgstr "Aucune donnée de catégorie n'est encore disponible."
+
+#: templates/admin_analytics.html:247
+msgid "No geolocation data available yet."
+msgstr "Aucune donnée de géolocalisation n'est encore disponible."
+
+#: templates/admin_analytics.html:248
+msgid "No prediction data available yet."
+msgstr "Aucune donnée de prévision n'est encore disponible."
+
+#: templates/admin_analytics.html:252
+msgid "Performance Metrics"
+msgstr "Indicateurs de performance"
+
+#: templates/admin_analytics.html:254
+msgid "Completed requests"
+msgstr "Demandes terminées"
+
+#: templates/admin_analytics.html:257
+msgid "Utilization rate"
+msgstr "Taux d'utilisation"
+
+#: templates/volunteer_dashboard.html:631
+msgid "Les détails s’afficheront ici. Rien n’est envoyé automatiquement."
+msgstr "Les détails s’afficheront ici. Rien n’est envoyé automatiquement."
+
+#: templates/admin_analytics.html:117
+msgid "This export contains personal data."
+msgstr "Cette exportation contient des données personnelles."
+
 #: templates/base.html:665
 msgid "Navigation comfort"
 msgstr "Navigation comfort"

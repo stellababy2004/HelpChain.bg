@@ -250,10 +250,14 @@ def analytics_stream():
 
     # Non-blocking fallback: Ð²Ñ€ÑŠÑ‰Ð°Ð¼Ðµ Ð¿Ð¾ÑÐ»ÐµÐ´Ð½Ð¸ n ÑÑŠÐ±Ð¸Ñ‚Ð¸Ñ ÐºÐ°Ñ‚Ð¾ JSON.
     # Ð—Ð° Ñ€ÐµÐ°Ð»Ð½Ð° SSE Ñ€ÐµÐ°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ñ Ð¸Ð·Ð¿Ð¾Ð»Ð·Ð²Ð°Ð¹ Ð¾Ñ‚Ð´ÐµÐ»ÐµÐ½ ASGI endpoint (EventSourceResponse Ð¾Ñ‚ starlette/fastapi)
-    sample_events = [
-        {"ts": int(time.time()), "msg": "new_analytics_event"},
-    ]
-    return jsonify({"sse_enabled": False, "events": sample_events})
+    return jsonify(
+        {
+            "sse_enabled": False,
+            "events": [],
+            "status": "idle",
+            "message": _("No analytics events available yet."),
+        }
+    )
 from hashlib import sha256
 
 

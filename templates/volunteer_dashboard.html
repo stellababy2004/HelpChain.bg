@@ -479,39 +479,6 @@
           </p>
 
           <p class="hc-tip">{{ _('По-точна локация + 2–3 умения = по-бърз match.') }}</p>
-
-          <details class="hc-demoWrap" style="margin-top:12px;">
-            <summary>{{ _('Voir un exemple') }}</summary>
-            <p class="hc-demoNote">
-              {{ _('Ceci est un exemple — les vraies demandes apparaîtront automatiquement.') }}
-            </p>
-
-            <article class="hc-match hc-match--demo" data-req-id="demo-empty" data-demo="1" style="margin-top:10px;">
-              <header class="hc-match__top">
-                <div class="hc-match__titleWrap">
-                  <strong class="hc-match__title">{{ _('Exemple de demande') }}</strong>
-                  <div class="hc-match__meta">
-                <span class="hc-match__city">{{ _('Paris') }}</span>
-                <span class="hc-dotSep" aria-hidden="true">•</span>
-                <span class="hc-match__time">{{ _("à l'instant") }}</span>
-              </div>
-            </div>
-            <span class="hc-demo-pill">{{ _('Exemple démo') }}</span>
-          </header>
-
-              <p class="hc-muted" style="margin:4px 0 8px;">
-                {{ _('Elle vient d’apparaître. Vérifiez si elle vous convient.') }}
-              </p>
-              <p class="hc-match__desc">{{ _('Une personne cherche de l’aide pour des documents et des orientations administratives.') }}</p>
-              <p class="hc-match__why">
-                {% if volunteer.location %}
-                  {{ _('Vous voyez cette demande car elle correspond à votre profil. в %(loc)s', loc=volunteer.location) }}
-                {% else %}
-                  {{ _('Vous voyez cette demande car elle correspond à votre profil.') }}
-                {% endif %}
-              </p>
-            </article>
-          </details>
         </section>
       {% endif %}
     </section>
@@ -629,36 +596,6 @@
 
 
 
-<!-- PREVIEW (secondary) -->
-  <section class="hc-card hc-vdash__preview" id="hc-preview">
-    <div class="hc-card__head">
-      <h2 class="hc-card__title">{{ _("Exemple de demande") }}</h2>
-      <p class="hc-card__desc">{{ _("Exemple pour vous montrer à quoi vous attendre.") }}</p>
-    </div>
-
-    <article class="hc-previewCard">
-      <div class="hc-previewCard__chips">
-        <span class="hc-pill">{{ _("Aide administrative") }}</span>
-        <span class="hc-pill">{{ _('Paris') }}</span>
-        <span class="hc-pill">{{ _("En ligne") }}</span>
-      </div>
-
-      <h3 class="hc-previewCard__title">{{ _("Aide aux démarches") }}</h3>
-      <p class="hc-previewCard__text">
-        {{ _("Une personne recherche de l’aide pour remplir des documents et savoir où déposer une demande.") }}
-      </p>
-
-      <div class="hc-previewCard__actions">
-        <button class="btn btn-outline-primary" type="button" disabled>{{ _("Voir détails") }}</button>
-        <button class="btn btn-primary" type="button" disabled>{{ _("Je peux aider") }}</button>
-      </div>
-
-      <p class="hc-note">
-        {{ _("Vous n’êtes jamais engagé automatiquement. Vous choisissez quand et comment aider.") }}
-      </p>
-    </article>
-  </section>
-
   <div id="hc-confirm-overlay" class="hc-confirm-overlay" hidden>
     <div class="hc-confirm-box">
       <h4>{{ _("Потвърди помощта") }}</h4>
@@ -688,21 +625,13 @@
 </section>
 <script type="application/json" id="hc-volDash-i18n">
 {{ {
-  "toastDemoDetails": _(" Démo : les détails apparaîtront ainsi. Les vraies demandes ouvriront une page dédiée."),
-  "confirmDemoInterest": _("Démo : vous allez signaler votre intérêt. C’est une invitation, pas un engagement. Vous déciderez ensuite tranquillement."),
   "confirmSendInterest": _("Vous allez signaler votre intérêt. C’est une invitation, pas un engagement. Rien n’est accepté automatiquement.") ~ "\n\n" ~ _("Continuer ?"),
   "pending": _("En attente"),
-  "toastDemoHelpSent": _(" Démo : l’aide a été proposée. Rien n’est accepté automatiquement."),
   "toastHelpSent": _(" Помощта е заявена. Очаква се кратко потвърждение от екипа."),
-  "toastDemoInlineDetails": _(" Démo : les détails s’afficheront ici. Les vraies demandes ouvriront une page de détails."),
+  "toastDetails": _("Les détails s’afficheront ici. Rien n’est envoyé automatiquement."),
   "newPill": _(" НОВО"),
   "tipTitle": _("Какво става, ако натиснеш?"),
   "tipText": _("Vous consultez les détails et signalez votre intérêt. Vous décidez ensuite tranquillement si vous souhaitez intervenir. Rien ne se fait automatiquement."),
-  "demoTitle": _("Exemple de demande"),
-  "demoJustNow": _("à l'instant"),
-  "demoPill": _("Exemple démo"),
-  "demoAppeared": _("Elle vient d’apparaître. Vérifiez si elle vous convient."),
-  "demoBody": _("Une personne cherche de l’aide pour des documents et des orientations administratives."),
   "viewDetails": _("Voir détails"),
   "willHelp": _("Je peux aider"),
   "inviteHint": _("C’est une invitation, pas un engagement. Vous pouvez consulter les détails puis décider tranquillement."),
@@ -711,13 +640,7 @@
 }|tojson }}
 </script>
 <script type="application/json" id="hc-volDash-cfg">
-{{ {
-  "hasHcApi": true,
-  "path": request.path,
-  "qs": request.query_string.decode("utf-8") if request.query_string else "",
-  "justLoggedIn": just_logged_in,
-  "demoReason": (_("Vous voyez cette demande car elle correspond à votre profil. в %(loc)s", loc=volunteer.location) if volunteer.location else _("Vous voyez cette demande car elle correspond à votre profil."))
-}|tojson }}
+{{ {"hasHcApi": true, "path": request.path, "qs": request.query_string.decode("utf-8") if request.query_string else "", "justLoggedIn": just_logged_in}|tojson }}
 </script>
 {% endblock %}
 

@@ -214,8 +214,8 @@
       var btn = e.target.closest(".js-match-why");
       if (!btn) return;
 
-      var pct = btn.dataset.pct || "—";
-      var title = btn.dataset.title || "—";
+      var pct = btn.dataset.pct || "â€”";
+      var title = btn.dataset.title || "â€”";
       var reqId = btn.dataset.reqId || "";
       var breakdown = {};
       try {
@@ -234,7 +234,7 @@
       clearNode(mmBreakdown);
       mmBreakdown.appendChild(createRow("Skills match", skills, 45));
       mmBreakdown.appendChild(createRow("Location match", city, 25));
-      mmBreakdown.appendChild(createRow("Renforcement de priorité", priority, 20));
+      mmBreakdown.appendChild(createRow("Priority boost", priority, 20));
       mmBreakdown.appendChild(createRow("Volunteer activity", activity, 10));
       if (distance) mmBreakdown.appendChild(createRow("Distance", distance, 20));
 
@@ -287,29 +287,20 @@
 
   function bindHelpDelegation() {
     var hcI18n = {
-      toastDemoDetails: I18N.toastDemoDetails || "Démonstration : aperçu des détails.",
-      confirmDemoInterest: I18N.confirmDemoInterest || "Démonstration : envoyer votre intérêt ?",
-      confirmSendInterest: I18N.confirmSendInterest || "Envoyer votre intérêt ?",
-      pending: I18N.pending || "En attente",
-      toastDemoHelpSent: I18N.toastDemoHelpSent || "Démonstration : aide proposée.",
-      toastHelpSent: I18N.toastHelpSent || "Aide proposée.",
-      toastDemoInlineDetails: I18N.toastDemoInlineDetails || "Démonstration : détails affichés ici.",
-      newPill: I18N.newPill || "NOUVEAU",
-      tipTitle: I18N.tipTitle || "Étape suivante",
-      tipText: I18N.tipText || "Vous pouvez consulter les détails et décider ensuite.",
-      demoTitle: I18N.demoTitle || "Demande de démonstration",
-      demoJustNow: I18N.demoJustNow || "à l’instant",
-      demoPill: I18N.demoPill || "Démo",
-      demoAppeared: I18N.demoAppeared || "Vient d’apparaître.",
-      demoBody: I18N.demoBody || "La personne a besoin d’aide pour ses documents.",
-      viewDetails: I18N.viewDetails || "Voir les détails",
-      willHelp: I18N.willHelp || "Je vais aider",
-      inviteHint: I18N.inviteHint || "Ceci est une invitation, pas un engagement.",
-      processing: I18N.processing || "Traitement en cours..."
+      confirmSendInterest: I18N.confirmSendInterest || "Send your interest?",
+      pending: I18N.pending || "Pending",
+      toastHelpSent: I18N.toastHelpSent || "Help offer sent.",
+      newPill: I18N.newPill || "NEW",
+      tipTitle: I18N.tipTitle || "Next step",
+      tipText: I18N.tipText || "You can review the details and decide afterward.",
+      viewDetails: I18N.viewDetails || "View details",
+      willHelp: I18N.willHelp || "I can help",
+      inviteHint: I18N.inviteHint || "This is an invitation, not a commitment.",
+      processing: I18N.processing || "Processing..."
     };
 
     function startHelp(reqId, btnEl) {
-      var ok = window.confirm(reqId === "demo" ? hcI18n.confirmDemoInterest : hcI18n.confirmSendInterest);
+      var ok = window.confirm(hcI18n.confirmSendInterest);
       if (!ok) return;
       if (btnEl) {
         btnEl.disabled = true;
@@ -318,7 +309,7 @@
         var note = btnEl.closest(".hc-match-card") ? btnEl.closest(".hc-match-card").querySelector(".hc-waiting-note") : null;
         if (note) note.hidden = false;
       }
-      toast(reqId === "demo" ? hcI18n.toastDemoHelpSent : hcI18n.toastHelpSent);
+      toast(hcI18n.toastHelpSent);
     }
 
     document.addEventListener("click", function (e) {
@@ -346,7 +337,7 @@
         if (el.tagName === "A" && href && href !== "#" && !href.startsWith("javascript")) return;
         e.preventDefault();
         e.stopPropagation();
-        toast(hcI18n.toastDemoInlineDetails);
+        toast(I18N.toastDetails || "Les details s'afficheront ici.");
         return;
       }
 
@@ -597,52 +588,6 @@
       setInterval(poll, intervalMs);
     })();
 
-    (function injectDemoCardWhenNeeded() {
-      function injectDemo() {
-        if (document.querySelector(".hc-match-card")) return;
-        var matchesMain = document.querySelector(".hc-vdash__matches");
-        if (!matchesMain) return;
-
-        var empty = matchesMain.querySelector(".hc-empty");
-        if (empty) empty.remove();
-
-        var slot = document.createElement("div");
-        slot.id = "hc-matches";
-        slot.className = "hc-soft-fade";
-        slot.innerHTML =
-          '<div class="hc-list">' +
-            '<article class="hc-listItem hc-soft-fade hc-match-card hc-demo-card" data-req-id="demo-1" data-demo="1">' +
-              '<div class="hc-listItem__top d-flex align-items-center justify-content-between">' +
-                '<strong class="hc-listItem__title">' + escHtml(hcI18n.demoTitle) + "</strong>" +
-                '<span class="hc-listItem__meta">' + escHtml(hcI18n.demoJustNow) + "</span>" +
-                '<span class="hc-demo-pill">' + escHtml(hcI18n.demoPill) + "</span>" +
-              "</div>" +
-              '<p class="hc-muted" style="margin:4px 0 8px;">' + escHtml(hcI18n.demoAppeared) + "</p>" +
-              '<div class="hc-listItem__body">' + escHtml(hcI18n.demoBody) + "</div>" +
-              '<p class="hc-why">' + escHtml(CFG.demoReason || "") + "</p>" +
-              '<div class="hc-listItem__actions">' +
-                '<a class="btn btn-sm btn-outline-primary hc-detail-link" href="javascript:void(0)" aria-disabled="true">' + escHtml(hcI18n.viewDetails) + "</a>" +
-                '<button class="btn btn-sm btn-primary hc-help-btn" type="button">' + escHtml(hcI18n.willHelp) + "</button>" +
-              "</div>" +
-              '<p class="hc-cta-hint">' + escHtml(hcI18n.inviteHint) + "</p>" +
-            "</article>" +
-          "</div>";
-        matchesMain.appendChild(slot);
-
-        if (window.hcBindHelpTooltips) window.hcBindHelpTooltips(document);
-        if (window.hcAfterCardsUpdate) {
-          window.hcAfterCardsUpdate.forEach(function (fn) {
-            try { fn(); } catch (_) {}
-          });
-        }
-      }
-
-      var qs = new URLSearchParams(window.location.search);
-      if (qs.get("demo_match") === "1" && !document.querySelector(".hc-match-card")) {
-        injectDemo();
-      }
-    })();
-
     (function seenStateWithStorage() {
       var key = "hcSeenRequests";
       function bindSeen() {
@@ -820,7 +765,7 @@
         var d = new Date(ts);
         if (isNaN(d.getTime())) return null;
         var diff = Math.floor((Date.now() - d.getTime()) / 1000);
-        if (diff < 60) return "à l’instant";
+        if (diff < 60) return "just now";
         var m = Math.floor(diff / 60);
         if (m < 60) return m + " min ago";
         var h = Math.floor(m / 60);
@@ -873,3 +818,5 @@
     })();
   }
 })();
+
+
