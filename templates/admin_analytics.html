@@ -113,6 +113,12 @@
         </ol>
       </nav>
 
+      {% set export_confirm = '\n'.join([
+        _(' This export contains personal data.'),
+        _('Internal use only.'),
+        '',
+        _('Are you sure you want to continue?')
+      ]) %}
       <!-- Header -->
       <div class="row mb-4">
         <div class="col-12">
@@ -274,249 +280,14 @@
     <script type="application/json" id="geoData">
       {{ geo_data|tojson }}
     </script>
-
-    <!-- Custom JavaScript -->
-    <script>
-      // Global variables
-      let trendsChart, categoryChart, geoChart, predictionChart;
-      let liveUpdateInterval;
-
-      // Load data from JSON scripts
-      const trendsData = JSON.parse(
-        document.getElementById("trendsData").textContent,
-      );
-      const categoryStats = JSON.parse(
-        document.getElementById("categoryStats").textContent,
-      );
-      const predictions = JSON.parse(
-        document.getElementById("predictions").textContent,
-      );
-      const geoData = JSON.parse(
-        document.getElementById("geoData").textContent,
-      );
-
-      console.log("Analytics data loaded:", {
-        trendsData,
-        categoryStats,
-        predictions,
-        geoData,
-      });
-
-      document.addEventListener("DOMContentLoaded", function () {
-        initializeCharts();
-        startLiveUpdates();
-      });
-
-      function initializeCharts() {
-        try {
-          const trendsCanvas = document.getElementById("trendsChart");
-          const trendsCtx = trendsCanvas ? trendsCanvas.getContext("2d") : null;
-          if (trendsCtx && ((trendsData.requests || []).length || (trendsData.completed || []).length || (trendsData.volunteers || []).length)) {
-            trendsChart = new Chart(trendsCtx, {
-              type: "line",
-              data: {
-                labels: trendsData.labels || [],
-                datasets: [
-                  { label: "Заявки", data: trendsData.requests || [], borderColor: "#667eea", backgroundColor: "rgba(102, 126, 234, 0.1)", tension: 0.4, fill: true },
-                  { label: "Завършени", data: trendsData.completed || [], borderColor: "#28a745", backgroundColor: "rgba(40, 167, 69, 0.1)", tension: 0.4, fill: true },
-                  { label: "Доброволци", data: trendsData.volunteers || [], borderColor: "#ffc107", backgroundColor: "rgba(255, 193, 7, 0.1)", tension: 0.4, fill: true },
-                ],
-              },
-              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "top" } }, scales: { y: { beginAtZero: true } } },
-            });
-          }
-        } catch (error) {
-          console.error("Error initializing trends chart:", error);
-        }
-
-        try {
-          const categoryCanvas = document.getElementById("categoryChart");
-          const categoryCtx = categoryCanvas ? categoryCanvas.getContext("2d") : null;
-          if (categoryCtx && (categoryStats.counts || []).length) {
-            categoryChart = new Chart(categoryCtx, {
-              type: "doughnut",
-              data: { labels: categoryStats.categories || [], datasets: [{ data: categoryStats.counts || [], backgroundColor: ["#667eea", "#28a745", "#ffc107", "#dc3545", "#6f42c1", "#20c997"] }] },
-              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } },
-            });
-          }
-        } catch (error) {
-          console.error("Error initializing category chart:", error);
-        }
-
-        try {
-          const geoCanvas = document.getElementById("geoChart");
-          if (geoCanvas && (((geoData.requests || []).length) || ((geoData.volunteers || []).length))) {
-            geoChart = new Chart(geoCanvas.getContext("2d"), {
-              type: "bar",
-              data: { labels: ["Requests", "Volunteers"], datasets: [{ label: "Mapped records", data: [(geoData.requests || []).length, (geoData.volunteers || []).length], backgroundColor: "#667eea" }] },
-              options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } },
-            });
-          }
-        } catch (error) {
-          console.error("Error initializing geo chart:", error);
-        }
-
-        try {
-          const predictionCanvas = document.getElementById("predictionChart");
-          if (predictionCanvas && (((predictions.requests_predicted || []).length) || ((predictions.volunteers_predicted || []).length))) {
-            predictionChart = new Chart(predictionCanvas.getContext("2d"), {
-              type: "line",
-              data: {
-                labels: predictions.labels || [],
-                datasets: [
-                  { label: "Прогноза заявки", data: predictions.requests_predicted || [], borderColor: "#dc3545", backgroundColor: "rgba(220, 53, 69, 0.1)", borderDash: [5, 5], tension: 0.4, fill: true },
-                  { label: "Прогноза доброволци", data: predictions.volunteers_predicted || [], borderColor: "#ffc107", backgroundColor: "rgba(255, 193, 7, 0.1)", borderDash: [5, 5], tension: 0.4, fill: true },
-                ],
-              },
-              options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "top" } }, scales: { y: { beginAtZero: true } } },
-            });
-          }
-        } catch (error) {
-          console.error("Error initializing prediction chart:", error);
-        }
-      }
-      function startLiveUpdates() {
-        // Update live stats every 30 seconds
-        liveUpdateInterval = setInterval(updateLiveStats, 30000);
-      }
-
-      function updateLiveStats() {
-        fetch("/api/analytics/live")
-          .then((response) => response.json())
-          .then((data) => {
-            // Update KPI values
-            document.getElementById("totalRequests").textContent =
-              data.requests_today || 0;
-            // Add more live updates as needed
-          })
-          .catch((error) => console.error("Error updating live stats:", error));
-      }
-
-      function updateTimeRange() {
-        const days = document.getElementById("timeRange").value;
-        // Reload page with new time range (in real implementation, this would update charts via AJAX)
-        window.location.href = `/admin_analytics?days=${days}`;
-      }
-
-      function updateFilters() {
-        // Apply filters to charts
-        console.log("Filters updated");
-      }
-
-      function updateTrendChart() {
-        const months = document.getElementById("trendPeriod").value;
-
-        // Show loading
-        if (!trendsChart || !document.getElementById("trendsChart")) return;
-        const chartContainer =
-          document.getElementById("trendsChart").parentElement;
-        chartContainer.style.position = "relative";
-        chartContainer.innerHTML =
-          '<div class="loading-overlay"><div class="spinner"></div></div>' +
-          chartContainer.innerHTML;
-
-        fetch(`/api/analytics/trends?months=${months}`)
-          .then((response) => response.json())
-          .then((data) => {
-            // Update chart data
-            trendsChart.data.labels = data.labels;
-            trendsChart.data.datasets[0].data = data.requests;
-            trendsChart.data.datasets[1].data = data.completed;
-            trendsChart.data.datasets[2].data = data.volunteers;
-            trendsChart.update();
-
-            // Remove loading
-            chartContainer.querySelector(".loading-overlay").remove();
-          })
-          .catch((error) => {
-            console.error("Error updating trend chart:", error);
-            chartContainer.querySelector(".loading-overlay").remove();
-          });
-      }
-
-      function refreshData() {
-        // Show loading on all charts
-        document.querySelectorAll(".chart-container").forEach((container) => {
-          container.style.position = "relative";
-          container.innerHTML =
-            '<div class="loading-overlay"><div class="spinner"></div></div>' +
-            container.innerHTML;
-        });
-
-        // Reload the page to refresh all data
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      }
-
-      // Localized export confirmation (stable multiline msgids)
-      {% set export_confirm = '\n'.join([
-        _(' This export contains personal data.'),
-        _('Internal use only.'),
-        '',
-        _('Are you sure you want to continue?')
-      ]) %}
-
-      function exportData(elOrFormat) {
-        const format =
-          typeof elOrFormat === "string"
-            ? elOrFormat
-            : (elOrFormat?.getAttribute("data-format") || "json");
-
-        const confirmMsg =
-          typeof elOrFormat === "string"
-            ? ""
-            : (elOrFormat?.getAttribute("data-confirm") || "");
-
-        if (confirmMsg && !confirm(confirmMsg)) return;
-
-        const url = `/api/analytics/export?format=${format}&type=dashboard`;
-        window.open(url, "_blank");
-      }
-
-      // Cleanup on page unload
-      window.addEventListener("beforeunload", function () {
-        if (liveUpdateInterval) {
-          clearInterval(liveUpdateInterval);
-        }
-      });
-
-      // Logout function
-      function logout() {
-        if (
-          confirm(
-            "Сигурни ли сте, че искате да излезете от администраторския панел?",
-          )
-        ) {
-          // Create and submit logout form
-          const form = document.createElement("form");
-          form.method = "POST";
-          form.action = "{{ url_for('admin.admin_logout') }}";
-          document.body.appendChild(form);
-          form.submit();
-        }
-      }
-
-      // Delegated actions (CSP-ready pattern)
-      (function () {
-        function safeCall(fnName, el) {
-          try {
-            const fn = window[fnName];
-            if (typeof fn === "function") return fn(el);
-          } catch (_) {}
-          return undefined;
-        }
-
-        document.addEventListener("click", function (e) {
-          const el = e.target.closest("[data-action]");
-          if (!el) return;
-          const action = el.getAttribute("data-action");
-          if (!action) return;
-          if (el.tagName === "A") e.preventDefault();
-          safeCall(action, el);
-        });
-      })();
-    </script>
+    <script type="application/json" id="analyticsPageConfig">{{ {
+      "liveUrl": "/api/analytics/live",
+      "trendsUrl": "/api/analytics/trends",
+      "dashboardUrl": "/admin_analytics",
+      "exportUrl": "/api/analytics/export",
+      "exportConfirm": export_confirm
+    }|tojson }}</script>
+    <script src="{{ url_for('static', filename='js/pages/admin_analytics.js') }}" defer></script>
   </body>
 </html>
 

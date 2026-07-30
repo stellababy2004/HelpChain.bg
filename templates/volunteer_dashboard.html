@@ -640,12 +640,7 @@
 }|tojson }}
 </script>
 <script type="application/json" id="hc-volDash-cfg">
-{{ {
-  "hasHcApi": true,
-  "path": request.path,
-  "qs": request.query_string.decode("utf-8") if request.query_string else "",
-  "justLoggedIn": just_logged_in
-}|tojson }}
+{{ {"hasHcApi": true, "path": request.path, "qs": request.query_string.decode("utf-8") if request.query_string else "", "justLoggedIn": just_logged_in}|tojson }}
 </script>
 {% endblock %}
 
